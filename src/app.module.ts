@@ -10,7 +10,7 @@ import { ViajesModule } from "./modules/admin/viajes/viajes.module";
 import { UsuariosModule } from "./modules/admin/usuarios/usuarios.module";
 import { ClientesModule } from "./modules/admin/clientes/clientes.module";
 import { AuthModule } from "./modules/auth/auth.module";
-import { UploadsModule } from "./modules/uploads/uploads.module";
+import { StorageModule } from "./modules/storage/storage.module";
 
 @Module({
   imports: [
@@ -23,7 +23,7 @@ import { UploadsModule } from "./modules/uploads/uploads.module";
     ViajesModule,
     UsuariosModule,
     ClientesModule,
-    UploadsModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

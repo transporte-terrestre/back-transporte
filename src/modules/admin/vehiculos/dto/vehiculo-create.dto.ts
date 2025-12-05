@@ -6,6 +6,7 @@ import {
   IsDateString,
   IsOptional,
   IsEnum,
+  IsArray,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { VehiculoDTO, estadoVehiculo } from "@models/tables/vehiculo.model";
@@ -50,4 +51,24 @@ export class VehiculoCreateDto
   @IsOptional()
   @IsEnum(estadoVehiculo.enumValues)
   estado: (typeof estadoVehiculo.enumValues)[number];
+
+  @ApiPropertyOptional({ 
+    example: ["https://res.cloudinary.com/xxx/image.jpg"], 
+    description: "Lista de URLs de imágenes del vehículo",
+    type: [String]
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  imagenes?: string[];
+
+  @ApiPropertyOptional({ 
+    example: ["https://res.cloudinary.com/xxx/document.pdf"], 
+    description: "Lista de URLs de documentos del vehículo",
+    type: [String]
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  documentos?: string[];
 }

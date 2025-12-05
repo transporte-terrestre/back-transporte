@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { estadoVehiculo } from "@models/tables/vehiculo.model";
 
 export class VehiculoResultDto {
@@ -29,6 +29,20 @@ export class VehiculoResultDto {
     description: "Vehicle status",
   })
   estado: (typeof estadoVehiculo.enumValues)[number];
+
+  @ApiPropertyOptional({ 
+    example: ["https://res.cloudinary.com/xxx/image.jpg"], 
+    description: "Lista de URLs de imágenes del vehículo",
+    type: [String]
+  })
+  imagenes: string[];
+
+  @ApiPropertyOptional({ 
+    example: ["https://res.cloudinary.com/xxx/document.pdf"], 
+    description: "Lista de URLs de documentos del vehículo",
+    type: [String]
+  })
+  documentos: string[];
 
   @ApiProperty({
     example: "2023-01-01T00:00:00.000Z",

@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, date, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, date, timestamp, pgEnum, text } from "drizzle-orm/pg-core";
 
 export const claseLicenciaConductor = pgEnum("clase_licencia_conductor", [
   "A",
@@ -20,6 +20,8 @@ export const conductores = pgTable("conductores", {
   categoriaLicencia: categoriaLicenciaConductor("categoria_licencia").notNull(),
   fechaExpedicion: date("fecha_expedicion").notNull(),
   fechaRevalidacion: date("fecha_revalidacion").notNull(),
+  imagenes: text("imagenes").array().default([]),
+  documentos: text("documentos").array().default([]),
   creadoEn: timestamp("creado_en").defaultNow().notNull(),
   actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
 });

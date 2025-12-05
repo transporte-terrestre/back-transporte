@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class UploadResultDto {
+export class StorageResultDto {
   @ApiProperty({ example: "images/abc123", description: "Public ID del archivo en Cloudinary" })
   publicId: string;
 

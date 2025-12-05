@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -46,4 +47,14 @@ export class ClienteCreateDto
   @IsOptional()
   @MaxLength(255)
   direccion?: string | null;
+
+  @ApiPropertyOptional({ 
+    example: ["https://res.cloudinary.com/xxx/image.jpg"], 
+    description: "Lista de URLs de imágenes del cliente",
+    type: [String]
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  imagenes?: string[];
 }

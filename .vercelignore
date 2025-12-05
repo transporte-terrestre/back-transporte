@@ -1,0 +1,13 @@
+node_modules
+src
+test
+.git
+.gitignore
+.env
+.env.*
+README.md
+tsconfig.json
+tsconfig.build.json
+nest-cli.json
+.prettierrc
+.eslintrc.js

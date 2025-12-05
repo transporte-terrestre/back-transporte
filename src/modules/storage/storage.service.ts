@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
-import { UploadResultDto } from "./dto/upload-result.dto";
+import { StorageResultDto } from "./dto/storage-result.dto";
 
 @Injectable()
-export class UploadsService {
+export class StorageService {
   constructor() {
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -12,14 +12,14 @@ export class UploadsService {
     });
   }
 
-  async upload(file: Express.Multer.File, folder: string = "uploads"): Promise<UploadResultDto> {
+  async upload(file: Express.Multer.File, folder: string = "storage"): Promise<StorageResultDto> {
     const originalName = file.originalname;
     const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
     const extension = originalName.split('.').pop();
 
     const result = await this.uploadToCloudinary(file, folder, nameWithoutExt, extension);
     
-    const response = new UploadResultDto();
+    const response = new StorageResultDto();
     response.publicId = result.public_id;
     response.url = result.url;
     response.secureUrl = result.secure_url;

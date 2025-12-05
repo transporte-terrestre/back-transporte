@@ -18,29 +18,29 @@ import {
 } from "@nestjs/swagger";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { AuthGuard } from "@nestjs/passport";
-import { UploadsService } from "./uploads.service";
-import { UploadResultDto } from "./dto/upload-result.dto";
+import { StorageService } from "./storage.service";
+import { StorageResultDto } from "./dto/storage-result.dto";
 
-@ApiTags("uploads")
+@ApiTags("storage")
 @ApiBearerAuth()
 @UseGuards(AuthGuard("jwt"))
-@Controller("upload")
-export class UploadsController {
-  constructor(private readonly uploadsService: UploadsService) {}
+@Controller("storage")
+export class StorageController {
+  constructor(private readonly storageService: StorageService) {}
 
   @Post()
   @ApiOperation({ summary: "Subir un archivo (imagen, documento, video, etc.)" })
   @ApiConsumes("multipart/form-data")
   @ApiBody({ schema: { type: "object", properties: { file: { type: "string", format: "binary" } } } })
-  @ApiResponse({ status: 200, type: UploadResultDto })
+  @ApiResponse({ status: 200, type: StorageResultDto })
   @UseInterceptors(FileInterceptor("file"))
   upload(@UploadedFile() file: Express.Multer.File, @Query("folder") folder?: string) {
-    return this.uploadsService.upload(file, folder);
+    return this.storageService.upload(file, folder);
   }
 
   @Delete(":publicId")
   @ApiOperation({ summary: "Eliminar un archivo" })
   delete(@Param("publicId") publicId: string) {
-    return this.uploadsService.delete(publicId);
+    return this.storageService.delete(publicId);
   }
 }

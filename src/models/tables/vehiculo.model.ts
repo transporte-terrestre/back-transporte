@@ -6,6 +6,7 @@ import {
   integer,
   date,
   timestamp,
+  text,
 } from "drizzle-orm/pg-core";
 
 export const estadoVehiculo = pgEnum("estado_vehiculo", [
@@ -23,6 +24,8 @@ export const vehiculos = pgTable("vehiculos", {
   kilometraje: integer("kilometraje").default(0).notNull(),
   fechaVencimientoSoat: date("fecha_vencimiento_soat").notNull(),
   estado: estadoVehiculo("estado").default("activo").notNull(),
+  imagenes: text("imagenes").array().default([]),
+  documentos: text("documentos").array().default([]),
   creadoEn: timestamp("creado_en").defaultNow().notNull(),
   actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
 });

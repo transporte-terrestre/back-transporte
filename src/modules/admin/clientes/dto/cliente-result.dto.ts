@@ -22,6 +22,13 @@ export class ClienteResultDto {
   @ApiPropertyOptional({ example: "Av. Principal 123", description: "Dirección del cliente" })
   direccion: string | null;
 
+  @ApiProperty({ 
+    example: ["https://res.cloudinary.com/xxx/image.jpg"], 
+    description: "Lista de URLs de imágenes del cliente",
+    type: [String]
+  })
+  imagenes: string[];
+
   @ApiProperty({
     example: "2023-01-01T00:00:00.000Z",
     description: "Fecha de creación",

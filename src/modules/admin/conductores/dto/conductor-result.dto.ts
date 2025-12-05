@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   categoriaLicenciaConductor,
   claseLicenciaConductor,
@@ -45,6 +45,20 @@ export class ConductorResultDto {
     description: "License revalidation date",
   })
   fechaRevalidacion: string;
+
+  @ApiPropertyOptional({ 
+    example: ["https://res.cloudinary.com/xxx/image.jpg"], 
+    description: "Lista de URLs de imágenes del conductor",
+    type: [String]
+  })
+  imagenes: string[];
+
+  @ApiPropertyOptional({ 
+    example: ["https://res.cloudinary.com/xxx/document.pdf"], 
+    description: "Lista de URLs de documentos del conductor",
+    type: [String]
+  })
+  documentos: string[];
 
   @ApiProperty({
     example: "2023-01-01T00:00:00.000Z",
