@@ -6,7 +6,7 @@ import {
   MinLength,
 } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
-import { UsuarioDTO, rolesUsuario } from "@models/tables/usuario.model";
+import { UsuarioDTO, rolesUsuario } from "@model/tables/usuario.model";
 
 export class UsuarioCreateDto
   implements Omit<UsuarioDTO, "id" | "creadoEn" | "actualizadoEn">

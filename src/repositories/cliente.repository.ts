@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { database } from "@db/connection.db";
-import { clientes, Cliente, ClienteDTO } from "@models/tables/cliente.model";
+import { clientes, Cliente, ClienteDTO } from "@model/tables/cliente.model";
 import { eq } from "drizzle-orm";
 
 @Injectable()

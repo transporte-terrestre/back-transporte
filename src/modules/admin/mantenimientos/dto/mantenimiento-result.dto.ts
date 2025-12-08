@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { tipoMantenimiento } from "@models/tables/mantenimiento.model";
+import { tipoMantenimiento } from "@model/tables/mantenimiento.model";
 
 export class MantenimientoResultDto {
   @ApiProperty({ example: 1, description: "Maintenance ID" })

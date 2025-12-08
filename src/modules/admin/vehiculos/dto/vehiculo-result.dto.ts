@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { estadoVehiculo } from "@models/tables/vehiculo.model";
+import { estadoVehiculo } from "@model/tables/vehiculo.model";
 
 export class VehiculoResultDto {
   @ApiProperty({ example: 1, description: "Vehicle ID" })

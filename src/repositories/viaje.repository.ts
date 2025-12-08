@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { eq } from "drizzle-orm";
 import { database } from "@db/connection.db";
-import { viajes, ViajeDTO } from "@models/tables/viaje.model";
+import { viajes, ViajeDTO } from "@model/tables/viaje.model";
 
 @Injectable()
 export class ViajeRepository {

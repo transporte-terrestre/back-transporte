@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { RutaRepository } from "@repositories/ruta.repository";
+import { RutaRepository } from "@repository/ruta.repository";
 import { RutaCreateDto } from "./dto/ruta-create.dto";
 import { RutaUpdateDto } from "./dto/ruta-update.dto";
 

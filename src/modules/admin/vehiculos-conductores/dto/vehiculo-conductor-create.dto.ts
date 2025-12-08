@@ -1,7 +1,7 @@
 import { IsInt, IsOptional, IsDate, IsNotEmpty } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { VehiculoConductorDTO } from "@models/tables/vehiculo-conductor.model";
+import { VehiculoConductorDTO } from "@model/tables/vehiculo-conductor.model";
 
 export class VehiculoConductorCreateDto
   implements Omit<VehiculoConductorDTO, "id" | "creadoEn" | "actualizadoEn">

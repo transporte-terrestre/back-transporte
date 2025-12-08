@@ -7,7 +7,7 @@ import {
   MaxLength,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { ClienteDTO } from "@models/tables/cliente.model";
+import { ClienteDTO } from "@model/tables/cliente.model";
 
 export class ClienteCreateDto
   implements Omit<ClienteDTO, "id" | "creadoEn" | "actualizadoEn">

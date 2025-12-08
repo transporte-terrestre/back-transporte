@@ -9,7 +9,7 @@ import {
   IsArray,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { VehiculoDTO, estadoVehiculo } from "@models/tables/vehiculo.model";
+import { VehiculoDTO, estadoVehiculo } from "@model/tables/vehiculo.model";
 
 export class VehiculoCreateDto
   implements Omit<VehiculoDTO, "id" | "creadoEn" | "actualizadoEn">

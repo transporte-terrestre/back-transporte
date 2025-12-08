@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { MantenimientoRepository } from "@repositories/mantenimiento.repository";
+import { MantenimientoRepository } from "@repository/mantenimiento.repository";
 import { MantenimientoCreateDto } from "./dto/mantenimiento-create.dto";
 import { MantenimientoUpdateDto } from "./dto/mantenimiento-update.dto";
 

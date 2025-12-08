@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { eq } from "drizzle-orm";
 import { database } from "@db/connection.db";
-import { mantenimientos, MantenimientoDTO } from "@models/tables/mantenimiento.model";
+import { mantenimientos, MantenimientoDTO } from "@model/tables/mantenimiento.model";
 
 @Injectable()
 export class MantenimientoRepository {

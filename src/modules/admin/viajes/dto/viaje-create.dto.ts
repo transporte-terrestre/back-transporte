@@ -1,7 +1,7 @@
 import { IsInt, IsEnum, IsNotEmpty, IsDate, IsOptional } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { ViajeDTO, estadoViaje } from "@models/tables/viaje.model";
+import { ViajeDTO, estadoViaje } from "@model/tables/viaje.model";
 
 export class ViajeCreateDto
   implements Omit<ViajeDTO, "id" | "creadoEn" | "actualizadoEn">

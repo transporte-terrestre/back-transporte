@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { estadoViaje } from "@models/tables/viaje.model";
+import { estadoViaje } from "@model/tables/viaje.model";
 
 export class ViajeResultDto {
   @ApiProperty({ example: 1, description: "Trip ID" })

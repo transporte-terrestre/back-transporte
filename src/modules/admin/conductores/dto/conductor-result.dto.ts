@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   categoriaLicenciaConductor,
   claseLicenciaConductor,
-} from "@models/tables/conductor.model";
+} from "@model/tables/conductor.model";
 
 export class ConductorResultDto {
   @ApiProperty({ example: 1, description: "Driver ID" })

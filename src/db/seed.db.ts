@@ -1,11 +1,11 @@
-import { seedConductores } from "@seeds/conductor.seed";
-import { seedVehiculos } from "@seeds/vehiculo.seed";
-import { seedRutas } from "@seeds/ruta.seed";
-import { seedVehiculosConductores } from "@seeds/vehiculo-conductor.seed";
-import { seedMantenimientos } from "@seeds/mantenimiento.seed";
-import { seedViajes } from "@seeds/viaje.seed";
-import { seedUsuarios } from "@seeds/usuario.seed";
-import { seedClientes } from "@seeds/cliente.seed";
+import { seedConductores } from "@seed/conductor.seed";
+import { seedVehiculos } from "@seed/vehiculo.seed";
+import { seedRutas } from "@seed/ruta.seed";
+import { seedVehiculosConductores } from "@seed/vehiculo-conductor.seed";
+import { seedMantenimientos } from "@seed/mantenimiento.seed";
+import { seedViajes } from "@seed/viaje.seed";
+import { seedUsuarios } from "@seed/usuario.seed";
+import { seedClientes } from "@seed/cliente.seed";
 
 async function seed() {
   try {

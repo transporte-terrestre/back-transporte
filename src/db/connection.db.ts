@@ -2,12 +2,12 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { dbConfig } from "@db/config.db";
 
-import { vehiculos } from "@models/tables/vehiculo.model";
-import { conductores } from "@models/tables/conductor.model";
-import { vehiculosConductores } from "@models/tables/vehiculo-conductor.model";
-import { mantenimientos } from "@models/tables/mantenimiento.model";
-import { rutas } from "@models/tables/ruta.model";
-import { viajes } from "@models/tables/viaje.model";
+import { vehiculos } from "@model/tables/vehiculo.model";
+import { conductores } from "@model/tables/conductor.model";
+import { vehiculosConductores } from "@model/tables/vehiculo-conductor.model";
+import { mantenimientos } from "@model/tables/mantenimiento.model";
+import { rutas } from "@model/tables/ruta.model";
+import { viajes } from "@model/tables/viaje.model";
 
 const pool = new Pool(dbConfig);
 

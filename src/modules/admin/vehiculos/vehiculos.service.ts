@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { VehiculoRepository } from "@repositories/vehiculo.repository";
+import { VehiculoRepository } from "@repository/vehiculo.repository";
 import { VehiculoCreateDto } from "./dto/vehiculo-create.dto";
 import { VehiculoUpdateDto } from "./dto/vehiculo-update.dto";
 

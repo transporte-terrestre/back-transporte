@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
-import { RutaDTO } from "@models/tables/ruta.model";
+import { RutaDTO } from "@model/tables/ruta.model";
 
 export class RutaCreateDto
   implements Omit<RutaDTO, "id" | "creadoEn" | "actualizadoEn">

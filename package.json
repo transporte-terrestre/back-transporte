@@ -20,8 +20,7 @@
     "test:watch": "jest --watchAll",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "vercel-build": "npm run build"
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "engines": {
     "npm": ">=10.0.0",
@@ -33,6 +32,7 @@
     "@nestjs/jwt": "^11.0.1",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/schedule": "^6.1.0",
     "@nestjs/swagger": "^11.2.1",
     "@types/multer": "^2.0.0",
     "bcrypt": "^6.0.0",
@@ -104,13 +104,13 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^@core/(.*)$": "<rootDir>/src/core/$1",
-      "^@models/(.*)$": "<rootDir>/src/models/$1",
-      "^@modules/(.*)$": "<rootDir>/src/modules/$1",
+      "^@model/(.*)$": "<rootDir>/src/models/$1",
+      "^@module/(.*)$": "<rootDir>/src/modules/$1",
       "^@services/(.*)$": "<rootDir>/src/services/$1",
       "^@db/(.*)$": "<rootDir>/src/db/$1",
-      "^@seeds/(.*)$": "<rootDir>/src/seeds/$1",
-      "^@repositories/(.*)$": "<rootDir>/src/repositories/$1",
-      "^@controllers/(.*)$": "<rootDir>/src/controllers/$1",
+      "^@seed/(.*)$": "<rootDir>/src/seeds/$1",
+      "^@repository/(.*)$": "<rootDir>/src/repositories/$1",
+      "^@controller/(.*)$": "<rootDir>/src/controllers/$1",
       "^@utils/(.*)$": "<rootDir>/src/utils/$1",
       "^@config/(.*)$": "<rootDir>/src/config/$1"
     }

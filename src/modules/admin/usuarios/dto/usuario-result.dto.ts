@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { rolesUsuario } from "@models/tables/usuario.model";
+import { rolesUsuario } from "@model/tables/usuario.model";
 
 export class UsuarioResultDto {
   @ApiProperty({ example: 1, description: "User ID" })

@@ -4,7 +4,7 @@ import {
   ConductorDTO,
   categoriaLicenciaConductor,
   claseLicenciaConductor,
-} from "@models/tables/conductor.model";
+} from "@model/tables/conductor.model";
 
 export class ConductorCreateDto
   implements Omit<ConductorDTO, "id" | "creadoEn" | "actualizadoEn">

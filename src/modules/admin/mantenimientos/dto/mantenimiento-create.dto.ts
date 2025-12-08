@@ -9,7 +9,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import {
   MantenimientoDTO,
   tipoMantenimiento,
-} from "@models/tables/mantenimiento.model";
+} from "@model/tables/mantenimiento.model";
 
 export class MantenimientoCreateDto
   implements Omit<MantenimientoDTO, "id" | "creadoEn" | "actualizadoEn">

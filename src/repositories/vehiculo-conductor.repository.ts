@@ -4,7 +4,7 @@ import { database } from "@db/connection.db";
 import {
   vehiculosConductores,
   VehiculoConductorDTO,
-} from "@models/tables/vehiculo-conductor.model";
+} from "@model/tables/vehiculo-conductor.model";
 
 @Injectable()
 export class VehiculoConductorRepository {

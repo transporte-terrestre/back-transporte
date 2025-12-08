@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ViajeRepository } from "@repositories/viaje.repository";
+import { ViajeRepository } from "@repository/viaje.repository";
 import { ViajeCreateDto } from "./dto/viaje-create.dto";
 import { ViajeUpdateDto } from "./dto/viaje-update.dto";
 

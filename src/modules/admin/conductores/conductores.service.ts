@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ConductorRepository } from "@repositories/conductor.repository";
+import { ConductorRepository } from "@repository/conductor.repository";
 import { ConductorCreateDto } from "./dto/conductor-create.dto";
 import { ConductorUpdateDto } from "./dto/conductor-update.dto";
 

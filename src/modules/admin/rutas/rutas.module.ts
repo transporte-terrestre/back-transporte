@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { RutasService } from "./rutas.service";
 import { RutasController } from "./rutas.controller";
-import { RutaRepository } from "@repositories/ruta.repository";
+import { RutaRepository } from "@repository/ruta.repository";
 
 @Module({
   controllers: [RutasController],
