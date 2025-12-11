@@ -1,12 +1,70 @@
 import { Injectable } from "@nestjs/common";
 import { database } from "@db/connection.db";
 import { usuarios, Usuario, UsuarioDTO } from "@model/tables/usuario.model";
-import { eq } from "drizzle-orm";
+import { eq, or, like, and, gte, lte, count } from "drizzle-orm";
+
+interface PaginationFilters {
+  search?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+}
 
 @Injectable()
 export class UsuarioRepository {
   async findAll() {
     return await database.select().from(usuarios);
+  }
+
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+    filters?: PaginationFilters,
+  ) {
+    const offset = (page - 1) * limit;
+    const conditions = [];
+
+    if (filters?.search) {
+      const searchTerm = `%${filters.search}%`;
+      conditions.push(
+        or(
+          like(usuarios.nombre, searchTerm),
+          like(usuarios.apellido, searchTerm),
+          like(usuarios.email, searchTerm),
+        ),
+      );
+    }
+
+    if (filters?.fechaInicio && filters?.fechaFin) {
+      conditions.push(
+        and(
+          gte(usuarios.creadoEn, new Date(filters.fechaInicio)),
+          lte(usuarios.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
+        ),
+      );
+    } else if (filters?.fechaInicio) {
+      conditions.push(gte(usuarios.creadoEn, new Date(filters.fechaInicio)));
+    } else if (filters?.fechaFin) {
+      conditions.push(lte(usuarios.creadoEn, new Date(filters.fechaFin + "T23:59:59")));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [{ total }] = await database
+      .select({ total: count() })
+      .from(usuarios)
+      .where(whereClause);
+
+    const data = await database
+      .select()
+      .from(usuarios)
+      .where(whereClause)
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      data,
+      total: Number(total),
+    };
   }
 
   async findOne(id: number) {

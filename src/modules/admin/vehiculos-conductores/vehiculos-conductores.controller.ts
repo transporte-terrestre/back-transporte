@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -20,6 +21,10 @@ import { VehiculoConductorCreateDto } from "./dto/vehiculo-conductor-create.dto"
 import { VehiculoConductorUpdateDto } from "./dto/vehiculo-conductor-update.dto";
 import { VehiculoConductorResultDto } from "./dto/vehiculo-conductor-result.dto";
 import { AuthGuard } from "@nestjs/passport";
+import {
+  VehiculoConductorPaginationQueryDto,
+  PaginatedVehiculoConductorResultDto,
+} from "./dto/vehiculo-conductor-paginated.dto";
 
 @ApiTags("vehiculos-conductores")
 @ApiBearerAuth()
@@ -31,10 +36,18 @@ export class VehiculosConductoresController {
   ) {}
 
   @Get("find-all")
-  @ApiOperation({ summary: "Get all vehicle assignments" })
-  @ApiResponse({ status: 200, type: [VehiculoConductorResultDto] })
-  findAll() {
-    return this.vehiculosConductoresService.findAll();
+  @ApiOperation({ 
+    summary: "Obtener asignaciones vehículo-conductor con paginación y filtros",
+    description: "Filtra por rango de fechas de asignación.",
+  })
+  @ApiResponse({ status: 200, type: PaginatedVehiculoConductorResultDto })
+  findAll(@Query() query: VehiculoConductorPaginationQueryDto) {
+    return this.vehiculosConductoresService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.fechaInicio,
+      query.fechaFin,
+    );
   }
 
   @Get("find-one/:id")

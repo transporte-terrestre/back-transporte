@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -20,6 +21,10 @@ import { ConductorCreateDto } from "./dto/conductor-create.dto";
 import { ConductorUpdateDto } from "./dto/conductor-update.dto";
 import { ConductorResultDto } from "./dto/conductor-result.dto";
 import { AuthGuard } from "@nestjs/passport";
+import {
+  ConductorPaginationQueryDto,
+  PaginatedConductorResultDto,
+} from "./dto/conductor-paginated.dto";
 
 @ApiTags("conductores")
 @ApiBearerAuth()
@@ -29,10 +34,19 @@ export class ConductoresController {
   constructor(private readonly conductoresService: ConductoresService) {}
 
   @Get("find-all")
-  @ApiOperation({ summary: "Get all drivers" })
-  @ApiResponse({ status: 200, type: [ConductorResultDto] })
-  findAll() {
-    return this.conductoresService.findAll();
+  @ApiOperation({ 
+    summary: "Obtener conductores con paginación, búsqueda y filtros",
+    description: "Busca por nombre, DNI o número de licencia. Filtra por rango de fechas.",
+  })
+  @ApiResponse({ status: 200, type: PaginatedConductorResultDto })
+  findAll(@Query() query: ConductorPaginationQueryDto) {
+    return this.conductoresService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+    );
   }
 
   @Get("find-one/:id")

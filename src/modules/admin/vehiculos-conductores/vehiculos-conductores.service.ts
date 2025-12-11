@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { VehiculoConductorRepository } from "@repository/vehiculo-conductor.repository";
 import { VehiculoConductorCreateDto } from "./dto/vehiculo-conductor-create.dto";
 import { VehiculoConductorUpdateDto } from "./dto/vehiculo-conductor-update.dto";
+import { PaginatedVehiculoConductorResultDto } from "./dto/vehiculo-conductor-paginated.dto";
 
 @Injectable()
 export class VehiculosConductoresService {
@@ -9,8 +10,33 @@ export class VehiculosConductoresService {
     private readonly vehiculoConductorRepository: VehiculoConductorRepository
   ) {}
 
-  findAll() {
-    return this.vehiculoConductorRepository.findAll();
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+    fechaInicio?: string,
+    fechaFin?: string,
+  ): Promise<PaginatedVehiculoConductorResultDto> {
+    const { data, total } = await this.vehiculoConductorRepository.findAllPaginated(
+      page,
+      limit,
+      { fechaInicio, fechaFin },
+    );
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
   }
 
   findOne(id: number) {

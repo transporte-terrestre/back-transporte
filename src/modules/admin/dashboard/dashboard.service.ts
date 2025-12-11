@@ -25,9 +25,16 @@ export class DashboardService {
   ) {}
 
   async getStats() {
-    const allVehiculos = await this.vehiculoRepository.findAll();
-    const allConductores = await this.conductorRepository.findAll();
-    const allClientes = await this.clienteRepository.findAll();
+    // Usar count directo en lugar de findAll para optimizar
+    const [{ total: totalVehiculos }] = await database
+      .select({ total: count() })
+      .from(vehiculos);
+
+    const [{ total: totalConductores }] = await database
+      .select({ total: count() })
+      .from(conductores);
+
+    const { total: totalClientes } = await this.clienteRepository.findAllPaginated(1, 1);
 
     // Calcular viajes de hoy
     const today = new Date();
@@ -47,10 +54,10 @@ export class DashboardService {
 
     // Calcular cambios porcentuales (simulados por ahora)
     return {
-      totalVehiculos: allVehiculos.length,
-      conductoresActivos: allConductores.length,
-      viajesHoy: viajesHoy[0]?.count || 0,
-      totalClientes: allClientes.length,
+      totalVehiculos: Number(totalVehiculos),
+      conductoresActivos: Number(totalConductores),
+      viajesHoy: Number(viajesHoy[0]?.count || 0),
+      totalClientes: totalClientes,
       cambioVehiculos: 12,
       cambioConductores: 5,
       cambioViajes: 18,

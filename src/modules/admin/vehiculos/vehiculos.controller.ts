@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -20,6 +21,10 @@ import { VehiculoCreateDto } from "./dto/vehiculo-create.dto";
 import { VehiculoUpdateDto } from "./dto/vehiculo-update.dto";
 import { VehiculoResultDto } from "./dto/vehiculo-result.dto";
 import { AuthGuard } from "@nestjs/passport";
+import {
+  VehiculoPaginationQueryDto,
+  PaginatedVehiculoResultDto,
+} from "./dto/vehiculo-paginated.dto";
 
 @ApiTags("vehiculos")
 @ApiBearerAuth()
@@ -29,10 +34,19 @@ export class VehiculosController {
   constructor(private readonly vehiculosService: VehiculosService) {}
 
   @Get("find-all")
-  @ApiOperation({ summary: "Get all vehicles" })
-  @ApiResponse({ status: 200, type: [VehiculoResultDto] })
-  findAll() {
-    return this.vehiculosService.findAll();
+  @ApiOperation({ 
+    summary: "Obtener vehículos con paginación, búsqueda y filtros",
+    description: "Busca por placa, marca o modelo. Filtra por rango de fechas.",
+  })
+  @ApiResponse({ status: 200, type: PaginatedVehiculoResultDto })
+  findAll(@Query() query: VehiculoPaginationQueryDto) {
+    return this.vehiculosService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+    );
   }
 
   @Get("find-one/:id")

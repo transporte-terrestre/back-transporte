@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -20,6 +21,10 @@ import { ViajeCreateDto } from "./dto/viaje-create.dto";
 import { ViajeUpdateDto } from "./dto/viaje-update.dto";
 import { ViajeResultDto } from "./dto/viaje-result.dto";
 import { AuthGuard } from "@nestjs/passport";
+import {
+  ViajePaginationQueryDto,
+  PaginatedViajeResultDto,
+} from "./dto/viaje-paginated.dto";
 
 @ApiTags("viajes")
 @ApiBearerAuth()
@@ -29,10 +34,19 @@ export class ViajesController {
   constructor(private readonly viajesService: ViajesService) {}
 
   @Get("find-all")
-  @ApiOperation({ summary: "Get all trips" })
-  @ApiResponse({ status: 200, type: [ViajeResultDto] })
-  findAll() {
-    return this.viajesService.findAll();
+  @ApiOperation({ 
+    summary: "Obtener viajes con paginación, búsqueda y filtros",
+    description: "Busca por estado del viaje. Filtra por rango de fechas de salida.",
+  })
+  @ApiResponse({ status: 200, type: PaginatedViajeResultDto })
+  findAll(@Query() query: ViajePaginationQueryDto) {
+    return this.viajesService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+    );
   }
 
   @Get("find-one/:id")

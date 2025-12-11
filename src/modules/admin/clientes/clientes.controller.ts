@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -20,6 +21,10 @@ import { ClienteCreateDto } from "./dto/cliente-create.dto";
 import { ClienteUpdateDto } from "./dto/cliente-update.dto";
 import { ClienteResultDto } from "./dto/cliente-result.dto";
 import { AuthGuard } from "@nestjs/passport";
+import {
+  ClientePaginationQueryDto,
+  PaginatedClienteResultDto,
+} from "./dto/cliente-paginated.dto";
 
 @ApiTags("clientes")
 @ApiBearerAuth()
@@ -29,10 +34,19 @@ export class ClientesController {
   constructor(private readonly clientesService: ClientesService) {}
 
   @Get("find-all")
-  @ApiOperation({ summary: "Obtener todos los clientes" })
-  @ApiResponse({ status: 200, type: [ClienteResultDto] })
-  findAll() {
-    return this.clientesService.findAll();
+  @ApiOperation({ 
+    summary: "Obtener clientes con paginación, búsqueda y filtros",
+    description: "Busca por nombre, apellido, DNI, teléfono o email. Filtra por rango de fechas.",
+  })
+  @ApiResponse({ status: 200, type: PaginatedClienteResultDto })
+  findAll(@Query() query: ClientePaginationQueryDto) {
+    return this.clientesService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+    );
   }
 
   @Get("find-one/:id")

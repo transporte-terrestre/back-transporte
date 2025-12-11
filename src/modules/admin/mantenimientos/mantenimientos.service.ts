@@ -2,13 +2,40 @@ import { Injectable } from "@nestjs/common";
 import { MantenimientoRepository } from "@repository/mantenimiento.repository";
 import { MantenimientoCreateDto } from "./dto/mantenimiento-create.dto";
 import { MantenimientoUpdateDto } from "./dto/mantenimiento-update.dto";
+import { PaginatedMantenimientoResultDto } from "./dto/mantenimiento-paginated.dto";
 
 @Injectable()
 export class MantenimientosService {
   constructor(private readonly mantenimientoRepository: MantenimientoRepository) {}
 
-  findAll() {
-    return this.mantenimientoRepository.findAll();
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    fechaInicio?: string,
+    fechaFin?: string,
+  ): Promise<PaginatedMantenimientoResultDto> {
+    const { data, total } = await this.mantenimientoRepository.findAllPaginated(
+      page,
+      limit,
+      { search, fechaInicio, fechaFin },
+    );
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
   }
 
   findOne(id: number) {

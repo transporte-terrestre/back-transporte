@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -20,6 +21,10 @@ import { MantenimientoCreateDto } from "./dto/mantenimiento-create.dto";
 import { MantenimientoUpdateDto } from "./dto/mantenimiento-update.dto";
 import { MantenimientoResultDto } from "./dto/mantenimiento-result.dto";
 import { AuthGuard } from "@nestjs/passport";
+import {
+  MantenimientoPaginationQueryDto,
+  PaginatedMantenimientoResultDto,
+} from "./dto/mantenimiento-paginated.dto";
 
 @ApiTags("mantenimientos")
 @ApiBearerAuth()
@@ -29,10 +34,19 @@ export class MantenimientosController {
   constructor(private readonly mantenimientosService: MantenimientosService) {}
 
   @Get("find-all")
-  @ApiOperation({ summary: "Get all maintenance records" })
-  @ApiResponse({ status: 200, type: [MantenimientoResultDto] })
-  findAll() {
-    return this.mantenimientosService.findAll();
+  @ApiOperation({ 
+    summary: "Obtener mantenimientos con paginación, búsqueda y filtros",
+    description: "Busca por tipo, proveedor o descripción. Filtra por rango de fechas.",
+  })
+  @ApiResponse({ status: 200, type: PaginatedMantenimientoResultDto })
+  findAll(@Query() query: MantenimientoPaginationQueryDto) {
+    return this.mantenimientosService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+    );
   }
 
   @Get("find-one/:id")

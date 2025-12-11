@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -20,6 +21,10 @@ import { RutaCreateDto } from "./dto/ruta-create.dto";
 import { RutaUpdateDto } from "./dto/ruta-update.dto";
 import { RutaResultDto } from "./dto/ruta-result.dto";
 import { AuthGuard } from "@nestjs/passport";
+import {
+  RutaPaginationQueryDto,
+  PaginatedRutaResultDto,
+} from "./dto/ruta-paginated.dto";
 
 @ApiTags("rutas")
 @ApiBearerAuth()
@@ -29,10 +34,19 @@ export class RutasController {
   constructor(private readonly rutasService: RutasService) {}
 
   @Get("find-all")
-  @ApiOperation({ summary: "Get all routes" })
-  @ApiResponse({ status: 200, type: [RutaResultDto] })
-  findAll() {
-    return this.rutasService.findAll();
+  @ApiOperation({ 
+    summary: "Obtener rutas con paginación, búsqueda y filtros",
+    description: "Busca por origen o destino. Filtra por rango de fechas.",
+  })
+  @ApiResponse({ status: 200, type: PaginatedRutaResultDto })
+  findAll(@Query() query: RutaPaginationQueryDto) {
+    return this.rutasService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+    );
   }
 
   @Get("find-one/:id")

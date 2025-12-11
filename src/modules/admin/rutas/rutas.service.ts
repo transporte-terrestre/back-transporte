@@ -2,13 +2,40 @@ import { Injectable } from "@nestjs/common";
 import { RutaRepository } from "@repository/ruta.repository";
 import { RutaCreateDto } from "./dto/ruta-create.dto";
 import { RutaUpdateDto } from "./dto/ruta-update.dto";
+import { PaginatedRutaResultDto } from "./dto/ruta-paginated.dto";
 
 @Injectable()
 export class RutasService {
   constructor(private readonly rutaRepository: RutaRepository) {}
 
-  findAll() {
-    return this.rutaRepository.findAll();
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    fechaInicio?: string,
+    fechaFin?: string,
+  ): Promise<PaginatedRutaResultDto> {
+    const { data, total } = await this.rutaRepository.findAllPaginated(
+      page,
+      limit,
+      { search, fechaInicio, fechaFin },
+    );
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
   }
 
   findOne(id: number) {

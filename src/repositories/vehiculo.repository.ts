@@ -1,12 +1,70 @@
 import { Injectable } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { eq, or, like, and, gte, lte, count } from "drizzle-orm";
 import { database } from "@db/connection.db";
 import { vehiculos, VehiculoDTO } from "@model/tables/vehiculo.model";
+
+interface PaginationFilters {
+  search?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+}
 
 @Injectable()
 export class VehiculoRepository {
   async findAll() {
     return await database.select().from(vehiculos);
+  }
+
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+    filters?: PaginationFilters,
+  ) {
+    const offset = (page - 1) * limit;
+    const conditions = [];
+
+    if (filters?.search) {
+      const searchTerm = `%${filters.search}%`;
+      conditions.push(
+        or(
+          like(vehiculos.placa, searchTerm),
+          like(vehiculos.marca, searchTerm),
+          like(vehiculos.modelo, searchTerm),
+        ),
+      );
+    }
+
+    if (filters?.fechaInicio && filters?.fechaFin) {
+      conditions.push(
+        and(
+          gte(vehiculos.creadoEn, new Date(filters.fechaInicio)),
+          lte(vehiculos.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
+        ),
+      );
+    } else if (filters?.fechaInicio) {
+      conditions.push(gte(vehiculos.creadoEn, new Date(filters.fechaInicio)));
+    } else if (filters?.fechaFin) {
+      conditions.push(lte(vehiculos.creadoEn, new Date(filters.fechaFin + "T23:59:59")));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [{ total }] = await database
+      .select({ total: count() })
+      .from(vehiculos)
+      .where(whereClause);
+
+    const data = await database
+      .select()
+      .from(vehiculos)
+      .where(whereClause)
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      data,
+      total: Number(total),
+    };
   }
 
   async findOne(id: number) {

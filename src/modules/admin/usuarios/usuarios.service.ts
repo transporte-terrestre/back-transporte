@@ -2,14 +2,41 @@ import { Injectable } from "@nestjs/common";
 import { UsuarioCreateDto } from "./dto/usuario-create.dto";
 import { UsuarioUpdateDto } from "./dto/usuario-update.dto";
 import { UsuarioRepository } from "@repository/usuario.repository";
+import { PaginatedUsuarioResultDto } from "./dto/usuario-paginated.dto";
 import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class UsuariosService {
   constructor(private readonly usuarioRepository: UsuarioRepository) {}
 
-  async findAll() {
-    return await this.usuarioRepository.findAll();
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    fechaInicio?: string,
+    fechaFin?: string,
+  ): Promise<PaginatedUsuarioResultDto> {
+    const { data, total } = await this.usuarioRepository.findAllPaginated(
+      page,
+      limit,
+      { search, fechaInicio, fechaFin },
+    );
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
   }
 
   async findOne(id: number) {

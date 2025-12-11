@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -20,6 +21,10 @@ import { UsuarioCreateDto } from "./dto/usuario-create.dto";
 import { UsuarioUpdateDto } from "./dto/usuario-update.dto";
 import { UsuarioResultDto } from "./dto/usuario-result.dto";
 import { AuthGuard } from "@nestjs/passport";
+import {
+  UsuarioPaginationQueryDto,
+  PaginatedUsuarioResultDto,
+} from "./dto/usuario-paginated.dto";
 
 @ApiTags("usuarios")
 @ApiBearerAuth()
@@ -29,10 +34,19 @@ export class UsuariosController {
   constructor(private readonly usuariosService: UsuariosService) {}
 
   @Get("find-all")
-  @ApiOperation({ summary: "Get all users" })
-  @ApiResponse({ status: 200, type: [UsuarioResultDto] })
-  findAll() {
-    return this.usuariosService.findAll();
+  @ApiOperation({ 
+    summary: "Obtener usuarios con paginación, búsqueda y filtros",
+    description: "Busca por nombre, apellido o email. Filtra por rango de fechas.",
+  })
+  @ApiResponse({ status: 200, type: PaginatedUsuarioResultDto })
+  findAll(@Query() query: UsuarioPaginationQueryDto) {
+    return this.usuariosService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+    );
   }
 
   @Get("find-one/:id")
