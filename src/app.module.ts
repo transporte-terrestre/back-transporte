@@ -3,7 +3,6 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { VehiculosModule } from "./modules/admin/vehiculos/vehiculos.module";
 import { ConductoresModule } from "./modules/admin/conductores/conductores.module";
-import { VehiculosConductoresModule } from "./modules/admin/vehiculos-conductores/vehiculos-conductores.module";
 import { MantenimientosModule } from "./modules/admin/mantenimientos/mantenimientos.module";
 import { RutasModule } from "./modules/admin/rutas/rutas.module";
 import { ViajesModule } from "./modules/admin/viajes/viajes.module";
@@ -20,14 +19,13 @@ import { CronjobModule } from "./modules/cronjob/cronjob.module";
     DashboardModule,
     VehiculosModule,
     ConductoresModule,
-    VehiculosConductoresModule,
     MantenimientosModule,
     RutasModule,
     ViajesModule,
     UsuariosModule,
     ClientesModule,
     StorageModule,
-    CronjobModule,
+    // CronjobModule,
   ],
   controllers: [AppController],
   providers: [AppService],

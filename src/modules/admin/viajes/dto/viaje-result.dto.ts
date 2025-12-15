@@ -1,18 +1,51 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { estadoViaje } from "@model/tables/viaje.model";
+import { viajesEstado, modalidadServicio } from "@model/tables/viaje.model";
+import type {
+  ViajeModalidadServicio,
+  ViajeEstado,
+} from "@model/tables/viaje.model";
 
 export class ViajeResultDto {
   @ApiProperty({ example: 1, description: "Trip ID" })
   id: number;
 
-  @ApiProperty({ example: 1, description: "Route ID" })
-  rutaId: number;
+  @ApiPropertyOptional({ example: 1, description: "ID de la ruta programada" })
+  rutaId: number | null;
 
-  @ApiProperty({ example: 1, description: "Vehicle ID" })
-  vehiculoId: number;
+  @ApiPropertyOptional({
+    example: "Lima - Arequipa (Ocasional)",
+    description: "Descripción de ruta ocasional",
+  })
+  rutaOcasional: string | null;
 
-  @ApiProperty({ example: 1, description: "Driver ID" })
-  conductorId: number;
+  @ApiProperty({
+    example: false,
+    description: "Indica si es un viaje ocasional",
+  })
+  isOcasional: boolean;
+
+  @ApiProperty({ example: 1, description: "ID del cliente" })
+  clienteId: number;
+
+  @ApiPropertyOptional({
+    example: ["Juan Pérez", "María García"],
+    description: "Lista de tripulantes",
+  })
+  tripulantes: string[];
+
+  @ApiProperty({
+    enum: modalidadServicio.enumValues,
+    example: "regular",
+    description: "Modalidad de servicio",
+  })
+  modalidadServicio: ViajeModalidadServicio;
+
+  @ApiProperty({
+    enum: viajesEstado.enumValues,
+    example: viajesEstado.enumValues[0],
+    description: "Trip status",
+  })
+  estado: ViajeEstado;
 
   @ApiProperty({
     example: "2025-01-01T10:00:00Z",
@@ -25,13 +58,6 @@ export class ViajeResultDto {
     description: "Arrival date",
   })
   fechaLlegada: Date | null;
-
-  @ApiProperty({
-    enum: estadoViaje.enumValues,
-    example: estadoViaje.enumValues[0],
-    description: "Trip status",
-  })
-  estado: (typeof estadoViaje.enumValues)[number];
 
   @ApiProperty({
     example: "2023-01-01T00:00:00.000Z",

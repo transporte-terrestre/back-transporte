@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe, BadRequestException } from '@nestjs/common';
 
 export function setupTransform(app: INestApplication) {
   app.useGlobalPipes(
@@ -8,6 +8,16 @@ export function setupTransform(app: INestApplication) {
         enableImplicitConversion: true,
       },
       whitelist: true,
+      forbidNonWhitelisted: true,
+      exceptionFactory: (errors) => {
+        const messages = errors.flatMap((error) => {
+          if (error.constraints) {
+            return Object.values(error.constraints);
+          }
+          return [];
+        });
+        return new BadRequestException(messages);
+      },
     }),
   );
 }

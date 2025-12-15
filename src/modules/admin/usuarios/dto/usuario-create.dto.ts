@@ -1,25 +1,27 @@
 import {
   IsEmail,
-  IsEnum,
+  IsIn,
   IsNotEmpty,
   IsString,
   MinLength,
+  IsArray,
 } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
-import { UsuarioDTO, rolesUsuario } from "@model/tables/usuario.model";
+import { UsuarioDTO, usuariosRol } from "@model/tables/usuario.model";
+import type { UsuarioRol } from "@model/tables/usuario.model";
 
 export class UsuarioCreateDto
-  implements Omit<UsuarioDTO, "id" | "creadoEn" | "actualizadoEn">
+  implements Omit<UsuarioDTO, "id" | "nombreCompleto" | "creadoEn" | "actualizadoEn">
 {
-  @ApiProperty({ example: "John", description: "User first name" })
+  @ApiProperty({ example: "John Michael", description: "User first names" })
   @IsString()
   @IsNotEmpty()
-  nombre: string;
+  nombres: string;
 
-  @ApiProperty({ example: "Doe", description: "User last name" })
+  @ApiProperty({ example: "Doe Smith", description: "User last names" })
   @IsString()
   @IsNotEmpty()
-  apellido: string;
+  apellidos: string;
 
   @ApiProperty({ example: "john.doe@example.com", description: "User email" })
   @IsEmail()
@@ -33,13 +35,13 @@ export class UsuarioCreateDto
   contrasenia: string;
 
   @ApiProperty({
-    example: [rolesUsuario.enumValues[0]],
-    enum: rolesUsuario.enumValues,
+    example: [usuariosRol.enumValues[0]],
+    enum: usuariosRol.enumValues,
     description: "User roles",
     isArray: true,
-    default: [rolesUsuario.enumValues[0]],
   })
-  @IsEnum(rolesUsuario.enumValues, { each: true })
+  @IsArray()
   @IsNotEmpty()
-  roles: (typeof rolesUsuario.enumValues)[number][];
+  @IsIn(usuariosRol.enumValues, { each: true })
+  roles: UsuarioRol[];
 }

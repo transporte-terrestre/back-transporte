@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { eq, or, like, and, gte, lte, count } from "drizzle-orm";
+import { eq, or, like, and, gte, lte, count, sql } from "drizzle-orm";
 import { database } from "@db/connection.db";
 import { vehiculos, VehiculoDTO } from "@model/tables/vehiculo.model";
 
@@ -30,16 +30,17 @@ export class VehiculoRepository {
           like(vehiculos.placa, searchTerm),
           like(vehiculos.marca, searchTerm),
           like(vehiculos.modelo, searchTerm),
+          like(sql`${vehiculos.estado}::text`, searchTerm),
         ),
       );
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(
-        and(
-          gte(vehiculos.creadoEn, new Date(filters.fechaInicio)),
-          lte(vehiculos.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
-        ),
+        gte(vehiculos.creadoEn, new Date(filters.fechaInicio)),
+      );
+      conditions.push(
+        lte(vehiculos.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(vehiculos.creadoEn, new Date(filters.fechaInicio)));

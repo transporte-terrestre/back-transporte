@@ -27,8 +27,9 @@ export class UsuarioRepository {
       const searchTerm = `%${filters.search}%`;
       conditions.push(
         or(
-          like(usuarios.nombre, searchTerm),
-          like(usuarios.apellido, searchTerm),
+          like(usuarios.nombreCompleto, searchTerm),
+          like(usuarios.nombres, searchTerm),
+          like(usuarios.apellidos, searchTerm),
           like(usuarios.email, searchTerm),
         ),
       );
@@ -36,10 +37,10 @@ export class UsuarioRepository {
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(
-        and(
-          gte(usuarios.creadoEn, new Date(filters.fechaInicio)),
-          lte(usuarios.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
-        ),
+        gte(usuarios.creadoEn, new Date(filters.fechaInicio)),
+      );
+      conditions.push(
+        lte(usuarios.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(usuarios.creadoEn, new Date(filters.fechaInicio)));
@@ -55,7 +56,17 @@ export class UsuarioRepository {
       .where(whereClause);
 
     const data = await database
-      .select()
+      .select({
+        id: usuarios.id,
+        nombres: usuarios.nombres,
+        apellidos: usuarios.apellidos,
+        nombreCompleto: usuarios.nombreCompleto,
+        email: usuarios.email,
+        roles: usuarios.roles,
+        fotocheck: usuarios.fotocheck,
+        creadoEn: usuarios.creadoEn,
+        actualizadoEn: usuarios.actualizadoEn,
+      })
       .from(usuarios)
       .where(whereClause)
       .limit(limit)
@@ -68,7 +79,20 @@ export class UsuarioRepository {
   }
 
   async findOne(id: number) {
-    const result = await database.select().from(usuarios).where(eq(usuarios.id, id));
+    const result = await database
+      .select({
+        id: usuarios.id,
+        nombres: usuarios.nombres,
+        apellidos: usuarios.apellidos,
+        nombreCompleto: usuarios.nombreCompleto,
+        email: usuarios.email,
+        roles: usuarios.roles,
+        fotocheck: usuarios.fotocheck,
+        creadoEn: usuarios.creadoEn,
+        actualizadoEn: usuarios.actualizadoEn,
+      })
+      .from(usuarios)
+      .where(eq(usuarios.id, id));
     return result[0];
   }
 
@@ -81,7 +105,20 @@ export class UsuarioRepository {
   }
 
   async create(data: UsuarioDTO) {
-    const result = await database.insert(usuarios).values(data).returning();
+    const result = await database
+      .insert(usuarios)
+      .values(data)
+      .returning({
+        id: usuarios.id,
+        nombres: usuarios.nombres,
+        apellidos: usuarios.apellidos,
+        nombreCompleto: usuarios.nombreCompleto,
+        email: usuarios.email,
+        roles: usuarios.roles,
+        fotocheck: usuarios.fotocheck,
+        creadoEn: usuarios.creadoEn,
+        actualizadoEn: usuarios.actualizadoEn,
+      });
     return result[0];
   }
 
@@ -90,7 +127,17 @@ export class UsuarioRepository {
       .update(usuarios)
       .set({ ...data, actualizadoEn: new Date() })
       .where(eq(usuarios.id, id))
-      .returning();
+      .returning({
+        id: usuarios.id,
+        nombres: usuarios.nombres,
+        apellidos: usuarios.apellidos,
+        nombreCompleto: usuarios.nombreCompleto,
+        email: usuarios.email,
+        roles: usuarios.roles,
+        fotocheck: usuarios.fotocheck,
+        creadoEn: usuarios.creadoEn,
+        actualizadoEn: usuarios.actualizadoEn,
+      });
     return result[0];
   }
 
@@ -98,7 +145,17 @@ export class UsuarioRepository {
     const result = await database
       .delete(usuarios)
       .where(eq(usuarios.id, id))
-      .returning();
+      .returning({
+        id: usuarios.id,
+        nombres: usuarios.nombres,
+        apellidos: usuarios.apellidos,
+        nombreCompleto: usuarios.nombreCompleto,
+        email: usuarios.email,
+        roles: usuarios.roles,
+        fotocheck: usuarios.fotocheck,
+        creadoEn: usuarios.creadoEn,
+        actualizadoEn: usuarios.actualizadoEn,
+      });
     return result[0];
   }
 }

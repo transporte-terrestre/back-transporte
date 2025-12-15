@@ -3,13 +3,14 @@ import {
   IsString,
   IsDateString,
   IsNotEmpty,
-  IsEnum,
+  IsIn,
 } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 import {
   MantenimientoDTO,
-  tipoMantenimiento,
+  mantenimientosTipo,
 } from "@model/tables/mantenimiento.model";
+import type { MantenimientoTipo } from "@model/tables/mantenimiento.model";
 
 export class MantenimientoCreateDto
   implements Omit<MantenimientoDTO, "id" | "creadoEn" | "actualizadoEn">
@@ -20,12 +21,12 @@ export class MantenimientoCreateDto
   vehiculoId: number;
 
   @ApiProperty({
-    enum: tipoMantenimiento.enumValues,
-    default: tipoMantenimiento.enumValues[0],
+    enum: mantenimientosTipo.enumValues,
+    default: mantenimientosTipo.enumValues[0],
     description: "Maintenance type",
   })
-  @IsEnum(tipoMantenimiento.enumValues)
-  tipo: (typeof tipoMantenimiento.enumValues)[number];
+  @IsIn(mantenimientosTipo.enumValues, { each: true })
+  tipo: MantenimientoTipo;
 
   @ApiProperty({ example: "150.50", description: "Cost" })
   @IsString()

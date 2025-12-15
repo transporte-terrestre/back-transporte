@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { UsuarioResultDto } from "./usuario-result.dto";
+import { UsuarioListDto } from "./usuario-list.dto";
 import { Type } from "class-transformer";
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from "class-validator";
 
@@ -60,9 +60,9 @@ export class UsuarioPaginationQueryDto {
 export class PaginatedUsuarioResultDto {
   @ApiProperty({
     description: "Lista de usuarios en la página actual",
-    type: [UsuarioResultDto],
+    type: [UsuarioListDto],
   })
-  data: UsuarioResultDto[];
+  data: UsuarioListDto[];
 
   @ApiProperty({
     description: "Metadatos de la paginación",

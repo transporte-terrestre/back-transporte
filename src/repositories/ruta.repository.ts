@@ -35,10 +35,10 @@ export class RutaRepository {
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(
-        and(
-          gte(rutas.creadoEn, new Date(filters.fechaInicio)),
-          lte(rutas.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
-        ),
+        gte(rutas.creadoEn, new Date(filters.fechaInicio)),
+      );
+      conditions.push(
+        lte(rutas.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(rutas.creadoEn, new Date(filters.fechaInicio)));

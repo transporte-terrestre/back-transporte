@@ -5,11 +5,12 @@ import {
   Min,
   IsDateString,
   IsOptional,
-  IsEnum,
+  IsIn,
   IsArray,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { VehiculoDTO, estadoVehiculo } from "@model/tables/vehiculo.model";
+import { VehiculoDTO, vehiculosEstado } from "@model/tables/vehiculo.model";
+import type { VehiculoEstado } from "@model/tables/vehiculo.model";
 
 export class VehiculoCreateDto
   implements Omit<VehiculoDTO, "id" | "creadoEn" | "actualizadoEn">
@@ -44,13 +45,13 @@ export class VehiculoCreateDto
   fechaVencimientoSoat: string;
 
   @ApiPropertyOptional({
-    enum: estadoVehiculo.enumValues,
+    enum: vehiculosEstado.enumValues,
     description: "Vehicle status",
-    default: estadoVehiculo.enumValues[0],
+    default: vehiculosEstado.enumValues[0],
   })
   @IsOptional()
-  @IsEnum(estadoVehiculo.enumValues)
-  estado: (typeof estadoVehiculo.enumValues)[number];
+  @IsIn(vehiculosEstado.enumValues, { each: true })
+  estado: VehiculoEstado;
 
   @ApiPropertyOptional({ 
     example: ["https://res.cloudinary.com/xxx/image.jpg"], 

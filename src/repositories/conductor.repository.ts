@@ -27,7 +27,9 @@ export class ConductorRepository {
       const searchTerm = `%${filters.search}%`;
       conditions.push(
         or(
-          like(conductores.nombre, searchTerm),
+          like(conductores.nombreCompleto, searchTerm),
+          like(conductores.nombres, searchTerm),
+          like(conductores.apellidos, searchTerm),
           like(conductores.dni, searchTerm),
           like(conductores.numeroLicencia, searchTerm),
         ),
@@ -36,10 +38,10 @@ export class ConductorRepository {
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(
-        and(
-          gte(conductores.creadoEn, new Date(filters.fechaInicio)),
-          lte(conductores.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
-        ),
+        gte(conductores.creadoEn, new Date(filters.fechaInicio)),
+      );
+      conditions.push(
+        lte(conductores.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(conductores.creadoEn, new Date(filters.fechaInicio)));

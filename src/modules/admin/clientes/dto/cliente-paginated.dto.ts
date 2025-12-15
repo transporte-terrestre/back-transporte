@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { ClienteResultDto } from "./cliente-result.dto";
+import { ClienteListDto } from "./cliente-list.dto";
 import { Type } from "class-transformer";
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from "class-validator";
 
@@ -60,9 +60,9 @@ export class ClientePaginationQueryDto {
 export class PaginatedClienteResultDto {
   @ApiProperty({
     description: "Lista de clientes en la página actual",
-    type: [ClienteResultDto],
+    type: [ClienteListDto],
   })
-  data: ClienteResultDto[];
+  data: ClienteListDto[];
 
   @ApiProperty({
     description: "Metadatos de la paginación",

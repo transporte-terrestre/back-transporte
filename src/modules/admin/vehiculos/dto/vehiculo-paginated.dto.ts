@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { VehiculoResultDto } from "./vehiculo-result.dto";
+import { VehiculoListDto } from "./vehiculo-list.dto";
 import { Type } from "class-transformer";
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from "class-validator";
 
@@ -60,9 +60,9 @@ export class VehiculoPaginationQueryDto {
 export class PaginatedVehiculoResultDto {
   @ApiProperty({
     description: "Lista de vehículos en la página actual",
-    type: [VehiculoResultDto],
+    type: [VehiculoListDto],
   })
-  data: VehiculoResultDto[];
+  data: VehiculoListDto[];
 
   @ApiProperty({
     description: "Metadatos de la paginación",

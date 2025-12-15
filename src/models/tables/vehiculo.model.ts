@@ -1,15 +1,6 @@
-import { pgEnum } from "drizzle-orm/pg-core";
-import {
-  pgTable,
-  serial,
-  varchar,
-  integer,
-  date,
-  timestamp,
-  text,
-} from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, serial, varchar, integer, date, timestamp, text } from "drizzle-orm/pg-core";
 
-export const estadoVehiculo = pgEnum("estado_vehiculo", [
+export const vehiculosEstado = pgEnum("vehiculos_estado", [
   "activo",
   "taller",
   "retirado",
@@ -23,12 +14,13 @@ export const vehiculos = pgTable("vehiculos", {
   anio: integer("anio").notNull(),
   kilometraje: integer("kilometraje").default(0).notNull(),
   fechaVencimientoSoat: date("fecha_vencimiento_soat").notNull(),
-  estado: estadoVehiculo("estado").default("activo").notNull(),
+  estado: vehiculosEstado("estado").default("activo").notNull(),
   imagenes: text("imagenes").array().default([]),
   documentos: text("documentos").array().default([]),
   creadoEn: timestamp("creado_en").defaultNow().notNull(),
   actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
 });
 
+export type VehiculoEstado = typeof vehiculosEstado.enumValues[number];
 export type Vehiculo = typeof vehiculos.$inferSelect;
 export type VehiculoDTO = typeof vehiculos.$inferInsert;

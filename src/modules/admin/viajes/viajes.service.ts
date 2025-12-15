@@ -1,12 +1,23 @@
 import { Injectable } from "@nestjs/common";
 import { ViajeRepository } from "@repository/viaje.repository";
+import { ViajeConductorRepository } from "@repository/viaje-conductor.repository";
+import { ViajeVehiculoRepository } from "@repository/viaje-vehiculo.repository";
+import { ViajeComentarioRepository } from "@repository/viaje-comentario.repository";
 import { ViajeCreateDto } from "./dto/viaje-create.dto";
 import { ViajeUpdateDto } from "./dto/viaje-update.dto";
 import { PaginatedViajeResultDto } from "./dto/viaje-paginated.dto";
+import { ViajeConductorDTO } from "@model/tables/viaje-conductor.model";
+import { ViajeVehiculoDTO } from "@model/tables/viaje-vehiculo.model";
+import { ViajeComentarioDTO } from "@model/tables/viaje-comentario.model";
 
 @Injectable()
 export class ViajesService {
-  constructor(private readonly viajeRepository: ViajeRepository) {}
+  constructor(
+    private readonly viajeRepository: ViajeRepository,
+    private readonly viajeConductorRepository: ViajeConductorRepository,
+    private readonly viajeVehiculoRepository: ViajeVehiculoRepository,
+    private readonly viajeComentarioRepository: ViajeComentarioRepository
+  ) {}
 
   async findAllPaginated(
     page: number = 1,
@@ -14,11 +25,13 @@ export class ViajesService {
     search?: string,
     fechaInicio?: string,
     fechaFin?: string,
+    modalidadServicio?: string,
+    isOcasional?: boolean
   ): Promise<PaginatedViajeResultDto> {
     const { data, total } = await this.viajeRepository.findAllPaginated(
       page,
       limit,
-      { search, fechaInicio, fechaFin },
+      { search, fechaInicio, fechaFin, modalidadServicio, isOcasional }
     );
 
     const totalPages = Math.ceil(total / limit);
@@ -52,5 +65,84 @@ export class ViajesService {
 
   delete(id: number) {
     return this.viajeRepository.delete(id);
+  }
+
+  // ========== CONDUCTORES ==========
+  async findConductores(viajeId: number) {
+    return await this.viajeConductorRepository.findByViajeId(viajeId);
+  }
+
+  async findConductor(viajeId: number, conductorId: number) {
+    return await this.viajeConductorRepository.findOne(viajeId, conductorId);
+  }
+
+  async assignConductor(data: Partial<ViajeConductorDTO>) {
+    return await this.viajeConductorRepository.create(
+      data as ViajeConductorDTO
+    );
+  }
+
+  async updateConductor(
+    viajeId: number,
+    conductorId: number,
+    data: Partial<ViajeConductorDTO>
+  ) {
+    return await this.viajeConductorRepository.update(
+      viajeId,
+      conductorId,
+      data
+    );
+  }
+
+  async removeConductor(viajeId: number, conductorId: number) {
+    return await this.viajeConductorRepository.delete(viajeId, conductorId);
+  }
+
+  // ========== VEHÍCULOS ==========
+  async findVehiculos(viajeId: number) {
+    return await this.viajeVehiculoRepository.findByViajeId(viajeId);
+  }
+
+  async findVehiculo(viajeId: number, vehiculoId: number) {
+    return await this.viajeVehiculoRepository.findOne(viajeId, vehiculoId);
+  }
+
+  async assignVehiculo(data: Partial<ViajeVehiculoDTO>) {
+    return await this.viajeVehiculoRepository.create(data as ViajeVehiculoDTO);
+  }
+
+  async updateVehiculo(
+    viajeId: number,
+    vehiculoId: number,
+    data: Partial<ViajeVehiculoDTO>
+  ) {
+    return await this.viajeVehiculoRepository.update(viajeId, vehiculoId, data);
+  }
+
+  async removeVehiculo(viajeId: number, vehiculoId: number) {
+    return await this.viajeVehiculoRepository.delete(viajeId, vehiculoId);
+  }
+
+  // ========== COMENTARIOS ==========
+  async findComentarios(viajeId: number) {
+    return await this.viajeComentarioRepository.findByViajeId(viajeId);
+  }
+
+  async findComentario(id: number) {
+    return await this.viajeComentarioRepository.findOne(id);
+  }
+
+  async createComentario(data: Partial<ViajeComentarioDTO>) {
+    return await this.viajeComentarioRepository.create(
+      data as ViajeComentarioDTO
+    );
+  }
+
+  async updateComentario(id: number, data: Partial<ViajeComentarioDTO>) {
+    return await this.viajeComentarioRepository.update(id, data);
+  }
+
+  async deleteComentario(id: number) {
+    return await this.viajeComentarioRepository.delete(id);
   }
 }

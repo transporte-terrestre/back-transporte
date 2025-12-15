@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { eq, like, and, gte, lte, count } from "drizzle-orm";
+import { eq, like, and, gte, lte, count, sql, or } from "drizzle-orm";
 import { database } from "@db/connection.db";
 import { viajes, ViajeDTO } from "@model/tables/viaje.model";
 
@@ -7,6 +7,8 @@ interface PaginationFilters {
   search?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  modalidadServicio?: string;
+  isOcasional?: boolean;
 }
 
 @Injectable()
@@ -18,27 +20,46 @@ export class ViajeRepository {
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
-    filters?: PaginationFilters,
+    filters?: PaginationFilters
   ) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
     if (filters?.search) {
       const searchTerm = `%${filters.search}%`;
-      conditions.push(like(viajes.estado, searchTerm));
+      conditions.push(
+        or(
+          like(sql`${viajes.estado}::text`, searchTerm),
+          like(viajes.rutaOcasional, searchTerm),
+          like(sql`${viajes.modalidadServicio}::text`, searchTerm)
+        )
+      );
+    }
+
+    if (filters?.modalidadServicio) {
+      conditions.push(
+        eq(
+          sql`${viajes.modalidadServicio}::text`,
+          filters.modalidadServicio
+        )
+      );
+    }
+
+    if (filters?.isOcasional !== undefined) {
+      conditions.push(eq(viajes.isOcasional, filters.isOcasional));
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
+      conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
       conditions.push(
-        and(
-          gte(viajes.fechaSalida, new Date(filters.fechaInicio)),
-          lte(viajes.fechaSalida, new Date(filters.fechaFin + "T23:59:59")),
-        ),
+        lte(viajes.fechaSalida, new Date(filters.fechaFin + "T23:59:59"))
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + "T23:59:59")));
+      conditions.push(
+        lte(viajes.fechaSalida, new Date(filters.fechaFin + "T23:59:59"))
+      );
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -62,7 +83,10 @@ export class ViajeRepository {
   }
 
   async findOne(id: number) {
-    const result = await database.select().from(viajes).where(eq(viajes.id, id));
+    const result = await database
+      .select()
+      .from(viajes)
+      .where(eq(viajes.id, id));
     return result[0];
   }
 

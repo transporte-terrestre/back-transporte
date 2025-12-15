@@ -3,30 +3,50 @@ import {
   serial,
   integer,
   timestamp,
-  pgEnum
+  pgEnum,
+  varchar,
+  boolean,
+  text,
 } from "drizzle-orm/pg-core";
 import { rutas } from "./ruta.model";
-import { vehiculos } from "./vehiculo.model";
-import { conductores } from "./conductor.model";
+import { clientes } from "./cliente.model";
 
-export const estadoViaje = pgEnum("estado_viaje", [
+export const viajesEstado = pgEnum("viajes_estado", [
   "programado",
   "en_progreso",
   "completado",
   "cancelado",
 ]);
 
+export const modalidadServicio = pgEnum("viajes_modalidad_servicio", [
+  "regular",
+  "expreso",
+  "ejecutivo",
+  "especial",
+  "turismo",
+]);
+
 export const viajes = pgTable("viajes", {
   id: serial("id").primaryKey(),
-  rutaId: integer("ruta_id").references(() => rutas.id).notNull(),
-  vehiculoId: integer("vehiculo_id").references(() => vehiculos.id).notNull(),
-  conductorId: integer("conductor_id").references(() => conductores.id).notNull(),
+  rutaId: integer("ruta_id").references(() => rutas.id),
+  rutaOcasional: varchar("ruta_ocasional", { length: 500 }),
+  isOcasional: boolean("is_ocasional").default(false).notNull(),
+  clienteId: integer("cliente_id")
+    .references(() => clientes.id)
+    .notNull(),
+  tripulantes: text("tripulantes").array(),
+  modalidadServicio: modalidadServicio("modalidad_servicio")
+    .default("regular")
+    .notNull(),
+  estado: viajesEstado("estado").default("programado").notNull(),
   fechaSalida: timestamp("fecha_salida").notNull(),
   fechaLlegada: timestamp("fecha_llegada"),
-  estado: estadoViaje("estado").default("programado").notNull(),
   creadoEn: timestamp("creado_en").defaultNow().notNull(),
   actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
 });
 
+export type ViajeEstado = (typeof viajesEstado.enumValues)[number];
+export type ViajeModalidadServicio =
+  (typeof modalidadServicio.enumValues)[number];
 export type Viaje = typeof viajes.$inferSelect;
 export type ViajeDTO = typeof viajes.$inferInsert;

@@ -25,6 +25,9 @@ import {
   ConductorPaginationQueryDto,
   PaginatedConductorResultDto,
 } from "./dto/conductor-paginated.dto";
+import { ConductorDocumentoCreateDto } from "./dto/conductor-documento-create.dto";
+import { ConductorDocumentoUpdateDto } from "./dto/conductor-documento-update.dto";
+import { ConductorDocumentoResultDto } from "./dto/conductor-documento-result.dto";
 
 @ApiTags("conductores")
 @ApiBearerAuth()
@@ -78,5 +81,37 @@ export class ConductoresController {
   @ApiResponse({ status: 200, type: ConductorResultDto })
   remove(@Param("id") id: string) {
     return this.conductoresService.delete(+id);
+  }
+
+  // ========== DOCUMENTOS ==========
+  @Get("documento/:id")
+  @ApiOperation({ summary: "Obtener un documento por ID" })
+  @ApiParam({ name: "id", description: "ID del documento", type: Number })
+  @ApiResponse({ status: 200, type: ConductorDocumentoResultDto })
+  findDocumento(@Param("id") id: string) {
+    return this.conductoresService.findDocumento(+id);
+  }
+
+  @Post("documento/create")
+  @ApiOperation({ summary: "Crear un nuevo documento de conductor" })
+  @ApiResponse({ status: 201, type: ConductorDocumentoResultDto })
+  createDocumento(@Body() createDto: ConductorDocumentoCreateDto) {
+    return this.conductoresService.createDocumento(createDto);
+  }
+
+  @Patch("documento/update/:id")
+  @ApiOperation({ summary: "Actualizar un documento de conductor" })
+  @ApiParam({ name: "id", description: "ID del documento", type: Number })
+  @ApiResponse({ status: 200, type: ConductorDocumentoResultDto })
+  updateDocumento(@Param("id") id: string, @Body() updateDto: ConductorDocumentoUpdateDto) {
+    return this.conductoresService.updateDocumento(+id, updateDto);
+  }
+
+  @Delete("documento/delete/:id")
+  @ApiOperation({ summary: "Eliminar un documento de conductor" })
+  @ApiParam({ name: "id", description: "ID del documento", type: Number })
+  @ApiResponse({ status: 200, type: ConductorDocumentoResultDto })
+  deleteDocumento(@Param("id") id: string) {
+    return this.conductoresService.deleteDocumento(+id);
   }
 }

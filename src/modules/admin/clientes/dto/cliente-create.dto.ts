@@ -10,7 +10,7 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { ClienteDTO } from "@model/tables/cliente.model";
 
 export class ClienteCreateDto
-  implements Omit<ClienteDTO, "id" | "creadoEn" | "actualizadoEn">
+  implements Omit<ClienteDTO, "id" | "nombreCompleto" | "creadoEn" | "actualizadoEn">
 {
   @ApiProperty({ example: "12345678", description: "DNI del cliente" })
   @IsString()
@@ -18,17 +18,17 @@ export class ClienteCreateDto
   @MaxLength(20)
   dni: string;
 
-  @ApiProperty({ example: "Juan", description: "Nombre del cliente" })
+  @ApiProperty({ example: "Juan Carlos", description: "Nombres del cliente" })
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  nombre: string;
+  nombres: string;
 
-  @ApiProperty({ example: "Pérez", description: "Apellido del cliente" })
+  @ApiProperty({ example: "Pérez García", description: "Apellidos del cliente" })
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  apellido: string;
+  apellidos: string;
 
   @ApiPropertyOptional({ example: "juan.perez@example.com", description: "Email del cliente" })
   @IsEmail()

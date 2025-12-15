@@ -12,6 +12,9 @@ import { viajes } from "@model/tables/viaje.model";
 import { mantenimientos } from "@model/tables/mantenimiento.model";
 import { rutas } from "@model/tables/ruta.model";
 import { conductores } from "@model/tables/conductor.model";
+import { viajeConductores } from "@model/tables/viaje-conductor.model";
+import { viajeVehiculos } from "@model/tables/viaje-vehiculo.model";
+import { clientes } from "@model/tables/cliente.model";
 
 @Injectable()
 export class DashboardService {
@@ -90,8 +93,10 @@ export class DashboardService {
       .select({
         id: viajes.id,
         rutaId: viajes.rutaId,
-        vehiculoId: viajes.vehiculoId,
-        conductorId: viajes.conductorId,
+        rutaOcasional: viajes.rutaOcasional,
+        isOcasional: viajes.isOcasional,
+        clienteId: viajes.clienteId,
+        tripulantes: viajes.tripulantes,
         fechaSalida: viajes.fechaSalida,
         estado: viajes.estado,
       })
@@ -101,33 +106,78 @@ export class DashboardService {
 
     const data = await Promise.all(
       result.map(async (viaje) => {
-        const ruta = await database
-          .select()
-          .from(rutas)
-          .where(eq(rutas.id, viaje.rutaId))
+        // Obtener ruta
+        let rutaTexto = "Ruta desconocida";
+        if (viaje.isOcasional) {
+          rutaTexto = viaje.rutaOcasional || "Ruta ocasional";
+        } else if (viaje.rutaId) {
+          const ruta = await database
+            .select()
+            .from(rutas)
+            .where(eq(rutas.id, viaje.rutaId))
+            .limit(1);
+          if (ruta[0]) {
+            rutaTexto = `${ruta[0].origen} - ${ruta[0].destino}`;
+          }
+        }
+
+        // Obtener conductor principal
+        const conductorPrincipal = await database
+          .select({
+            conductorId: viajeConductores.conductorId,
+          })
+          .from(viajeConductores)
+          .where(
+            and(
+              eq(viajeConductores.viajeId, viaje.id),
+              eq(viajeConductores.esPrincipal, true)
+            )
+          )
           .limit(1);
 
-        const vehiculo = await database
-          .select()
-          .from(vehiculos)
-          .where(eq(vehiculos.id, viaje.vehiculoId))
+        let conductorTexto = "Sin asignar";
+        if (conductorPrincipal[0]) {
+          const conductor = await database
+            .select()
+            .from(conductores)
+            .where(eq(conductores.id, conductorPrincipal[0].conductorId))
+            .limit(1);
+          if (conductor[0]) {
+            conductorTexto = conductor[0].nombreCompleto;
+          }
+        }
+
+        // Obtener vehículo principal
+        const vehiculoPrincipal = await database
+          .select({
+            vehiculoId: viajeVehiculos.vehiculoId,
+          })
+          .from(viajeVehiculos)
+          .where(
+            and(
+              eq(viajeVehiculos.viajeId, viaje.id),
+              eq(viajeVehiculos.esPrincipal, true)
+            )
+          )
           .limit(1);
 
-        const conductor = await database
-          .select()
-          .from(conductores)
-          .where(eq(conductores.id, viaje.conductorId))
-          .limit(1);
+        let vehiculoTexto = "N/A";
+        if (vehiculoPrincipal[0]) {
+          const vehiculo = await database
+            .select()
+            .from(vehiculos)
+            .where(eq(vehiculos.id, vehiculoPrincipal[0].vehiculoId))
+            .limit(1);
+          if (vehiculo[0]) {
+            vehiculoTexto = vehiculo[0].placa;
+          }
+        }
 
         return {
           id: viaje.id,
-          ruta: ruta[0]
-            ? `${ruta[0].origen} - ${ruta[0].destino}`
-            : "Ruta desconocida",
-          conductor: conductor[0]
-            ? conductor[0].nombre
-            : "Conductor desconocido",
-          vehiculo: vehiculo[0]?.placa || "N/A",
+          ruta: rutaTexto,
+          conductor: conductorTexto,
+          vehiculo: vehiculoTexto,
           estado: viaje.estado,
           fechaSalida: viaje.fechaSalida,
         };
@@ -197,6 +247,7 @@ export class DashboardService {
         totalViajes: count(),
       })
       .from(viajes)
+      .where(eq(viajes.isOcasional, false))
       .groupBy(viajes.rutaId)
       .orderBy(desc(count()))
       .limit(5);

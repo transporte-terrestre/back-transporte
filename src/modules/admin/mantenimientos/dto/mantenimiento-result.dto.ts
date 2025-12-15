@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { tipoMantenimiento } from "@model/tables/mantenimiento.model";
+import { mantenimientosTipo } from "@model/tables/mantenimiento.model";
+import type { MantenimientoTipo } from "@model/tables/mantenimiento.model";
 
 export class MantenimientoResultDto {
   @ApiProperty({ example: 1, description: "Maintenance ID" })
@@ -9,11 +10,11 @@ export class MantenimientoResultDto {
   vehiculoId: number;
 
   @ApiProperty({
-    enum: tipoMantenimiento.enumValues,
-    example: tipoMantenimiento.enumValues[0],
+    enum: mantenimientosTipo.enumValues,
+    example: mantenimientosTipo.enumValues[0],
     description: "Maintenance type",
   })
-  tipo: (typeof tipoMantenimiento.enumValues)[number];
+  tipo: MantenimientoTipo;
 
   @ApiProperty({ example: "150.50", description: "Cost" })
   costo: string;

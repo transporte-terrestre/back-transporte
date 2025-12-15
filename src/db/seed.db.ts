@@ -1,7 +1,6 @@
 import { seedConductores } from "@seed/conductor.seed";
 import { seedVehiculos } from "@seed/vehiculo.seed";
 import { seedRutas } from "@seed/ruta.seed";
-import { seedVehiculosConductores } from "@seed/vehiculo-conductor.seed";
 import { seedMantenimientos } from "@seed/mantenimiento.seed";
 import { seedViajes } from "@seed/viaje.seed";
 import { seedUsuarios } from "@seed/usuario.seed";
@@ -13,14 +12,13 @@ async function seed() {
 
     // Seeds must run in order due to foreign key dependencies
     await seedUsuarios();
-    await seedClientes();
-    const driversData = await seedConductores();
+    const clientesData = await seedClientes();
+    await seedConductores();
     const vehiclesData = await seedVehiculos();
     const routesData = await seedRutas();
 
-    await seedVehiculosConductores(driversData, vehiclesData);
     await seedMantenimientos(vehiclesData);
-    await seedViajes(driversData, vehiclesData, routesData);
+    await seedViajes(clientesData, routesData);
 
     console.log("\n✨ Database seeding completed successfully!");
     process.exit(0);

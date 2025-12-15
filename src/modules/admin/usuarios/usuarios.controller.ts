@@ -25,6 +25,9 @@ import {
   UsuarioPaginationQueryDto,
   PaginatedUsuarioResultDto,
 } from "./dto/usuario-paginated.dto";
+import { UsuarioDocumentoCreateDto } from "./dto/usuario-documento-create.dto";
+import { UsuarioDocumentoUpdateDto } from "./dto/usuario-documento-update.dto";
+import { UsuarioDocumentoResultDto } from "./dto/usuario-documento-result.dto";
 
 @ApiTags("usuarios")
 @ApiBearerAuth()
@@ -78,5 +81,37 @@ export class UsuariosController {
   @ApiResponse({ status: 200, type: UsuarioResultDto })
   remove(@Param("id") id: string) {
     return this.usuariosService.remove(+id);
+  }
+
+  // ========== DOCUMENTOS ==========
+  @Get("documento/:id")
+  @ApiOperation({ summary: "Obtener un documento por ID" })
+  @ApiParam({ name: "id", description: "ID del documento", type: Number })
+  @ApiResponse({ status: 200, type: UsuarioDocumentoResultDto })
+  findDocumento(@Param("id") id: string) {
+    return this.usuariosService.findDocumento(+id);
+  }
+
+  @Post("documento/create")
+  @ApiOperation({ summary: "Crear un nuevo documento de usuario" })
+  @ApiResponse({ status: 201, type: UsuarioDocumentoResultDto })
+  createDocumento(@Body() createDto: UsuarioDocumentoCreateDto) {
+    return this.usuariosService.createDocumento(createDto);
+  }
+
+  @Patch("documento/update/:id")
+  @ApiOperation({ summary: "Actualizar un documento de usuario" })
+  @ApiParam({ name: "id", description: "ID del documento", type: Number })
+  @ApiResponse({ status: 200, type: UsuarioDocumentoResultDto })
+  updateDocumento(@Param("id") id: string, @Body() updateDto: UsuarioDocumentoUpdateDto) {
+    return this.usuariosService.updateDocumento(+id, updateDto);
+  }
+
+  @Delete("documento/delete/:id")
+  @ApiOperation({ summary: "Eliminar un documento de usuario" })
+  @ApiParam({ name: "id", description: "ID del documento", type: Number })
+  @ApiResponse({ status: 200, type: UsuarioDocumentoResultDto })
+  deleteDocumento(@Param("id") id: string) {
+    return this.usuariosService.deleteDocumento(+id);
   }
 }

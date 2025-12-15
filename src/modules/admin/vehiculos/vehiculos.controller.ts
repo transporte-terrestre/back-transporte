@@ -25,6 +25,9 @@ import {
   VehiculoPaginationQueryDto,
   PaginatedVehiculoResultDto,
 } from "./dto/vehiculo-paginated.dto";
+import { VehiculoDocumentoCreateDto } from "./dto/vehiculo-documento-create.dto";
+import { VehiculoDocumentoUpdateDto } from "./dto/vehiculo-documento-update.dto";
+import { VehiculoDocumentoResultDto } from "./dto/vehiculo-documento-result.dto";
 
 @ApiTags("vehiculos")
 @ApiBearerAuth()
@@ -36,17 +39,10 @@ export class VehiculosController {
   @Get("find-all")
   @ApiOperation({ 
     summary: "Obtener vehículos con paginación, búsqueda y filtros",
-    description: "Busca por placa, marca o modelo. Filtra por rango de fechas.",
   })
   @ApiResponse({ status: 200, type: PaginatedVehiculoResultDto })
   findAll(@Query() query: VehiculoPaginationQueryDto) {
-    return this.vehiculosService.findAllPaginated(
-      query.page,
-      query.limit,
-      query.search,
-      query.fechaInicio,
-      query.fechaFin,
-    );
+    return this.vehiculosService.findAllPaginated(query.page, query.limit, query.search, query.fechaInicio, query.fechaFin);
   }
 
   @Get("find-one/:id")
@@ -78,5 +74,37 @@ export class VehiculosController {
   @ApiResponse({ status: 200, type: VehiculoResultDto })
   remove(@Param("id") id: string) {
     return this.vehiculosService.delete(+id);
+  }
+
+  // ========== DOCUMENTOS ==========
+  @Get("documento/:id")
+  @ApiOperation({ summary: "Obtener un documento por ID" })
+  @ApiParam({ name: "id", description: "ID del documento", type: Number })
+  @ApiResponse({ status: 200, type: VehiculoDocumentoResultDto })
+  findDocumento(@Param("id") id: string) {
+    return this.vehiculosService.findDocumento(+id);
+  }
+
+  @Post("documento/create")
+  @ApiOperation({ summary: "Crear un nuevo documento de vehículo" })
+  @ApiResponse({ status: 201, type: VehiculoDocumentoResultDto })
+  createDocumento(@Body() createDto: VehiculoDocumentoCreateDto) {
+    return this.vehiculosService.createDocumento(createDto);
+  }
+
+  @Patch("documento/update/:id")
+  @ApiOperation({ summary: "Actualizar un documento de vehículo" })
+  @ApiParam({ name: "id", description: "ID del documento", type: Number })
+  @ApiResponse({ status: 200, type: VehiculoDocumentoResultDto })
+  updateDocumento(@Param("id") id: string, @Body() updateDto: VehiculoDocumentoUpdateDto) {
+    return this.vehiculosService.updateDocumento(+id, updateDto);
+  }
+
+  @Delete("documento/delete/:id")
+  @ApiOperation({ summary: "Eliminar un documento de vehículo" })
+  @ApiParam({ name: "id", description: "ID del documento", type: Number })
+  @ApiResponse({ status: 200, type: VehiculoDocumentoResultDto })
+  deleteDocumento(@Param("id") id: string) {
+    return this.vehiculosService.deleteDocumento(+id);
   }
 }

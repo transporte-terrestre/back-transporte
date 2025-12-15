@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { ConductorResultDto } from "./conductor-result.dto";
+import { ConductorListDto } from "./conductor-list.dto";
 import { Type } from "class-transformer";
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from "class-validator";
 
@@ -60,9 +60,9 @@ export class ConductorPaginationQueryDto {
 export class PaginatedConductorResultDto {
   @ApiProperty({
     description: "Lista de conductores en la página actual",
-    type: [ConductorResultDto],
+    type: [ConductorListDto],
   })
-  data: ConductorResultDto[];
+  data: ConductorListDto[];
 
   @ApiProperty({
     description: "Metadatos de la paginación",

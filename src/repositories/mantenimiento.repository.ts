@@ -27,7 +27,7 @@ export class MantenimientoRepository {
       const searchTerm = `%${filters.search}%`;
       conditions.push(
         or(
-          like(mantenimientos.tipo, searchTerm),
+          like(sql`${mantenimientos.tipo}::text`, searchTerm),
           like(mantenimientos.proveedor, searchTerm),
           like(mantenimientos.descripcion, searchTerm),
         ),
@@ -36,10 +36,10 @@ export class MantenimientoRepository {
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(
-        and(
-          gte(sql`${mantenimientos.fecha}::timestamp`, new Date(filters.fechaInicio)),
-          lte(sql`${mantenimientos.fecha}::timestamp`, new Date(filters.fechaFin + "T23:59:59")),
-        ),
+        gte(sql`${mantenimientos.fecha}::timestamp`, new Date(filters.fechaInicio)),
+      );
+      conditions.push(
+        lte(sql`${mantenimientos.fecha}::timestamp`, new Date(filters.fechaFin + "T23:59:59")),
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(sql`${mantenimientos.fecha}::timestamp`, new Date(filters.fechaInicio)));

@@ -1,23 +1,36 @@
-import { IsString, IsNotEmpty, IsDateString, IsEnum, IsArray, IsOptional } from "class-validator";
+import {
+  IsString,
+  IsNotEmpty,
+  IsIn,
+  IsArray,
+  IsOptional,
+} from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   ConductorDTO,
-  categoriaLicenciaConductor,
-  claseLicenciaConductor,
+  conductoresClaseLicencia,
+  conductoresCategoriaLicencia,
 } from "@model/tables/conductor.model";
+import type { ConductorCategoriaLicencia, ConductorClaseLicencia } from "@model/tables/conductor.model";
 
 export class ConductorCreateDto
-  implements Omit<ConductorDTO, "id" | "creadoEn" | "actualizadoEn">
+  implements
+    Omit<ConductorDTO, "id" | "nombreCompleto" | "creadoEn" | "actualizadoEn">
 {
   @ApiProperty({ example: "12345678", description: "Driver DNI" })
   @IsString()
   @IsNotEmpty()
   dni: string;
 
-  @ApiProperty({ example: "Juan Perez Garcia", description: "Driver full name" })
+  @ApiProperty({ example: "Juan Carlos", description: "Driver first names" })
   @IsString()
   @IsNotEmpty()
-  nombre: string;
+  nombres: string;
+
+  @ApiProperty({ example: "Perez Garcia", description: "Driver last names" })
+  @IsString()
+  @IsNotEmpty()
+  apellidos: string;
 
   @ApiProperty({
     example: "Q07864165",
@@ -28,52 +41,28 @@ export class ConductorCreateDto
   numeroLicencia: string;
 
   @ApiProperty({
-    enum: claseLicenciaConductor.enumValues,
-    default: claseLicenciaConductor.enumValues[0],
+    enum: conductoresCategoriaLicencia.enumValues,
+    default: conductoresCategoriaLicencia.enumValues[0],
     description: "Driver license class",
   })
-  @IsEnum(claseLicenciaConductor.enumValues)
-  claseLicencia: (typeof claseLicenciaConductor.enumValues)[number];
+  @IsIn(conductoresCategoriaLicencia.enumValues, { each: true })
+  claseLicencia: ConductorClaseLicencia;
 
   @ApiProperty({
-    enum: categoriaLicenciaConductor.enumValues,
-    default: categoriaLicenciaConductor.enumValues[0],
+    enum: conductoresClaseLicencia.enumValues,
+    default: conductoresClaseLicencia.enumValues[0],
     description: "Driver license category",
   })
-  @IsEnum(categoriaLicenciaConductor.enumValues)
-  categoriaLicencia: (typeof categoriaLicenciaConductor.enumValues)[number];
+  @IsIn(conductoresClaseLicencia.enumValues, { each: true })
+  categoriaLicencia: ConductorCategoriaLicencia;
 
-  @ApiProperty({
-    example: "2020-09-11",
-    description: "License expedition date",
-  })
-  @IsDateString()
-  fechaExpedicion: string;
-
-  @ApiProperty({
-    example: "2025-04-19",
-    description: "License revalidation date",
-  })
-  @IsDateString()
-  fechaRevalidacion: string;
-
-  @ApiPropertyOptional({ 
-    example: ["https://res.cloudinary.com/xxx/image.jpg"], 
-    description: "Lista de URLs de imágenes del conductor",
-    type: [String]
+  @ApiPropertyOptional({
+    example: ["https://res.cloudinary.com/xxx/fotocheck.jpg"],
+    description: "Lista de URLs de fotochecks del conductor",
+    type: [String],
   })
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  imagenes?: string[];
-
-  @ApiPropertyOptional({ 
-    example: ["https://res.cloudinary.com/xxx/document.pdf"], 
-    description: "Lista de URLs de documentos del conductor",
-    type: [String]
-  })
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  documentos?: string[];
+  fotocheck?: string[];
 }

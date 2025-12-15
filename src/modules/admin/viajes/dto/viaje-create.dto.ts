@@ -1,25 +1,68 @@
-import { IsInt, IsEnum, IsNotEmpty, IsDate, IsOptional } from "class-validator";
+import {
+  IsInt,
+  IsIn,
+  IsNotEmpty,
+  IsDate,
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsArray,
+} from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { ViajeDTO, estadoViaje } from "@model/tables/viaje.model";
+import {
+  ViajeDTO,
+  viajesEstado,
+  modalidadServicio,
+} from "@model/tables/viaje.model";
 
 export class ViajeCreateDto
   implements Omit<ViajeDTO, "id" | "creadoEn" | "actualizadoEn">
 {
-  @ApiProperty({ example: 1, description: "Route ID" })
+  @ApiPropertyOptional({ example: 1, description: "ID de la ruta programada" })
+  @IsOptional()
   @IsInt()
-  @IsNotEmpty()
-  rutaId: number;
+  rutaId?: number;
 
-  @ApiProperty({ example: 1, description: "Vehicle ID" })
-  @IsInt()
-  @IsNotEmpty()
-  vehiculoId: number;
+  @ApiPropertyOptional({
+    example: "Lima - Arequipa (Ocasional)",
+    description: "Descripción de ruta ocasional",
+  })
+  @IsOptional()
+  @IsString()
+  rutaOcasional?: string;
 
-  @ApiProperty({ example: 1, description: "Driver ID" })
+  @ApiPropertyOptional({
+    example: false,
+    description: "Indica si es un viaje ocasional",
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isOcasional?: boolean;
+
+  @ApiProperty({ example: 1, description: "ID del cliente" })
   @IsInt()
   @IsNotEmpty()
-  conductorId: number;
+  clienteId: number;
+
+  @ApiPropertyOptional({
+    example: ["Juan Pérez", "María García"],
+    description: "Lista de tripulantes",
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tripulantes?: string[];
+
+  @ApiPropertyOptional({
+    enum: modalidadServicio.enumValues,
+    description: "Modalidad de servicio",
+    default: modalidadServicio.enumValues[0],
+  })
+  @IsOptional()
+  @IsIn(modalidadServicio.enumValues, { each: true })
+  modalidadServicio?: (typeof modalidadServicio.enumValues)[number];
 
   @ApiProperty({
     example: "2025-01-01T10:00:00Z",
@@ -39,11 +82,11 @@ export class ViajeCreateDto
   fechaLlegada: Date | null;
 
   @ApiPropertyOptional({
-    enum: estadoViaje.enumValues,
+    enum: viajesEstado.enumValues,
     description: "Trip status",
-    default: estadoViaje.enumValues[0],
+    default: viajesEstado.enumValues[0],
   })
   @IsOptional()
-  @IsEnum(estadoViaje.enumValues)
-  estado: (typeof estadoViaje.enumValues)[number];
+  @IsIn(viajesEstado.enumValues, { each: true })
+  estado: (typeof viajesEstado.enumValues)[number];
 }

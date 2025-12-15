@@ -26,8 +26,9 @@ export class ClienteRepository {
       const searchTerm = `%${filters.search}%`;
       conditions.push(
         or(
-          like(clientes.nombre, searchTerm),
-          like(clientes.apellido, searchTerm),
+          like(clientes.nombreCompleto, searchTerm),
+          like(clientes.nombres, searchTerm),
+          like(clientes.apellidos, searchTerm),
           like(clientes.dni, searchTerm),
           like(clientes.telefono, searchTerm),
           like(clientes.email, searchTerm),
@@ -38,10 +39,10 @@ export class ClienteRepository {
     // Filtro por rango de fechas
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(
-        and(
-          gte(clientes.creadoEn, new Date(filters.fechaInicio)),
-          lte(clientes.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
-        ),
+        gte(clientes.creadoEn, new Date(filters.fechaInicio)),
+      );
+      conditions.push(
+        lte(clientes.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(clientes.creadoEn, new Date(filters.fechaInicio)));

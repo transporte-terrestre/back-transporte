@@ -1,7 +1,17 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { ViajeResultDto } from "./viaje-result.dto";
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from "class-validator";
+import {
+  IsInt,
+  IsOptional,
+  Min,
+  Max,
+  IsString,
+  IsDateString,
+  IsBoolean,
+  IsIn,
+} from "class-validator";
+import { modalidadServicio } from "@model/tables/viaje.model";
 
 export class ViajePaginationQueryDto {
   @ApiProperty({
@@ -55,6 +65,26 @@ export class ViajePaginationQueryDto {
   @IsOptional()
   @IsDateString()
   fechaFin?: string;
+
+  @ApiProperty({
+    description: "Filtrar por modalidad de servicio",
+    enum: modalidadServicio.enumValues,
+    default: modalidadServicio.enumValues[0],
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(modalidadServicio.enumValues, { each: true })
+  modalidadServicio?: string;
+
+  @ApiProperty({
+    description: "Filtrar por viajes ocasionales o regulares",
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  isOcasional?: boolean;
 }
 
 export class PaginatedViajeResultDto {
