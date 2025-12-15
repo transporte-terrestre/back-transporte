@@ -29,7 +29,8 @@ export class ClientesService {
     limit: number = 10,
     search?: string,
     fechaInicio?: string,
-    fechaFin?: string
+    fechaFin?: string,
+    tipoDocumento?: string
   ): Promise<PaginatedClienteResultDto> {
     const { data, total } = await this.clienteRepository.findAllPaginated(
       page,
@@ -38,6 +39,7 @@ export class ClientesService {
         search,
         fechaInicio,
         fechaFin,
+        tipoDocumento,
       }
     );
 

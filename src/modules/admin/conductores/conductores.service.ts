@@ -23,12 +23,14 @@ export class ConductoresService {
     limit: number = 10,
     search?: string,
     fechaInicio?: string,
-    fechaFin?: string
+    fechaFin?: string,
+    claseLicencia?: string,
+    categoriaLicencia?: string
   ): Promise<PaginatedConductorResultDto> {
     const { data, total } = await this.conductorRepository.findAllPaginated(
       page,
       limit,
-      { search, fechaInicio, fechaFin }
+      { search, fechaInicio, fechaFin, claseLicencia, categoriaLicencia }
     );
 
     const totalPages = Math.ceil(total / limit);

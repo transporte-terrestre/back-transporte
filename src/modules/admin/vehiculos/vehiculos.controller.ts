@@ -37,12 +37,19 @@ export class VehiculosController {
   constructor(private readonly vehiculosService: VehiculosService) {}
 
   @Get("find-all")
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "Obtener vehículos con paginación, búsqueda y filtros",
   })
   @ApiResponse({ status: 200, type: PaginatedVehiculoResultDto })
   findAll(@Query() query: VehiculoPaginationQueryDto) {
-    return this.vehiculosService.findAllPaginated(query.page, query.limit, query.search, query.fechaInicio, query.fechaFin);
+    return this.vehiculosService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+      query.estado
+    );
   }
 
   @Get("find-one/:id")
@@ -64,7 +71,10 @@ export class VehiculosController {
   @ApiOperation({ summary: "Update a vehicle" })
   @ApiParam({ name: "id", type: "number", description: "Vehicle ID" })
   @ApiResponse({ status: 200, type: VehiculoResultDto })
-  update(@Param("id") id: string, @Body() updateVehiculoDto: VehiculoUpdateDto) {
+  update(
+    @Param("id") id: string,
+    @Body() updateVehiculoDto: VehiculoUpdateDto
+  ) {
     return this.vehiculosService.update(+id, updateVehiculoDto);
   }
 
@@ -96,7 +106,10 @@ export class VehiculosController {
   @ApiOperation({ summary: "Actualizar un documento de vehículo" })
   @ApiParam({ name: "id", description: "ID del documento", type: Number })
   @ApiResponse({ status: 200, type: VehiculoDocumentoResultDto })
-  updateDocumento(@Param("id") id: string, @Body() updateDto: VehiculoDocumentoUpdateDto) {
+  updateDocumento(
+    @Param("id") id: string,
+    @Body() updateDto: VehiculoDocumentoUpdateDto
+  ) {
     return this.vehiculosService.updateDocumento(+id, updateDto);
   }
 

@@ -1,5 +1,15 @@
-import { pgTable, serial, varchar, integer, date, decimal, timestamp, text } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  serial,
+  varchar,
+  integer,
+  date,
+  decimal,
+  timestamp,
+  text,
+} from "drizzle-orm/pg-core";
 import { vehiculos } from "./vehiculo.model";
+import { talleres } from "./taller.model";
 import { pgEnum } from "drizzle-orm/pg-core";
 
 export const mantenimientosTipo = pgEnum("mantenimientos_tipo", [
@@ -7,19 +17,30 @@ export const mantenimientosTipo = pgEnum("mantenimientos_tipo", [
   "correctivo",
 ]);
 
+export const mantenimientosEstado = pgEnum("mantenimientos_estado", [
+  "pendiente",
+  "en_proceso",
+  "finalizado",
+]);
+
 export const mantenimientos = pgTable("mantenimientos", {
   id: serial("id").primaryKey(),
   vehiculoId: integer("vehiculo_id").references(() => vehiculos.id).notNull(),
+  tallerId: integer("taller_id").references(() => talleres.id).notNull(),
+  codigoOrden: varchar("codigo_orden", { length: 50 }).unique(),
   tipo: mantenimientosTipo("tipo").notNull(),
-  costo: decimal("costo", { precision: 10, scale: 2 }).notNull(),
+  costoTotal: decimal("costo_total", { precision: 10, scale: 2 }).default("0").notNull(),
   descripcion: text("descripcion").notNull(),
-  fecha: date("fecha").notNull(),
+  fechaIngreso: timestamp("fecha_ingreso").notNull(),
+  fechaSalida: timestamp("fecha_salida"),
   kilometraje: integer("kilometraje").notNull(),
-  proveedor: varchar("proveedor", { length: 100 }).notNull(),
+  estado: mantenimientosEstado("estado").default("pendiente").notNull(),
   creadoEn: timestamp("creado_en").defaultNow().notNull(),
   actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
 });
 
-export type MantenimientoTipo = typeof mantenimientosTipo.enumValues[number];
+export type MantenimientoTipo = (typeof mantenimientosTipo.enumValues)[number];
+export type MantenimientoEstado =
+  (typeof mantenimientosEstado.enumValues)[number];
 export type Mantenimiento = typeof mantenimientos.$inferSelect;
 export type MantenimientoDTO = typeof mantenimientos.$inferInsert;

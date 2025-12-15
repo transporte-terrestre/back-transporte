@@ -1,7 +1,7 @@
-export const getDateString = (daysOffset: number): string => {
+export const getDate = (daysOffset: number): Date => {
   const date = new Date();
   date.setDate(date.getDate() + daysOffset);
-  return date.toISOString().split('T')[0];
+  return date;
 };
 
 export const getDateTime = (

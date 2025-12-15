@@ -7,6 +7,7 @@ interface PaginationFilters {
   search?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  estado?: string;
 }
 
 @Injectable()
@@ -18,7 +19,7 @@ export class VehiculoRepository {
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
-    filters?: PaginationFilters,
+    filters?: PaginationFilters
   ) {
     const offset = (page - 1) * limit;
     const conditions = [];
@@ -29,23 +30,26 @@ export class VehiculoRepository {
         or(
           like(vehiculos.placa, searchTerm),
           like(vehiculos.marca, searchTerm),
-          like(vehiculos.modelo, searchTerm),
-          like(sql`${vehiculos.estado}::text`, searchTerm),
-        ),
+          like(vehiculos.modelo, searchTerm)
+        )
       );
     }
 
+    if (filters?.estado) {
+      conditions.push(eq(sql`${vehiculos.estado}::text`, filters.estado));
+    }
+
     if (filters?.fechaInicio && filters?.fechaFin) {
+      conditions.push(gte(vehiculos.creadoEn, new Date(filters.fechaInicio)));
       conditions.push(
-        gte(vehiculos.creadoEn, new Date(filters.fechaInicio)),
-      );
-      conditions.push(
-        lte(vehiculos.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
+        lte(vehiculos.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(vehiculos.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(lte(vehiculos.creadoEn, new Date(filters.fechaFin + "T23:59:59")));
+      conditions.push(
+        lte(vehiculos.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
+      );
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

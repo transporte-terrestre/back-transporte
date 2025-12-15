@@ -1,7 +1,23 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { MantenimientoResultDto } from "./mantenimiento-result.dto";
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from "class-validator";
+import {
+  IsInt,
+  IsOptional,
+  Min,
+  Max,
+  IsString,
+  IsDateString,
+  IsIn,
+} from "class-validator";
+import {
+  mantenimientosTipo,
+  mantenimientosEstado,
+} from "@model/tables/mantenimiento.model";
+import type {
+  MantenimientoTipo,
+  MantenimientoEstado,
+} from "@model/tables/mantenimiento.model";
 
 export class MantenimientoPaginationQueryDto {
   @ApiProperty({
@@ -30,8 +46,8 @@ export class MantenimientoPaginationQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description: "Búsqueda por tipo, proveedor o descripción del mantenimiento",
-    example: "preventivo",
+    description:
+      "Búsqueda por tipo, descripción o código de orden del mantenimiento",
     required: false,
   })
   @IsOptional()
@@ -40,7 +56,6 @@ export class MantenimientoPaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-01-01",
     required: false,
   })
   @IsOptional()
@@ -49,12 +64,29 @@ export class MantenimientoPaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-12-31",
     required: false,
   })
   @IsOptional()
   @IsDateString()
   fechaFin?: string;
+
+  @ApiProperty({
+    description: "Filtrar por tipo de mantenimiento",
+    enum: mantenimientosTipo.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(mantenimientosTipo.enumValues, { each: true })
+  tipo?: MantenimientoTipo;
+
+  @ApiProperty({
+    description: "Filtrar por estado del mantenimiento",
+    enum: mantenimientosEstado.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(mantenimientosEstado.enumValues, { each: true })
+  estado?: MantenimientoEstado;
 }
 
 export class PaginatedMantenimientoResultDto {

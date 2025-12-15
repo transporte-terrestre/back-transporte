@@ -37,9 +37,10 @@ export class UsuariosController {
   constructor(private readonly usuariosService: UsuariosService) {}
 
   @Get("find-all")
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "Obtener usuarios con paginación, búsqueda y filtros",
-    description: "Busca por nombre, apellido o email. Filtra por rango de fechas.",
+    description:
+      "Busca por nombre, apellido o email. Filtra por rango de fechas.",
   })
   @ApiResponse({ status: 200, type: PaginatedUsuarioResultDto })
   findAll(@Query() query: UsuarioPaginationQueryDto) {
@@ -49,6 +50,7 @@ export class UsuariosController {
       query.search,
       query.fechaInicio,
       query.fechaFin,
+      query.rol
     );
   }
 
@@ -103,7 +105,10 @@ export class UsuariosController {
   @ApiOperation({ summary: "Actualizar un documento de usuario" })
   @ApiParam({ name: "id", description: "ID del documento", type: Number })
   @ApiResponse({ status: 200, type: UsuarioDocumentoResultDto })
-  updateDocumento(@Param("id") id: string, @Body() updateDto: UsuarioDocumentoUpdateDto) {
+  updateDocumento(
+    @Param("id") id: string,
+    @Body() updateDto: UsuarioDocumentoUpdateDto
+  ) {
     return this.usuariosService.updateDocumento(+id, updateDto);
   }
 

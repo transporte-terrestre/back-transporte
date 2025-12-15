@@ -69,6 +69,12 @@ export class VehiculoResultDto {
   @ApiProperty({ example: "ABC-123", description: "Vehicle license plate" })
   placa: string;
 
+  @ApiPropertyOptional({
+    example: "0582",
+    description: "Internal vehicle code",
+  })
+  codigoInterno: string | null;
+
   @ApiProperty({ example: "Toyota", description: "Vehicle brand" })
   marca: string;
 

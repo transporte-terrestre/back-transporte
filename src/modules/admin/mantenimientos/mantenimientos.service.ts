@@ -6,7 +6,9 @@ import { PaginatedMantenimientoResultDto } from "./dto/mantenimiento-paginated.d
 
 @Injectable()
 export class MantenimientosService {
-  constructor(private readonly mantenimientoRepository: MantenimientoRepository) {}
+  constructor(
+    private readonly mantenimientoRepository: MantenimientoRepository
+  ) {}
 
   async findAllPaginated(
     page: number = 1,
@@ -14,11 +16,13 @@ export class MantenimientosService {
     search?: string,
     fechaInicio?: string,
     fechaFin?: string,
+    tipo?: string,
+    estado?: string
   ): Promise<PaginatedMantenimientoResultDto> {
     const { data, total } = await this.mantenimientoRepository.findAllPaginated(
       page,
       limit,
-      { search, fechaInicio, fechaFin },
+      { search, fechaInicio, fechaFin, tipo, estado }
     );
 
     const totalPages = Math.ceil(total / limit);

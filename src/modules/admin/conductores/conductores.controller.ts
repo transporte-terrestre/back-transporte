@@ -37,9 +37,10 @@ export class ConductoresController {
   constructor(private readonly conductoresService: ConductoresService) {}
 
   @Get("find-all")
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "Obtener conductores con paginación, búsqueda y filtros",
-    description: "Busca por nombre, DNI o número de licencia. Filtra por rango de fechas.",
+    description:
+      "Busca por nombre, DNI o número de licencia. Filtra por rango de fechas.",
   })
   @ApiResponse({ status: 200, type: PaginatedConductorResultDto })
   findAll(@Query() query: ConductorPaginationQueryDto) {
@@ -49,6 +50,8 @@ export class ConductoresController {
       query.search,
       query.fechaInicio,
       query.fechaFin,
+      query.claseLicencia,
+      query.categoriaLicencia
     );
   }
 
@@ -71,7 +74,10 @@ export class ConductoresController {
   @ApiOperation({ summary: "Update a driver" })
   @ApiParam({ name: "id", type: "number", description: "Driver ID" })
   @ApiResponse({ status: 200, type: ConductorResultDto })
-  update(@Param("id") id: string, @Body() updateConductorDto: ConductorUpdateDto) {
+  update(
+    @Param("id") id: string,
+    @Body() updateConductorDto: ConductorUpdateDto
+  ) {
     return this.conductoresService.update(+id, updateConductorDto);
   }
 
@@ -103,7 +109,10 @@ export class ConductoresController {
   @ApiOperation({ summary: "Actualizar un documento de conductor" })
   @ApiParam({ name: "id", description: "ID del documento", type: Number })
   @ApiResponse({ status: 200, type: ConductorDocumentoResultDto })
-  updateDocumento(@Param("id") id: string, @Body() updateDto: ConductorDocumentoUpdateDto) {
+  updateDocumento(
+    @Param("id") id: string,
+    @Body() updateDto: ConductorDocumentoUpdateDto
+  ) {
     return this.conductoresService.updateDocumento(+id, updateDto);
   }
 

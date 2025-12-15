@@ -1,7 +1,17 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { ClienteListDto } from "./cliente-list.dto";
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from "class-validator";
+import {
+  IsInt,
+  IsOptional,
+  Min,
+  Max,
+  IsString,
+  IsDateString,
+  IsIn,
+} from "class-validator";
+import { clientesTipoDocumento } from "@model/tables/cliente.model";
+import type { ClienteTipoDocumento } from "@model/tables/cliente.model";
 
 export class ClientePaginationQueryDto {
   @ApiProperty({
@@ -31,7 +41,6 @@ export class ClientePaginationQueryDto {
 
   @ApiProperty({
     description: "Búsqueda por nombre, DNI, teléfono o email del cliente",
-    example: "Juan",
     required: false,
   })
   @IsOptional()
@@ -40,7 +49,6 @@ export class ClientePaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-01-01",
     required: false,
   })
   @IsOptional()
@@ -49,12 +57,20 @@ export class ClientePaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-12-31",
     required: false,
   })
   @IsOptional()
   @IsDateString()
   fechaFin?: string;
+
+  @ApiProperty({
+    description: "Filtrar por tipo de documento",
+    enum: clientesTipoDocumento.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(clientesTipoDocumento.enumValues, { each: true })
+  tipoDocumento?: ClienteTipoDocumento;
 }
 
 export class PaginatedClienteResultDto {

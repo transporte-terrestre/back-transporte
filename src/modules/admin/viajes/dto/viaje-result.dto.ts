@@ -1,8 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { viajesEstado, modalidadServicio } from "@model/tables/viaje.model";
+import {
+  viajesEstado,
+  modalidadServicio,
+  viajesTipoRuta,
+} from "@model/tables/viaje.model";
 import type {
   ViajeModalidadServicio,
   ViajeEstado,
+  ViajeTipoRuta,
 } from "@model/tables/viaje.model";
 
 export class ViajeResultDto {
@@ -19,10 +24,11 @@ export class ViajeResultDto {
   rutaOcasional: string | null;
 
   @ApiProperty({
-    example: false,
-    description: "Indica si es un viaje ocasional",
+    enum: viajesTipoRuta.enumValues,
+    example: "fija",
+    description: "Tipo de ruta",
   })
-  isOcasional: boolean;
+  tipoRuta: ViajeTipoRuta;
 
   @ApiProperty({ example: 1, description: "ID del cliente" })
   clienteId: number;

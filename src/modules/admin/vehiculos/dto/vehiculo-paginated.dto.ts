@@ -1,7 +1,17 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { VehiculoListDto } from "./vehiculo-list.dto";
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from "class-validator";
+import {
+  IsInt,
+  IsOptional,
+  Min,
+  Max,
+  IsString,
+  IsDateString,
+  IsIn,
+} from "class-validator";
+import { vehiculosEstado } from "@model/tables/vehiculo.model";
+import type { VehiculoEstado } from "@model/tables/vehiculo.model";
 
 export class VehiculoPaginationQueryDto {
   @ApiProperty({
@@ -31,7 +41,6 @@ export class VehiculoPaginationQueryDto {
 
   @ApiProperty({
     description: "Búsqueda por placa, marca o modelo del vehículo",
-    example: "ABC-123",
     required: false,
   })
   @IsOptional()
@@ -40,7 +49,6 @@ export class VehiculoPaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-01-01",
     required: false,
   })
   @IsOptional()
@@ -49,12 +57,20 @@ export class VehiculoPaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-12-31",
     required: false,
   })
   @IsOptional()
   @IsDateString()
   fechaFin?: string;
+
+  @ApiProperty({
+    description: "Filtrar por estado del vehículo",
+    enum: vehiculosEstado.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(vehiculosEstado.enumValues, { each: true })
+  estado?: VehiculoEstado;
 }
 
 export class PaginatedVehiculoResultDto {

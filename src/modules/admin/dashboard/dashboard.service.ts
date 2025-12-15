@@ -37,7 +37,8 @@ export class DashboardService {
       .select({ total: count() })
       .from(conductores);
 
-    const { total: totalClientes } = await this.clienteRepository.findAllPaginated(1, 1);
+    const { total: totalClientes } =
+      await this.clienteRepository.findAllPaginated(1, 1);
 
     // Calcular viajes de hoy
     const today = new Date();
@@ -49,10 +50,7 @@ export class DashboardService {
       .select({ count: count() })
       .from(viajes)
       .where(
-        and(
-          gte(viajes.fechaSalida, today),
-          lte(viajes.fechaSalida, tomorrow)
-        )
+        and(gte(viajes.fechaSalida, today), lte(viajes.fechaSalida, tomorrow))
       );
 
     // Calcular cambios porcentuales (simulados por ahora)
@@ -94,7 +92,7 @@ export class DashboardService {
         id: viajes.id,
         rutaId: viajes.rutaId,
         rutaOcasional: viajes.rutaOcasional,
-        isOcasional: viajes.isOcasional,
+        tipoRuta: viajes.tipoRuta,
         clienteId: viajes.clienteId,
         tripulantes: viajes.tripulantes,
         fechaSalida: viajes.fechaSalida,
@@ -108,7 +106,7 @@ export class DashboardService {
       result.map(async (viaje) => {
         // Obtener ruta
         let rutaTexto = "Ruta desconocida";
-        if (viaje.isOcasional) {
+        if (viaje.tipoRuta === "ocasional") {
           rutaTexto = viaje.rutaOcasional || "Ruta ocasional";
         } else if (viaje.rutaId) {
           const ruta = await database
@@ -198,17 +196,17 @@ export class DashboardService {
         id: mantenimientos.id,
         vehiculoId: mantenimientos.vehiculoId,
         tipo: mantenimientos.tipo,
-        fecha: mantenimientos.fecha,
+        fecha: mantenimientos.fechaIngreso,
         descripcion: mantenimientos.descripcion,
       })
       .from(mantenimientos)
       .where(
         and(
-          gte(mantenimientos.fecha, today.toISOString().split("T")[0]),
-          lte(mantenimientos.fecha, futureDate.toISOString().split("T")[0])
+          gte(mantenimientos.fechaIngreso, today),
+          lte(mantenimientos.fechaIngreso, futureDate)
         )
       )
-      .orderBy(mantenimientos.fecha)
+      .orderBy(mantenimientos.fechaIngreso)
       .limit(4);
 
     const data = await Promise.all(
@@ -247,13 +245,12 @@ export class DashboardService {
         totalViajes: count(),
       })
       .from(viajes)
-      .where(eq(viajes.isOcasional, false))
+      .where(eq(viajes.tipoRuta, "fija"))
       .groupBy(viajes.rutaId)
       .orderBy(desc(count()))
       .limit(5);
 
-    const maxViajes =
-      result.length > 0 ? Number(result[0].totalViajes) : 1;
+    const maxViajes = result.length > 0 ? Number(result[0].totalViajes) : 1;
 
     const data = await Promise.all(
       result.map(async (item) => {
@@ -281,7 +278,7 @@ export class DashboardService {
   async getIngresosMensuales() {
     const today = new Date();
     const meses = ["Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-    
+
     // Por ahora retornamos datos simulados
     // En producción, aquí deberías calcular los ingresos reales desde una tabla de pagos/ingresos
     const data = meses.map((mes, index) => ({

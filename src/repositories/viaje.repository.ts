@@ -8,7 +8,8 @@ interface PaginationFilters {
   fechaInicio?: string;
   fechaFin?: string;
   modalidadServicio?: string;
-  isOcasional?: boolean;
+  tipoRuta?: string;
+  estado?: string;
 }
 
 @Injectable()
@@ -29,7 +30,6 @@ export class ViajeRepository {
       const searchTerm = `%${filters.search}%`;
       conditions.push(
         or(
-          like(sql`${viajes.estado}::text`, searchTerm),
           like(viajes.rutaOcasional, searchTerm),
           like(sql`${viajes.modalidadServicio}::text`, searchTerm)
         )
@@ -38,15 +38,16 @@ export class ViajeRepository {
 
     if (filters?.modalidadServicio) {
       conditions.push(
-        eq(
-          sql`${viajes.modalidadServicio}::text`,
-          filters.modalidadServicio
-        )
+        eq(sql`${viajes.modalidadServicio}::text`, filters.modalidadServicio)
       );
     }
 
-    if (filters?.isOcasional !== undefined) {
-      conditions.push(eq(viajes.isOcasional, filters.isOcasional));
+    if (filters?.tipoRuta) {
+      conditions.push(eq(sql`${viajes.tipoRuta}::text`, filters.tipoRuta));
+    }
+
+    if (filters?.estado) {
+      conditions.push(eq(sql`${viajes.estado}::text`, filters.estado));
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {

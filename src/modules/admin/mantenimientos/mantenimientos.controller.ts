@@ -34,9 +34,10 @@ export class MantenimientosController {
   constructor(private readonly mantenimientosService: MantenimientosService) {}
 
   @Get("find-all")
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "Obtener mantenimientos con paginación, búsqueda y filtros",
-    description: "Busca por tipo, proveedor o descripción. Filtra por rango de fechas.",
+    description:
+      "Busca por tipo, proveedor o descripción. Filtra por rango de fechas.",
   })
   @ApiResponse({ status: 200, type: PaginatedMantenimientoResultDto })
   findAll(@Query() query: MantenimientoPaginationQueryDto) {
@@ -46,6 +47,8 @@ export class MantenimientosController {
       query.search,
       query.fechaInicio,
       query.fechaFin,
+      query.tipo,
+      query.estado
     );
   }
 

@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { ClienteDocumentoResultDto } from "./cliente-documento-result.dto";
+import { clientesTipoDocumento } from "@model/tables/cliente.model";
 import type { ClienteDocumentoTipo } from "@model/tables/cliente-documento.model";
+import type { ClienteTipoDocumento } from "@model/tables/cliente.model";
 
 export class DocumentosAgrupadosClienteDto
   implements Record<ClienteDocumentoTipo, ClienteDocumentoResultDto[]>
@@ -28,17 +30,33 @@ export class ClienteResultDto {
   @ApiProperty({ example: 1, description: "ID del cliente" })
   id: number;
 
+  @ApiProperty({
+    enum: clientesTipoDocumento.enumValues,
+    example: clientesTipoDocumento.enumValues[0],
+    description: "Tipo de documento",
+  })
+  tipoDocumento: ClienteTipoDocumento;
+
   @ApiProperty({ example: "12345678", description: "DNI del cliente" })
-  dni: string;
+  dni: string | null;
+
+  @ApiProperty({ example: "20123456789", description: "RUC del cliente" })
+  ruc: string | null;
 
   @ApiProperty({ example: "Juan Carlos", description: "Nombres del cliente" })
-  nombres: string;
+  nombres: string | null;
 
   @ApiProperty({
     example: "Pérez García",
     description: "Apellidos del cliente",
   })
-  apellidos: string;
+  apellidos: string | null;
+
+  @ApiProperty({
+    example: "Empresa SAC",
+    description: "Razón Social del cliente",
+  })
+  razonSocial: string | null;
 
   @ApiProperty({
     example: "Juan Carlos Pérez García",

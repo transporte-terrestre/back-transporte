@@ -22,12 +22,13 @@ export class VehiculosService {
     limit: number = 10,
     search?: string,
     fechaInicio?: string,
-    fechaFin?: string
+    fechaFin?: string,
+    estado?: string
   ): Promise<PaginatedVehiculoResultDto> {
     const { data, total } = await this.vehiculoRepository.findAllPaginated(
       page,
       limit,
-      { search, fechaInicio, fechaFin }
+      { search, fechaInicio, fechaFin, estado }
     );
 
     const totalPages = Math.ceil(total / limit);
@@ -49,7 +50,8 @@ export class VehiculosService {
 
   async findOne(id: number) {
     const vehiculo = await this.vehiculoRepository.findOne(id);
-    const documentos = await this.vehiculoDocumentoRepository.findByVehiculoId(id);
+    const documentos =
+      await this.vehiculoDocumentoRepository.findByVehiculoId(id);
 
     const documentosAgrupados = vehiculoDocumentosTipo.enumValues.reduce(
       (acc, tipo) => {

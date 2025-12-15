@@ -5,7 +5,6 @@ import {
   IsDate,
   IsOptional,
   IsString,
-  IsBoolean,
   IsArray,
 } from "class-validator";
 import { Type } from "class-transformer";
@@ -14,7 +13,9 @@ import {
   ViajeDTO,
   viajesEstado,
   modalidadServicio,
+  viajesTipoRuta,
 } from "@model/tables/viaje.model";
+import type { ViajeEstado, ViajeModalidadServicio, ViajeTipoRuta } from "@model/tables/viaje.model";
 
 export class ViajeCreateDto
   implements Omit<ViajeDTO, "id" | "creadoEn" | "actualizadoEn">
@@ -33,13 +34,13 @@ export class ViajeCreateDto
   rutaOcasional?: string;
 
   @ApiPropertyOptional({
-    example: false,
-    description: "Indica si es un viaje ocasional",
-    default: false,
+    enum: viajesTipoRuta.enumValues,
+    description: "Tipo de ruta (fija, ocasional)",
+    default: viajesTipoRuta.enumValues[1],
   })
   @IsOptional()
-  @IsBoolean()
-  isOcasional?: boolean;
+  @IsIn(viajesTipoRuta.enumValues, { each: true })
+  tipoRuta: ViajeTipoRuta;
 
   @ApiProperty({ example: 1, description: "ID del cliente" })
   @IsInt()
@@ -62,7 +63,7 @@ export class ViajeCreateDto
   })
   @IsOptional()
   @IsIn(modalidadServicio.enumValues, { each: true })
-  modalidadServicio?: (typeof modalidadServicio.enumValues)[number];
+  modalidadServicio?: ViajeModalidadServicio;
 
   @ApiProperty({
     example: "2025-01-01T10:00:00Z",
@@ -88,5 +89,5 @@ export class ViajeCreateDto
   })
   @IsOptional()
   @IsIn(viajesEstado.enumValues, { each: true })
-  estado: (typeof viajesEstado.enumValues)[number];
+  estado: ViajeEstado;
 }

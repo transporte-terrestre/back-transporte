@@ -26,12 +26,13 @@ export class ViajesService {
     fechaInicio?: string,
     fechaFin?: string,
     modalidadServicio?: string,
-    isOcasional?: boolean
+    tipoRuta?: string,
+    estado?: string
   ): Promise<PaginatedViajeResultDto> {
     const { data, total } = await this.viajeRepository.findAllPaginated(
       page,
       limit,
-      { search, fechaInicio, fechaFin, modalidadServicio, isOcasional }
+      { search, fechaInicio, fechaFin, modalidadServicio, tipoRuta, estado }
     );
 
     const totalPages = Math.ceil(total / limit);

@@ -1,7 +1,17 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { UsuarioListDto } from "./usuario-list.dto";
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from "class-validator";
+import {
+  IsInt,
+  IsOptional,
+  Min,
+  Max,
+  IsString,
+  IsDateString,
+  IsIn,
+} from "class-validator";
+import { usuariosRol } from "@model/tables/usuario.model";
+import type { UsuarioRol } from "@model/tables/usuario.model";
 
 export class UsuarioPaginationQueryDto {
   @ApiProperty({
@@ -31,7 +41,6 @@ export class UsuarioPaginationQueryDto {
 
   @ApiProperty({
     description: "Búsqueda por nombre, apellido o email del usuario",
-    example: "Juan",
     required: false,
   })
   @IsOptional()
@@ -40,7 +49,6 @@ export class UsuarioPaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-01-01",
     required: false,
   })
   @IsOptional()
@@ -49,12 +57,20 @@ export class UsuarioPaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-12-31",
     required: false,
   })
   @IsOptional()
   @IsDateString()
   fechaFin?: string;
+
+  @ApiProperty({
+    description: "Filtrar por rol de usuario",
+    enum: usuariosRol.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(usuariosRol.enumValues, { each: true })
+  rol?: UsuarioRol;
 }
 
 export class PaginatedUsuarioResultDto {

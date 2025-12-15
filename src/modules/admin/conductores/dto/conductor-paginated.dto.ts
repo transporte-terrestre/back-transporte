@@ -1,7 +1,23 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { ConductorListDto } from "./conductor-list.dto";
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from "class-validator";
+import {
+  IsInt,
+  IsOptional,
+  Min,
+  Max,
+  IsString,
+  IsDateString,
+  IsIn,
+} from "class-validator";
+import {
+  conductoresClaseLicencia,
+  conductoresCategoriaLicencia,
+} from "@model/tables/conductor.model";
+import type {
+  ConductorClaseLicencia,
+  ConductorCategoriaLicencia,
+} from "@model/tables/conductor.model";
 
 export class ConductorPaginationQueryDto {
   @ApiProperty({
@@ -31,7 +47,6 @@ export class ConductorPaginationQueryDto {
 
   @ApiProperty({
     description: "Búsqueda por nombre, DNI o número de licencia del conductor",
-    example: "Juan",
     required: false,
   })
   @IsOptional()
@@ -40,7 +55,6 @@ export class ConductorPaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-01-01",
     required: false,
   })
   @IsOptional()
@@ -49,12 +63,29 @@ export class ConductorPaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-12-31",
     required: false,
   })
   @IsOptional()
   @IsDateString()
   fechaFin?: string;
+
+  @ApiProperty({
+    description: "Filtrar por clase de licencia",
+    enum: conductoresClaseLicencia.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(conductoresClaseLicencia.enumValues, { each: true })
+  claseLicencia?: ConductorClaseLicencia;
+
+  @ApiProperty({
+    description: "Filtrar por categoría de licencia",
+    enum: conductoresCategoriaLicencia.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(conductoresCategoriaLicencia.enumValues, { each: true })
+  categoriaLicencia?: ConductorCategoriaLicencia;
 }
 
 export class PaginatedConductorResultDto {

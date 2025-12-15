@@ -4,13 +4,19 @@ import {
   IsDateString,
   IsNotEmpty,
   IsIn,
+  IsOptional,
 } from "class-validator";
+import { Type } from "class-transformer";
 import { ApiProperty } from "@nestjs/swagger";
 import {
   MantenimientoDTO,
   mantenimientosTipo,
+  mantenimientosEstado,
 } from "@model/tables/mantenimiento.model";
-import type { MantenimientoTipo } from "@model/tables/mantenimiento.model";
+import type {
+  MantenimientoTipo,
+  MantenimientoEstado,
+} from "@model/tables/mantenimiento.model";
 
 export class MantenimientoCreateDto
   implements Omit<MantenimientoDTO, "id" | "creadoEn" | "actualizadoEn">
@@ -20,6 +26,16 @@ export class MantenimientoCreateDto
   @IsNotEmpty()
   vehiculoId: number;
 
+  @ApiProperty({ example: 1, description: "Workshop ID" })
+  @IsInt()
+  @IsNotEmpty()
+  tallerId: number;
+
+  @ApiProperty({ example: "ORD-001", description: "Service Order Code" })
+  @IsString()
+  @IsOptional()
+  codigoOrden: string | null;
+
   @ApiProperty({
     enum: mantenimientosTipo.enumValues,
     default: mantenimientosTipo.enumValues[0],
@@ -28,29 +44,40 @@ export class MantenimientoCreateDto
   @IsIn(mantenimientosTipo.enumValues, { each: true })
   tipo: MantenimientoTipo;
 
-  @ApiProperty({ example: "150.50", description: "Cost" })
+  @ApiProperty({ example: "150.50", description: "Total Cost" })
   @IsString()
   @IsNotEmpty()
-  costo: string;
+  costoTotal: string;
 
   @ApiProperty({ example: "Cambio de aceite", description: "Description" })
   @IsString()
   @IsNotEmpty()
   descripcion: string;
 
-  @ApiProperty({ example: "2025-01-15", description: "Date of maintenance" })
+  @ApiProperty({
+    example: "2025-01-15T10:00:00Z",
+    description: "Date of entry",
+  })
   @IsDateString()
-  fecha: string;
+  @Type(() => Date)
+  fechaIngreso: Date;
+
+  @ApiProperty({ example: "2025-01-16T18:00:00Z", description: "Date of exit" })
+  @IsDateString()
+  @IsOptional()
+  @Type(() => Date)
+  fechaSalida: Date | null;
 
   @ApiProperty({ example: 55000, description: "Mileage at maintenance" })
   @IsInt()
   kilometraje: number;
 
   @ApiProperty({
-    example: "Taller Mecanico XYZ",
-    description: "Service provider",
+    enum: mantenimientosEstado.enumValues,
+    default: mantenimientosEstado.enumValues[0],
+    description: "Status",
   })
-  @IsString()
-  @IsNotEmpty()
-  proveedor: string;
+  @IsIn(mantenimientosEstado.enumValues, { each: true })
+  @IsOptional()
+  estado: MantenimientoEstado;
 }

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { eq, or, like, and, gte, lte, count } from "drizzle-orm";
+import { eq, or, like, and, gte, lte, count, sql } from "drizzle-orm";
 import { database } from "@db/connection.db";
 import { conductores, ConductorDTO } from "@model/tables/conductor.model";
 
@@ -7,6 +7,8 @@ interface PaginationFilters {
   search?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  claseLicencia?: string;
+  categoriaLicencia?: string;
 }
 
 @Injectable()
@@ -18,7 +20,7 @@ export class ConductorRepository {
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
-    filters?: PaginationFilters,
+    filters?: PaginationFilters
   ) {
     const offset = (page - 1) * limit;
     const conditions = [];
@@ -31,22 +33,37 @@ export class ConductorRepository {
           like(conductores.nombres, searchTerm),
           like(conductores.apellidos, searchTerm),
           like(conductores.dni, searchTerm),
-          like(conductores.numeroLicencia, searchTerm),
-        ),
+          like(conductores.numeroLicencia, searchTerm)
+        )
+      );
+    }
+
+    if (filters?.claseLicencia) {
+      conditions.push(
+        eq(sql`${conductores.claseLicencia}::text`, filters.claseLicencia)
+      );
+    }
+
+    if (filters?.categoriaLicencia) {
+      conditions.push(
+        eq(
+          sql`${conductores.categoriaLicencia}::text`,
+          filters.categoriaLicencia
+        )
       );
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
+      conditions.push(gte(conductores.creadoEn, new Date(filters.fechaInicio)));
       conditions.push(
-        gte(conductores.creadoEn, new Date(filters.fechaInicio)),
-      );
-      conditions.push(
-        lte(conductores.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
+        lte(conductores.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(conductores.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(lte(conductores.creadoEn, new Date(filters.fechaFin + "T23:59:59")));
+      conditions.push(
+        lte(conductores.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
+      );
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

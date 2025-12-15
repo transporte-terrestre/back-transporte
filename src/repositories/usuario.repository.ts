@@ -1,12 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { database } from "@db/connection.db";
 import { usuarios, Usuario, UsuarioDTO } from "@model/tables/usuario.model";
-import { eq, or, like, and, gte, lte, count } from "drizzle-orm";
+import { eq, or, like, and, gte, lte, count, sql } from "drizzle-orm";
 
 interface PaginationFilters {
   search?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  rol?: string;
 }
 
 @Injectable()
@@ -18,7 +19,7 @@ export class UsuarioRepository {
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
-    filters?: PaginationFilters,
+    filters?: PaginationFilters
   ) {
     const offset = (page - 1) * limit;
     const conditions = [];
@@ -30,22 +31,26 @@ export class UsuarioRepository {
           like(usuarios.nombreCompleto, searchTerm),
           like(usuarios.nombres, searchTerm),
           like(usuarios.apellidos, searchTerm),
-          like(usuarios.email, searchTerm),
-        ),
+          like(usuarios.email, searchTerm)
+        )
       );
     }
 
+    if (filters?.rol) {
+      conditions.push(sql`${filters.rol} = ANY(${usuarios.roles})`);
+    }
+
     if (filters?.fechaInicio && filters?.fechaFin) {
+      conditions.push(gte(usuarios.creadoEn, new Date(filters.fechaInicio)));
       conditions.push(
-        gte(usuarios.creadoEn, new Date(filters.fechaInicio)),
-      );
-      conditions.push(
-        lte(usuarios.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
+        lte(usuarios.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(usuarios.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(lte(usuarios.creadoEn, new Date(filters.fechaFin + "T23:59:59")));
+      conditions.push(
+        lte(usuarios.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
+      );
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -105,20 +110,17 @@ export class UsuarioRepository {
   }
 
   async create(data: UsuarioDTO) {
-    const result = await database
-      .insert(usuarios)
-      .values(data)
-      .returning({
-        id: usuarios.id,
-        nombres: usuarios.nombres,
-        apellidos: usuarios.apellidos,
-        nombreCompleto: usuarios.nombreCompleto,
-        email: usuarios.email,
-        roles: usuarios.roles,
-        fotocheck: usuarios.fotocheck,
-        creadoEn: usuarios.creadoEn,
-        actualizadoEn: usuarios.actualizadoEn,
-      });
+    const result = await database.insert(usuarios).values(data).returning({
+      id: usuarios.id,
+      nombres: usuarios.nombres,
+      apellidos: usuarios.apellidos,
+      nombreCompleto: usuarios.nombreCompleto,
+      email: usuarios.email,
+      roles: usuarios.roles,
+      fotocheck: usuarios.fotocheck,
+      creadoEn: usuarios.creadoEn,
+      actualizadoEn: usuarios.actualizadoEn,
+    });
     return result[0];
   }
 

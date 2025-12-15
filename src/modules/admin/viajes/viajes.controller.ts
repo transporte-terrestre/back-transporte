@@ -57,7 +57,8 @@ export class ViajesController {
       query.fechaInicio,
       query.fechaFin,
       query.modalidadServicio,
-      query.isOcasional
+      query.tipoRuta,
+      query.estado
     );
   }
 

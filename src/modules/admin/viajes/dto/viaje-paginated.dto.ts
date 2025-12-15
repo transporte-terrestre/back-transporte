@@ -8,10 +8,18 @@ import {
   Max,
   IsString,
   IsDateString,
-  IsBoolean,
   IsIn,
 } from "class-validator";
-import { modalidadServicio } from "@model/tables/viaje.model";
+import {
+  modalidadServicio,
+  viajesTipoRuta,
+  viajesEstado,
+} from "@model/tables/viaje.model";
+import type {
+  ViajeModalidadServicio,
+  ViajeTipoRuta,
+  ViajeEstado,
+} from "@model/tables/viaje.model";
 
 export class ViajePaginationQueryDto {
   @ApiProperty({
@@ -40,8 +48,7 @@ export class ViajePaginationQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description: "Búsqueda por estado del viaje",
-    example: "programado",
+    description: "Búsqueda por ruta ocasional o modalidad de servicio",
     required: false,
   })
   @IsOptional()
@@ -50,7 +57,6 @@ export class ViajePaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-01-01",
     required: false,
   })
   @IsOptional()
@@ -59,7 +65,6 @@ export class ViajePaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-12-31",
     required: false,
   })
   @IsOptional()
@@ -69,22 +74,29 @@ export class ViajePaginationQueryDto {
   @ApiProperty({
     description: "Filtrar por modalidad de servicio",
     enum: modalidadServicio.enumValues,
-    default: modalidadServicio.enumValues[0],
     required: false,
   })
   @IsOptional()
   @IsIn(modalidadServicio.enumValues, { each: true })
-  modalidadServicio?: string;
+  modalidadServicio?: ViajeModalidadServicio;
 
   @ApiProperty({
-    description: "Filtrar por viajes ocasionales o regulares",
-    example: false,
+    description: "Filtrar por tipo de ruta (ocasional, fija)",
+    enum: viajesTipoRuta.enumValues,
     required: false,
   })
   @IsOptional()
-  @Type(() => Boolean)
-  @IsBoolean()
-  isOcasional?: boolean;
+  @IsIn(viajesTipoRuta.enumValues, { each: true })
+  tipoRuta?: ViajeTipoRuta;
+
+  @ApiProperty({
+    description: "Filtrar por estado del viaje",
+    enum: viajesEstado.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(viajesEstado.enumValues, { each: true })
+  estado?: ViajeEstado;
 }
 
 export class PaginatedViajeResultDto {

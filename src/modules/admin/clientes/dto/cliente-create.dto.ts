@@ -5,53 +5,98 @@ import {
   IsOptional,
   IsString,
   MaxLength,
+  IsIn,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { ClienteDTO } from "@model/tables/cliente.model";
+import { ClienteDTO, clientesTipoDocumento } from "@model/tables/cliente.model";
+import type { ClienteTipoDocumento } from "@model/tables/cliente.model";
 
 export class ClienteCreateDto
-  implements Omit<ClienteDTO, "id" | "nombreCompleto" | "creadoEn" | "actualizadoEn">
+  implements
+    Omit<ClienteDTO, "id" | "nombreCompleto" | "creadoEn" | "actualizadoEn">
 {
-  @ApiProperty({ example: "12345678", description: "DNI del cliente" })
-  @IsString()
+  @ApiProperty({
+    enum: clientesTipoDocumento.enumValues,
+    default: clientesTipoDocumento.enumValues[0],
+    description: "Tipo de documento (DNI, RUC)",
+  })
+  @IsIn(clientesTipoDocumento.enumValues, { each: true })
   @IsNotEmpty()
+  tipoDocumento: ClienteTipoDocumento;
+
+  @ApiPropertyOptional({ example: "12345678", description: "DNI del cliente" })
+  @IsString()
+  @IsOptional()
   @MaxLength(20)
-  dni: string;
+  dni?: string | null;
 
-  @ApiProperty({ example: "Juan Carlos", description: "Nombres del cliente" })
+  @ApiPropertyOptional({
+    example: "20123456789",
+    description: "RUC del cliente",
+  })
   @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  nombres: string;
+  @IsOptional()
+  @MaxLength(20)
+  ruc?: string | null;
 
-  @ApiProperty({ example: "Pérez García", description: "Apellidos del cliente" })
+  @ApiPropertyOptional({
+    example: "Juan Carlos",
+    description: "Nombres del cliente",
+  })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(100)
-  apellidos: string;
+  nombres?: string | null;
 
-  @ApiPropertyOptional({ example: "juan.perez@example.com", description: "Email del cliente" })
+  @ApiPropertyOptional({
+    example: "Pérez García",
+    description: "Apellidos del cliente",
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  apellidos?: string | null;
+
+  @ApiPropertyOptional({
+    example: "Empresa SAC",
+    description: "Razón Social del cliente",
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(200)
+  razonSocial?: string | null;
+
+  @ApiPropertyOptional({
+    example: "juan.perez@example.com",
+    description: "Email del cliente",
+  })
   @IsEmail()
   @IsOptional()
   @MaxLength(100)
   email?: string | null;
 
-  @ApiPropertyOptional({ example: "987654321", description: "Teléfono del cliente" })
+  @ApiPropertyOptional({
+    example: "987654321",
+    description: "Teléfono del cliente",
+  })
   @IsString()
   @IsOptional()
   @MaxLength(20)
   telefono?: string | null;
 
-  @ApiPropertyOptional({ example: "Av. Principal 123", description: "Dirección del cliente" })
+  @ApiPropertyOptional({
+    example: "Av. Principal 123",
+    description: "Dirección del cliente",
+  })
   @IsString()
   @IsOptional()
   @MaxLength(255)
   direccion?: string | null;
 
-  @ApiPropertyOptional({ 
-    example: ["https://res.cloudinary.com/xxx/image.jpg"], 
+  @ApiPropertyOptional({
+    example: ["https://res.cloudinary.com/xxx/image.jpg"],
     description: "Lista de URLs de imágenes del cliente",
-    type: [String]
+    type: [String],
   })
   @IsArray()
   @IsString({ each: true })

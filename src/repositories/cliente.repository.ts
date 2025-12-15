@@ -7,6 +7,7 @@ interface PaginationFilters {
   search?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  tipoDocumento?: string;
 }
 
 @Injectable()
@@ -14,7 +15,7 @@ export class ClienteRepository {
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
-    filters?: PaginationFilters,
+    filters?: PaginationFilters
   ) {
     const offset = (page - 1) * limit;
 
@@ -29,25 +30,33 @@ export class ClienteRepository {
           like(clientes.nombreCompleto, searchTerm),
           like(clientes.nombres, searchTerm),
           like(clientes.apellidos, searchTerm),
+          like(clientes.razonSocial, searchTerm),
           like(clientes.dni, searchTerm),
+          like(clientes.ruc, searchTerm),
           like(clientes.telefono, searchTerm),
-          like(clientes.email, searchTerm),
-        ),
+          like(clientes.email, searchTerm)
+        )
+      );
+    }
+
+    if (filters?.tipoDocumento) {
+      conditions.push(
+        eq(sql`${clientes.tipoDocumento}::text`, filters.tipoDocumento)
       );
     }
 
     // Filtro por rango de fechas
     if (filters?.fechaInicio && filters?.fechaFin) {
+      conditions.push(gte(clientes.creadoEn, new Date(filters.fechaInicio)));
       conditions.push(
-        gte(clientes.creadoEn, new Date(filters.fechaInicio)),
-      );
-      conditions.push(
-        lte(clientes.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
+        lte(clientes.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(clientes.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(lte(clientes.creadoEn, new Date(filters.fechaFin + "T23:59:59")));
+      conditions.push(
+        lte(clientes.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
+      );
     }
 
     // Combinar todas las condiciones
@@ -74,7 +83,10 @@ export class ClienteRepository {
   }
 
   async findOne(id: number) {
-    const result = await database.select().from(clientes).where(eq(clientes.id, id));
+    const result = await database
+      .select()
+      .from(clientes)
+      .where(eq(clientes.id, id));
     return result[0];
   }
 
@@ -83,6 +95,14 @@ export class ClienteRepository {
       .select()
       .from(clientes)
       .where(eq(clientes.dni, dni));
+    return result[0];
+  }
+
+  async findByRuc(ruc: string) {
+    const result = await database
+      .select()
+      .from(clientes)
+      .where(eq(clientes.ruc, ruc));
     return result[0];
   }
 

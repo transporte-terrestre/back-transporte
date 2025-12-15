@@ -15,7 +15,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
   await database.insert(viajes).values([
     {
       rutaId: routesData[0].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[0].id,
       tripulantes: ["Carlos Mendoza", "Ana Torres"],
       modalidadServicio: "regular",
@@ -25,7 +25,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[1].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[1].id,
       tripulantes: ["Luis Ramírez"],
       modalidadServicio: "expreso",
@@ -35,7 +35,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaOcasional: "Lima - Playa de Máncora (Viaje especial)",
-      isOcasional: true,
+      tipoRuta: "ocasional",
       clienteId: clientesData[2].id,
       tripulantes: ["Jorge Flores", "Patricia Díaz", "Miguel Soto"],
       modalidadServicio: "turismo",
@@ -45,7 +45,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[3].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[3].id,
       tripulantes: ["Roberto Salas"],
       modalidadServicio: "ejecutivo",
@@ -55,7 +55,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[4].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[4].id,
       tripulantes: ["Sandra Vega", "Pedro Cruz"],
       modalidadServicio: "regular",
@@ -65,7 +65,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaOcasional: "Cusco - Valle Sagrado (Tour privado)",
-      isOcasional: true,
+      tipoRuta: "ocasional",
       clienteId: clientesData[5].id,
       tripulantes: ["Fernando Rojas", "Lucia Paredes"],
       modalidadServicio: "especial",
@@ -75,7 +75,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[6].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[6].id,
       tripulantes: ["Andrés Morales"],
       modalidadServicio: "expreso",
@@ -85,7 +85,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[7].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[7].id,
       tripulantes: ["Carla Gutiérrez"],
       modalidadServicio: "regular",
@@ -95,7 +95,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaOcasional: "Arequipa - Cañón del Colca (Excursión)",
-      isOcasional: true,
+      tipoRuta: "ocasional",
       clienteId: clientesData[8].id,
       tripulantes: ["Diego Vargas", "Elena Castillo"],
       modalidadServicio: "turismo",
@@ -105,7 +105,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[9].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[9].id,
       tripulantes: ["Raúl Jiménez"],
       modalidadServicio: "ejecutivo",
@@ -115,7 +115,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[10].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[10].id,
       tripulantes: ["Beatriz Núñez", "Francisco Reyes"],
       modalidadServicio: "regular",
@@ -125,7 +125,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaOcasional: "Ica - Paracas (Servicio privado)",
-      isOcasional: true,
+      tipoRuta: "ocasional",
       clienteId: clientesData[11].id,
       tripulantes: ["Gabriel Herrera", "Mariana López", "Sebastián Ortiz"],
       modalidadServicio: "especial",
@@ -135,7 +135,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[12].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[12].id,
       tripulantes: ["Natalia Romero"],
       modalidadServicio: "expreso",
@@ -145,7 +145,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[13].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[13].id,
       tripulantes: ["Víctor Peña", "Isabel Medina"],
       modalidadServicio: "ejecutivo",
@@ -155,7 +155,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[14].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[14].id,
       tripulantes: ["Tomás Ríos"],
       modalidadServicio: "regular",
@@ -165,7 +165,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaOcasional: "Trujillo - Huanchaco (Tour playero)",
-      isOcasional: true,
+      tipoRuta: "ocasional",
       clienteId: clientesData[15].id,
       tripulantes: ["Mónica Silva", "Javier Campos"],
       modalidadServicio: "turismo",
@@ -175,7 +175,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[16].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[16].id,
       tripulantes: ["Alejandro Chávez"],
       modalidadServicio: "expreso",
@@ -185,7 +185,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[17].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[17].id,
       tripulantes: ["Verónica Fuentes", "Ernesto Aguilar", "Daniela Córdoba"],
       modalidadServicio: "regular",
@@ -195,7 +195,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[18].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[18].id,
       tripulantes: ["Hugo Zamora"],
       modalidadServicio: "ejecutivo",
@@ -204,7 +204,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaOcasional: "Lima - Lunahuaná (Aventura)",
-      isOcasional: true,
+      tipoRuta: "ocasional",
       clienteId: clientesData[19].id,
       tripulantes: ["Claudia Bravo", "Manuel Escobar"],
       modalidadServicio: "especial",
@@ -213,7 +213,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[20].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[20].id,
       tripulantes: ["Ricardo Delgado"],
       modalidadServicio: "regular",
@@ -222,7 +222,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[21].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[21].id,
       tripulantes: ["Paola Méndez", "Alberto Santos"],
       modalidadServicio: "expreso",
@@ -231,7 +231,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[22].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[22].id,
       tripulantes: ["Gabriela Navarro"],
       modalidadServicio: "regular",
@@ -240,7 +240,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaOcasional: "Puno - Islas Flotantes (Tour lacustre)",
-      isOcasional: true,
+      tipoRuta: "ocasional",
       clienteId: clientesData[23].id,
       tripulantes: ["Óscar Ibarra", "Lorena Valdez", "Mario Ponce"],
       modalidadServicio: "turismo",
@@ -249,7 +249,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[24].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[24].id,
       tripulantes: ["Sofía Ramos", "Marcos Luna"],
       modalidadServicio: "ejecutivo",
@@ -258,7 +258,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[25].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[25].id,
       tripulantes: ["Eduardo Prieto"],
       modalidadServicio: "regular",
@@ -267,7 +267,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[26].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[26].id,
       tripulantes: ["Carolina Bustos", "Ignacio Araya"],
       modalidadServicio: "expreso",
@@ -276,7 +276,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaOcasional: "Nazca - Sobrevuelo Líneas de Nazca",
-      isOcasional: true,
+      tipoRuta: "ocasional",
       clienteId: clientesData[27].id,
       tripulantes: ["Adriana Guerrero"],
       modalidadServicio: "especial",
@@ -285,7 +285,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[28].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[28].id,
       tripulantes: ["Felipe Cortés", "Valeria Ruiz", "Cristian Márquez"],
       modalidadServicio: "regular",
@@ -294,7 +294,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
     },
     {
       rutaId: routesData[29].id,
-      isOcasional: false,
+      tipoRuta: "fija",
       clienteId: clientesData[29].id,
       tripulantes: ["Rodrigo León", "Teresa Salazar"],
       modalidadServicio: "ejecutivo",

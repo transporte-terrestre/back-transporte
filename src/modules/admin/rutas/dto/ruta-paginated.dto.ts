@@ -1,7 +1,14 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { RutaResultDto } from "./ruta-result.dto";
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from "class-validator";
+import {
+  IsInt,
+  IsOptional,
+  Min,
+  Max,
+  IsString,
+  IsDateString,
+} from "class-validator";
 
 export class RutaPaginationQueryDto {
   @ApiProperty({
@@ -31,7 +38,6 @@ export class RutaPaginationQueryDto {
 
   @ApiProperty({
     description: "Búsqueda por origen o destino de la ruta",
-    example: "Lima",
     required: false,
   })
   @IsOptional()
@@ -40,7 +46,6 @@ export class RutaPaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-01-01",
     required: false,
   })
   @IsOptional()
@@ -49,7 +54,6 @@ export class RutaPaginationQueryDto {
 
   @ApiProperty({
     description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
-    example: "2024-12-31",
     required: false,
   })
   @IsOptional()

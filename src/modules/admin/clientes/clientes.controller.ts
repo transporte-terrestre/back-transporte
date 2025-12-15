@@ -37,10 +37,19 @@ export class ClientesController {
   constructor(private readonly clientesService: ClientesService) {}
 
   @Get("find-all")
-  @ApiOperation({ summary: "Obtener clientes con paginación, búsqueda y filtros" })
+  @ApiOperation({
+    summary: "Obtener clientes con paginación, búsqueda y filtros",
+  })
   @ApiResponse({ status: 200, type: PaginatedClienteResultDto })
   findAll(@Query() query: ClientePaginationQueryDto) {
-    return this.clientesService.findAllPaginated(query.page, query.limit, query.search, query.fechaInicio, query.fechaFin);
+    return this.clientesService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+      query.tipoDocumento
+    );
   }
 
   @Get("find-one/:id")
@@ -94,7 +103,10 @@ export class ClientesController {
   @ApiOperation({ summary: "Actualizar un documento de cliente" })
   @ApiParam({ name: "id", description: "ID del documento", type: Number })
   @ApiResponse({ status: 200, type: ClienteDocumentoResultDto })
-  updateDocumento(@Param("id") id: string, @Body() updateDto: ClienteDocumentoUpdateDto) {
+  updateDocumento(
+    @Param("id") id: string,
+    @Body() updateDto: ClienteDocumentoUpdateDto
+  ) {
     return this.clientesService.updateDocumento(+id, updateDto);
   }
 

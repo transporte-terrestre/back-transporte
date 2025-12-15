@@ -30,12 +30,13 @@ export class UsuariosService {
     limit: number = 10,
     search?: string,
     fechaInicio?: string,
-    fechaFin?: string
+    fechaFin?: string,
+    rol?: string
   ): Promise<PaginatedUsuarioResultDto> {
     const { data, total } = await this.usuarioRepository.findAllPaginated(
       page,
       limit,
-      { search, fechaInicio, fechaFin }
+      { search, fechaInicio, fechaFin, rol }
     );
 
     const totalPages = Math.ceil(total / limit);
@@ -57,7 +58,8 @@ export class UsuariosService {
 
   async findOne(id: number) {
     const usuario = await this.usuarioRepository.findOne(id);
-    const documentos = await this.usuarioDocumentoRepository.findByUsuarioId(id);
+    const documentos =
+      await this.usuarioDocumentoRepository.findByUsuarioId(id);
     const documentosAgrupados = usuarioDocumentosTipo.enumValues.reduce(
       (acc, tipo) => {
         acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
