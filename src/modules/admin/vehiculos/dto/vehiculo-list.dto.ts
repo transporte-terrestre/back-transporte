@@ -39,4 +39,11 @@ export class VehiculoListDto {
     description: "Update date",
   })
   actualizadoEn: Date;
+
+  @ApiPropertyOptional({
+    example: ["https://res.cloudinary.com/xxx/image.jpg"],
+    description: "Lista de URLs de imágenes del vehículo",
+    type: [String],
+  })
+  imagenes: string[];
 }

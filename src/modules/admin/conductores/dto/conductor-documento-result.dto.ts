@@ -16,6 +16,9 @@ export class ConductorDocumentoResultDto {
   })
   tipo: ConductorDocumentoTipo;
 
+  @ApiProperty({ example: "Documento 1", description: "Nombre del documento" })
+  nombre: string;
+
   @ApiProperty({
     example: "https://storage.example.com/documentos/licencia-A123456.pdf",
     description: "URL del documento",

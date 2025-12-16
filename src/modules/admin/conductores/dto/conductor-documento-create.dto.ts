@@ -29,6 +29,11 @@ export class ConductorDocumentoCreateDto
   @IsNotEmpty()
   tipo: ConductorDocumentoTipo;
 
+  @ApiProperty({ example: "Documento 1", description: "Nombre del documento" })
+  @IsString()
+  @IsNotEmpty()
+  nombre: string;
+
   @ApiProperty({
     example: "https://storage.example.com/documentos/licencia-A123456.pdf",
     description: "URL del documento",

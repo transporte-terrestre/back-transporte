@@ -16,6 +16,9 @@ export class UsuarioDocumentoResultDto {
   })
   tipo: UsuarioDocumentoTipo;
 
+  @ApiProperty({ example: "Documento 1", description: "Nombre del documento" })
+  nombre: string;
+
   @ApiProperty({
     example: "https://storage.example.com/documentos/dni-12345678.pdf",
     description: "URL del documento",

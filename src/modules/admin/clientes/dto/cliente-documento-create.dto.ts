@@ -30,6 +30,11 @@ export class ClienteDocumentoCreateDto
   @IsNotEmpty()
   tipo: ClienteDocumentoTipo;
 
+  @ApiProperty({ example: "Documento 1", description: "Nombre del documento" })
+  @IsString()
+  @IsNotEmpty()
+  nombre: string;
+
   @ApiProperty({
     example: "https://storage.example.com/documentos/dni-12345678.pdf",
     description: "URL del documento",

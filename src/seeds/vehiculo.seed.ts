@@ -1,6 +1,5 @@
 import { database } from "@db/connection.db";
 import { vehiculos } from "@model/tables/vehiculo.model";
-import { getDate } from "@function/date.function";
 
 export async function seedVehiculos() {
   console.log("🌱 Seeding vehicles...");
@@ -9,7 +8,8 @@ export async function seedVehiculos() {
     .insert(vehiculos)
     .values([
       {
-        placa: "ABC-123",
+        placa: "ABC123",
+        codigoInterno: "0001",
         marca: "Toyota",
         modelo: "Corolla",
         anio: 2020,
@@ -18,7 +18,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubanob.jpg"],
       },
       {
-        placa: "XYZ-789",
+        placa: "XYZ789",
+        codigoInterno: "0002",
         marca: "Hyundai",
         modelo: "Elantra",
         anio: 2021,
@@ -27,7 +28,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubaxix.jpg"],
       },
       {
-        placa: "DEF-456",
+        placa: "DEF456",
+        codigoInterno: "0003",
         marca: "Nissan",
         modelo: "Sentra",
         anio: 2019,
@@ -36,7 +38,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubauUB.jpg"],
       },
       {
-        placa: "GHI-321",
+        placa: "GHI321",
+        codigoInterno: "0004",
         marca: "Honda",
         modelo: "Civic",
         anio: 2022,
@@ -45,7 +48,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fuba5R1.jpg"],
       },
       {
-        placa: "JKL-654",
+        placa: "JKL654",
+        codigoInterno: "0005",
         marca: "Mazda",
         modelo: "3",
         anio: 2020,
@@ -54,7 +58,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubaYDg.jpg"],
       },
       {
-        placa: "MNO-987",
+        placa: "MNO987",
+        codigoInterno: "0006",
         marca: "Chevrolet",
         modelo: "Cruze",
         anio: 2019,
@@ -63,7 +68,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubaEfR.jpg"],
       },
       {
-        placa: "PQR-234",
+        placa: "PQR234",
+        codigoInterno: "0007",
         marca: "Kia",
         modelo: "Forte",
         anio: 2021,
@@ -72,7 +78,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubaWJI.jpg"],
       },
       {
-        placa: "STU-567",
+        placa: "STU567",
+        codigoInterno: "0008",
         marca: "Volkswagen",
         modelo: "Jetta",
         anio: 2020,
@@ -81,7 +88,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubaXRt.jpg"],
       },
       {
-        placa: "VWX-890",
+        placa: "VWX890",
+        codigoInterno: "0009",
         marca: "Ford",
         modelo: "Focus",
         anio: 2018,
@@ -90,7 +98,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubahOX.jpg"],
       },
       {
-        placa: "YZA-123",
+        placa: "YZA123",
+        codigoInterno: "0010",
         marca: "Suzuki",
         modelo: "Ciaz",
         anio: 2021,
@@ -99,7 +108,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubaNxs.jpg"],
       },
       {
-        placa: "BCD-456",
+        placa: "BCD456",
+        codigoInterno: "0011",
         marca: "Toyota",
         modelo: "Yaris",
         anio: 2022,
@@ -108,7 +118,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubavf4.webp"],
       },
       {
-        placa: "EFG-789",
+        placa: "EFG789",
+        codigoInterno: "0012",
         marca: "Hyundai",
         modelo: "Accent",
         anio: 2020,
@@ -117,7 +128,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fuba80l.webp"],
       },
       {
-        placa: "HIJ-012",
+        placa: "HIJ012",
+        codigoInterno: "0013",
         marca: "Nissan",
         modelo: "Versa",
         anio: 2021,
@@ -126,7 +138,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubaSg2.webp"],
       },
       {
-        placa: "KLM-345",
+        placa: "KLM345",
+        codigoInterno: "0014",
         marca: "Honda",
         modelo: "City",
         anio: 2019,
@@ -135,7 +148,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubar57.webp"],
       },
       {
-        placa: "NOP-678",
+        placa: "NOP678",
+        codigoInterno: "0015",
         marca: "Mazda",
         modelo: "2",
         anio: 2020,
@@ -144,7 +158,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fuba4e9.webp"],
       },
       {
-        placa: "QRS-901",
+        placa: "QRS901",
+        codigoInterno: "0016",
         marca: "Chevrolet",
         modelo: "Sail",
         anio: 2018,
@@ -153,7 +168,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubaizu.webp"],
       },
       {
-        placa: "TUV-234",
+        placa: "TUV234",
+        codigoInterno: "0017",
         marca: "Kia",
         modelo: "Rio",
         anio: 2021,
@@ -162,7 +178,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubasWb.webp"],
       },
       {
-        placa: "WXY-567",
+        placa: "WXY567",
+        codigoInterno: "0018",
         marca: "Volkswagen",
         modelo: "Polo",
         anio: 2022,
@@ -171,7 +188,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubaZqx.webp"],
       },
       {
-        placa: "ZAB-890",
+        placa: "ZAB890",
+        codigoInterno: "0019",
         marca: "Ford",
         modelo: "Fiesta",
         anio: 2019,
@@ -180,7 +198,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubaDgV.webp"],
       },
       {
-        placa: "CDE-123",
+        placa: "CDE123",
+        codigoInterno: "0020",
         marca: "Suzuki",
         modelo: "Swift",
         anio: 2020,
@@ -189,7 +208,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubamdB.webp"],
       },
       {
-        placa: "FGH-456",
+        placa: "FGH456",
+        codigoInterno: "0021",
         marca: "Toyota",
         modelo: "Camry",
         anio: 2021,
@@ -198,7 +218,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubaye1.webp"],
       },
       {
-        placa: "IJK-789",
+        placa: "IJK789",
+        codigoInterno: "0022",
         marca: "Hyundai",
         modelo: "Sonata",
         anio: 2020,
@@ -207,7 +228,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubc9mF.webp"],
       },
       {
-        placa: "LMN-012",
+        placa: "LMN012",
+        codigoInterno: "0023",
         marca: "Nissan",
         modelo: "Altima",
         anio: 2019,
@@ -216,7 +238,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubcdXa.webp"],
       },
       {
-        placa: "OPQ-345",
+        placa: "OPQ345",
+        codigoInterno: "0024",
         marca: "Honda",
         modelo: "Accord",
         anio: 2022,
@@ -225,7 +248,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubc2LJ.webp"],
       },
       {
-        placa: "RST-678",
+        placa: "RST678",
+        codigoInterno: "0025",
         marca: "Mazda",
         modelo: "6",
         anio: 2021,
@@ -234,7 +258,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubcBdN.webp"],
       },
       {
-        placa: "UVW-901",
+        placa: "UVW901",
+        codigoInterno: "0026",
         marca: "Chevrolet",
         modelo: "Malibu",
         anio: 2020,
@@ -243,7 +268,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubcnet.webp"],
       },
       {
-        placa: "XYZ-234",
+        placa: "XYZ234",
+        codigoInterno: "0027",
         marca: "Kia",
         modelo: "Optima",
         anio: 2019,
@@ -252,7 +278,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubczIn.webp"],
       },
       {
-        placa: "ABC-567",
+        placa: "ABC567",
+        codigoInterno: "0028",
         marca: "Volkswagen",
         modelo: "Passat",
         anio: 2021,
@@ -261,7 +288,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubcTLG.webp"],
       },
       {
-        placa: "DEF-890",
+        placa: "DEF890",
+        codigoInterno: "0029",
         marca: "Ford",
         modelo: "Fusion",
         anio: 2020,
@@ -270,7 +298,8 @@ export async function seedVehiculos() {
         imagenes: ["https://iili.io/fubc5rl.webp"],
       },
       {
-        placa: "GHI-123",
+        placa: "GHI123",
+        codigoInterno: "0030",
         marca: "Suzuki",
         modelo: "Baleno",
         anio: 2022,

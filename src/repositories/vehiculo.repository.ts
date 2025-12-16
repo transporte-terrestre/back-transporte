@@ -1,7 +1,18 @@
 import { Injectable } from "@nestjs/common";
-import { eq, or, like, and, gte, lte, count, sql } from "drizzle-orm";
+import {
+  eq,
+  or,
+  like,
+  and,
+  gte,
+  lte,
+  count,
+  sql,
+  getTableColumns,
+} from "drizzle-orm";
 import { database } from "@db/connection.db";
 import { vehiculos, VehiculoDTO } from "@model/tables/vehiculo.model";
+import { vehiculoDocumentos } from "@model/tables/vehiculo-documento.model";
 
 interface PaginationFilters {
   search?: string;
@@ -60,8 +71,18 @@ export class VehiculoRepository {
       .where(whereClause);
 
     const data = await database
-      .select()
+      .select({
+        ...getTableColumns(vehiculos),
+        fechaVencimientoSoat: vehiculoDocumentos.fechaExpiracion,
+      })
       .from(vehiculos)
+      .leftJoin(
+        vehiculoDocumentos,
+        and(
+          eq(vehiculoDocumentos.vehiculoId, vehiculos.id),
+          eq(vehiculoDocumentos.tipo, "soat")
+        )
+      )
       .where(whereClause)
       .limit(limit)
       .offset(offset);

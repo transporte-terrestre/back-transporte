@@ -16,6 +16,9 @@ export class VehiculoDocumentoResultDto {
   })
   tipo: VehiculoDocumentoTipo;
 
+  @ApiProperty({ example: "Documento 1", description: "Nombre del documento" })
+  nombre: string;
+
   @ApiProperty({
     example: "https://storage.example.com/documentos/soat-ABC123.pdf",
     description: "URL del documento",

@@ -1,6 +1,16 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsInt, IsIn, IsString, IsDateString, IsOptional } from "class-validator";
-import { UsuarioDocumentoDTO, usuarioDocumentosTipo } from "@model/tables/usuario-documento.model";
+import {
+  IsNotEmpty,
+  IsInt,
+  IsIn,
+  IsString,
+  IsDateString,
+  IsOptional,
+} from "class-validator";
+import {
+  UsuarioDocumentoDTO,
+  usuarioDocumentosTipo,
+} from "@model/tables/usuario-documento.model";
 import type { UsuarioDocumentoTipo } from "@model/tables/usuario-documento.model";
 
 export class UsuarioDocumentoCreateDto
@@ -19,6 +29,11 @@ export class UsuarioDocumentoCreateDto
   @IsIn(usuarioDocumentosTipo.enumValues, { each: true })
   @IsNotEmpty()
   tipo: UsuarioDocumentoTipo;
+
+  @ApiProperty({ example: "Documento 1", description: "Nombre del documento" })
+  @IsString()
+  @IsNotEmpty()
+  nombre: string;
 
   @ApiProperty({
     example: "https://storage.example.com/documentos/dni-12345678.pdf",
