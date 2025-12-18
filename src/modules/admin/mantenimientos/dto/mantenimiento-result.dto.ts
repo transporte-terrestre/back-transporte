@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, OmitType } from "@nestjs/swagger";
 import {
   mantenimientosTipo,
   mantenimientosEstado,
@@ -7,6 +7,9 @@ import type {
   MantenimientoTipo,
   MantenimientoEstado,
 } from "@model/tables/mantenimiento.model";
+import { VehiculoResultDto } from "../../vehiculos/dto/vehiculo-result.dto";
+import { MantenimientoTareaResultDto } from "./mantenimiento-tarea-result.dto";
+import { MantenimientoDocumentoResultDto } from "./mantenimiento-documento-result.dto";
 
 export class MantenimientoResultDto {
   @ApiProperty({ example: 1, description: "Maintenance ID" })
@@ -15,8 +18,37 @@ export class MantenimientoResultDto {
   @ApiProperty({ example: 1, description: "Vehicle ID" })
   vehiculoId: number;
 
+  @ApiProperty({
+    type: () => OmitType(VehiculoResultDto, ["documentos"]),
+    description: "Vehicle details",
+  })
+  vehiculo: Omit<VehiculoResultDto, "documentos">;
+
   @ApiProperty({ example: 1, description: "Workshop ID" })
   tallerId: number;
+
+  @ApiProperty({
+    description: "Workshop details",
+    required: false,
+    example: {
+      id: 1,
+      razonSocial: "Taller SAC",
+      nombreComercial: "El Buen Mecánico",
+    },
+  })
+  taller?: {
+    id: number;
+    razonSocial: string;
+    nombreComercial: string | null;
+    ruc?: string | null;
+    tipo?: string;
+    telefono?: string | null;
+    email?: string | null;
+    direccion?: string | null;
+    creadoEn?: Date;
+    actualizadoEn?: Date;
+    eliminadoEn?: Date | null;
+  };
 
   @ApiProperty({ example: "ORD-001", description: "Service Order Code" })
   codigoOrden: string | null;
@@ -64,4 +96,18 @@ export class MantenimientoResultDto {
     description: "Update date",
   })
   actualizadoEn: Date;
+
+  @ApiProperty({
+    type: [MantenimientoTareaResultDto],
+    description: "List of maintenance tasks",
+    required: false,
+  })
+  tareas?: MantenimientoTareaResultDto[];
+
+  @ApiProperty({
+    type: [MantenimientoDocumentoResultDto],
+    description: "List of maintenance documents",
+    required: false,
+  })
+  documentos?: MantenimientoDocumentoResultDto[];
 }

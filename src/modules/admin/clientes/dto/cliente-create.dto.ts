@@ -16,9 +16,9 @@ export class ClienteCreateDto
     Omit<ClienteDTO, "id" | "nombreCompleto" | "creadoEn" | "actualizadoEn">
 {
   @ApiProperty({
+    description: "Tipo de documento",
     enum: clientesTipoDocumento.enumValues,
     default: clientesTipoDocumento.enumValues[0],
-    description: "Tipo de documento (DNI, RUC)",
   })
   @IsIn(clientesTipoDocumento.enumValues, { each: true })
   @IsNotEmpty()

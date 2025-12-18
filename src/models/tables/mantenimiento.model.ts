@@ -25,11 +25,17 @@ export const mantenimientosEstado = pgEnum("mantenimientos_estado", [
 
 export const mantenimientos = pgTable("mantenimientos", {
   id: serial("id").primaryKey(),
-  vehiculoId: integer("vehiculo_id").references(() => vehiculos.id).notNull(),
-  tallerId: integer("taller_id").references(() => talleres.id).notNull(),
+  vehiculoId: integer("vehiculo_id")
+    .references(() => vehiculos.id)
+    .notNull(),
+  tallerId: integer("taller_id")
+    .references(() => talleres.id)
+    .notNull(),
   codigoOrden: varchar("codigo_orden", { length: 50 }).unique(),
   tipo: mantenimientosTipo("tipo").notNull(),
-  costoTotal: decimal("costo_total", { precision: 10, scale: 2 }).default("0").notNull(),
+  costoTotal: decimal("costo_total", { precision: 10, scale: 2 })
+    .default("0")
+    .notNull(),
   descripcion: text("descripcion").notNull(),
   fechaIngreso: timestamp("fecha_ingreso").notNull(),
   fechaSalida: timestamp("fecha_salida"),
@@ -37,6 +43,7 @@ export const mantenimientos = pgTable("mantenimientos", {
   estado: mantenimientosEstado("estado").default("pendiente").notNull(),
   creadoEn: timestamp("creado_en").defaultNow().notNull(),
   actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
+  eliminadoEn: timestamp("eliminado_en"),
 });
 
 export type MantenimientoTipo = (typeof mantenimientosTipo.enumValues)[number];

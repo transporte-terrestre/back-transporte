@@ -66,6 +66,7 @@ export class UsuarioPaginationQueryDto {
   @ApiProperty({
     description: "Filtrar por rol de usuario",
     enum: usuariosRol.enumValues,
+    example: usuariosRol.enumValues[0],
     required: false,
   })
   @IsOptional()

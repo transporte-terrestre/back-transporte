@@ -15,7 +15,11 @@ import {
   modalidadServicio,
   viajesTipoRuta,
 } from "@model/tables/viaje.model";
-import type { ViajeEstado, ViajeModalidadServicio, ViajeTipoRuta } from "@model/tables/viaje.model";
+import type {
+  ViajeEstado,
+  ViajeModalidadServicio,
+  ViajeTipoRuta,
+} from "@model/tables/viaje.model";
 
 export class ViajeCreateDto
   implements Omit<ViajeDTO, "id" | "creadoEn" | "actualizadoEn">
@@ -90,4 +94,17 @@ export class ViajeCreateDto
   @IsOptional()
   @IsIn(viajesEstado.enumValues, { each: true })
   estado: ViajeEstado;
+
+  @ApiPropertyOptional({
+    example: 1,
+    description: "ID del conductor principal",
+  })
+  @IsOptional()
+  @IsInt()
+  conductorId?: number;
+
+  @ApiPropertyOptional({ example: 1, description: "ID del vehículo principal" })
+  @IsOptional()
+  @IsInt()
+  vehiculoId?: number;
 }

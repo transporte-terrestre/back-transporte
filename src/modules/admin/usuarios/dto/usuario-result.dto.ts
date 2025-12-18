@@ -47,6 +47,7 @@ export class UsuarioResultDto {
   @ApiProperty({
     example: [usuariosRol.enumValues[0]],
     enum: usuariosRol.enumValues,
+    
     description: "User roles",
     isArray: true,
   })

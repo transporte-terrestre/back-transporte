@@ -48,10 +48,6 @@ export class VehiculoCreateDto
   @Min(0)
   kilometraje: number;
 
-  @ApiProperty({ example: "2025-12-31", description: "SOAT expiration date" })
-  @IsDateString()
-  fechaVencimientoSoat: string;
-
   @ApiPropertyOptional({
     enum: vehiculosEstado.enumValues,
     description: "Vehicle status",

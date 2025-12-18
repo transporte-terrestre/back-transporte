@@ -1,7 +1,26 @@
 import { Injectable } from "@nestjs/common";
-import { eq, like, and, gte, lte, count, sql, or } from "drizzle-orm";
+import {
+  eq,
+  like,
+  and,
+  gte,
+  lte,
+  count,
+  sql,
+  or,
+  isNull,
+  getTableColumns,
+} from "drizzle-orm";
 import { database } from "@db/connection.db";
 import { viajes, ViajeDTO } from "@model/tables/viaje.model";
+import { viajeConductores } from "@model/tables/viaje-conductor.model";
+import { conductores } from "@model/tables/conductor.model";
+import { viajeVehiculos } from "@model/tables/viaje-vehiculo.model";
+import { vehiculos } from "@model/tables/vehiculo.model";
+import { rutas } from "@model/tables/ruta.model";
+import { clientes } from "@model/tables/cliente.model";
+import { viajeComentarios } from "@model/tables/viaje-comentario.model";
+import { usuarios } from "@model/tables/usuario.model";
 
 interface PaginationFilters {
   search?: string;
@@ -28,12 +47,7 @@ export class ViajeRepository {
 
     if (filters?.search) {
       const searchTerm = `%${filters.search}%`;
-      conditions.push(
-        or(
-          like(viajes.rutaOcasional, searchTerm),
-          like(sql`${viajes.modalidadServicio}::text`, searchTerm)
-        )
-      );
+      conditions.push(like(viajes.rutaOcasional, searchTerm));
     }
 
     if (filters?.modalidadServicio) {
@@ -63,6 +77,9 @@ export class ViajeRepository {
       );
     }
 
+    // Excluir eliminados
+    conditions.push(isNull(viajes.eliminadoEn));
+
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [{ total }] = await database
@@ -71,8 +88,40 @@ export class ViajeRepository {
       .where(whereClause);
 
     const data = await database
-      .select()
+      .select({
+        ...getTableColumns(viajes),
+        conductorPrincipal: {
+          ...getTableColumns(conductores),
+        },
+        vehiculoPrincipal: {
+          ...getTableColumns(vehiculos),
+        },
+        ruta: {
+          ...getTableColumns(rutas),
+        },
+        cliente: {
+          ...getTableColumns(clientes),
+        },
+      })
       .from(viajes)
+      .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
+      .leftJoin(clientes, eq(clientes.id, viajes.clienteId))
+      .leftJoin(
+        viajeConductores,
+        and(
+          eq(viajeConductores.viajeId, viajes.id),
+          eq(viajeConductores.esPrincipal, true)
+        )
+      )
+      .leftJoin(conductores, eq(conductores.id, viajeConductores.conductorId))
+      .leftJoin(
+        viajeVehiculos,
+        and(
+          eq(viajeVehiculos.viajeId, viajes.id),
+          eq(viajeVehiculos.esPrincipal, true)
+        )
+      )
+      .leftJoin(vehiculos, eq(vehiculos.id, viajeVehiculos.vehiculoId))
       .where(whereClause)
       .limit(limit)
       .offset(offset);
@@ -85,10 +134,63 @@ export class ViajeRepository {
 
   async findOne(id: number) {
     const result = await database
-      .select()
+      .select({
+        viaje: getTableColumns(viajes),
+        cliente: getTableColumns(clientes),
+        ruta: getTableColumns(rutas),
+      })
       .from(viajes)
-      .where(eq(viajes.id, id));
-    return result[0];
+      .leftJoin(clientes, eq(clientes.id, viajes.clienteId))
+      .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
+      .where(and(eq(viajes.id, id), isNull(viajes.eliminadoEn)))
+      .limit(1);
+
+    if (result.length === 0) return null;
+
+    const { viaje, cliente, ruta } = result[0];
+
+    const conductorsQuery = database
+      .select({
+        ...getTableColumns(conductores),
+        rol: viajeConductores.rol,
+        esPrincipal: viajeConductores.esPrincipal,
+      })
+      .from(viajeConductores)
+      .innerJoin(conductores, eq(conductores.id, viajeConductores.conductorId))
+      .where(eq(viajeConductores.viajeId, id));
+
+    const vehiculosQuery = database
+      .select({
+        ...getTableColumns(vehiculos),
+        rol: viajeVehiculos.rol,
+        esPrincipal: viajeVehiculos.esPrincipal,
+      })
+      .from(viajeVehiculos)
+      .innerJoin(vehiculos, eq(vehiculos.id, viajeVehiculos.vehiculoId))
+      .where(eq(viajeVehiculos.viajeId, id));
+
+    const comentariosQuery = database
+      .select({
+        ...getTableColumns(viajeComentarios),
+        usuarioNombreCompleto: usuarios.nombreCompleto,
+        usuarioId: usuarios.id,
+      })
+      .from(viajeComentarios)
+      .leftJoin(usuarios, eq(usuarios.id, viajeComentarios.usuarioId))
+      .where(eq(viajeComentarios.viajeId, id))
+
+    const [conductoresList, vehiculosList, comentariosList] = await Promise.all(
+      [conductorsQuery, vehiculosQuery, comentariosQuery]
+    );
+
+    return {
+      ...viaje,
+      cliente: cliente || null,
+      ruta: ruta || null,
+      conductores: conductoresList,
+      vehiculos: vehiculosList,
+      comentarios: comentariosList,
+    };
   }
 
   async create(data: ViajeDTO) {
@@ -107,7 +209,8 @@ export class ViajeRepository {
 
   async delete(id: number) {
     const result = await database
-      .delete(viajes)
+      .update(viajes)
+      .set({ eliminadoEn: new Date() })
       .where(eq(viajes.id, id))
       .returning();
     return result[0];

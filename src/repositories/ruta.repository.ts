@@ -1,5 +1,16 @@
 import { Injectable } from "@nestjs/common";
-import { eq, or, like, and, gte, lte, count } from "drizzle-orm";
+import {
+  eq,
+  or,
+  like,
+  and,
+  gte,
+  lte,
+  count,
+  ilike,
+  desc,
+  isNull,
+} from "drizzle-orm";
 import { database } from "@db/connection.db";
 import { rutas, RutaDTO } from "@model/tables/ruta.model";
 
@@ -18,33 +29,36 @@ export class RutaRepository {
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
-    filters?: PaginationFilters,
+    filters?: PaginationFilters
   ) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
     if (filters?.search) {
-      const searchTerm = `%${filters.search}%`;
+      const searchTerm = filters.search.trim();
       conditions.push(
         or(
-          like(rutas.origen, searchTerm),
-          like(rutas.destino, searchTerm),
-        ),
+          ilike(rutas.origen, `%${searchTerm}%`),
+          ilike(rutas.destino, `%${searchTerm}%`)
+        )
       );
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
+      conditions.push(gte(rutas.creadoEn, new Date(filters.fechaInicio)));
       conditions.push(
-        gte(rutas.creadoEn, new Date(filters.fechaInicio)),
-      );
-      conditions.push(
-        lte(rutas.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
+        lte(rutas.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
       );
     } else if (filters?.fechaInicio) {
       conditions.push(gte(rutas.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(lte(rutas.creadoEn, new Date(filters.fechaFin + "T23:59:59")));
+      conditions.push(
+        lte(rutas.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
+      );
     }
+
+    // Excluir eliminados
+    conditions.push(isNull(rutas.eliminadoEn));
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -57,6 +71,7 @@ export class RutaRepository {
       .select()
       .from(rutas)
       .where(whereClause)
+      .orderBy(desc(rutas.creadoEn))
       .limit(limit)
       .offset(offset);
 
@@ -70,7 +85,7 @@ export class RutaRepository {
     const result = await database
       .select()
       .from(rutas)
-      .where(eq(rutas.id, id));
+      .where(and(eq(rutas.id, id), isNull(rutas.eliminadoEn)));
     return result[0];
   }
 
@@ -90,7 +105,8 @@ export class RutaRepository {
 
   async delete(id: number) {
     const result = await database
-      .delete(rutas)
+      .update(rutas)
+      .set({ eliminadoEn: new Date() })
       .where(eq(rutas.id, id))
       .returning();
     return result[0];

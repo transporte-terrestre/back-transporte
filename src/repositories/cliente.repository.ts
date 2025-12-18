@@ -1,7 +1,19 @@
 import { Injectable } from "@nestjs/common";
 import { database } from "@db/connection.db";
 import { clientes, Cliente, ClienteDTO } from "@model/tables/cliente.model";
-import { eq, sql, count, or, like, and, gte, lte } from "drizzle-orm";
+import {
+  eq,
+  sql,
+  count,
+  or,
+  like,
+  and,
+  gte,
+  lte,
+  ilike,
+  desc,
+  isNull,
+} from "drizzle-orm";
 
 interface PaginationFilters {
   search?: string;
@@ -24,17 +36,14 @@ export class ClienteRepository {
 
     // Filtro de búsqueda flexible
     if (filters?.search) {
-      const searchTerm = `%${filters.search}%`;
+      const searchTerm = filters.search.trim();
       conditions.push(
         or(
-          like(clientes.nombreCompleto, searchTerm),
-          like(clientes.nombres, searchTerm),
-          like(clientes.apellidos, searchTerm),
-          like(clientes.razonSocial, searchTerm),
-          like(clientes.dni, searchTerm),
-          like(clientes.ruc, searchTerm),
-          like(clientes.telefono, searchTerm),
-          like(clientes.email, searchTerm)
+          ilike(clientes.nombreCompleto, `%${searchTerm}%`),
+          like(clientes.dni, `%${searchTerm}%`),
+          like(clientes.ruc, `%${searchTerm}%`),
+          like(clientes.telefono, `%${searchTerm}%`),
+          like(clientes.email, `%${searchTerm}%`)
         )
       );
     }
@@ -59,7 +68,8 @@ export class ClienteRepository {
       );
     }
 
-    // Combinar todas las condiciones
+    // Combinar todas las condiciones y excluir eliminados
+    conditions.push(isNull(clientes.eliminadoEn));
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     // Obtener el total de registros con filtros
@@ -73,6 +83,7 @@ export class ClienteRepository {
       .select()
       .from(clientes)
       .where(whereClause)
+      .orderBy(desc(clientes.creadoEn))
       .limit(limit)
       .offset(offset);
 
@@ -86,7 +97,7 @@ export class ClienteRepository {
     const result = await database
       .select()
       .from(clientes)
-      .where(eq(clientes.id, id));
+      .where(and(eq(clientes.id, id), isNull(clientes.eliminadoEn)));
     return result[0];
   }
 
@@ -94,7 +105,7 @@ export class ClienteRepository {
     const result = await database
       .select()
       .from(clientes)
-      .where(eq(clientes.dni, dni));
+      .where(and(eq(clientes.dni, dni), isNull(clientes.eliminadoEn)));
     return result[0];
   }
 
@@ -102,7 +113,7 @@ export class ClienteRepository {
     const result = await database
       .select()
       .from(clientes)
-      .where(eq(clientes.ruc, ruc));
+      .where(and(eq(clientes.ruc, ruc), isNull(clientes.eliminadoEn)));
     return result[0];
   }
 
@@ -110,7 +121,7 @@ export class ClienteRepository {
     const result = await database
       .select()
       .from(clientes)
-      .where(eq(clientes.email, email));
+      .where(and(eq(clientes.email, email), isNull(clientes.eliminadoEn)));
     return result[0];
   }
 
@@ -130,7 +141,8 @@ export class ClienteRepository {
 
   async delete(id: number) {
     const result = await database
-      .delete(clientes)
+      .update(clientes)
+      .set({ eliminadoEn: new Date() })
       .where(eq(clientes.id, id))
       .returning();
     return result[0];

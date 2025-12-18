@@ -1,5 +1,4 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { ViajeResultDto } from "./viaje-result.dto";
 import { Type } from "class-transformer";
 import {
   IsInt,
@@ -20,6 +19,7 @@ import type {
   ViajeTipoRuta,
   ViajeEstado,
 } from "@model/tables/viaje.model";
+import { ViajeListDto } from "./viaje-list.dto";
 
 export class ViajePaginationQueryDto {
   @ApiProperty({
@@ -48,7 +48,7 @@ export class ViajePaginationQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description: "Búsqueda por ruta ocasional o modalidad de servicio",
+    description: "Búsqueda por ruta ocasional",
     required: false,
   })
   @IsOptional()
@@ -74,6 +74,7 @@ export class ViajePaginationQueryDto {
   @ApiProperty({
     description: "Filtrar por modalidad de servicio",
     enum: modalidadServicio.enumValues,
+    example: modalidadServicio.enumValues[0],
     required: false,
   })
   @IsOptional()
@@ -83,6 +84,7 @@ export class ViajePaginationQueryDto {
   @ApiProperty({
     description: "Filtrar por tipo de ruta (ocasional, fija)",
     enum: viajesTipoRuta.enumValues,
+    example: viajesTipoRuta.enumValues[0],
     required: false,
   })
   @IsOptional()
@@ -92,6 +94,7 @@ export class ViajePaginationQueryDto {
   @ApiProperty({
     description: "Filtrar por estado del viaje",
     enum: viajesEstado.enumValues,
+    example: viajesEstado.enumValues[0],
     required: false,
   })
   @IsOptional()
@@ -102,9 +105,9 @@ export class ViajePaginationQueryDto {
 export class PaginatedViajeResultDto {
   @ApiProperty({
     description: "Lista de viajes en la página actual",
-    type: [ViajeResultDto],
+    type: [ViajeListDto],
   })
-  data: ViajeResultDto[];
+  data: ViajeListDto[];
 
   @ApiProperty({
     description: "Metadatos de la paginación",

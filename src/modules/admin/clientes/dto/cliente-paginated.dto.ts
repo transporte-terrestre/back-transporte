@@ -66,6 +66,7 @@ export class ClientePaginationQueryDto {
   @ApiProperty({
     description: "Filtrar por tipo de documento",
     enum: clientesTipoDocumento.enumValues,
+    example: clientesTipoDocumento.enumValues[0],
     required: false,
   })
   @IsOptional()

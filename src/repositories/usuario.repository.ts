@@ -1,7 +1,19 @@
 import { Injectable } from "@nestjs/common";
 import { database } from "@db/connection.db";
 import { usuarios, Usuario, UsuarioDTO } from "@model/tables/usuario.model";
-import { eq, or, like, and, gte, lte, count, sql } from "drizzle-orm";
+import {
+  eq,
+  or,
+  like,
+  and,
+  gte,
+  lte,
+  count,
+  sql,
+  ilike,
+  desc,
+  isNull,
+} from "drizzle-orm";
 
 interface PaginationFilters {
   search?: string;
@@ -25,13 +37,13 @@ export class UsuarioRepository {
     const conditions = [];
 
     if (filters?.search) {
-      const searchTerm = `%${filters.search}%`;
+      const searchTerm = filters.search.trim();
       conditions.push(
         or(
-          like(usuarios.nombreCompleto, searchTerm),
-          like(usuarios.nombres, searchTerm),
-          like(usuarios.apellidos, searchTerm),
-          like(usuarios.email, searchTerm)
+          ilike(usuarios.nombreCompleto, `%${searchTerm}%`),
+          like(usuarios.email, `%${searchTerm}%`),
+          like(usuarios.nombres, `%${searchTerm}%`),
+          like(usuarios.apellidos, `%${searchTerm}%`)
         )
       );
     }
@@ -52,6 +64,9 @@ export class UsuarioRepository {
         lte(usuarios.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
       );
     }
+
+    // Excluir eliminados
+    conditions.push(isNull(usuarios.eliminadoEn));
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -74,6 +89,7 @@ export class UsuarioRepository {
       })
       .from(usuarios)
       .where(whereClause)
+      .orderBy(desc(usuarios.creadoEn))
       .limit(limit)
       .offset(offset);
 
@@ -97,7 +113,7 @@ export class UsuarioRepository {
         actualizadoEn: usuarios.actualizadoEn,
       })
       .from(usuarios)
-      .where(eq(usuarios.id, id));
+      .where(and(eq(usuarios.id, id), isNull(usuarios.eliminadoEn)));
     return result[0];
   }
 
@@ -105,7 +121,7 @@ export class UsuarioRepository {
     const result = await database
       .select()
       .from(usuarios)
-      .where(eq(usuarios.email, email));
+      .where(and(eq(usuarios.email, email), isNull(usuarios.eliminadoEn)));
     return result[0];
   }
 
@@ -145,7 +161,8 @@ export class UsuarioRepository {
 
   async delete(id: number) {
     const result = await database
-      .delete(usuarios)
+      .update(usuarios)
+      .set({ eliminadoEn: new Date() })
       .where(eq(usuarios.id, id))
       .returning({
         id: usuarios.id,

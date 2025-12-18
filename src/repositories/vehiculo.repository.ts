@@ -8,7 +8,9 @@ import {
   lte,
   count,
   sql,
-  getTableColumns,
+  ilike,
+  desc,
+  isNull,
 } from "drizzle-orm";
 import { database } from "@db/connection.db";
 import { vehiculos, VehiculoDTO } from "@model/tables/vehiculo.model";
@@ -36,12 +38,13 @@ export class VehiculoRepository {
     const conditions = [];
 
     if (filters?.search) {
-      const searchTerm = `%${filters.search}%`;
+      const searchTerm = filters.search.trim();
       conditions.push(
         or(
-          like(vehiculos.placa, searchTerm),
-          like(vehiculos.marca, searchTerm),
-          like(vehiculos.modelo, searchTerm)
+          like(vehiculos.placa, `%${searchTerm}%`),
+          ilike(vehiculos.marca, `%${searchTerm}%`),
+          ilike(vehiculos.modelo, `%${searchTerm}%`),
+          like(vehiculos.codigoInterno, `%${searchTerm}%`)
         )
       );
     }
@@ -63,6 +66,9 @@ export class VehiculoRepository {
       );
     }
 
+    // Excluir eliminados
+    conditions.push(isNull(vehiculos.eliminadoEn));
+
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [{ total }] = await database
@@ -71,19 +77,10 @@ export class VehiculoRepository {
       .where(whereClause);
 
     const data = await database
-      .select({
-        ...getTableColumns(vehiculos),
-        fechaVencimientoSoat: vehiculoDocumentos.fechaExpiracion,
-      })
+      .select()
       .from(vehiculos)
-      .leftJoin(
-        vehiculoDocumentos,
-        and(
-          eq(vehiculoDocumentos.vehiculoId, vehiculos.id),
-          eq(vehiculoDocumentos.tipo, "soat")
-        )
-      )
       .where(whereClause)
+      .orderBy(desc(vehiculos.creadoEn))
       .limit(limit)
       .offset(offset);
 
@@ -97,7 +94,7 @@ export class VehiculoRepository {
     const result = await database
       .select()
       .from(vehiculos)
-      .where(eq(vehiculos.id, id));
+      .where(and(eq(vehiculos.id, id), isNull(vehiculos.eliminadoEn)));
     return result[0];
   }
 
@@ -117,7 +114,8 @@ export class VehiculoRepository {
 
   async delete(id: number) {
     const result = await database
-      .delete(vehiculos)
+      .update(vehiculos)
+      .set({ eliminadoEn: new Date() })
       .where(eq(vehiculos.id, id))
       .returning();
     return result[0];

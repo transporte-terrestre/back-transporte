@@ -9,6 +9,7 @@ import { PaginatedViajeResultDto } from "./dto/viaje-paginated.dto";
 import { ViajeConductorDTO } from "@model/tables/viaje-conductor.model";
 import { ViajeVehiculoDTO } from "@model/tables/viaje-vehiculo.model";
 import { ViajeComentarioDTO } from "@model/tables/viaje-comentario.model";
+import { ViajeDTO } from "@model/tables/viaje.model";
 
 @Injectable()
 export class ViajesService {
@@ -56,11 +57,33 @@ export class ViajesService {
     return this.viajeRepository.findOne(id);
   }
 
-  create(data: ViajeCreateDto) {
-    return this.viajeRepository.create(data);
+  async create(data: ViajeCreateDto) {
+    const { conductorId, vehiculoId, ...viajeData } = data;
+
+    const viaje = await this.viajeRepository.create(viajeData);
+
+    if (conductorId) {
+      await this.assignConductor({
+        viajeId: viaje.id,
+        conductorId,
+        esPrincipal: true,
+        rol: "conductor",
+      });
+    }
+
+    if (vehiculoId) {
+      await this.assignVehiculo({
+        viajeId: viaje.id,
+        vehiculoId,
+        esPrincipal: true,
+        rol: "principal",
+      });
+    }
+
+    return viaje;
   }
 
-  update(id: number, data: ViajeUpdateDto) {
+  async update(id: number, data: ViajeUpdateDto) {
     return this.viajeRepository.update(id, data);
   }
 
@@ -77,10 +100,8 @@ export class ViajesService {
     return await this.viajeConductorRepository.findOne(viajeId, conductorId);
   }
 
-  async assignConductor(data: Partial<ViajeConductorDTO>) {
-    return await this.viajeConductorRepository.create(
-      data as ViajeConductorDTO
-    );
+  async assignConductor(data: ViajeConductorDTO) {
+    return await this.viajeConductorRepository.create(data);
   }
 
   async updateConductor(
@@ -108,8 +129,8 @@ export class ViajesService {
     return await this.viajeVehiculoRepository.findOne(viajeId, vehiculoId);
   }
 
-  async assignVehiculo(data: Partial<ViajeVehiculoDTO>) {
-    return await this.viajeVehiculoRepository.create(data as ViajeVehiculoDTO);
+  async assignVehiculo(data: ViajeVehiculoDTO) {
+    return await this.viajeVehiculoRepository.create(data);
   }
 
   async updateVehiculo(
@@ -133,10 +154,8 @@ export class ViajesService {
     return await this.viajeComentarioRepository.findOne(id);
   }
 
-  async createComentario(data: Partial<ViajeComentarioDTO>) {
-    return await this.viajeComentarioRepository.create(
-      data as ViajeComentarioDTO
-    );
+  async createComentario(data: ViajeComentarioDTO) {
+    return await this.viajeComentarioRepository.create(data);
   }
 
   async updateComentario(id: number, data: Partial<ViajeComentarioDTO>) {

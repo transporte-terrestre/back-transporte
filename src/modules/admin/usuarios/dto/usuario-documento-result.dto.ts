@@ -12,7 +12,7 @@ export class UsuarioDocumentoResultDto {
   @ApiProperty({
     enum: usuarioDocumentosTipo.enumValues,
     description: "Tipo de documento",
-    example: "dni",
+    example: usuarioDocumentosTipo.enumValues[0],
   })
   tipo: UsuarioDocumentoTipo;
 

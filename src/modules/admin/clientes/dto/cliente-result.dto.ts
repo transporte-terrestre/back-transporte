@@ -31,9 +31,9 @@ export class ClienteResultDto {
   id: number;
 
   @ApiProperty({
+    description: "Tipo de documento",
     enum: clientesTipoDocumento.enumValues,
     example: clientesTipoDocumento.enumValues[0],
-    description: "Tipo de documento",
   })
   tipoDocumento: ClienteTipoDocumento;
 

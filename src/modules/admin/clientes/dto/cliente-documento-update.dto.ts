@@ -5,8 +5,8 @@ import type { ClienteDocumentoTipo } from "@model/tables/cliente-documento.model
 
 export class ClienteDocumentoUpdateDto {
   @ApiProperty({
-    enum: clienteDocumentosTipo.enumValues,
     description: "Tipo de documento",
+    enum: clienteDocumentosTipo.enumValues,
     default: clienteDocumentosTipo.enumValues[0],
     required: false,
   })

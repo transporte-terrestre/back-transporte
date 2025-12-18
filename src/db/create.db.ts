@@ -34,9 +34,29 @@ async function createDatabase() {
   }
 }
 
+async function enableExtensions() {
+  const { database, ...postgresConfig } = dbConfig;
+  const client = new Client({
+    ...postgresConfig,
+    database: database,
+  });
+
+  try {
+    await client.connect();
+    await client.query("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
+    console.log("✅ Extension 'pg_trgm' enabled successfully.");
+  } catch (error) {
+    console.error("❌ Error enabling extensions:", error);
+    throw error;
+  } finally {
+    await client.end();
+  }
+}
+
 async function createTables() {
   try {
     await createDatabase();
+    await enableExtensions();
     execSync("npx drizzle-kit push --config=drizzle.config.ts", {
       stdio: "inherit",
       cwd: process.cwd(),
@@ -44,7 +64,7 @@ async function createTables() {
     console.log("✅ Tablas creadas exitosamente desde los modelos");
     process.exit(0);
   } catch (error) {
-    console.error("❌ Error al crear las tablas");
+    console.error("❌ Error al crear las tablas/extensions");
     process.exit(1);
   }
 }

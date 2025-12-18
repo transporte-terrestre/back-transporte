@@ -1,14 +1,54 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional, OmitType } from "@nestjs/swagger";
 import {
   viajesEstado,
   modalidadServicio,
   viajesTipoRuta,
 } from "@model/tables/viaje.model";
+import { ConductorResultDto } from "../../conductores/dto/conductor-result.dto";
+import { VehiculoResultDto } from "../../vehiculos/dto/vehiculo-result.dto";
+import { ClienteResultDto } from "../../clientes/dto/cliente-result.dto";
+import { viajeConductoresRol } from "@model/tables/viaje-conductor.model";
+import { viajeVehiculosRol } from "@model/tables/viaje-vehiculo.model";
 import type {
   ViajeModalidadServicio,
   ViajeEstado,
   ViajeTipoRuta,
 } from "@model/tables/viaje.model";
+import { ViajeComentarioResultDto } from "./viaje-comentario-result.dto";
+import { RutaResultDto } from "@module/admin/rutas/dto/ruta-result.dto";
+
+export class ViajeConductorDetalleDto extends OmitType(ConductorResultDto, [
+  "documentos",
+]) {
+  @ApiProperty({ example: true, description: "Es conductor principal" })
+  esPrincipal: boolean;
+
+  @ApiProperty({ 
+    enum: viajeConductoresRol.enumValues, 
+    example: viajeConductoresRol.enumValues[0],
+    description: "Rol del conductor"
+  })
+  rol: string;
+}
+
+export class ViajeVehiculoDetalleDto extends OmitType(VehiculoResultDto, [
+  "documentos",
+]) {
+  @ApiProperty({ example: true, description: "Es vehículo principal" })
+  esPrincipal: boolean;
+
+  @ApiProperty({ 
+    enum: viajeVehiculosRol.enumValues, 
+    example: viajeVehiculosRol.enumValues[0],
+    description: "Rol del vehículo"
+  })
+  rol: string;
+}
+
+export class ViajeComentarioDetalleDto extends ViajeComentarioResultDto {
+  @ApiProperty({ example: "Juan Pérez", description: "Nombre del usuario" })
+  usuarioNombreCompleto: string;
+}
 
 export class ViajeResultDto {
   @ApiProperty({ example: 1, description: "Trip ID" })
@@ -25,7 +65,7 @@ export class ViajeResultDto {
 
   @ApiProperty({
     enum: viajesTipoRuta.enumValues,
-    example: "fija",
+    example: viajesTipoRuta.enumValues[0],
     description: "Tipo de ruta",
   })
   tipoRuta: ViajeTipoRuta;
@@ -41,7 +81,7 @@ export class ViajeResultDto {
 
   @ApiProperty({
     enum: modalidadServicio.enumValues,
-    example: "regular",
+    example: modalidadServicio.enumValues[0],
     description: "Modalidad de servicio",
   })
   modalidadServicio: ViajeModalidadServicio;
@@ -76,4 +116,21 @@ export class ViajeResultDto {
     description: "Update date",
   })
   actualizadoEn: Date;
+
+  @ApiPropertyOptional({ type: [ViajeConductorDetalleDto] })
+  conductores?: ViajeConductorDetalleDto[];
+
+  @ApiPropertyOptional({ type: [ViajeVehiculoDetalleDto] })
+  vehiculos?: ViajeVehiculoDetalleDto[];
+
+  @ApiPropertyOptional({ type: [ViajeComentarioDetalleDto] })
+  comentarios?: ViajeComentarioDetalleDto[];
+
+  @ApiPropertyOptional({
+    type: OmitType(ClienteResultDto, ["documentos"]),
+  })
+  cliente?: Omit<ClienteResultDto, "documentos">;
+
+  @ApiPropertyOptional({ type: RutaResultDto })
+  ruta?: Omit<RutaResultDto, "documentos">;
 }

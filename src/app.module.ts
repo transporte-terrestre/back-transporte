@@ -12,6 +12,9 @@ import { DashboardModule } from "./modules/admin/dashboard/dashboard.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { StorageModule } from "./modules/storage/storage.module";
 import { CronjobModule } from "./modules/cronjob/cronjob.module";
+import { TalleresModule } from "./modules/admin/talleres/talleres.module";
+import { NotificacionesModule } from "./modules/admin/notificaciones/notificaciones.module";
+import { ReportesModule } from "./modules/admin/reportes/reportes.module";
 
 @Module({
   imports: [
@@ -25,6 +28,9 @@ import { CronjobModule } from "./modules/cronjob/cronjob.module";
     UsuariosModule,
     ClientesModule,
     StorageModule,
+    TalleresModule,
+    NotificacionesModule,
+    ReportesModule,
     // CronjobModule,
   ],
   controllers: [AppController],

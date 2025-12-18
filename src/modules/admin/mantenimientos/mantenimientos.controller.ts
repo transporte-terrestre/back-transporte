@@ -85,4 +85,50 @@ export class MantenimientosController {
   remove(@Param("id") id: string) {
     return this.mantenimientosService.delete(+id);
   }
+
+  // ========== TAREAS ==========
+  @Post("create/tarea")
+  @ApiOperation({ summary: "Add a task to a maintenance record" })
+  createTarea(@Body() data: any) {
+    return this.mantenimientosService.createTarea(data);
+  }
+
+  @Patch("update/:id/tarea/:tareaId")
+  @ApiOperation({ summary: "Update a maintenance task" })
+  updateTarea(
+    @Param("id") id: string,
+    @Param("tareaId") tareaId: string,
+    @Body() data: any
+  ) {
+    return this.mantenimientosService.updateTarea(+tareaId, data);
+  }
+
+  @Delete("delete/:id/tarea/:tareaId")
+  @ApiOperation({ summary: "Delete a maintenance task" })
+  deleteTarea(@Param("id") id: string, @Param("tareaId") tareaId: string) {
+    return this.mantenimientosService.deleteTarea(+tareaId);
+  }
+
+  // ========== DOCUMENTOS ==========
+  @Post("create/documento")
+  @ApiOperation({ summary: "Add a document to a maintenance record" })
+  createDocumento(@Body() data: any) {
+    return this.mantenimientosService.createDocumento(data);
+  }
+
+  @Patch("update/:id/documento/:docId")
+  @ApiOperation({ summary: "Update a maintenance document" })
+  updateDocumento(
+    @Param("id") id: string,
+    @Param("docId") docId: string,
+    @Body() data: any
+  ) {
+    return this.mantenimientosService.updateDocumento(+docId, data);
+  }
+
+  @Delete("delete/:id/documento/:docId")
+  @ApiOperation({ summary: "Delete a maintenance document" })
+  deleteDocumento(@Param("id") id: string, @Param("docId") docId: string) {
+    return this.mantenimientosService.deleteDocumento(+docId);
+  }
 }

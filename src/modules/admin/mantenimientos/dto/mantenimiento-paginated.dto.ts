@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { MantenimientoResultDto } from "./mantenimiento-result.dto";
+
 import { Type } from "class-transformer";
 import {
   IsInt,
@@ -42,7 +42,7 @@ export class MantenimientoPaginationQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(1000)
   limit?: number = 10;
 
   @ApiProperty({
@@ -73,6 +73,7 @@ export class MantenimientoPaginationQueryDto {
   @ApiProperty({
     description: "Filtrar por tipo de mantenimiento",
     enum: mantenimientosTipo.enumValues,
+    example: mantenimientosTipo.enumValues[0],
     required: false,
   })
   @IsOptional()
@@ -82,6 +83,7 @@ export class MantenimientoPaginationQueryDto {
   @ApiProperty({
     description: "Filtrar por estado del mantenimiento",
     enum: mantenimientosEstado.enumValues,
+    example: mantenimientosEstado.enumValues[0],
     required: false,
   })
   @IsOptional()
@@ -89,12 +91,14 @@ export class MantenimientoPaginationQueryDto {
   estado?: MantenimientoEstado;
 }
 
+import { MantenimientoListDto } from "./mantenimiento-list.dto";
+
 export class PaginatedMantenimientoResultDto {
   @ApiProperty({
     description: "Lista de mantenimientos en la página actual",
-    type: [MantenimientoResultDto],
+    type: [MantenimientoListDto],
   })
-  data: MantenimientoResultDto[];
+  data: MantenimientoListDto[];
 
   @ApiProperty({
     description: "Metadatos de la paginación",

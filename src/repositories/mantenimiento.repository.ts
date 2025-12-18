@@ -1,10 +1,25 @@
 import { Injectable } from "@nestjs/common";
-import { eq, or, like, and, gte, lte, count, sql } from "drizzle-orm";
+import {
+  eq,
+  or,
+  like,
+  and,
+  gte,
+  lte,
+  count,
+  sql,
+  isNull,
+  getTableColumns,
+} from "drizzle-orm";
 import { database } from "@db/connection.db";
 import {
   mantenimientos,
   MantenimientoDTO,
 } from "@model/tables/mantenimiento.model";
+import { vehiculos } from "@model/tables/vehiculo.model";
+import { talleres } from "@model/tables/taller.model";
+import { mantenimientoTareas } from "@model/tables/mantenimiento-tarea.model";
+import { mantenimientoDocumentos } from "@model/tables/mantenimiento-documento.model";
 
 interface PaginationFilters {
   search?: string;
@@ -27,6 +42,8 @@ export class MantenimientoRepository {
   ) {
     const offset = (page - 1) * limit;
     const conditions = [];
+
+    conditions.push(isNull(mantenimientos.eliminadoEn));
 
     if (filters?.search) {
       const searchTerm = `%${filters.search}%`;
@@ -83,8 +100,18 @@ export class MantenimientoRepository {
       .where(whereClause);
 
     const data = await database
-      .select()
+      .select({
+        ...getTableColumns(mantenimientos),
+        vehiculo: {
+          ...getTableColumns(vehiculos),
+        },
+        taller: {
+          ...getTableColumns(talleres),
+        },
+      })
       .from(mantenimientos)
+      .leftJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
+      .leftJoin(talleres, eq(mantenimientos.tallerId, talleres.id))
       .where(whereClause)
       .limit(limit)
       .offset(offset);
@@ -97,10 +124,42 @@ export class MantenimientoRepository {
 
   async findOne(id: number) {
     const result = await database
-      .select()
+      .select({
+        ...getTableColumns(mantenimientos),
+        vehiculo: {
+          ...getTableColumns(vehiculos),
+        },
+        taller: {
+          ...getTableColumns(talleres),
+        },
+      })
       .from(mantenimientos)
-      .where(eq(mantenimientos.id, id));
-    return result[0];
+      .leftJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
+      .leftJoin(talleres, eq(mantenimientos.tallerId, talleres.id))
+      .where(
+        and(eq(mantenimientos.id, id), isNull(mantenimientos.eliminadoEn))
+      );
+
+    if (result.length === 0) return null;
+
+    const maintenance = result[0];
+
+    // Fetch related data sequentially (equivalent to ViajeRepository)
+    const tareasList = await database
+      .select()
+      .from(mantenimientoTareas)
+      .where(eq(mantenimientoTareas.mantenimientoId, id));
+
+    const documentosList = await database
+      .select()
+      .from(mantenimientoDocumentos)
+      .where(eq(mantenimientoDocumentos.mantenimientoId, id));
+
+    return {
+      ...maintenance,
+      tareas: tareasList,
+      documentos: documentosList,
+    };
   }
 
   async create(data: MantenimientoDTO) {
@@ -122,8 +181,61 @@ export class MantenimientoRepository {
 
   async delete(id: number) {
     const result = await database
-      .delete(mantenimientos)
+      .update(mantenimientos)
+      .set({ eliminadoEn: new Date() })
       .where(eq(mantenimientos.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // ========== TAREAS ==========
+  async createTarea(data: any) {
+    const result = await database
+      .insert(mantenimientoTareas)
+      .values(data)
+      .returning();
+    return result[0];
+  }
+
+  async updateTarea(id: number, data: any) {
+    const result = await database
+      .update(mantenimientoTareas)
+      .set({ ...data, actualizadoEn: new Date() })
+      .where(eq(mantenimientoTareas.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteTarea(id: number) {
+    const result = await database
+      .delete(mantenimientoTareas)
+      .where(eq(mantenimientoTareas.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // ========== DOCUMENTOS ==========
+  async createDocumento(data: any) {
+    const result = await database
+      .insert(mantenimientoDocumentos)
+      .values(data)
+      .returning();
+    return result[0];
+  }
+
+  async updateDocumento(id: number, data: any) {
+    const result = await database
+      .update(mantenimientoDocumentos)
+      .set({ ...data, actualizadoEn: new Date() })
+      .where(eq(mantenimientoDocumentos.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDocumento(id: number) {
+    const result = await database
+      .delete(mantenimientoDocumentos)
+      .where(eq(mantenimientoDocumentos.id, id))
       .returning();
     return result[0];
   }

@@ -12,7 +12,7 @@ export class ConductorDocumentoResultDto {
   @ApiProperty({
     enum: conductorDocumentosTipo.enumValues,
     description: "Tipo de documento",
-    example: "licencia",
+    example: conductorDocumentosTipo.enumValues[0],
   })
   tipo: ConductorDocumentoTipo;
 

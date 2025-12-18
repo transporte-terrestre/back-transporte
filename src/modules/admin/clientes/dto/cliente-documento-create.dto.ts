@@ -22,8 +22,8 @@ export class ClienteDocumentoCreateDto
   clienteId: number;
 
   @ApiProperty({
-    enum: clienteDocumentosTipo.enumValues,
     description: "Tipo de documento",
+    enum: clienteDocumentosTipo.enumValues,
     default: clienteDocumentosTipo.enumValues[0],
   })
   @IsIn(clienteDocumentosTipo.enumValues, { each: true })

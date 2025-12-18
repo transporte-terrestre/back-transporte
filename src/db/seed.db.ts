@@ -6,21 +6,33 @@ import { seedTalleres } from "@seed/taller.seed";
 import { seedViajes } from "@seed/viaje.seed";
 import { seedUsuarios } from "@seed/usuario.seed";
 import { seedClientes } from "@seed/cliente.seed";
+import { seedClienteDocumentos } from "@seed/cliente-documento.seed";
+import { seedConductorDocumentos } from "@seed/conductor-documento.seed";
+import { seedVehiculoDocumentos } from "@seed/vehiculo-documento.seed";
+import { seedUsuarioDocumentos } from "@seed/usuario-documento.seed";
 
 async function seed() {
   try {
     console.log("🚀 Starting database seeding...\n");
 
     // Seeds must run in order due to foreign key dependencies
-    await seedUsuarios();
-    await seedConductores();
+    // 1. Core entities
+    const usuariosData = await seedUsuarios();
+    const driversData = await seedConductores();
     const clientesData = await seedClientes();
     const vehiclesData = await seedVehiculos();
     const routesData = await seedRutas();
     const talleresData = await seedTalleres();
 
+    // 2. Related data
     await seedMantenimientos(vehiclesData, talleresData);
-    await seedViajes(clientesData, routesData);
+    await seedViajes(clientesData, routesData, vehiclesData, driversData);
+
+    // 3. Documents (depend on core entities)
+    await seedUsuarioDocumentos(usuariosData);
+    await seedConductorDocumentos(driversData);
+    await seedClienteDocumentos(clientesData);
+    await seedVehiculoDocumentos(vehiclesData);
 
     console.log("\n✨ Database seeding completed successfully!");
     process.exit(0);

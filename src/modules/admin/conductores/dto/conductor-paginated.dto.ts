@@ -72,6 +72,7 @@ export class ConductorPaginationQueryDto {
   @ApiProperty({
     description: "Filtrar por clase de licencia",
     enum: conductoresClaseLicencia.enumValues,
+    example: conductoresClaseLicencia.enumValues[0],
     required: false,
   })
   @IsOptional()
@@ -81,6 +82,7 @@ export class ConductorPaginationQueryDto {
   @ApiProperty({
     description: "Filtrar por categoría de licencia",
     enum: conductoresCategoriaLicencia.enumValues,
+    example: conductoresCategoriaLicencia.enumValues[0],
     required: false,
   })
   @IsOptional()

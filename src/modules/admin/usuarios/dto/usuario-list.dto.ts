@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { usuariosRol } from "@model/tables/usuario.model";
+import type { UsuarioRol } from "@model/tables/usuario.model";
 
 export class UsuarioListDto {
   @ApiProperty({ example: 1, description: "User ID" })
@@ -23,7 +24,7 @@ export class UsuarioListDto {
     description: "User roles",
     isArray: true,
   })
-  roles: (typeof usuariosRol.enumValues)[number][];
+  roles: UsuarioRol[];
 
   @ApiProperty({
     example: [],

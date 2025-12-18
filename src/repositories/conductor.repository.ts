@@ -1,5 +1,17 @@
 import { Injectable } from "@nestjs/common";
-import { eq, or, like, and, gte, lte, count, sql } from "drizzle-orm";
+import {
+  eq,
+  or,
+  like,
+  and,
+  gte,
+  lte,
+  count,
+  sql,
+  ilike,
+  desc,
+  isNull,
+} from "drizzle-orm";
 import { database } from "@db/connection.db";
 import { conductores, ConductorDTO } from "@model/tables/conductor.model";
 
@@ -26,14 +38,12 @@ export class ConductorRepository {
     const conditions = [];
 
     if (filters?.search) {
-      const searchTerm = `%${filters.search}%`;
+      const searchTerm = filters.search.trim();
       conditions.push(
         or(
-          like(conductores.nombreCompleto, searchTerm),
-          like(conductores.nombres, searchTerm),
-          like(conductores.apellidos, searchTerm),
-          like(conductores.dni, searchTerm),
-          like(conductores.numeroLicencia, searchTerm)
+          ilike(conductores.nombreCompleto, `%${searchTerm}%`),
+          like(conductores.dni, `%${searchTerm}%`),
+          like(conductores.numeroLicencia, `%${searchTerm}%`)
         )
       );
     }
@@ -66,6 +76,9 @@ export class ConductorRepository {
       );
     }
 
+    // Excluir eliminados
+    conditions.push(isNull(conductores.eliminadoEn));
+
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [{ total }] = await database
@@ -77,6 +90,7 @@ export class ConductorRepository {
       .select()
       .from(conductores)
       .where(whereClause)
+      .orderBy(desc(conductores.creadoEn))
       .limit(limit)
       .offset(offset);
 
@@ -90,7 +104,7 @@ export class ConductorRepository {
     const result = await database
       .select()
       .from(conductores)
-      .where(eq(conductores.id, id));
+      .where(and(eq(conductores.id, id), isNull(conductores.eliminadoEn)));
     return result[0];
   }
 
@@ -110,7 +124,8 @@ export class ConductorRepository {
 
   async delete(id: number) {
     const result = await database
-      .delete(conductores)
+      .update(conductores)
+      .set({ eliminadoEn: new Date() })
       .where(eq(conductores.id, id))
       .returning();
     return result[0];

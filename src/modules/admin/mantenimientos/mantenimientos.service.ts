@@ -57,4 +57,30 @@ export class MantenimientosService {
   delete(id: number) {
     return this.mantenimientoRepository.delete(id);
   }
+
+  // Tareas
+  createTarea(data: any) {
+    return this.mantenimientoRepository.createTarea(data);
+  }
+
+  updateTarea(id: number, data: any) {
+    return this.mantenimientoRepository.updateTarea(id, data);
+  }
+
+  deleteTarea(id: number) {
+    return this.mantenimientoRepository.deleteTarea(id);
+  }
+
+  // Documentos
+  createDocumento(data: any) {
+    return this.mantenimientoRepository.createDocumento(data);
+  }
+
+  updateDocumento(id: number, data: any) {
+    return this.mantenimientoRepository.updateDocumento(id, data);
+  }
+
+  deleteDocumento(id: number) {
+    return this.mantenimientoRepository.deleteDocumento(id);
+  }
 }

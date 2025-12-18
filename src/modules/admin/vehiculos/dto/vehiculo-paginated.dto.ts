@@ -66,6 +66,7 @@ export class VehiculoPaginationQueryDto {
   @ApiProperty({
     description: "Filtrar por estado del vehículo",
     enum: vehiculosEstado.enumValues,
+    example: vehiculosEstado.enumValues[0],
     required: false,
   })
   @IsOptional()

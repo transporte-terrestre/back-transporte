@@ -12,7 +12,7 @@ export class VehiculoDocumentoResultDto {
   @ApiProperty({
     enum: vehiculoDocumentosTipo.enumValues,
     description: "Tipo de documento",
-    example: "soat",
+    example: vehiculoDocumentosTipo.enumValues[0],
   })
   tipo: VehiculoDocumentoTipo;
 

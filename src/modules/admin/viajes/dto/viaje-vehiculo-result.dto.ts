@@ -18,7 +18,7 @@ export class ViajeVehiculoResultDto {
   @ApiProperty({
     enum: viajeVehiculosRol.enumValues,
     description: "Rol del vehículo en el viaje",
-    example: "principal",
+    example: viajeVehiculosRol.enumValues[0],
   })
   rol: ViajeVehiculoRol;
 

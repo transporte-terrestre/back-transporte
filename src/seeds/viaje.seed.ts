@@ -4,304 +4,220 @@ import { Ruta } from "@model/tables/ruta.model";
 import { Cliente } from "@model/tables/cliente.model";
 import { getDateTime } from "@function/date.function";
 
-export async function seedViajes(clientesData: Cliente[], routesData: Ruta[]) {
-  console.log("🌱 Seeding trips...");
+import { Conductor } from "@model/tables/conductor.model";
+import { Vehiculo } from "@model/tables/vehiculo.model";
+import {
+  ViajeConductorDTO,
+  viajeConductores,
+} from "@model/tables/viaje-conductor.model";
+import {
+  ViajeVehiculoDTO,
+  viajeVehiculos,
+} from "@model/tables/viaje-vehiculo.model";
 
-  if (clientesData.length === 0 || routesData.length === 0) {
+// Helper functions
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomElement<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+const modalidades = [
+  "regular",
+  "expreso",
+  "ejecutivo",
+  "especial",
+  "turismo",
+] as const;
+const estados = ["programado", "en_progreso", "completado"] as const;
+const tripulantesPool = [
+  "Carlos Mendoza",
+  "Ana Torres",
+  "Luis Ramírez",
+  "Jorge Flores",
+  "Patricia Díaz",
+  "Miguel Soto",
+  "Roberto Salas",
+  "Sandra Vega",
+  "Pedro Cruz",
+  "Fernando Rojas",
+  "Lucia Paredes",
+  "Andrés Morales",
+  "Carla Gutiérrez",
+  "Diego Vargas",
+  "Elena Castillo",
+  "Raúl Jiménez",
+  "Beatriz Núñez",
+  "Francisco Reyes",
+  "Gabriel Herrera",
+  "Mariana López",
+];
+
+const rutasOcasionalesPool = [
+  "Lima - Playa de Máncora (Viaje especial)",
+  "Cusco - Valle Sagrado (Tour privado)",
+  "Arequipa - Cañón del Colca (Excursión)",
+  "Ica - Paracas (Servicio privado)",
+  "Trujillo - Huanchaco (Tour playero)",
+  "Lima - Lunahuaná (Aventura)",
+  "Puno - Islas Flotantes (Tour lacustre)",
+  "Nazca - Sobrevuelo Líneas de Nazca",
+  "Chiclayo - Señor de Sipán (Cultural)",
+  "Tarapoto - Cataratas de Ahuashiyacu",
+];
+
+export async function seedViajes(
+  clientesData: Cliente[],
+  routesData: Ruta[],
+  vehiclesData: Vehiculo[],
+  driversData: Conductor[]
+) {
+  console.log("🌱 Seeding trips (enhanced with 3-5 per vehicle)...");
+
+  if (
+    clientesData.length === 0 ||
+    routesData.length === 0 ||
+    vehiclesData.length === 0 ||
+    driversData.length === 0
+  ) {
     console.log("⚠️ Skipping trips (missing dependencies)");
     return;
   }
 
-  await database.insert(viajes).values([
-    {
-      rutaId: routesData[0].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[0].id,
-      tripulantes: ["Carlos Mendoza", "Ana Torres"],
-      modalidadServicio: "regular",
-      fechaSalida: getDateTime(-30, 8),
-      fechaLlegada: getDateTime(-30, 12),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[1].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[1].id,
-      tripulantes: ["Luis Ramírez"],
-      modalidadServicio: "expreso",
-      fechaSalida: getDateTime(-28, 9),
-      fechaLlegada: getDateTime(-28, 14, 30),
-      estado: "completado",
-    },
-    {
-      rutaOcasional: "Lima - Playa de Máncora (Viaje especial)",
-      tipoRuta: "ocasional",
-      clienteId: clientesData[2].id,
-      tripulantes: ["Jorge Flores", "Patricia Díaz", "Miguel Soto"],
-      modalidadServicio: "turismo",
-      fechaSalida: getDateTime(-26, 7),
-      fechaLlegada: getDateTime(-26, 13),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[3].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[3].id,
-      tripulantes: ["Roberto Salas"],
-      modalidadServicio: "ejecutivo",
-      fechaSalida: getDateTime(-24, 8, 30),
-      fechaLlegada: getDateTime(-24, 16),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[4].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[4].id,
-      tripulantes: ["Sandra Vega", "Pedro Cruz"],
-      modalidadServicio: "regular",
-      fechaSalida: getDateTime(-22, 10),
-      fechaLlegada: getDateTime(-22, 18),
-      estado: "completado",
-    },
-    {
-      rutaOcasional: "Cusco - Valle Sagrado (Tour privado)",
-      tipoRuta: "ocasional",
-      clienteId: clientesData[5].id,
-      tripulantes: ["Fernando Rojas", "Lucia Paredes"],
-      modalidadServicio: "especial",
-      fechaSalida: getDateTime(-20, 6),
-      fechaLlegada: getDateTime(-20, 14),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[6].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[6].id,
-      tripulantes: ["Andrés Morales"],
-      modalidadServicio: "expreso",
-      fechaSalida: getDateTime(-18, 9),
-      fechaLlegada: getDateTime(-18, 13),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[7].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[7].id,
-      tripulantes: ["Carla Gutiérrez"],
-      modalidadServicio: "regular",
-      fechaSalida: getDateTime(-16, 7, 30),
-      fechaLlegada: getDateTime(-16, 12, 30),
-      estado: "completado",
-    },
-    {
-      rutaOcasional: "Arequipa - Cañón del Colca (Excursión)",
-      tipoRuta: "ocasional",
-      clienteId: clientesData[8].id,
-      tripulantes: ["Diego Vargas", "Elena Castillo"],
-      modalidadServicio: "turismo",
-      fechaSalida: getDateTime(-14, 8),
-      fechaLlegada: getDateTime(-14, 14),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[9].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[9].id,
-      tripulantes: ["Raúl Jiménez"],
-      modalidadServicio: "ejecutivo",
-      fechaSalida: getDateTime(-12, 10),
-      fechaLlegada: getDateTime(-12, 14, 30),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[10].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[10].id,
-      tripulantes: ["Beatriz Núñez", "Francisco Reyes"],
-      modalidadServicio: "regular",
-      fechaSalida: getDateTime(-10, 6, 30),
-      fechaLlegada: getDateTime(-10, 11),
-      estado: "completado",
-    },
-    {
-      rutaOcasional: "Ica - Paracas (Servicio privado)",
-      tipoRuta: "ocasional",
-      clienteId: clientesData[11].id,
-      tripulantes: ["Gabriel Herrera", "Mariana López", "Sebastián Ortiz"],
-      modalidadServicio: "especial",
-      fechaSalida: getDateTime(-8, 9),
-      fechaLlegada: getDateTime(-8, 17),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[12].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[12].id,
-      tripulantes: ["Natalia Romero"],
-      modalidadServicio: "expreso",
-      fechaSalida: getDateTime(-6, 8),
-      fechaLlegada: getDateTime(-6, 18),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[13].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[13].id,
-      tripulantes: ["Víctor Peña", "Isabel Medina"],
-      modalidadServicio: "ejecutivo",
-      fechaSalida: getDateTime(-5, 7),
-      fechaLlegada: getDateTime(-5, 19),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[14].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[14].id,
-      tripulantes: ["Tomás Ríos"],
-      modalidadServicio: "regular",
-      fechaSalida: getDateTime(-4, 10),
-      fechaLlegada: getDateTime(-4, 12),
-      estado: "completado",
-    },
-    {
-      rutaOcasional: "Trujillo - Huanchaco (Tour playero)",
-      tipoRuta: "ocasional",
-      clienteId: clientesData[15].id,
-      tripulantes: ["Mónica Silva", "Javier Campos"],
-      modalidadServicio: "turismo",
-      fechaSalida: getDateTime(-3, 8, 30),
-      fechaLlegada: getDateTime(-3, 11),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[16].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[16].id,
-      tripulantes: ["Alejandro Chávez"],
-      modalidadServicio: "expreso",
-      fechaSalida: getDateTime(-2, 9),
-      fechaLlegada: getDateTime(-2, 12),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[17].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[17].id,
-      tripulantes: ["Verónica Fuentes", "Ernesto Aguilar", "Daniela Córdoba"],
-      modalidadServicio: "regular",
-      fechaSalida: getDateTime(-1, 7),
-      fechaLlegada: getDateTime(-1, 11, 30),
-      estado: "completado",
-    },
-    {
-      rutaId: routesData[18].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[18].id,
-      tripulantes: ["Hugo Zamora"],
-      modalidadServicio: "ejecutivo",
-      fechaSalida: getDateTime(0, 8),
-      estado: "en_progreso",
-    },
-    {
-      rutaOcasional: "Lima - Lunahuaná (Aventura)",
-      tipoRuta: "ocasional",
-      clienteId: clientesData[19].id,
-      tripulantes: ["Claudia Bravo", "Manuel Escobar"],
-      modalidadServicio: "especial",
-      fechaSalida: getDateTime(0, 10),
-      estado: "en_progreso",
-    },
-    {
-      rutaId: routesData[20].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[20].id,
-      tripulantes: ["Ricardo Delgado"],
-      modalidadServicio: "regular",
-      fechaSalida: getDateTime(1, 8, 30),
-      estado: "programado",
-    },
-    {
-      rutaId: routesData[21].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[21].id,
-      tripulantes: ["Paola Méndez", "Alberto Santos"],
-      modalidadServicio: "expreso",
-      fechaSalida: getDateTime(2, 10),
-      estado: "programado",
-    },
-    {
-      rutaId: routesData[22].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[22].id,
-      tripulantes: ["Gabriela Navarro"],
-      modalidadServicio: "regular",
-      fechaSalida: getDateTime(3, 9),
-      estado: "programado",
-    },
-    {
-      rutaOcasional: "Puno - Islas Flotantes (Tour lacustre)",
-      tipoRuta: "ocasional",
-      clienteId: clientesData[23].id,
-      tripulantes: ["Óscar Ibarra", "Lorena Valdez", "Mario Ponce"],
-      modalidadServicio: "turismo",
-      fechaSalida: getDateTime(4, 7, 30),
-      estado: "programado",
-    },
-    {
-      rutaId: routesData[24].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[24].id,
-      tripulantes: ["Sofía Ramos", "Marcos Luna"],
-      modalidadServicio: "ejecutivo",
-      fechaSalida: getDateTime(5, 8),
-      estado: "programado",
-    },
-    {
-      rutaId: routesData[25].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[25].id,
-      tripulantes: ["Eduardo Prieto"],
-      modalidadServicio: "regular",
-      fechaSalida: getDateTime(6, 9, 30),
-      estado: "programado",
-    },
-    {
-      rutaId: routesData[26].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[26].id,
-      tripulantes: ["Carolina Bustos", "Ignacio Araya"],
-      modalidadServicio: "expreso",
-      fechaSalida: getDateTime(7, 10),
-      estado: "programado",
-    },
-    {
-      rutaOcasional: "Nazca - Sobrevuelo Líneas de Nazca",
-      tipoRuta: "ocasional",
-      clienteId: clientesData[27].id,
-      tripulantes: ["Adriana Guerrero"],
-      modalidadServicio: "especial",
-      fechaSalida: getDateTime(8, 8),
-      estado: "programado",
-    },
-    {
-      rutaId: routesData[28].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[28].id,
-      tripulantes: ["Felipe Cortés", "Valeria Ruiz", "Cristian Márquez"],
-      modalidadServicio: "regular",
-      fechaSalida: getDateTime(9, 7),
-      estado: "programado",
-    },
-    {
-      rutaId: routesData[29].id,
-      tipoRuta: "fija",
-      clienteId: clientesData[29].id,
-      tripulantes: ["Rodrigo León", "Teresa Salazar"],
-      modalidadServicio: "ejecutivo",
-      fechaSalida: getDateTime(10, 9),
-      estado: "programado",
-    },
-  ]);
+  // We'll create 3-5 viajes per vehicle
+  const viajesData: {
+    rutaId?: number;
+    rutaOcasional?: string;
+    tipoRuta: "fija" | "ocasional";
+    clienteId: number;
+    tripulantes: string[];
+    modalidadServicio: (typeof modalidades)[number];
+    fechaSalida: Date;
+    fechaLlegada?: Date;
+    estado: (typeof estados)[number];
+  }[] = [];
 
-  console.log("✅ Trips inserted");
+  // Track which vehicle->driver->client assignments to make
+  const assignments: { vehiculoId: number; conductorId: number }[] = [];
+
+  let dayOffset = -60; // Start from 60 days ago
+
+  for (let vehicleIdx = 0; vehicleIdx < vehiclesData.length; vehicleIdx++) {
+    const vehicle = vehiclesData[vehicleIdx];
+    const numTrips = randomInt(3, 5); // 3 to 5 trips per vehicle
+
+    for (let tripNum = 0; tripNum < numTrips; tripNum++) {
+      // Decide fixed or occasional route (80% fixed, 20% occasional)
+      const isFixed = Math.random() < 0.8;
+
+      // Pick random client
+      const cliente = randomElement(clientesData);
+
+      // Pick random conductor (different for variety)
+      const conductor =
+        driversData[(vehicleIdx + tripNum) % driversData.length];
+
+      // Random time offset
+      const hourStart = randomInt(6, 14);
+      const tripDuration = randomInt(2, 8); // 2 to 8 hours
+
+      // Decide estado based on day offset
+      let estado: (typeof estados)[number];
+      if (dayOffset < -2) {
+        estado = "completado";
+      } else if (dayOffset <= 0) {
+        estado = Math.random() < 0.5 ? "en_progreso" : "completado";
+      } else {
+        estado = "programado";
+      }
+
+      // Random tripulantes (1-3)
+      const numTripulantes = randomInt(1, 3);
+      const tripulantes: string[] = [];
+      for (let t = 0; t < numTripulantes; t++) {
+        const tripulante = randomElement(tripulantesPool);
+        if (!tripulantes.includes(tripulante)) {
+          tripulantes.push(tripulante);
+        }
+      }
+
+      const viajeEntry: (typeof viajesData)[0] = {
+        tipoRuta: isFixed ? "fija" : "ocasional",
+        clienteId: cliente.id,
+        tripulantes,
+        modalidadServicio: randomElement(modalidades),
+        fechaSalida: getDateTime(dayOffset, hourStart),
+        estado,
+      };
+
+      if (isFixed) {
+        viajeEntry.rutaId = randomElement(routesData).id;
+      } else {
+        viajeEntry.rutaOcasional = randomElement(rutasOcasionalesPool);
+      }
+
+      // Add arrival time for completed trips
+      if (estado === "completado") {
+        viajeEntry.fechaLlegada = getDateTime(
+          dayOffset,
+          hourStart + tripDuration
+        );
+      }
+
+      viajesData.push(viajeEntry);
+
+      // Store the assignment
+      assignments.push({
+        vehiculoId: vehicle.id,
+        conductorId: conductor.id,
+      });
+
+      // Move forward in time for variety
+      dayOffset += randomInt(1, 3);
+    }
+  }
+
+  // Insert all viajes
+  const insertedViajes = await database
+    .insert(viajes)
+    .values(viajesData)
+    .returning({ id: viajes.id });
+
+  console.log(
+    `✅ ${insertedViajes.length} trips inserted. Assigning drivers and vehicles...`
+  );
+
+  // Create conductor and vehicle assignments
+  const conductorInserts: ViajeConductorDTO[] = [];
+  const vehiculoInserts: ViajeVehiculoDTO[] = [];
+
+  insertedViajes.forEach((viaje, index) => {
+    const assignment = assignments[index];
+
+    conductorInserts.push({
+      viajeId: viaje.id,
+      conductorId: assignment.conductorId,
+      esPrincipal: true,
+      rol: "conductor",
+    });
+
+    vehiculoInserts.push({
+      viajeId: viaje.id,
+      vehiculoId: assignment.vehiculoId,
+      esPrincipal: true,
+      rol: "principal",
+    });
+  });
+
+  if (conductorInserts.length > 0) {
+    await database.insert(viajeConductores).values(conductorInserts);
+  }
+
+  if (vehiculoInserts.length > 0) {
+    await database.insert(viajeVehiculos).values(vehiculoInserts);
+  }
+
+  console.log("✅ Trip assignments completed!");
 }
