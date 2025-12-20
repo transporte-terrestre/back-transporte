@@ -15,6 +15,9 @@ export class VehiculoListDto {
   @ApiProperty({ example: "Corolla", description: "Vehicle model" })
   modelo: string;
 
+  @ApiProperty({ example: 1, description: "Vehicle model ID" })
+  modeloId: number;
+
   @ApiProperty({ example: 2020, description: "Manufacturing year" })
   anio: number;
 

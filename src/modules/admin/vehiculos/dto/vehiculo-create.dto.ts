@@ -28,15 +28,10 @@ export class VehiculoCreateDto
   @IsOptional()
   codigoInterno?: string;
 
-  @ApiProperty({ example: "Toyota", description: "Vehicle brand" })
-  @IsString()
-  @IsNotEmpty()
-  marca: string;
-
-  @ApiProperty({ example: "Corolla", description: "Vehicle model" })
-  @IsString()
-  @IsNotEmpty()
-  modelo: string;
+  @ApiProperty({ example: 1, description: "Vehicle model ID" })
+  @IsInt()
+  @Min(1)
+  modeloId: number;
 
   @ApiProperty({ example: 2020, description: "Manufacturing year" })
   @IsInt()

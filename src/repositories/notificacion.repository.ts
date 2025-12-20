@@ -9,6 +9,8 @@ import { usuarioDocumentos } from "@model/tables/usuario-documento.model";
 import { clientes } from "@model/tables/cliente.model";
 import { conductores } from "@model/tables/conductor.model";
 import { vehiculos } from "@model/tables/vehiculo.model";
+import { modelos } from "@model/tables/modelo.model";
+import { marcas } from "@model/tables/marca.model";
 import { usuarios } from "@model/tables/usuario.model";
 import { eq, and, desc, isNull, count, sql, lte, isNotNull } from "drizzle-orm";
 
@@ -151,23 +153,6 @@ export class NotificacionRepository {
     return result[0];
   }
 
-  // =============================================
-  // DOCUMENT EXPIRATION CHECK METHODS
-  // =============================================
-
-  /**
-   * Retrieves documents that are expiring or have expired.
-   * Searches for documents with expiration date <= (fechaReferencia + diasAnticipacion).
-   *
-   * For each entity (cliente, conductor, vehiculo, usuario), it only considers
-   * the document with the LATEST expiration date per document type (to avoid
-   * notifying about outdated documents).
-   *
-   * @param fechaReferencia - The base date to check from
-   * @param diasAnticipacion - Number of days ahead to look (default 7).
-   *                          Documents expiring between now and fechaReferencia + diasAnticipacion are included.
-   * @returns Array of DocumentoVencimiento with details about expiring documents
-   */
   async getDocumentosVencimientosPorFecha(
     fechaReferencia: Date,
     diasAnticipacion: number = 7
@@ -199,9 +184,7 @@ export class NotificacionRepository {
     return results;
   }
 
-  /**
-   * Gets cliente documents that are expiring, taking only the latest per tipo.
-   */
+
   private async getClienteDocumentosVencidos(
     fechaLimite: Date
   ): Promise<ClienteDocumentoVencimiento[]> {
@@ -263,9 +246,6 @@ export class NotificacionRepository {
     }));
   }
 
-  /**
-   * Gets conductor documents that are expiring, taking only the latest per tipo.
-   */
   private async getConductorDocumentosVencidos(
     fechaLimite: Date
   ): Promise<ConductorDocumentoVencimiento[]> {
@@ -329,9 +309,6 @@ export class NotificacionRepository {
     }));
   }
 
-  /**
-   * Gets vehiculo documents that are expiring, taking only the latest per tipo.
-   */
   private async getVehiculoDocumentosVencidos(
     fechaLimite: Date
   ): Promise<VehiculoDocumentoVencimiento[]> {
@@ -356,11 +333,13 @@ export class NotificacionRepository {
         fechaExpiracion: vehiculoDocumentos.fechaExpiracion,
         entidadId: vehiculos.id,
         placa: vehiculos.placa,
-        marca: vehiculos.marca,
-        modelo: vehiculos.modelo,
+        marca: marcas.nombre,
+        modelo: modelos.nombre,
       })
       .from(vehiculoDocumentos)
       .innerJoin(vehiculos, eq(vehiculoDocumentos.vehiculoId, vehiculos.id))
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
       .innerJoin(
         latestDocs,
         and(
@@ -393,9 +372,6 @@ export class NotificacionRepository {
     }));
   }
 
-  /**
-   * Gets usuario documents that are expiring, taking only the latest per tipo.
-   */
   private async getUsuarioDocumentosVencidos(
     fechaLimite: Date
   ): Promise<UsuarioDocumentoVencimiento[]> {

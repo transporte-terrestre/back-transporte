@@ -1,11 +1,4 @@
-import {
-  IsInt,
-  IsString,
-  IsDateString,
-  IsNotEmpty,
-  IsIn,
-  IsOptional,
-} from "class-validator";
+import { IsInt, IsString, IsNotEmpty, IsIn, IsOptional, IsDate } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty } from "@nestjs/swagger";
 import {
@@ -58,13 +51,13 @@ export class MantenimientoCreateDto
     example: "2025-01-15T10:00:00Z",
     description: "Date of entry",
   })
-  @IsDateString()
+  @IsDate()
   @Type(() => Date)
   fechaIngreso: Date;
 
   @ApiProperty({ example: "2025-01-16T18:00:00Z", description: "Date of exit" })
-  @IsDateString()
   @IsOptional()
+  @IsDate()
   @Type(() => Date)
   fechaSalida: Date | null;
 

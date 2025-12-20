@@ -17,6 +17,8 @@ import {
   MantenimientoDTO,
 } from "@model/tables/mantenimiento.model";
 import { vehiculos } from "@model/tables/vehiculo.model";
+import { modelos } from "@model/tables/modelo.model";
+import { marcas } from "@model/tables/marca.model";
 import { talleres } from "@model/tables/taller.model";
 import { mantenimientoTareas } from "@model/tables/mantenimiento-tarea.model";
 import { mantenimientoDocumentos } from "@model/tables/mantenimiento-documento.model";
@@ -104,6 +106,8 @@ export class MantenimientoRepository {
         ...getTableColumns(mantenimientos),
         vehiculo: {
           ...getTableColumns(vehiculos),
+          marca: marcas.nombre,
+          modelo: modelos.nombre,
         },
         taller: {
           ...getTableColumns(talleres),
@@ -111,6 +115,8 @@ export class MantenimientoRepository {
       })
       .from(mantenimientos)
       .leftJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
+      .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .leftJoin(talleres, eq(mantenimientos.tallerId, talleres.id))
       .where(whereClause)
       .limit(limit)
@@ -128,6 +134,8 @@ export class MantenimientoRepository {
         ...getTableColumns(mantenimientos),
         vehiculo: {
           ...getTableColumns(vehiculos),
+          marca: marcas.nombre,
+          modelo: modelos.nombre,
         },
         taller: {
           ...getTableColumns(talleres),
@@ -135,6 +143,8 @@ export class MantenimientoRepository {
       })
       .from(mantenimientos)
       .leftJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
+      .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .leftJoin(talleres, eq(mantenimientos.tallerId, talleres.id))
       .where(
         and(eq(mantenimientos.id, id), isNull(mantenimientos.eliminadoEn))

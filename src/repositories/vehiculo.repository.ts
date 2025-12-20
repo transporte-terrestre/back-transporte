@@ -11,10 +11,13 @@ import {
   ilike,
   desc,
   isNull,
+  getTableColumns,
 } from "drizzle-orm";
 import { database } from "@db/connection.db";
 import { vehiculos, VehiculoDTO } from "@model/tables/vehiculo.model";
 import { vehiculoDocumentos } from "@model/tables/vehiculo-documento.model";
+import { modelos } from "@model/tables/modelo.model";
+import { marcas } from "@model/tables/marca.model";
 
 interface PaginationFilters {
   search?: string;
@@ -26,7 +29,15 @@ interface PaginationFilters {
 @Injectable()
 export class VehiculoRepository {
   async findAll() {
-    return await database.select().from(vehiculos);
+    return await database
+      .select({
+        ...getTableColumns(vehiculos),
+        marca: marcas.nombre,
+        modelo: modelos.nombre,
+      })
+      .from(vehiculos)
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .innerJoin(marcas, eq(modelos.marcaId, marcas.id));
   }
 
   async findAllPaginated(
@@ -41,9 +52,9 @@ export class VehiculoRepository {
       const searchTerm = filters.search.trim();
       conditions.push(
         or(
-          like(vehiculos.placa, `%${searchTerm}%`),
-          ilike(vehiculos.marca, `%${searchTerm}%`),
-          ilike(vehiculos.modelo, `%${searchTerm}%`),
+          ilike(vehiculos.placa, `%${searchTerm}%`),
+          ilike(marcas.nombre, `%${searchTerm}%`),
+          ilike(modelos.nombre, `%${searchTerm}%`),
           like(vehiculos.codigoInterno, `%${searchTerm}%`)
         )
       );
@@ -74,11 +85,19 @@ export class VehiculoRepository {
     const [{ total }] = await database
       .select({ total: count() })
       .from(vehiculos)
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
       .where(whereClause);
 
     const data = await database
-      .select()
+      .select({
+        ...getTableColumns(vehiculos),
+        marca: marcas.nombre,
+        modelo: modelos.nombre,
+      })
       .from(vehiculos)
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
       .where(whereClause)
       .orderBy(desc(vehiculos.creadoEn))
       .limit(limit)
@@ -92,8 +111,14 @@ export class VehiculoRepository {
 
   async findOne(id: number) {
     const result = await database
-      .select()
+      .select({
+        ...getTableColumns(vehiculos),
+        marca: marcas.nombre,
+        modelo: modelos.nombre,
+      })
       .from(vehiculos)
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
       .where(and(eq(vehiculos.id, id), isNull(vehiculos.eliminadoEn)));
     return result[0];
   }

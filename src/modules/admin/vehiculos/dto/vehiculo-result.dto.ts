@@ -75,6 +75,9 @@ export class VehiculoResultDto {
   })
   codigoInterno: string | null;
 
+  @ApiProperty({ example: 1, description: "Vehicle model ID" })
+  modeloId: number;
+
   @ApiProperty({ example: "Toyota", description: "Vehicle brand" })
   marca: string;
 

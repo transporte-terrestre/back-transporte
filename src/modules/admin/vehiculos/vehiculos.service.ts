@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { VehiculoRepository } from "@repository/vehiculo.repository";
 import { VehiculoDocumentoRepository } from "@repository/vehiculo-documento.repository";
+import { MarcaRepository } from "@repository/marca.repository";
+import { ModeloRepository } from "@repository/modelo.repository";
 import { VehiculoCreateDto } from "./dto/vehiculo-create.dto";
 import { VehiculoUpdateDto } from "./dto/vehiculo-update.dto";
 import { PaginatedVehiculoResultDto } from "./dto/vehiculo-paginated.dto";
@@ -9,12 +11,18 @@ import {
   vehiculoDocumentosTipo,
 } from "@model/tables/vehiculo-documento.model";
 import { DocumentosAgrupadosVehiculoDto } from "./dto/vehiculo-result.dto";
+import { MarcaCreateDto } from "./dto/marca-create.dto";
+import { MarcaUpdateDto } from "./dto/marca-update.dto";
+import { ModeloCreateDto } from "./dto/modelo-create.dto";
+import { ModeloUpdateDto } from "./dto/modelo-update.dto";
 
 @Injectable()
 export class VehiculosService {
   constructor(
     private readonly vehiculoRepository: VehiculoRepository,
-    private readonly vehiculoDocumentoRepository: VehiculoDocumentoRepository
+    private readonly vehiculoDocumentoRepository: VehiculoDocumentoRepository,
+    private readonly marcaRepository: MarcaRepository,
+    private readonly modeloRepository: ModeloRepository
   ) {}
 
   async findAllPaginated(
@@ -96,5 +104,102 @@ export class VehiculosService {
 
   async deleteDocumento(id: number) {
     return await this.vehiculoDocumentoRepository.delete(id);
+  }
+
+  // ========== MARCAS ==========
+
+  async findAllMarcasPaginated(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    fechaInicio?: string,
+    fechaFin?: string
+  ) {
+    const { data, total } = await this.marcaRepository.findAllPaginated(
+      page,
+      limit,
+      { search, fechaInicio, fechaFin }
+    );
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
+  async findOneMarca(id: number) {
+    return await this.marcaRepository.findOne(id);
+  }
+
+  async createMarca(data: MarcaCreateDto) {
+    return await this.marcaRepository.create(data);
+  }
+
+  async updateMarca(id: number, data: MarcaUpdateDto) {
+    return await this.marcaRepository.update(id, data);
+  }
+
+  async deleteMarca(id: number) {
+    return await this.marcaRepository.delete(id);
+  }
+
+  // ========== MODELOS ==========
+
+  async findAllModelosPaginated(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    marcaId?: number,
+    fechaInicio?: string,
+    fechaFin?: string
+  ) {
+    const { data, total } = await this.modeloRepository.findAllPaginated(
+      page,
+      limit,
+      { search, marcaId, fechaInicio, fechaFin }
+    );
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
+  async findOneModelo(id: number) {
+    return await this.modeloRepository.findOne(id);
+  }
+
+  async createModelo(data: ModeloCreateDto) {
+    return await this.modeloRepository.create(data);
+  }
+
+  async updateModelo(id: number, data: ModeloUpdateDto) {
+    return await this.modeloRepository.update(id, data);
+  }
+
+  async deleteModelo(id: number) {
+    return await this.modeloRepository.delete(id);
   }
 }

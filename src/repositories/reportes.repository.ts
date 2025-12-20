@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { database } from "@db/connection.db";
 import { vehiculos } from "@model/tables/vehiculo.model";
+import { modelos } from "@model/tables/modelo.model";
+import { marcas } from "@model/tables/marca.model";
 import { conductores } from "@model/tables/conductor.model";
 import { viajes } from "@model/tables/viaje.model";
 import { viajeVehiculos } from "@model/tables/viaje-vehiculo.model";
@@ -22,15 +24,17 @@ export class ReportesRepository {
       .select({
         vehiculoId: vehiculos.id,
         placa: vehiculos.placa,
-        marca: vehiculos.marca,
-        modelo: vehiculos.modelo,
+        marca: marcas.nombre,
+        modelo: modelos.nombre,
         totalViajes: count(viajes.id),
       })
       .from(vehiculos)
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
       .leftJoin(viajeVehiculos, eq(vehiculos.id, viajeVehiculos.vehiculoId))
       .leftJoin(viajes, eq(viajeVehiculos.viajeId, viajes.id))
       .where(whereClause)
-      .groupBy(vehiculos.id, vehiculos.placa, vehiculos.marca, vehiculos.modelo)
+      .groupBy(vehiculos.id, vehiculos.placa, marcas.nombre, modelos.nombre)
       .orderBy(desc(count(viajes.id)));
   }
 
@@ -167,15 +171,19 @@ export class ReportesRepository {
       .select({
         vehiculoId: vehiculos.id,
         placa: vehiculos.placa,
+        marca: marcas.nombre,
+        modelo: modelos.nombre,
         totalKilometros: sql<number>`SUM(${rutas.distancia})`.mapWith(Number),
         totalViajes: count(viajes.id),
       })
       .from(vehiculos)
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
       .innerJoin(viajeVehiculos, eq(vehiculos.id, viajeVehiculos.vehiculoId))
       .innerJoin(viajes, eq(viajeVehiculos.viajeId, viajes.id))
       .innerJoin(rutas, eq(viajes.rutaId, rutas.id))
       .where(whereClause)
-      .groupBy(vehiculos.id, vehiculos.placa)
+      .groupBy(vehiculos.id, vehiculos.placa, marcas.nombre, modelos.nombre)
       .orderBy(desc(sql`SUM(${rutas.distancia})`));
   }
 }

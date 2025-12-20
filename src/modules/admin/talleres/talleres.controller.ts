@@ -19,7 +19,7 @@ import { TallerResultDto } from "./dto/taller-result.dto";
 import { TallerCreateDto } from "./dto/taller-create.dto";
 import { TallerUpdateDto } from "./dto/taller-update.dto";
 
-@ApiTags("Administración - Talleres")
+@ApiTags("Talleres")
 @Controller("taller")
 export class TalleresController {
   constructor(private readonly talleresService: TalleresService) {}

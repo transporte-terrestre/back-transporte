@@ -1,4 +1,6 @@
 import { seedConductores } from "@seed/conductor.seed";
+import { seedMarcas } from "@seed/marca.seed";
+import { seedModelos } from "@seed/modelo.seed";
 import { seedVehiculos } from "@seed/vehiculo.seed";
 import { seedRutas } from "@seed/ruta.seed";
 import { seedMantenimientos } from "@seed/mantenimiento.seed";
@@ -20,6 +22,11 @@ async function seed() {
     const usuariosData = await seedUsuarios();
     const driversData = await seedConductores();
     const clientesData = await seedClientes();
+
+    // 1.1 Marcas y Modelos (deben ejecutarse ANTES de vehículos)
+    await seedMarcas();
+    await seedModelos();
+
     const vehiclesData = await seedVehiculos();
     const routesData = await seedRutas();
     const talleresData = await seedTalleres();

@@ -17,6 +17,8 @@ import { viajeConductores } from "@model/tables/viaje-conductor.model";
 import { conductores } from "@model/tables/conductor.model";
 import { viajeVehiculos } from "@model/tables/viaje-vehiculo.model";
 import { vehiculos } from "@model/tables/vehiculo.model";
+import { modelos } from "@model/tables/modelo.model";
+import { marcas } from "@model/tables/marca.model";
 import { rutas } from "@model/tables/ruta.model";
 import { clientes } from "@model/tables/cliente.model";
 import { viajeComentarios } from "@model/tables/viaje-comentario.model";
@@ -95,6 +97,8 @@ export class ViajeRepository {
         },
         vehiculoPrincipal: {
           ...getTableColumns(vehiculos),
+          marca: marcas.nombre,
+          modelo: modelos.nombre,
         },
         ruta: {
           ...getTableColumns(rutas),
@@ -122,6 +126,8 @@ export class ViajeRepository {
         )
       )
       .leftJoin(vehiculos, eq(vehiculos.id, viajeVehiculos.vehiculoId))
+      .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .where(whereClause)
       .limit(limit)
       .offset(offset);
@@ -162,11 +168,15 @@ export class ViajeRepository {
     const vehiculosQuery = database
       .select({
         ...getTableColumns(vehiculos),
+        marca: marcas.nombre,
+        modelo: modelos.nombre,
         rol: viajeVehiculos.rol,
         esPrincipal: viajeVehiculos.esPrincipal,
       })
       .from(viajeVehiculos)
       .innerJoin(vehiculos, eq(vehiculos.id, viajeVehiculos.vehiculoId))
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
       .where(eq(viajeVehiculos.viajeId, id));
 
     const comentariosQuery = database
@@ -177,7 +187,7 @@ export class ViajeRepository {
       })
       .from(viajeComentarios)
       .leftJoin(usuarios, eq(usuarios.id, viajeComentarios.usuarioId))
-      .where(eq(viajeComentarios.viajeId, id))
+      .where(eq(viajeComentarios.viajeId, id));
 
     const [conductoresList, vehiculosList, comentariosList] = await Promise.all(
       [conductorsQuery, vehiculosQuery, comentariosQuery]
