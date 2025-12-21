@@ -5,6 +5,7 @@ import { ViajeRepository } from "@repository/viaje.repository";
 import { ViajeConductorRepository } from "@repository/viaje-conductor.repository";
 import { ViajeVehiculoRepository } from "@repository/viaje-vehiculo.repository";
 import { ViajeComentarioRepository } from "@repository/viaje-comentario.repository";
+import { RutaRepository } from "@repository/ruta.repository";
 
 @Module({
   controllers: [ViajesController],
@@ -14,6 +15,7 @@ import { ViajeComentarioRepository } from "@repository/viaje-comentario.reposito
     ViajeConductorRepository,
     ViajeVehiculoRepository,
     ViajeComentarioRepository,
+    RutaRepository,
   ],
 })
 export class ViajesModule {}

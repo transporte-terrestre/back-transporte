@@ -3,6 +3,7 @@ import { ViajeRepository } from "@repository/viaje.repository";
 import { ViajeConductorRepository } from "@repository/viaje-conductor.repository";
 import { ViajeVehiculoRepository } from "@repository/viaje-vehiculo.repository";
 import { ViajeComentarioRepository } from "@repository/viaje-comentario.repository";
+import { RutaRepository } from "@repository/ruta.repository";
 import { ViajeCreateDto } from "./dto/viaje-create.dto";
 import { ViajeUpdateDto } from "./dto/viaje-update.dto";
 import { PaginatedViajeResultDto } from "./dto/viaje-paginated.dto";
@@ -17,7 +18,8 @@ export class ViajesService {
     private readonly viajeRepository: ViajeRepository,
     private readonly viajeConductorRepository: ViajeConductorRepository,
     private readonly viajeVehiculoRepository: ViajeVehiculoRepository,
-    private readonly viajeComentarioRepository: ViajeComentarioRepository
+    private readonly viajeComentarioRepository: ViajeComentarioRepository,
+    private readonly rutaRepository: RutaRepository
   ) {}
 
   async findAllPaginated(

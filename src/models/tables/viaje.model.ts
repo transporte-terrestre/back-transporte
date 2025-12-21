@@ -7,6 +7,7 @@ import {
   varchar,
   boolean,
   text,
+  decimal,
 } from "drizzle-orm/pg-core";
 import { rutas } from "./ruta.model";
 import { clientes } from "./cliente.model";
@@ -32,6 +33,8 @@ export const viajes = pgTable("viajes", {
   id: serial("id").primaryKey(),
   rutaId: integer("ruta_id").references(() => rutas.id),
   rutaOcasional: varchar("ruta_ocasional", { length: 500 }),
+  distanciaEstimada: decimal("distancia_estimada", { precision: 10, scale: 2 }), // Distancia estimada del viaje
+  distanciaFinal: decimal("distancia_final", { precision: 10, scale: 2 }), // Distancia real al final del viaje
   tipoRuta: viajesTipoRuta("tipo_ruta").default("fija").notNull(),
   clienteId: integer("cliente_id")
     .references(() => clientes.id)

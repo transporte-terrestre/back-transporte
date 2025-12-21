@@ -22,14 +22,11 @@ async function seed() {
     const usuariosData = await seedUsuarios();
     const driversData = await seedConductores();
     const clientesData = await seedClientes();
-
-    // 1.1 Marcas y Modelos (deben ejecutarse ANTES de vehículos)
-    await seedMarcas();
-    await seedModelos();
-
-    const vehiclesData = await seedVehiculos();
+    const marcasData = await seedMarcas();
+    const modelosData = await seedModelos(marcasData);
     const routesData = await seedRutas();
     const talleresData = await seedTalleres();
+    const vehiclesData = await seedVehiculos(modelosData);
 
     // 2. Related data
     await seedMantenimientos(vehiclesData, talleresData);

@@ -16,8 +16,23 @@ export class ViajeDetalladoDto {
   @ApiProperty({ nullable: true })
   rutaDestino: string | null;
 
-  @ApiProperty({ nullable: true })
-  distancia: string | null;
+  @ApiProperty({
+    nullable: true,
+    description: "Distancia estimada del viaje en km",
+  })
+  distanciaEstimada: string | null;
+
+  @ApiProperty({
+    nullable: true,
+    description: "Distancia real al final del viaje en km",
+  })
+  distanciaFinal: string | null;
+
+  @ApiProperty({
+    description:
+      "Diferencia entre distancia final y estimada (0 si no hay valores)",
+  })
+  diferencia: number;
 
   @ApiProperty()
   estado: string;

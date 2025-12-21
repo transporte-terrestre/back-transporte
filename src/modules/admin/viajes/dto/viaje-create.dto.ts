@@ -38,6 +38,22 @@ export class ViajeCreateDto
   rutaOcasional?: string;
 
   @ApiPropertyOptional({
+    example: "450.00",
+    description: "Distancia estimada del viaje en km",
+  })
+  @IsOptional()
+  @IsString()
+  distanciaEstimada?: string;
+
+  @ApiPropertyOptional({
+    example: "455.50",
+    description: "Distancia real al final del viaje en km",
+  })
+  @IsOptional()
+  @IsString()
+  distanciaFinal?: string;
+
+  @ApiPropertyOptional({
     enum: viajesTipoRuta.enumValues,
     description: "Tipo de ruta (fija, ocasional)",
     default: viajesTipoRuta.enumValues[1],

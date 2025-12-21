@@ -83,7 +83,12 @@ export class ReportesRepository {
         rutaOcasional: viajes.rutaOcasional,
         rutaOrigen: rutas.origen,
         rutaDestino: rutas.destino,
-        distancia: rutas.distancia,
+        distanciaEstimada: viajes.distanciaEstimada,
+        distanciaFinal: viajes.distanciaFinal,
+        diferencia:
+          sql<number>`COALESCE(CAST(${viajes.distanciaFinal} AS DECIMAL) - CAST(${viajes.distanciaEstimada} AS DECIMAL), 0)`.mapWith(
+            Number
+          ),
         estado: viajes.estado,
         modalidadServicio: viajes.modalidadServicio,
         fechaSalida: viajes.fechaSalida,
@@ -113,7 +118,12 @@ export class ReportesRepository {
         rutaOcasional: viajes.rutaOcasional,
         rutaOrigen: rutas.origen,
         rutaDestino: rutas.destino,
-        distancia: rutas.distancia,
+        distanciaEstimada: viajes.distanciaEstimada,
+        distanciaFinal: viajes.distanciaFinal,
+        diferencia:
+          sql<number>`COALESCE(CAST(${viajes.distanciaFinal} AS DECIMAL) - CAST(${viajes.distanciaEstimada} AS DECIMAL), 0)`.mapWith(
+            Number
+          ),
         estado: viajes.estado,
         modalidadServicio: viajes.modalidadServicio,
         fechaSalida: viajes.fechaSalida,
@@ -143,7 +153,12 @@ export class ReportesRepository {
         rutaOcasional: viajes.rutaOcasional,
         rutaOrigen: rutas.origen,
         rutaDestino: rutas.destino,
-        distancia: rutas.distancia,
+        distanciaEstimada: viajes.distanciaEstimada,
+        distanciaFinal: viajes.distanciaFinal,
+        diferencia:
+          sql<number>`COALESCE(CAST(${viajes.distanciaFinal} AS DECIMAL) - CAST(${viajes.distanciaEstimada} AS DECIMAL), 0)`.mapWith(
+            Number
+          ),
         estado: viajes.estado,
         modalidadServicio: viajes.modalidadServicio,
         fechaSalida: viajes.fechaSalida,
@@ -157,7 +172,6 @@ export class ReportesRepository {
 
   async getKilometrajePorVehiculo(fechaInicio?: Date, fechaFin?: Date) {
     const filters = [
-      eq(viajes.tipoRuta, "fija"), // Only fixed routes have defined distance in 'rutas' table
       eq(viajes.estado, "completado"), // Only count completed trips
     ];
 
@@ -166,14 +180,25 @@ export class ReportesRepository {
 
     const whereClause = and(...filters);
 
-    // Sum distance of routes associated with trips taken by vehicle
+    // Sum distance from viajes table directly
     return await database
       .select({
         vehiculoId: vehiculos.id,
         placa: vehiculos.placa,
         marca: marcas.nombre,
         modelo: modelos.nombre,
-        totalKilometros: sql<number>`SUM(${rutas.distancia})`.mapWith(Number),
+        totalKilometrosEstimados:
+          sql<number>`COALESCE(SUM(CAST(${viajes.distanciaEstimada} AS DECIMAL)), 0)`.mapWith(
+            Number
+          ),
+        totalKilometrosReales:
+          sql<number>`COALESCE(SUM(CAST(${viajes.distanciaFinal} AS DECIMAL)), 0)`.mapWith(
+            Number
+          ),
+        diferenciaTotalKilometros:
+          sql<number>`COALESCE(SUM(CAST(${viajes.distanciaFinal} AS DECIMAL) - CAST(${viajes.distanciaEstimada} AS DECIMAL)), 0)`.mapWith(
+            Number
+          ),
         totalViajes: count(viajes.id),
       })
       .from(vehiculos)
@@ -181,9 +206,10 @@ export class ReportesRepository {
       .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
       .innerJoin(viajeVehiculos, eq(vehiculos.id, viajeVehiculos.vehiculoId))
       .innerJoin(viajes, eq(viajeVehiculos.viajeId, viajes.id))
-      .innerJoin(rutas, eq(viajes.rutaId, rutas.id))
       .where(whereClause)
       .groupBy(vehiculos.id, vehiculos.placa, marcas.nombre, modelos.nombre)
-      .orderBy(desc(sql`SUM(${rutas.distancia})`));
+      .orderBy(
+        desc(sql`COALESCE(SUM(CAST(${viajes.distanciaFinal} AS DECIMAL)), 0)`)
+      );
   }
 }

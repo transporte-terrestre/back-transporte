@@ -23,10 +23,10 @@ export class ViajeConductorDetalleDto extends OmitType(ConductorResultDto, [
   @ApiProperty({ example: true, description: "Es conductor principal" })
   esPrincipal: boolean;
 
-  @ApiProperty({ 
-    enum: viajeConductoresRol.enumValues, 
+  @ApiProperty({
+    enum: viajeConductoresRol.enumValues,
     example: viajeConductoresRol.enumValues[0],
-    description: "Rol del conductor"
+    description: "Rol del conductor",
   })
   rol: string;
 }
@@ -37,10 +37,10 @@ export class ViajeVehiculoDetalleDto extends OmitType(VehiculoResultDto, [
   @ApiProperty({ example: true, description: "Es vehículo principal" })
   esPrincipal: boolean;
 
-  @ApiProperty({ 
-    enum: viajeVehiculosRol.enumValues, 
+  @ApiProperty({
+    enum: viajeVehiculosRol.enumValues,
     example: viajeVehiculosRol.enumValues[0],
-    description: "Rol del vehículo"
+    description: "Rol del vehículo",
   })
   rol: string;
 }
@@ -69,6 +69,18 @@ export class ViajeResultDto {
     description: "Tipo de ruta",
   })
   tipoRuta: ViajeTipoRuta;
+
+  @ApiPropertyOptional({
+    example: "450.00",
+    description: "Distancia estimada del viaje en km",
+  })
+  distanciaEstimada: string | null;
+
+  @ApiPropertyOptional({
+    example: "455.50",
+    description: "Distancia real al final del viaje en km",
+  })
+  distanciaFinal: string | null;
 
   @ApiProperty({ example: 1, description: "ID del cliente" })
   clienteId: number;

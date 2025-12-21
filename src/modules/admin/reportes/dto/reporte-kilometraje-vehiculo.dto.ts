@@ -7,8 +7,22 @@ export class ReporteKilometrajeVehiculoDto {
   @ApiProperty()
   placa: string;
 
-  @ApiProperty()
-  totalKilometros: number;
+  @ApiProperty({ description: "Marca del vehículo" })
+  marca: string;
+
+  @ApiProperty({ description: "Modelo del vehículo" })
+  modelo: string;
+
+  @ApiProperty({ description: "Total de kilómetros estimados" })
+  totalKilometrosEstimados: number;
+
+  @ApiProperty({ description: "Total de kilómetros reales" })
+  totalKilometrosReales: number;
+
+  @ApiProperty({
+    description: "Diferencia total de kilómetros (reales - estimados)",
+  })
+  diferenciaTotalKilometros: number;
 
   @ApiProperty()
   totalViajes: number;

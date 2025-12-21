@@ -54,7 +54,7 @@ export class ReportesController {
   @Get("kilometraje-vehiculo")
   @ApiOperation({
     summary:
-      "Reporte de kilometraje total (rutas fijas completadas) por vehículo",
+      "Reporte de kilometraje total (estimado, real y diferencia) por vehículo",
   })
   @ApiResponse({ type: [ReporteKilometrajeVehiculoDto] })
   async getKilometrajePorVehiculo(@Query() query: ReporteQueryDto) {

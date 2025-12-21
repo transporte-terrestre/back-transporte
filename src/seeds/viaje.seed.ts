@@ -90,6 +90,8 @@ export async function seedViajes(
   const viajesData: {
     rutaId?: number;
     rutaOcasional?: string;
+    distanciaEstimada?: string;
+    distanciaFinal?: string;
     tipoRuta: "fija" | "ocasional";
     clienteId: number;
     tripulantes: string[];
@@ -143,6 +145,23 @@ export async function seedViajes(
         }
       }
 
+      // Determine distance based on route type
+      let distanciaEstimadaNum: number;
+      let selectedRuta: Ruta | undefined;
+
+      if (isFixed) {
+        // For fixed routes, get distance from the route
+        selectedRuta = randomElement(routesData);
+        distanciaEstimadaNum = parseFloat(selectedRuta.distancia);
+      } else {
+        // For occasional routes, generate random distance (100-800 km)
+        distanciaEstimadaNum = randomInt(100, 800);
+      }
+
+      // Add small variation for final distance (-10 to +20 km)
+      const variacion = randomInt(-10, 20);
+      const distanciaFinalNum = distanciaEstimadaNum + variacion;
+
       const viajeEntry: (typeof viajesData)[0] = {
         tipoRuta: isFixed ? "fija" : "ocasional",
         clienteId: cliente.id,
@@ -150,20 +169,22 @@ export async function seedViajes(
         modalidadServicio: randomElement(modalidades),
         fechaSalida: getDateTime(dayOffset, hourStart),
         estado,
+        distanciaEstimada: distanciaEstimadaNum.toFixed(2),
       };
 
-      if (isFixed) {
-        viajeEntry.rutaId = randomElement(routesData).id;
+      if (isFixed && selectedRuta) {
+        viajeEntry.rutaId = selectedRuta.id;
       } else {
         viajeEntry.rutaOcasional = randomElement(rutasOcasionalesPool);
       }
 
-      // Add arrival time for completed trips
+      // Add arrival time and final distance for completed trips
       if (estado === "completado") {
         viajeEntry.fechaLlegada = getDateTime(
           dayOffset,
           hourStart + tripDuration
         );
+        viajeEntry.distanciaFinal = distanciaFinalNum.toFixed(2);
       }
 
       viajesData.push(viajeEntry);

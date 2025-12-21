@@ -1,7 +1,6 @@
 import { database } from "@db/connection.db";
-import { modelos } from "@model/tables/modelo.model";
-import { marcas } from "@model/tables/marca.model";
-import { eq } from "drizzle-orm";
+import { Modelo, modelos } from "@model/tables/modelo.model";
+import { Marca } from "@model/tables/marca.model";
 
 // Mapa de modelos por marca (mínimo 5 modelos por marca)
 const modelosPorMarca: Record<string, string[]> = {
@@ -109,15 +108,12 @@ const modelosPorMarca: Record<string, string[]> = {
   JAC: ["Refine", "T6", "T8", "N56", "N80", "Sunray"],
 };
 
-export async function seedModelos() {
+export async function seedModelos(marcasData: Marca[]): Promise<Modelo[]> {
   console.log("🌱 Seeding models...");
-
-  // Obtener todas las marcas insertadas
-  const marcasInsertadas = await database.select().from(marcas);
 
   // Crear mapa de nombre -> id
   const marcaIdMap = new Map<string, number>();
-  for (const marca of marcasInsertadas) {
+  for (const marca of marcasData) {
     marcaIdMap.set(marca.nombre, marca.id);
   }
 
