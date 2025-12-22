@@ -7,7 +7,9 @@ import {
   timestamp,
   text,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { modelos } from "./modelo.model";
 
 export const vehiculosEstado = pgEnum("vehiculos_estado", [
@@ -20,8 +22,8 @@ export const vehiculos = pgTable(
   "vehiculos",
   {
     id: serial("id").primaryKey(),
-    placa: varchar("placa", { length: 20 }).unique().notNull(),
-    codigoInterno: varchar("codigo_interno", { length: 50 }).unique(),
+    placa: varchar("placa", { length: 20 }).notNull(),
+    codigoInterno: varchar("codigo_interno", { length: 50 }),
     modeloId: integer("modelo_id")
       .notNull()
       .references(() => modelos.id, { onDelete: "restrict" }),
@@ -33,18 +35,19 @@ export const vehiculos = pgTable(
     actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
     eliminadoEn: timestamp("eliminado_en"),
   },
-  (t) => {
-    return {
-      modeloIdIndex: index("vehiculos_modelo_id_idx").on(t.modeloId),
-      placaIndex: index("vehiculos_placa_idx").using(
-        "gin",
-        t.placa.op("gin_trgm_ops")
-      ),
-      codigoInternoIndex: index("vehiculos_codigo_interno_idx").on(
-        t.codigoInterno
-      ),
-    };
-  }
+  (t) => [
+    // Índices de búsqueda
+    index("vehiculos_modelo_id_idx").on(t.modeloId),
+    index("vehiculos_placa_idx").using("gin", t.placa.op("gin_trgm_ops")),
+    index("vehiculos_codigo_interno_idx").on(t.codigoInterno),
+    // Índices únicos parciales - solo aplican cuando eliminadoEn IS NULL
+    uniqueIndex("vehiculos_placa_unique_active_idx")
+      .on(t.placa)
+      .where(sql`${t.eliminadoEn} IS NULL`),
+    uniqueIndex("vehiculos_codigo_interno_unique_active_idx")
+      .on(t.codigoInterno)
+      .where(sql`${t.eliminadoEn} IS NULL`),
+  ]
 );
 
 export type VehiculoEstado = (typeof vehiculosEstado.enumValues)[number];

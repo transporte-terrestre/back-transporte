@@ -20,13 +20,12 @@ export const notificacionesLeidas = pgTable(
       .notNull(),
     leidoEn: timestamp("leido_en").defaultNow().notNull(),
   },
-  (t) => {
-    return {
-      usuarioNotificacionUnique: uniqueIndex(
-        "usuario_notificacion_unique_idx"
-      ).on(t.usuarioId, t.notificacionId),
-    };
-  }
+  (t) => [
+    uniqueIndex("usuario_notificacion_unique_idx").on(
+      t.usuarioId,
+      t.notificacionId
+    ),
+  ]
 );
 
 export type NotificacionLeida = typeof notificacionesLeidas.$inferSelect;

@@ -13,35 +13,14 @@ export class MantenimientoTareaCreateDto {
   @IsNotEmpty()
   mantenimientoId: number;
 
-  @ApiProperty({
-    example: "T-001",
-    description: "Código de la tarea",
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  codigo?: string;
-
-  @ApiProperty({
-    example: "Mecánica",
-    description: "Categoría de la tarea",
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  categoria?: string;
-
-  @ApiProperty({
-    example: "Cambio de filtros",
-    description: "Descripción de la tarea",
-  })
-  @IsString()
+  @ApiProperty({ example: 1, description: "ID de la tarea del catálogo" })
+  @IsNumber()
   @IsNotEmpty()
-  descripcion: string;
+  tareaId: number;
 
   @ApiProperty({
     example: "Juan Perez",
-    description: "Responsable",
+    description: "Responsable de la ejecución",
     required: false,
   })
   @IsOptional()
@@ -74,20 +53,6 @@ export class MantenimientoTareaCreateDto {
   @IsOptional()
   @IsBoolean()
   completada?: boolean;
-
-  @ApiProperty({
-    example: "50.00",
-    description: "Costo estimado",
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  costoEstimado?: string;
-
-  @ApiProperty({ example: "55.00", description: "Costo real", required: false })
-  @IsOptional()
-  @IsString()
-  costoReal?: string;
 
   @ApiProperty({
     example: "Ninguna",

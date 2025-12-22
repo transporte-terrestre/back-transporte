@@ -11,7 +11,10 @@ import {
   conductoresClaseLicencia,
   conductoresCategoriaLicencia,
 } from "@model/tables/conductor.model";
-import type { ConductorCategoriaLicencia, ConductorClaseLicencia } from "@model/tables/conductor.model";
+import type {
+  ConductorCategoriaLicencia,
+  ConductorClaseLicencia,
+} from "@model/tables/conductor.model";
 
 export class ConductorCreateDto
   implements
@@ -41,19 +44,19 @@ export class ConductorCreateDto
   numeroLicencia: string;
 
   @ApiProperty({
-    enum: conductoresCategoriaLicencia.enumValues,
-    default: conductoresCategoriaLicencia.enumValues[0],
+    enum: conductoresClaseLicencia.enumValues,
+    default: conductoresClaseLicencia.enumValues[0],
     description: "Driver license class",
   })
-  @IsIn(conductoresCategoriaLicencia.enumValues, { each: true })
+  @IsIn(conductoresClaseLicencia.enumValues, { each: true })
   claseLicencia: ConductorClaseLicencia;
 
   @ApiProperty({
-    enum: conductoresClaseLicencia.enumValues,
-    default: conductoresClaseLicencia.enumValues[0],
+    enum: conductoresCategoriaLicencia.enumValues,
+    default: conductoresCategoriaLicencia.enumValues[0],
     description: "Driver license category",
   })
-  @IsIn(conductoresClaseLicencia.enumValues, { each: true })
+  @IsIn(conductoresCategoriaLicencia.enumValues, { each: true })
   categoriaLicencia: ConductorCategoriaLicencia;
 
   @ApiPropertyOptional({

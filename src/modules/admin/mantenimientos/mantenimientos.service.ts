@@ -1,13 +1,18 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { MantenimientoRepository } from "@repository/mantenimiento.repository";
+import { TareaRepository } from "@repository/tarea.repository";
 import { MantenimientoCreateDto } from "./dto/mantenimiento-create.dto";
 import { MantenimientoUpdateDto } from "./dto/mantenimiento-update.dto";
 import { PaginatedMantenimientoResultDto } from "./dto/mantenimiento-paginated.dto";
+import { PaginatedTareaResultDto } from "./dto/tarea-paginated.dto";
+import { TareaCreateDto } from "./dto/tarea-create.dto";
+import { TareaUpdateDto } from "./dto/tarea-update.dto";
 
 @Injectable()
 export class MantenimientosService {
   constructor(
-    private readonly mantenimientoRepository: MantenimientoRepository
+    private readonly mantenimientoRepository: MantenimientoRepository,
+    private readonly tareaRepository: TareaRepository
   ) {}
 
   async findAllPaginated(
@@ -46,8 +51,27 @@ export class MantenimientosService {
     return this.mantenimientoRepository.findOne(id);
   }
 
-  create(data: MantenimientoCreateDto) {
-    return this.mantenimientoRepository.create(data);
+  async create(data: MantenimientoCreateDto) {
+    const codigoOrden = await this.generarCodigoOrden(data.vehiculoId);
+    return this.mantenimientoRepository.create({ ...data, codigoOrden });
+  }
+
+  private async generarCodigoOrden(vehiculoId: number): Promise<string> {
+    const placa =
+      await this.mantenimientoRepository.getPlacaVehiculo(vehiculoId);
+
+    if (!placa) {
+      throw new NotFoundException(
+        `Vehículo con id ${vehiculoId} no encontrado`
+      );
+    }
+
+    const count =
+      await this.mantenimientoRepository.countMantenimientosActivos(vehiculoId);
+    const numero = count + 1;
+    const numeroFormateado = String(numero).padStart(5, "0");
+
+    return `${placa}-${numeroFormateado}`;
   }
 
   update(id: number, data: MantenimientoUpdateDto) {
@@ -58,20 +82,65 @@ export class MantenimientosService {
     return this.mantenimientoRepository.delete(id);
   }
 
-  // Tareas
-  createTarea(data: any) {
+  // ========== MANTENIMIENTO TAREAS (relación) ==========
+  createMantenimientoTarea(data: any) {
     return this.mantenimientoRepository.createTarea(data);
   }
 
-  updateTarea(id: number, data: any) {
+  updateMantenimientoTarea(id: number, data: any) {
     return this.mantenimientoRepository.updateTarea(id, data);
   }
 
-  deleteTarea(id: number) {
+  deleteMantenimientoTarea(id: number) {
     return this.mantenimientoRepository.deleteTarea(id);
   }
 
-  // Documentos
+  // ========== CATÁLOGO DE TAREAS ==========
+  async findAllTareasPaginated(
+    page: number = 1,
+    limit: number = 10,
+    search?: string
+  ): Promise<PaginatedTareaResultDto> {
+    const { data, total } = await this.tareaRepository.findAllPaginated(
+      page,
+      limit,
+      { search }
+    );
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
+  findOneTarea(id: number) {
+    return this.tareaRepository.findOne(id);
+  }
+
+  createTarea(data: TareaCreateDto) {
+    return this.tareaRepository.create(data);
+  }
+
+  updateTarea(id: number, data: TareaUpdateDto) {
+    return this.tareaRepository.update(id, data);
+  }
+
+  deleteTarea(id: number) {
+    return this.tareaRepository.delete(id);
+  }
+
+  // ========== DOCUMENTOS ==========
   createDocumento(data: any) {
     return this.mantenimientoRepository.createDocumento(data);
   }

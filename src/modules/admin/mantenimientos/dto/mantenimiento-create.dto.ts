@@ -12,7 +12,7 @@ import type {
 } from "@model/tables/mantenimiento.model";
 
 export class MantenimientoCreateDto
-  implements Omit<MantenimientoDTO, "id" | "creadoEn" | "actualizadoEn">
+  implements Omit<MantenimientoDTO, "id" | "creadoEn" | "actualizadoEn" | "codigoOrden">
 {
   @ApiProperty({ example: 1, description: "Vehicle ID" })
   @IsInt()
@@ -23,11 +23,6 @@ export class MantenimientoCreateDto
   @IsInt()
   @IsNotEmpty()
   tallerId: number;
-
-  @ApiProperty({ example: "ORD-001", description: "Service Order Code" })
-  @IsString()
-  @IsOptional()
-  codigoOrden: string | null;
 
   @ApiProperty({
     enum: mantenimientosTipo.enumValues,

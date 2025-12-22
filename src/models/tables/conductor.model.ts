@@ -6,7 +6,9 @@ import {
   pgEnum,
   text,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const conductoresClaseLicencia = pgEnum("conductores_clase_licencia", [
   "A",
@@ -22,13 +24,11 @@ export const conductores = pgTable(
   "conductores",
   {
     id: serial("id").primaryKey(),
-    dni: varchar("dni", { length: 20 }).unique().notNull(),
+    dni: varchar("dni", { length: 20 }).notNull(),
     nombres: varchar("nombres", { length: 100 }).notNull(),
     apellidos: varchar("apellidos", { length: 100 }).notNull(),
     nombreCompleto: varchar("nombre_completo", { length: 200 }).notNull(),
-    numeroLicencia: varchar("numero_licencia", { length: 20 })
-      .unique()
-      .notNull(),
+    numeroLicencia: varchar("numero_licencia", { length: 20 }).notNull(),
     claseLicencia: conductoresClaseLicencia("clase_licencia").notNull(),
     categoriaLicencia:
       conductoresCategoriaLicencia("categoria_licencia").notNull(),
@@ -37,18 +37,22 @@ export const conductores = pgTable(
     actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
     eliminadoEn: timestamp("eliminado_en"),
   },
-  (t) => {
-    return {
-      nombreCompletoIndex: index("conductores_nombre_completo_idx").using(
-        "gin",
-        t.nombreCompleto.op("gin_trgm_ops")
-      ),
-      dniIndex: index("conductores_dni_idx").on(t.dni),
-      numeroLicenciaIndex: index("conductores_numero_licencia_idx").on(
-        t.numeroLicencia
-      ),
-    };
-  }
+  (t) => [
+    // Índices de búsqueda
+    index("conductores_nombre_completo_idx").using(
+      "gin",
+      t.nombreCompleto.op("gin_trgm_ops")
+    ),
+    index("conductores_dni_idx").on(t.dni),
+    index("conductores_numero_licencia_idx").on(t.numeroLicencia),
+    // Índices únicos parciales - solo aplican cuando eliminadoEn IS NULL
+    uniqueIndex("conductores_dni_unique_active_idx")
+      .on(t.dni)
+      .where(sql`${t.eliminadoEn} IS NULL`),
+    uniqueIndex("conductores_numero_licencia_unique_active_idx")
+      .on(t.numeroLicencia)
+      .where(sql`${t.eliminadoEn} IS NULL`),
+  ]
 );
 
 export type ConductorClaseLicencia =

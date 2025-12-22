@@ -22,6 +22,7 @@ import { marcas } from "@model/tables/marca.model";
 import { talleres } from "@model/tables/taller.model";
 import { mantenimientoTareas } from "@model/tables/mantenimiento-tarea.model";
 import { mantenimientoDocumentos } from "@model/tables/mantenimiento-documento.model";
+import { tareas } from "@model/tables/tarea.model";
 
 interface PaginationFilters {
   search?: string;
@@ -154,10 +155,17 @@ export class MantenimientoRepository {
 
     const maintenance = result[0];
 
-    // Fetch related data sequentially (equivalent to ViajeRepository)
     const tareasList = await database
-      .select()
+      .select({
+        ...getTableColumns(mantenimientoTareas),
+        tarea: {
+          id: tareas.id,
+          codigo: tareas.codigo,
+          descripcion: tareas.descripcion,
+        },
+      })
       .from(mantenimientoTareas)
+      .leftJoin(tareas, eq(mantenimientoTareas.tareaId, tareas.id))
       .where(eq(mantenimientoTareas.mantenimientoId, id));
 
     const documentosList = await database
@@ -178,6 +186,29 @@ export class MantenimientoRepository {
       .values(data)
       .returning();
     return result[0];
+  }
+
+  async getPlacaVehiculo(vehiculoId: number): Promise<string | null> {
+    const [vehiculo] = await database
+      .select({ placa: vehiculos.placa })
+      .from(vehiculos)
+      .where(eq(vehiculos.id, vehiculoId));
+
+    return vehiculo?.placa ?? null;
+  }
+
+  async countMantenimientosActivos(vehiculoId: number): Promise<number> {
+    const [{ total }] = await database
+      .select({ total: count() })
+      .from(mantenimientos)
+      .where(
+        and(
+          eq(mantenimientos.vehiculoId, vehiculoId),
+          isNull(mantenimientos.eliminadoEn)
+        )
+      );
+
+    return Number(total);
   }
 
   async update(id: number, data: Partial<MantenimientoDTO>) {

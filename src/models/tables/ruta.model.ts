@@ -23,18 +23,11 @@ export const rutas = pgTable(
     actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
     eliminadoEn: timestamp("eliminado_en"),
   },
-  (t) => {
-    return {
-      origenIndex: index("rutas_origen_idx").using(
-        "gin",
-        t.origen.op("gin_trgm_ops")
-      ),
-      destinoIndex: index("rutas_destino_idx").using(
-        "gin",
-        t.destino.op("gin_trgm_ops")
-      ),
-    };
-  }
+  (t) => [
+    // Índices de búsqueda
+    index("rutas_origen_idx").using("gin", t.origen.op("gin_trgm_ops")),
+    index("rutas_destino_idx").using("gin", t.destino.op("gin_trgm_ops")),
+  ]
 );
 
 export type Ruta = typeof rutas.$inferSelect;

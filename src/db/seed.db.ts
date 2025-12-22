@@ -5,6 +5,7 @@ import { seedVehiculos } from "@seed/vehiculo.seed";
 import { seedRutas } from "@seed/ruta.seed";
 import { seedMantenimientos } from "@seed/mantenimiento.seed";
 import { seedTalleres } from "@seed/taller.seed";
+import { seedTareas } from "@seed/tarea.seed";
 import { seedViajes } from "@seed/viaje.seed";
 import { seedUsuarios } from "@seed/usuario.seed";
 import { seedClientes } from "@seed/cliente.seed";
@@ -26,6 +27,7 @@ async function seed() {
     const modelosData = await seedModelos(marcasData);
     const routesData = await seedRutas();
     const talleresData = await seedTalleres();
+    await seedTareas(); // Catálogo de tareas de mantenimiento
     const vehiclesData = await seedVehiculos(modelosData);
 
     // 2. Related data

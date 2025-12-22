@@ -25,6 +25,7 @@ export const modalidadServicio = pgEnum("viajes_modalidad_servicio", [
   "ejecutivo",
   "especial",
   "turismo",
+  "corporativo",
 ]);
 
 export const viajesTipoRuta = pgEnum("viajes_tipo_ruta", ["ocasional", "fija"]);

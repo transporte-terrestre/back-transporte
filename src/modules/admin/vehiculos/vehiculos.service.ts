@@ -75,8 +75,14 @@ export class VehiculosService {
     };
   }
 
-  create(data: VehiculoCreateDto) {
-    return this.vehiculoRepository.create(data);
+  async create(data: VehiculoCreateDto) {
+    const vehiculo = await this.vehiculoRepository.create(data);
+    const codigoInterno = this.generarCodigoInterno(vehiculo.id);
+    return this.vehiculoRepository.update(vehiculo.id, { codigoInterno });
+  }
+
+  private generarCodigoInterno(id: number): string {
+    return String(id).padStart(5, "0");
   }
 
   update(id: number, data: VehiculoUpdateDto) {

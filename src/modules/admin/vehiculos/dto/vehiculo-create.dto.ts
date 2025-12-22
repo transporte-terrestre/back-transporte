@@ -3,7 +3,6 @@ import {
   IsNotEmpty,
   IsInt,
   Min,
-  IsDateString,
   IsOptional,
   IsIn,
   IsArray,
@@ -13,20 +12,13 @@ import { VehiculoDTO, vehiculosEstado } from "@model/tables/vehiculo.model";
 import type { VehiculoEstado } from "@model/tables/vehiculo.model";
 
 export class VehiculoCreateDto
-  implements Omit<VehiculoDTO, "id" | "creadoEn" | "actualizadoEn">
+  implements
+    Omit<VehiculoDTO, "id" | "creadoEn" | "actualizadoEn" | "codigoInterno">
 {
   @ApiProperty({ example: "ABC-123", description: "Vehicle license plate" })
   @IsString()
   @IsNotEmpty()
   placa: string;
-
-  @ApiPropertyOptional({
-    example: "0582",
-    description: "Internal vehicle code",
-  })
-  @IsString()
-  @IsOptional()
-  codigoInterno?: string;
 
   @ApiProperty({ example: 1, description: "Vehicle model ID" })
   @IsInt()

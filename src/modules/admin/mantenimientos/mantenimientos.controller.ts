@@ -25,6 +25,16 @@ import {
   MantenimientoPaginationQueryDto,
   PaginatedMantenimientoResultDto,
 } from "./dto/mantenimiento-paginated.dto";
+import { MantenimientoTareaCreateDto } from "./dto/mantenimiento-tarea-create.dto";
+import { MantenimientoTareaUpdateDto } from "./dto/mantenimiento-tarea-update.dto";
+import { MantenimientoTareaResultDto } from "./dto/mantenimiento-tarea-result.dto";
+import { TareaCreateDto } from "./dto/tarea-create.dto";
+import { TareaUpdateDto } from "./dto/tarea-update.dto";
+import { TareaResultDto } from "./dto/tarea-result.dto";
+import {
+  TareaPaginationQueryDto,
+  PaginatedTareaResultDto,
+} from "./dto/tarea-paginated.dto";
 
 @ApiTags("mantenimientos")
 @ApiBearerAuth()
@@ -86,49 +96,104 @@ export class MantenimientosController {
     return this.mantenimientosService.delete(+id);
   }
 
-  // ========== TAREAS ==========
-  @Post("create/tarea")
-  @ApiOperation({ summary: "Add a task to a maintenance record" })
-  createTarea(@Body() data: any) {
-    return this.mantenimientosService.createTarea(data);
+  // ========== MANTENIMIENTO TAREAS (relación) ==========
+  @Post("mantenimiento-tarea/create")
+  @ApiOperation({ summary: "Agregar una tarea a un mantenimiento" })
+  @ApiResponse({ status: 201, type: MantenimientoTareaResultDto })
+  createMantenimientoTarea(@Body() data: MantenimientoTareaCreateDto) {
+    return this.mantenimientosService.createMantenimientoTarea(data);
   }
 
-  @Patch("update/:id/tarea/:tareaId")
-  @ApiOperation({ summary: "Update a maintenance task" })
-  updateTarea(
+  @Patch("mantenimiento-tarea/update/:id")
+  @ApiOperation({ summary: "Actualizar una tarea de mantenimiento" })
+  @ApiParam({
+    name: "id",
+    description: "ID de la relación tarea-mantenimiento",
+    type: Number,
+  })
+  @ApiResponse({ status: 200, type: MantenimientoTareaResultDto })
+  updateMantenimientoTarea(
     @Param("id") id: string,
-    @Param("tareaId") tareaId: string,
-    @Body() data: any
+    @Body() data: MantenimientoTareaUpdateDto
   ) {
-    return this.mantenimientosService.updateTarea(+tareaId, data);
+    return this.mantenimientosService.updateMantenimientoTarea(+id, data);
   }
 
-  @Delete("delete/:id/tarea/:tareaId")
-  @ApiOperation({ summary: "Delete a maintenance task" })
-  deleteTarea(@Param("id") id: string, @Param("tareaId") tareaId: string) {
-    return this.mantenimientosService.deleteTarea(+tareaId);
+  @Delete("mantenimiento-tarea/delete/:id")
+  @ApiOperation({ summary: "Eliminar una tarea de mantenimiento" })
+  @ApiParam({
+    name: "id",
+    description: "ID de la relación tarea-mantenimiento",
+    type: Number,
+  })
+  @ApiResponse({ status: 200, type: MantenimientoTareaResultDto })
+  deleteMantenimientoTarea(@Param("id") id: string) {
+    return this.mantenimientosService.deleteMantenimientoTarea(+id);
+  }
+
+  // ========== CATÁLOGO DE TAREAS ==========
+  @Get("tarea/find-all")
+  @ApiOperation({
+    summary: "Obtener tareas del catálogo con paginación y filtros",
+  })
+  @ApiResponse({ status: 200, type: PaginatedTareaResultDto })
+  findAllTareas(@Query() query: TareaPaginationQueryDto) {
+    return this.mantenimientosService.findAllTareasPaginated(
+      query.page,
+      query.limit,
+      query.search
+    );
+  }
+
+  @Get("tarea/find-one/:id")
+  @ApiOperation({ summary: "Obtener una tarea del catálogo por ID" })
+  @ApiParam({ name: "id", description: "ID de la tarea", type: Number })
+  @ApiResponse({ status: 200, type: TareaResultDto })
+  findOneTarea(@Param("id") id: string) {
+    return this.mantenimientosService.findOneTarea(+id);
+  }
+
+  @Post("tarea/create")
+  @ApiOperation({ summary: "Crear una nueva tarea en el catálogo" })
+  @ApiResponse({ status: 201, type: TareaResultDto })
+  createTarea(@Body() createDto: TareaCreateDto) {
+    return this.mantenimientosService.createTarea(createDto);
+  }
+
+  @Patch("tarea/update/:id")
+  @ApiOperation({ summary: "Actualizar una tarea del catálogo" })
+  @ApiParam({ name: "id", description: "ID de la tarea", type: Number })
+  @ApiResponse({ status: 200, type: TareaResultDto })
+  updateTarea(@Param("id") id: string, @Body() updateDto: TareaUpdateDto) {
+    return this.mantenimientosService.updateTarea(+id, updateDto);
+  }
+
+  @Delete("tarea/delete/:id")
+  @ApiOperation({ summary: "Eliminar una tarea del catálogo" })
+  @ApiParam({ name: "id", description: "ID de la tarea", type: Number })
+  @ApiResponse({ status: 200, type: TareaResultDto })
+  deleteTarea(@Param("id") id: string) {
+    return this.mantenimientosService.deleteTarea(+id);
   }
 
   // ========== DOCUMENTOS ==========
-  @Post("create/documento")
-  @ApiOperation({ summary: "Add a document to a maintenance record" })
+  @Post("documento/create")
+  @ApiOperation({ summary: "Agregar un documento a un mantenimiento" })
   createDocumento(@Body() data: any) {
     return this.mantenimientosService.createDocumento(data);
   }
 
-  @Patch("update/:id/documento/:docId")
-  @ApiOperation({ summary: "Update a maintenance document" })
-  updateDocumento(
-    @Param("id") id: string,
-    @Param("docId") docId: string,
-    @Body() data: any
-  ) {
-    return this.mantenimientosService.updateDocumento(+docId, data);
+  @Patch("documento/update/:id")
+  @ApiOperation({ summary: "Actualizar un documento de mantenimiento" })
+  @ApiParam({ name: "id", description: "ID del documento", type: Number })
+  updateDocumento(@Param("id") id: string, @Body() data: any) {
+    return this.mantenimientosService.updateDocumento(+id, data);
   }
 
-  @Delete("delete/:id/documento/:docId")
-  @ApiOperation({ summary: "Delete a maintenance document" })
-  deleteDocumento(@Param("id") id: string, @Param("docId") docId: string) {
-    return this.mantenimientosService.deleteDocumento(+docId);
+  @Delete("documento/delete/:id")
+  @ApiOperation({ summary: "Eliminar un documento de mantenimiento" })
+  @ApiParam({ name: "id", description: "ID del documento", type: Number })
+  deleteDocumento(@Param("id") id: string) {
+    return this.mantenimientosService.deleteDocumento(+id);
   }
 }

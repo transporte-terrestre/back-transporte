@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { TareaResultDto } from "./tarea-result.dto";
 
 export class MantenimientoTareaResultDto {
   @ApiProperty()
@@ -7,14 +8,14 @@ export class MantenimientoTareaResultDto {
   @ApiProperty()
   mantenimientoId: number;
 
-  @ApiProperty({ nullable: true })
-  codigo: string | null;
-
-  @ApiProperty({ nullable: true })
-  categoria: string | null;
-
   @ApiProperty()
-  descripcion: string;
+  tareaId: number;
+
+  @ApiProperty({
+    type: TareaResultDto,
+    description: "Datos de la tarea del catálogo",
+  })
+  tarea: TareaResultDto;
 
   @ApiProperty({ nullable: true })
   responsable: string | null;
@@ -27,12 +28,6 @@ export class MantenimientoTareaResultDto {
 
   @ApiProperty()
   completada: boolean;
-
-  @ApiProperty({ nullable: true })
-  costoEstimado: string | null;
-
-  @ApiProperty({ nullable: true })
-  costoReal: string | null;
 
   @ApiProperty({ nullable: true })
   observaciones: string | null;
