@@ -356,6 +356,13 @@ export async function seedMantenimientos(
       contadorPorVehiculo
     );
 
+    // Calcular fechaSalida para mantenimientos finalizados (1-3 días después del ingreso)
+    let fechaSalida: Date | undefined;
+    if (m.estado === "finalizado") {
+      const diasDuracion = Math.floor(Math.random() * 3) + 1; // 1-3 días
+      fechaSalida = getDate(m.dias + diasDuracion);
+    }
+
     await database.insert(mantenimientos).values({
       vehiculoId: m.vehiculo.id,
       tallerId: m.taller.id,
@@ -363,6 +370,7 @@ export async function seedMantenimientos(
       costoTotal: m.costo,
       descripcion: m.desc,
       fechaIngreso: getDate(m.dias),
+      fechaSalida,
       kilometraje: m.km,
       estado: m.estado,
       codigoOrden,

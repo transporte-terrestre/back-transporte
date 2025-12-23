@@ -1,6 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsOptional, IsNumber } from "class-validator";
-import { Type } from "class-transformer";
+import { IsDateString, IsOptional } from "class-validator";
 
 export class ReporteDetalladoQueryDto {
   @ApiProperty({

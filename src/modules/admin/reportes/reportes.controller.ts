@@ -15,12 +15,10 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { AuthGuard } from "@nestjs/passport";
-import { ReporteQueryDto } from "./dto/reporte-query.dto";
-import { ReporteViajesVehiculoDto } from "./dto/reporte-viajes-vehiculo.dto";
-import { ReporteViajesConductorDto } from "./dto/reporte-viajes-conductor.dto";
-import { ReporteKilometrajeVehiculoDto } from "./dto/reporte-kilometraje-vehiculo.dto";
 import { ReporteDetalladoQueryDto } from "./dto/reporte-detallado-query.dto";
 import { ViajeDetalladoDto } from "./dto/viaje-detallado.dto";
+import { MantenimientoDetalladoVehiculoDto } from "./dto/mantenimiento-detallado-vehiculo.dto";
+import { MantenimientoDetalladoTallerDto } from "./dto/mantenimiento-detallado-taller.dto";
 
 @ApiTags("Reportes")
 @ApiBearerAuth()
@@ -28,41 +26,6 @@ import { ViajeDetalladoDto } from "./dto/viaje-detallado.dto";
 @Controller("reportes")
 export class ReportesController {
   constructor(private readonly reportesService: ReportesService) {}
-
-  // ========== RESÚMENES (Estadísticas Agregadas) ==========
-
-  @Get("viajes-vehiculo")
-  @ApiOperation({ summary: "Reporte de cantidad de viajes por vehículo" })
-  @ApiResponse({ type: [ReporteViajesVehiculoDto] })
-  async getViajesPorVehiculo(@Query() query: ReporteQueryDto) {
-    return await this.reportesService.getViajesPorVehiculo(
-      query.fechaInicio,
-      query.fechaFin
-    );
-  }
-
-  @Get("viajes-conductor")
-  @ApiOperation({ summary: "Reporte de cantidad de viajes por conductor" })
-  @ApiResponse({ type: [ReporteViajesConductorDto] })
-  async getViajesPorConductor(@Query() query: ReporteQueryDto) {
-    return await this.reportesService.getViajesPorConductor(
-      query.fechaInicio,
-      query.fechaFin
-    );
-  }
-
-  @Get("kilometraje-vehiculo")
-  @ApiOperation({
-    summary:
-      "Reporte de kilometraje total (estimado, real y diferencia) por vehículo",
-  })
-  @ApiResponse({ type: [ReporteKilometrajeVehiculoDto] })
-  async getKilometrajePorVehiculo(@Query() query: ReporteQueryDto) {
-    return await this.reportesService.getKilometrajePorVehiculo(
-      query.fechaInicio,
-      query.fechaFin
-    );
-  }
 
   // ========== REPORTES DETALLADOS (Viajes específicos) ==========
 
@@ -105,6 +68,42 @@ export class ReportesController {
     @Query() query: ReporteDetalladoQueryDto
   ) {
     return await this.reportesService.getViajesDetalladosPorCliente(
+      id,
+      query.fechaInicio,
+      query.fechaFin
+    );
+  }
+
+  // ========== REPORTES MANTENIMIENTOS ==========
+
+  @Get("mantenimientos-detallados/vehiculo/:id")
+  @ApiOperation({
+    summary: "Mantenimientos detallados de un vehículo específico",
+  })
+  @ApiParam({ name: "id", description: "ID del vehículo" })
+  @ApiResponse({ type: [MantenimientoDetalladoVehiculoDto] })
+  async getMantenimientosDetalladosPorVehiculo(
+    @Param("id", ParseIntPipe) id: number,
+    @Query() query: ReporteDetalladoQueryDto
+  ) {
+    return await this.reportesService.getMantenimientosDetalladosPorVehiculo(
+      id,
+      query.fechaInicio,
+      query.fechaFin
+    );
+  }
+
+  @Get("mantenimientos-detallados/taller/:id")
+  @ApiOperation({
+    summary: "Mantenimientos detallados de un taller específico",
+  })
+  @ApiParam({ name: "id", description: "ID del taller" })
+  @ApiResponse({ type: [MantenimientoDetalladoTallerDto] })
+  async getMantenimientosDetalladosPorTaller(
+    @Param("id", ParseIntPipe) id: number,
+    @Query() query: ReporteDetalladoQueryDto
+  ) {
+    return await this.reportesService.getMantenimientosDetalladosPorTaller(
       id,
       query.fechaInicio,
       query.fechaFin

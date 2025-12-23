@@ -3,66 +3,16 @@ import { database } from "@db/connection.db";
 import { vehiculos } from "@model/tables/vehiculo.model";
 import { modelos } from "@model/tables/modelo.model";
 import { marcas } from "@model/tables/marca.model";
-import { conductores } from "@model/tables/conductor.model";
 import { viajes } from "@model/tables/viaje.model";
 import { viajeVehiculos } from "@model/tables/viaje-vehiculo.model";
 import { viajeConductores } from "@model/tables/viaje-conductor.model";
 import { rutas } from "@model/tables/ruta.model";
-import { count, eq, sum, desc, and, gte, lte, sql } from "drizzle-orm";
+import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
+import { mantenimientos } from "@model/tables/mantenimiento.model";
+import { talleres } from "@model/tables/taller.model";
 
 @Injectable()
 export class ReportesRepository {
-  async getViajesPorVehiculo(fechaInicio?: Date, fechaFin?: Date) {
-    const filters = [];
-
-    if (fechaInicio) filters.push(gte(viajes.fechaSalida, fechaInicio));
-    if (fechaFin) filters.push(lte(viajes.fechaSalida, fechaFin));
-
-    const whereClause = filters.length > 0 ? and(...filters) : undefined;
-
-    return await database
-      .select({
-        vehiculoId: vehiculos.id,
-        placa: vehiculos.placa,
-        marca: marcas.nombre,
-        modelo: modelos.nombre,
-        totalViajes: count(viajes.id),
-      })
-      .from(vehiculos)
-      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
-      .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
-      .leftJoin(viajeVehiculos, eq(vehiculos.id, viajeVehiculos.vehiculoId))
-      .leftJoin(viajes, eq(viajeVehiculos.viajeId, viajes.id))
-      .where(whereClause)
-      .groupBy(vehiculos.id, vehiculos.placa, marcas.nombre, modelos.nombre)
-      .orderBy(desc(count(viajes.id)));
-  }
-
-  async getViajesPorConductor(fechaInicio?: Date, fechaFin?: Date) {
-    const filters = [];
-
-    if (fechaInicio) filters.push(gte(viajes.fechaSalida, fechaInicio));
-    if (fechaFin) filters.push(lte(viajes.fechaSalida, fechaFin));
-
-    const whereClause = filters.length > 0 ? and(...filters) : undefined;
-
-    return await database
-      .select({
-        conductorId: conductores.id,
-        nombreCompleto: conductores.nombreCompleto,
-        dni: conductores.dni, // Assuming dni exists or similar identifier
-        totalViajes: count(viajes.id),
-      })
-      .from(conductores)
-      .leftJoin(
-        viajeConductores,
-        eq(conductores.id, viajeConductores.conductorId)
-      )
-      .leftJoin(viajes, eq(viajeConductores.viajeId, viajes.id))
-      .where(whereClause)
-      .groupBy(conductores.id, conductores.nombreCompleto, conductores.dni)
-      .orderBy(desc(count(viajes.id)));
-  }
 
   // ========== REPORTES DETALLADOS ==========
 
@@ -170,46 +120,68 @@ export class ReportesRepository {
       .orderBy(desc(viajes.fechaSalida));
   }
 
-  async getKilometrajePorVehiculo(fechaInicio?: Date, fechaFin?: Date) {
-    const filters = [
-      eq(viajes.estado, "completado"), // Only count completed trips
-    ];
+  async getMantenimientosDetalladosPorVehiculo(
+    vehiculoId: number,
+    fechaInicio?: Date,
+    fechaFin?: Date
+  ) {
+    const filters = [eq(mantenimientos.vehiculoId, vehiculoId)];
 
-    if (fechaInicio) filters.push(gte(viajes.fechaSalida, fechaInicio));
-    if (fechaFin) filters.push(lte(viajes.fechaSalida, fechaFin));
+    if (fechaInicio)
+      filters.push(gte(mantenimientos.fechaIngreso, fechaInicio));
+    if (fechaFin) filters.push(lte(mantenimientos.fechaIngreso, fechaFin));
 
-    const whereClause = and(...filters);
-
-    // Sum distance from viajes table directly
     return await database
       .select({
-        vehiculoId: vehiculos.id,
-        placa: vehiculos.placa,
-        marca: marcas.nombre,
-        modelo: modelos.nombre,
-        totalKilometrosEstimados:
-          sql<number>`COALESCE(SUM(CAST(${viajes.distanciaEstimada} AS DECIMAL)), 0)`.mapWith(
-            Number
-          ),
-        totalKilometrosReales:
-          sql<number>`COALESCE(SUM(CAST(${viajes.distanciaFinal} AS DECIMAL)), 0)`.mapWith(
-            Number
-          ),
-        diferenciaTotalKilometros:
-          sql<number>`COALESCE(SUM(CAST(${viajes.distanciaFinal} AS DECIMAL) - CAST(${viajes.distanciaEstimada} AS DECIMAL)), 0)`.mapWith(
-            Number
-          ),
-        totalViajes: count(viajes.id),
+        id: mantenimientos.id,
+        codigoOrden: mantenimientos.codigoOrden,
+        tipo: mantenimientos.tipo,
+        estado: mantenimientos.estado,
+        descripcion: mantenimientos.descripcion,
+        kilometraje: mantenimientos.kilometraje,
+        costoTotal: mantenimientos.costoTotal,
+        fechaIngreso: mantenimientos.fechaIngreso,
+        fechaSalida: mantenimientos.fechaSalida,
+        tallerNombre: talleres.razonSocial,
+        tallerTipo: talleres.tipo,
       })
-      .from(vehiculos)
+      .from(mantenimientos)
+      .innerJoin(talleres, eq(mantenimientos.tallerId, talleres.id))
+      .where(and(...filters))
+      .orderBy(desc(mantenimientos.fechaIngreso));
+  }
+
+  async getMantenimientosDetalladosPorTaller(
+    tallerId: number,
+    fechaInicio?: Date,
+    fechaFin?: Date
+  ) {
+    const filters = [eq(mantenimientos.tallerId, tallerId)];
+
+    if (fechaInicio)
+      filters.push(gte(mantenimientos.fechaIngreso, fechaInicio));
+    if (fechaFin) filters.push(lte(mantenimientos.fechaIngreso, fechaFin));
+
+    return await database
+      .select({
+        id: mantenimientos.id,
+        codigoOrden: mantenimientos.codigoOrden,
+        tipo: mantenimientos.tipo,
+        estado: mantenimientos.estado,
+        descripcion: mantenimientos.descripcion,
+        kilometraje: mantenimientos.kilometraje,
+        costoTotal: mantenimientos.costoTotal,
+        fechaIngreso: mantenimientos.fechaIngreso,
+        fechaSalida: mantenimientos.fechaSalida,
+        vehiculoPlaca: vehiculos.placa,
+        vehiculoMarca: marcas.nombre,
+        vehiculoModelo: modelos.nombre,
+      })
+      .from(mantenimientos)
+      .innerJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
       .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
-      .innerJoin(viajeVehiculos, eq(vehiculos.id, viajeVehiculos.vehiculoId))
-      .innerJoin(viajes, eq(viajeVehiculos.viajeId, viajes.id))
-      .where(whereClause)
-      .groupBy(vehiculos.id, vehiculos.placa, marcas.nombre, modelos.nombre)
-      .orderBy(
-        desc(sql`COALESCE(SUM(CAST(${viajes.distanciaFinal} AS DECIMAL)), 0)`)
-      );
+      .where(and(...filters))
+      .orderBy(desc(mantenimientos.fechaIngreso));
   }
 }
