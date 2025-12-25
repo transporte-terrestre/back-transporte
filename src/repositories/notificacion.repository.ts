@@ -184,7 +184,6 @@ export class NotificacionRepository {
     return results;
   }
 
-
   private async getClienteDocumentosVencidos(
     fechaLimite: Date
   ): Promise<ClienteDocumentoVencimiento[]> {
@@ -242,7 +241,7 @@ export class NotificacionRepository {
       fechaExpiracion: r.fechaExpiracion!,
       entidadId: r.entidadId,
       entidadNombre: r.entidadNombre,
-      diasRestantes: this.calcularDiasRestantes(new Date(r.fechaExpiracion!)),
+      diasRestantes: this.calcularDiasRestantes(r.fechaExpiracion!),
     }));
   }
 
@@ -305,7 +304,7 @@ export class NotificacionRepository {
       fechaExpiracion: r.fechaExpiracion,
       entidadId: r.entidadId,
       entidadNombre: r.entidadNombre,
-      diasRestantes: this.calcularDiasRestantes(new Date(r.fechaExpiracion)),
+      diasRestantes: this.calcularDiasRestantes(r.fechaExpiracion),
     }));
   }
 
@@ -368,7 +367,7 @@ export class NotificacionRepository {
       fechaExpiracion: r.fechaExpiracion!,
       entidadId: r.entidadId,
       entidadNombre: `${r.placa} - ${r.marca} ${r.modelo}`,
-      diasRestantes: this.calcularDiasRestantes(new Date(r.fechaExpiracion!)),
+      diasRestantes: this.calcularDiasRestantes(r.fechaExpiracion!),
     }));
   }
 
@@ -427,20 +426,38 @@ export class NotificacionRepository {
       fechaExpiracion: r.fechaExpiracion!,
       entidadId: r.entidadId,
       entidadNombre: r.entidadNombre,
-      diasRestantes: this.calcularDiasRestantes(new Date(r.fechaExpiracion!)),
+      diasRestantes: this.calcularDiasRestantes(r.fechaExpiracion!),
     }));
   }
 
   /**
    * Helper: Calculate days remaining (negative = expired days ago)
+   * Handles timezone correctly by parsing date strings as local dates
    */
-  private calcularDiasRestantes(fechaExpiracion: Date): number {
+  private calcularDiasRestantes(fechaExpiracion: Date | string): number {
+    // Get today at midnight in local time
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    fechaExpiracion.setHours(0, 0, 0, 0);
 
-    const diffTime = fechaExpiracion.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // Parse expiration date as local time
+    // If it's a string like "2025-12-24", parse it as local, not UTC
+    let expDate: Date;
+    if (typeof fechaExpiracion === "string") {
+      const [year, month, day] = fechaExpiracion.split("-").map(Number);
+      expDate = new Date(year, month - 1, day); // month is 0-indexed
+    } else {
+      // If it's already a Date, we need to handle potential UTC offset
+      // Check if the date was created from an ISO string (would be at midnight UTC)
+      expDate = new Date(fechaExpiracion);
+      // If hours/minutes suggest UTC offset issue, adjust
+      if (expDate.getHours() !== 0) {
+        expDate.setHours(0, 0, 0, 0);
+      }
+    }
+    expDate.setHours(0, 0, 0, 0);
+
+    const diffTime = expDate.getTime() - today.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
     return diffDays;
   }
