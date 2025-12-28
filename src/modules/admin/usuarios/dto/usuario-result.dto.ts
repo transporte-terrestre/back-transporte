@@ -73,6 +73,13 @@ export class UsuarioResultDto {
   actualizadoEn: Date;
 
   @ApiProperty({
+    example: "2023-01-01T00:00:00.000Z",
+    description: "Deletion date (if applicable)",
+    nullable: true,
+  })
+  eliminadoEn: Date | null;
+
+  @ApiProperty({
     description: "User documents grouped by type",
     type: DocumentosAgrupadosDto,
   })

@@ -86,6 +86,7 @@ export class UsuarioRepository {
         fotocheck: usuarios.fotocheck,
         creadoEn: usuarios.creadoEn,
         actualizadoEn: usuarios.actualizadoEn,
+        eliminadoEn: usuarios.eliminadoEn,
       })
       .from(usuarios)
       .where(whereClause)
@@ -111,6 +112,7 @@ export class UsuarioRepository {
         fotocheck: usuarios.fotocheck,
         creadoEn: usuarios.creadoEn,
         actualizadoEn: usuarios.actualizadoEn,
+        eliminadoEn: usuarios.eliminadoEn,
       })
       .from(usuarios)
       .where(and(eq(usuarios.id, id), isNull(usuarios.eliminadoEn)));

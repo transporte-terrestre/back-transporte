@@ -1,27 +1,14 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
-import { Type } from "class-transformer";
-import {
-  IsInt,
-  IsOptional,
-  Min,
-  Max,
-  IsString,
-  IsDateString,
-  IsIn,
-} from "class-validator";
-import {
-  mantenimientosTipo,
-  mantenimientosEstado,
-} from "@model/tables/mantenimiento.model";
-import type {
-  MantenimientoTipo,
-  MantenimientoEstado,
-} from "@model/tables/mantenimiento.model";
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
+import { mantenimientosTipo, mantenimientosEstado } from '@model/tables/mantenimiento.model';
+import type { MantenimientoTipo, MantenimientoEstado } from '@model/tables/mantenimiento.model';
+import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
 
 export class MantenimientoPaginationQueryDto {
   @ApiProperty({
-    description: "Número de página (comienza en 1)",
+    description: 'Número de página (comienza en 1)',
     example: 1,
     default: 1,
     required: false,
@@ -33,7 +20,7 @@ export class MantenimientoPaginationQueryDto {
   page?: number = 1;
 
   @ApiProperty({
-    description: "Cantidad de elementos por página",
+    description: 'Cantidad de elementos por página',
     example: 10,
     default: 10,
     required: false,
@@ -46,8 +33,7 @@ export class MantenimientoPaginationQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description:
-      "Búsqueda por tipo, descripción o código de orden del mantenimiento",
+    description: 'Búsqueda por tipo, descripción o código de orden del mantenimiento',
     required: false,
   })
   @IsOptional()
@@ -55,7 +41,7 @@ export class MantenimientoPaginationQueryDto {
   search?: string;
 
   @ApiProperty({
-    description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
+    description: 'Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()
@@ -63,7 +49,7 @@ export class MantenimientoPaginationQueryDto {
   fechaInicio?: string;
 
   @ApiProperty({
-    description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
+    description: 'Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()
@@ -71,7 +57,7 @@ export class MantenimientoPaginationQueryDto {
   fechaFin?: string;
 
   @ApiProperty({
-    description: "Filtrar por tipo de mantenimiento",
+    description: 'Filtrar por tipo de mantenimiento',
     enum: mantenimientosTipo.enumValues,
     example: mantenimientosTipo.enumValues[0],
     required: false,
@@ -81,7 +67,7 @@ export class MantenimientoPaginationQueryDto {
   tipo?: MantenimientoTipo;
 
   @ApiProperty({
-    description: "Filtrar por estado del mantenimiento",
+    description: 'Filtrar por estado del mantenimiento',
     enum: mantenimientosEstado.enumValues,
     example: mantenimientosEstado.enumValues[0],
     required: false,
@@ -91,32 +77,18 @@ export class MantenimientoPaginationQueryDto {
   estado?: MantenimientoEstado;
 }
 
-import { MantenimientoListDto } from "./mantenimiento-list.dto";
+import { MantenimientoListDto } from './mantenimiento-list.dto';
 
 export class PaginatedMantenimientoResultDto {
   @ApiProperty({
-    description: "Lista de mantenimientos en la página actual",
+    description: 'Lista de mantenimientos en la página actual',
     type: [MantenimientoListDto],
   })
   data: MantenimientoListDto[];
 
   @ApiProperty({
-    description: "Metadatos de la paginación",
-    example: {
-      total: 50,
-      page: 1,
-      limit: 10,
-      totalPages: 5,
-      hasNextPage: true,
-      hasPreviousPage: false,
-    },
+    description: 'Metadatos de la paginación',
+    type: PaginationMetaDto,
   })
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
+  meta: PaginationMetaDto;
 }

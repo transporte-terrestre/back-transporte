@@ -1,21 +1,14 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { ClienteListDto } from "./cliente-list.dto";
-import { Type } from "class-transformer";
-import {
-  IsInt,
-  IsOptional,
-  Min,
-  Max,
-  IsString,
-  IsDateString,
-  IsIn,
-} from "class-validator";
-import { clientesTipoDocumento } from "@model/tables/cliente.model";
-import type { ClienteTipoDocumento } from "@model/tables/cliente.model";
+import { ApiProperty } from '@nestjs/swagger';
+import { ClienteListDto } from './cliente-list.dto';
+import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
+import { clientesTipoDocumento } from '@model/tables/cliente.model';
+import type { ClienteTipoDocumento } from '@model/tables/cliente.model';
 
 export class ClientePaginationQueryDto {
   @ApiProperty({
-    description: "Número de página (comienza en 1)",
+    description: 'Número de página (comienza en 1)',
     example: 1,
     default: 1,
     required: false,
@@ -27,7 +20,7 @@ export class ClientePaginationQueryDto {
   page?: number = 1;
 
   @ApiProperty({
-    description: "Cantidad de elementos por página",
+    description: 'Cantidad de elementos por página',
     example: 10,
     default: 10,
     required: false,
@@ -40,7 +33,7 @@ export class ClientePaginationQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description: "Búsqueda por nombre, DNI, teléfono o email del cliente",
+    description: 'Búsqueda por nombre, DNI, teléfono o email del cliente',
     required: false,
   })
   @IsOptional()
@@ -48,7 +41,7 @@ export class ClientePaginationQueryDto {
   search?: string;
 
   @ApiProperty({
-    description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
+    description: 'Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()
@@ -56,7 +49,7 @@ export class ClientePaginationQueryDto {
   fechaInicio?: string;
 
   @ApiProperty({
-    description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
+    description: 'Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()
@@ -64,7 +57,7 @@ export class ClientePaginationQueryDto {
   fechaFin?: string;
 
   @ApiProperty({
-    description: "Filtrar por tipo de documento",
+    description: 'Filtrar por tipo de documento',
     enum: clientesTipoDocumento.enumValues,
     example: clientesTipoDocumento.enumValues[0],
     required: false,
@@ -76,28 +69,14 @@ export class ClientePaginationQueryDto {
 
 export class PaginatedClienteResultDto {
   @ApiProperty({
-    description: "Lista de clientes en la página actual",
+    description: 'Lista de clientes en la página actual',
     type: [ClienteListDto],
   })
   data: ClienteListDto[];
 
   @ApiProperty({
-    description: "Metadatos de la paginación",
-    example: {
-      total: 50,
-      page: 1,
-      limit: 10,
-      totalPages: 5,
-      hasNextPage: true,
-      hasPreviousPage: false,
-    },
+    description: 'Metadatos de la paginación',
+    type: PaginationMetaDto,
   })
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
+  meta: PaginationMetaDto;
 }

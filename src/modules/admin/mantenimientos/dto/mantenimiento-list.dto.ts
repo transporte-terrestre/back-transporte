@@ -2,6 +2,7 @@ import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { mantenimientosTipo, mantenimientosEstado } from '@model/tables/mantenimiento.model';
 import type { MantenimientoTipo, MantenimientoEstado } from '@model/tables/mantenimiento.model';
 import { VehiculoResultDto } from '../../vehiculos/dto/vehiculo-result.dto';
+import { TallerResultDto } from '../../talleres/dto/taller-result.dto';
 
 export class VehiculoMantenimientoListDto extends OmitType(VehiculoResultDto, ['documentos']) {}
 
@@ -20,6 +21,12 @@ export class MantenimientoListDto {
 
   @ApiProperty({ example: 1, description: 'Workshop ID' })
   tallerId: number;
+
+  @ApiProperty({
+    type: () => TallerResultDto,
+    description: 'Workshop details',
+  })
+  taller: TallerResultDto;
 
   @ApiProperty({ example: 'ORD-001', description: 'Service Order Code' })
   codigoOrden: string | null;
@@ -61,4 +68,17 @@ export class MantenimientoListDto {
     description: 'Creation date',
   })
   creadoEn: Date;
+
+  @ApiProperty({
+    example: '2023-01-02T00:00:00.000Z',
+    description: 'Update date',
+  })
+  actualizadoEn: Date;
+
+  @ApiProperty({
+    example: null,
+    description: 'Deletion date (if applicable)',
+    nullable: true,
+  })
+  eliminadoEn: Date | null;
 }

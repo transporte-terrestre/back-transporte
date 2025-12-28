@@ -1,18 +1,12 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { RutaResultDto } from "./ruta-result.dto";
-import { Type } from "class-transformer";
-import {
-  IsInt,
-  IsOptional,
-  Min,
-  Max,
-  IsString,
-  IsDateString,
-} from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { RutaResultDto } from './ruta-result.dto';
+import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Min, Max, IsString, IsDateString } from 'class-validator';
 
 export class RutaPaginationQueryDto {
   @ApiProperty({
-    description: "Número de página (comienza en 1)",
+    description: 'Número de página (comienza en 1)',
     example: 1,
     default: 1,
     required: false,
@@ -24,7 +18,7 @@ export class RutaPaginationQueryDto {
   page?: number = 1;
 
   @ApiProperty({
-    description: "Cantidad de elementos por página",
+    description: 'Cantidad de elementos por página',
     example: 10,
     default: 10,
     required: false,
@@ -37,7 +31,7 @@ export class RutaPaginationQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description: "Búsqueda por origen o destino de la ruta",
+    description: 'Búsqueda por origen o destino de la ruta',
     required: false,
   })
   @IsOptional()
@@ -45,7 +39,7 @@ export class RutaPaginationQueryDto {
   search?: string;
 
   @ApiProperty({
-    description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
+    description: 'Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()
@@ -53,7 +47,7 @@ export class RutaPaginationQueryDto {
   fechaInicio?: string;
 
   @ApiProperty({
-    description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
+    description: 'Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()
@@ -63,28 +57,14 @@ export class RutaPaginationQueryDto {
 
 export class PaginatedRutaResultDto {
   @ApiProperty({
-    description: "Lista de rutas en la página actual",
+    description: 'Lista de rutas en la página actual',
     type: [RutaResultDto],
   })
   data: RutaResultDto[];
 
   @ApiProperty({
-    description: "Metadatos de la paginación",
-    example: {
-      total: 50,
-      page: 1,
-      limit: 10,
-      totalPages: 5,
-      hasNextPage: true,
-      hasPreviousPage: false,
-    },
+    description: 'Metadatos de la paginación',
+    type: PaginationMetaDto,
   })
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
+  meta: PaginationMetaDto;
 }

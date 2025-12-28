@@ -1,18 +1,25 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { MantenimientoRepository } from "@repository/mantenimiento.repository";
-import { TareaRepository } from "@repository/tarea.repository";
-import { MantenimientoCreateDto } from "./dto/mantenimiento-create.dto";
-import { MantenimientoUpdateDto } from "./dto/mantenimiento-update.dto";
-import { PaginatedMantenimientoResultDto } from "./dto/mantenimiento-paginated.dto";
-import { PaginatedTareaResultDto } from "./dto/tarea-paginated.dto";
-import { TareaCreateDto } from "./dto/tarea-create.dto";
-import { TareaUpdateDto } from "./dto/tarea-update.dto";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { MantenimientoRepository } from '@repository/mantenimiento.repository';
+import { TareaRepository } from '@repository/tarea.repository';
+import { MantenimientoCreateDto } from './dto/mantenimiento-create.dto';
+import { MantenimientoUpdateDto } from './dto/mantenimiento-update.dto';
+import { PaginatedMantenimientoResultDto } from './dto/mantenimiento-paginated.dto';
+import { PaginatedTareaResultDto } from './dto/tarea-paginated.dto';
+import { TareaCreateDto } from './dto/tarea-create.dto';
+import { TareaUpdateDto } from './dto/tarea-update.dto';
+import { MantenimientoTareaCreateDto } from './dto/mantenimiento-tarea-create.dto';
+import { MantenimientoTareaUpdateDto } from './dto/mantenimiento-tarea-update.dto';
+import { MantenimientoDocumentoCreateDto } from './dto/mantenimiento-documento-create.dto';
+import { MantenimientoDocumentoUpdateDto } from './dto/mantenimiento-documento-update.dto';
+
+import { MantenimientoDocumentoDTO, mantenimientoDocumentosTipo } from '@model/tables/mantenimiento-documento.model';
+import { DocumentosAgrupadosMantenimientoDto } from './dto/mantenimiento-result.dto';
 
 @Injectable()
 export class MantenimientosService {
   constructor(
     private readonly mantenimientoRepository: MantenimientoRepository,
-    private readonly tareaRepository: TareaRepository
+    private readonly tareaRepository: TareaRepository,
   ) {}
 
   async findAllPaginated(
@@ -22,13 +29,9 @@ export class MantenimientosService {
     fechaInicio?: string,
     fechaFin?: string,
     tipo?: string,
-    estado?: string
+    estado?: string,
   ): Promise<PaginatedMantenimientoResultDto> {
-    const { data, total } = await this.mantenimientoRepository.findAllPaginated(
-      page,
-      limit,
-      { search, fechaInicio, fechaFin, tipo, estado }
-    );
+    const { data, total } = await this.mantenimientoRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin, tipo, estado });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -47,8 +50,20 @@ export class MantenimientosService {
     };
   }
 
-  findOne(id: number) {
-    return this.mantenimientoRepository.findOne(id);
+  async findOne(id: number) {
+    const maintenance = await this.mantenimientoRepository.findOne(id);
+    if (!maintenance) return null;
+
+    // Group documents by type
+    const documentosAgrupados = mantenimientoDocumentosTipo.enumValues.reduce((acc, tipo) => {
+      acc[tipo] = maintenance.documentos.filter((doc) => doc.tipo === tipo);
+      return acc;
+    }, {} as DocumentosAgrupadosMantenimientoDto);
+
+    return {
+      ...maintenance,
+      documentos: documentosAgrupados,
+    };
   }
 
   async create(data: MantenimientoCreateDto) {
@@ -57,19 +72,15 @@ export class MantenimientosService {
   }
 
   private async generarCodigoOrden(vehiculoId: number): Promise<string> {
-    const placa =
-      await this.mantenimientoRepository.getPlacaVehiculo(vehiculoId);
+    const placa = await this.mantenimientoRepository.getPlacaVehiculo(vehiculoId);
 
     if (!placa) {
-      throw new NotFoundException(
-        `Vehículo con id ${vehiculoId} no encontrado`
-      );
+      throw new NotFoundException(`Vehículo con id ${vehiculoId} no encontrado`);
     }
 
-    const count =
-      await this.mantenimientoRepository.countMantenimientosActivos(vehiculoId);
+    const count = await this.mantenimientoRepository.countMantenimientosActivos(vehiculoId);
     const numero = count + 1;
-    const numeroFormateado = String(numero).padStart(5, "0");
+    const numeroFormateado = String(numero).padStart(5, '0');
 
     return `${placa}-${numeroFormateado}`;
   }
@@ -83,11 +94,11 @@ export class MantenimientosService {
   }
 
   // ========== MANTENIMIENTO TAREAS (relación) ==========
-  createMantenimientoTarea(data: any) {
+  createMantenimientoTarea(data: MantenimientoTareaCreateDto) {
     return this.mantenimientoRepository.createTarea(data);
   }
 
-  updateMantenimientoTarea(id: number, data: any) {
+  updateMantenimientoTarea(id: number, data: MantenimientoTareaUpdateDto) {
     return this.mantenimientoRepository.updateTarea(id, data);
   }
 
@@ -96,16 +107,8 @@ export class MantenimientosService {
   }
 
   // ========== CATÁLOGO DE TAREAS ==========
-  async findAllTareasPaginated(
-    page: number = 1,
-    limit: number = 10,
-    search?: string
-  ): Promise<PaginatedTareaResultDto> {
-    const { data, total } = await this.tareaRepository.findAllPaginated(
-      page,
-      limit,
-      { search }
-    );
+  async findAllTareasPaginated(page: number = 1, limit: number = 10, search?: string): Promise<PaginatedTareaResultDto> {
+    const { data, total } = await this.tareaRepository.findAllPaginated(page, limit, { search });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -141,11 +144,15 @@ export class MantenimientosService {
   }
 
   // ========== DOCUMENTOS ==========
-  createDocumento(data: any) {
+  async findDocumento(id: number) {
+    return this.mantenimientoRepository.findDocumento(id);
+  }
+
+  createDocumento(data: MantenimientoDocumentoCreateDto) {
     return this.mantenimientoRepository.createDocumento(data);
   }
 
-  updateDocumento(id: number, data: any) {
+  updateDocumento(id: number, data: MantenimientoDocumentoUpdateDto) {
     return this.mantenimientoRepository.updateDocumento(id, data);
   }
 

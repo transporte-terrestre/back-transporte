@@ -1,4 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
+import { mantenimientoDocumentosTipo } from '@model/tables/mantenimiento-documento.model';
+import type { MantenimientoDocumentoTipo } from '@model/tables/mantenimiento-documento.model';
 
 export class MantenimientoDocumentoResultDto {
   @ApiProperty()
@@ -7,8 +9,10 @@ export class MantenimientoDocumentoResultDto {
   @ApiProperty()
   mantenimientoId: number;
 
-  @ApiProperty()
-  tipo: string;
+  @ApiProperty({
+    enum: mantenimientoDocumentosTipo.enumValues,
+  })
+  tipo: MantenimientoDocumentoTipo;
 
   @ApiProperty()
   nombre: string;
@@ -17,7 +21,10 @@ export class MantenimientoDocumentoResultDto {
   url: string;
 
   @ApiProperty({ nullable: true })
-  descripcion: string | null;
+  fechaEmision: string | null;
+
+  @ApiProperty({ nullable: true })
+  fechaExpiracion: string | null;
 
   @ApiProperty()
   creadoEn: Date;

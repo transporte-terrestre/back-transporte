@@ -4,34 +4,29 @@ import type { MantenimientoTipo, MantenimientoEstado } from '@model/tables/mante
 import { VehiculoResultDto } from '../../vehiculos/dto/vehiculo-result.dto';
 import { MantenimientoTareaResultDto } from './mantenimiento-tarea-result.dto';
 import { MantenimientoDocumentoResultDto } from './mantenimiento-documento-result.dto';
-
-export class TallerSimpleDto {
-  @ApiProperty({ example: 1, description: 'Workshop ID' })
-  id: number;
-
-  @ApiProperty({ example: '12345678901', description: 'RUC', nullable: true })
-  ruc: string | null;
-
-  @ApiProperty({ example: 'Taller SAC', description: 'Business name' })
-  razonSocial: string;
-
-  @ApiProperty({ example: 'El Buen Mecánico', description: 'Trade name', nullable: true })
-  nombreComercial: string | null;
-
-  @ApiProperty({ example: 'externo', description: 'Workshop type' })
-  tipo: string;
-
-  @ApiProperty({ example: '999888777', description: 'Phone', nullable: true })
-  telefono: string | null;
-
-  @ApiProperty({ example: 'contacto@taller.com', description: 'Email', nullable: true })
-  email: string | null;
-
-  @ApiProperty({ example: 'Av. Principal 123', description: 'Address', nullable: true })
-  direccion: string | null;
-}
+import { TallerResultDto } from '@module/admin/talleres/dto/taller-result.dto';
 
 export class VehiculoMantenimientoResultDto extends OmitType(VehiculoResultDto, ['documentos']) {}
+
+export class DocumentosAgrupadosMantenimientoDto {
+  @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
+  factura: MantenimientoDocumentoResultDto[];
+
+  @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
+  guia_remision: MantenimientoDocumentoResultDto[];
+
+  @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
+  informe_tecnico: MantenimientoDocumentoResultDto[];
+
+  @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
+  cotizacion: MantenimientoDocumentoResultDto[];
+
+  @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
+  fotos: MantenimientoDocumentoResultDto[];
+
+  @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
+  otros: MantenimientoDocumentoResultDto[];
+}
 
 export class MantenimientoResultDto {
   @ApiProperty({ example: 1, description: 'Maintenance ID' })
@@ -44,17 +39,16 @@ export class MantenimientoResultDto {
     type: () => VehiculoMantenimientoResultDto,
     description: 'Vehicle details',
   })
-  vehiculo: VehiculoMantenimientoResultDto;
+  vehiculo: VehiculoResultDto;
 
   @ApiProperty({ example: 1, description: 'Workshop ID' })
   tallerId: number;
 
   @ApiProperty({
-    type: () => TallerSimpleDto,
+    type: () => TallerResultDto,
     description: 'Workshop details',
-    required: false,
   })
-  taller?: TallerSimpleDto;
+  taller: TallerResultDto;
 
   @ApiProperty({ example: 'ORD-001', description: 'Service Order Code' })
   codigoOrden: string | null;
@@ -104,16 +98,20 @@ export class MantenimientoResultDto {
   actualizadoEn: Date;
 
   @ApiProperty({
-    type: [MantenimientoTareaResultDto],
-    description: 'List of maintenance tasks',
-    required: false,
+    example: '2023-01-01T00:00:00.000Z',
+    description: 'Deletion date (if applicable)',
+    nullable: true,
   })
-  tareas?: MantenimientoTareaResultDto[];
+  eliminadoEn: Date | null;
 
   @ApiProperty({
-    type: [MantenimientoDocumentoResultDto],
-    description: 'List of maintenance documents',
-    required: false,
+    type: [MantenimientoTareaResultDto],
+    description: 'List of maintenance tasks',
   })
-  documentos?: MantenimientoDocumentoResultDto[];
+  tareas: MantenimientoTareaResultDto[];
+
+  @ApiProperty({
+    description: 'Maintenance documents grouped by type',
+  })
+  documentos: DocumentosAgrupadosMantenimientoDto;
 }

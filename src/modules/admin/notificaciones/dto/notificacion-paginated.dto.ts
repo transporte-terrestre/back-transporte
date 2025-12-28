@@ -1,11 +1,12 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { NotificacionListDto } from "./notificacion-list.dto";
-import { Type } from "class-transformer";
-import { IsInt, IsOptional, Min, Max } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { NotificacionListDto } from './notificacion-list.dto';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Min, Max } from 'class-validator';
+import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
 
 export class NotificacionPaginationQueryDto {
   @ApiProperty({
-    description: "Número de página (comienza en 1)",
+    description: 'Número de página (comienza en 1)',
     example: 1,
     default: 1,
     required: false,
@@ -17,7 +18,7 @@ export class NotificacionPaginationQueryDto {
   page?: number = 1;
 
   @ApiProperty({
-    description: "Cantidad de elementos por página",
+    description: 'Cantidad de elementos por página',
     example: 10,
     default: 10,
     required: false,
@@ -30,7 +31,7 @@ export class NotificacionPaginationQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description: "ID del usuario",
+    description: 'ID del usuario',
     example: 1,
     required: true,
   })
@@ -41,28 +42,14 @@ export class NotificacionPaginationQueryDto {
 
 export class PaginatedNotificacionResultDto {
   @ApiProperty({
-    description: "Lista de notificaciones",
+    description: 'Lista de notificaciones',
     type: [NotificacionListDto],
   })
   data: NotificacionListDto[];
 
   @ApiProperty({
-    description: "Metadatos de la paginación",
-    example: {
-      total: 50,
-      page: 1,
-      limit: 10,
-      totalPages: 5,
-      hasNextPage: true,
-      hasPreviousPage: false,
-    },
+    description: 'Metadatos de la paginación',
+    type: PaginationMetaDto,
   })
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
+  meta: PaginationMetaDto;
 }

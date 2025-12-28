@@ -1,29 +1,14 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Type } from "class-transformer";
-import {
-  IsInt,
-  IsOptional,
-  Min,
-  Max,
-  IsString,
-  IsDateString,
-  IsIn,
-} from "class-validator";
-import {
-  modalidadServicio,
-  viajesTipoRuta,
-  viajesEstado,
-} from "@model/tables/viaje.model";
-import type {
-  ViajeModalidadServicio,
-  ViajeTipoRuta,
-  ViajeEstado,
-} from "@model/tables/viaje.model";
-import { ViajeListDto } from "./viaje-list.dto";
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
+import { modalidadServicio, viajesTipoRuta, viajesEstado } from '@model/tables/viaje.model';
+import type { ViajeModalidadServicio, ViajeTipoRuta, ViajeEstado } from '@model/tables/viaje.model';
+import { ViajeListDto } from './viaje-list.dto';
+import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
 
 export class ViajePaginationQueryDto {
   @ApiProperty({
-    description: "Número de página (comienza en 1)",
+    description: 'Número de página (comienza en 1)',
     example: 1,
     default: 1,
     required: false,
@@ -35,7 +20,7 @@ export class ViajePaginationQueryDto {
   page?: number = 1;
 
   @ApiProperty({
-    description: "Cantidad de elementos por página",
+    description: 'Cantidad de elementos por página',
     example: 10,
     default: 10,
     required: false,
@@ -48,7 +33,7 @@ export class ViajePaginationQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description: "Búsqueda por ruta ocasional",
+    description: 'Búsqueda por ruta ocasional',
     required: false,
   })
   @IsOptional()
@@ -56,7 +41,7 @@ export class ViajePaginationQueryDto {
   search?: string;
 
   @ApiProperty({
-    description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
+    description: 'Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()
@@ -64,7 +49,7 @@ export class ViajePaginationQueryDto {
   fechaInicio?: string;
 
   @ApiProperty({
-    description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
+    description: 'Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()
@@ -72,7 +57,7 @@ export class ViajePaginationQueryDto {
   fechaFin?: string;
 
   @ApiProperty({
-    description: "Filtrar por modalidad de servicio",
+    description: 'Filtrar por modalidad de servicio',
     enum: modalidadServicio.enumValues,
     example: modalidadServicio.enumValues[0],
     required: false,
@@ -82,7 +67,7 @@ export class ViajePaginationQueryDto {
   modalidadServicio?: ViajeModalidadServicio;
 
   @ApiProperty({
-    description: "Filtrar por tipo de ruta (ocasional, fija)",
+    description: 'Filtrar por tipo de ruta (ocasional, fija)',
     enum: viajesTipoRuta.enumValues,
     example: viajesTipoRuta.enumValues[0],
     required: false,
@@ -92,7 +77,7 @@ export class ViajePaginationQueryDto {
   tipoRuta?: ViajeTipoRuta;
 
   @ApiProperty({
-    description: "Filtrar por estado del viaje",
+    description: 'Filtrar por estado del viaje',
     enum: viajesEstado.enumValues,
     example: viajesEstado.enumValues[0],
     required: false,
@@ -104,28 +89,14 @@ export class ViajePaginationQueryDto {
 
 export class PaginatedViajeResultDto {
   @ApiProperty({
-    description: "Lista de viajes en la página actual",
+    description: 'Lista de viajes en la página actual',
     type: [ViajeListDto],
   })
   data: ViajeListDto[];
 
   @ApiProperty({
-    description: "Metadatos de la paginación",
-    example: {
-      total: 50,
-      page: 1,
-      limit: 10,
-      totalPages: 5,
-      hasNextPage: true,
-      hasPreviousPage: false,
-    },
+    description: 'Metadatos de la paginación',
+    type: PaginationMetaDto,
   })
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
+  meta: PaginationMetaDto;
 }

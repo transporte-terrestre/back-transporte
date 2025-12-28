@@ -1,11 +1,12 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Type } from "class-transformer";
-import { IsInt, IsOptional, Min, Max, IsString } from "class-validator";
-import { TareaListDto } from "./tarea-list.dto";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Min, Max, IsString } from 'class-validator';
+import { TareaListDto } from './tarea-list.dto';
+import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
 
 export class TareaPaginationQueryDto {
   @ApiProperty({
-    description: "Número de página (comienza en 1)",
+    description: 'Número de página (comienza en 1)',
     example: 1,
     default: 1,
     required: false,
@@ -17,7 +18,7 @@ export class TareaPaginationQueryDto {
   page?: number = 1;
 
   @ApiProperty({
-    description: "Cantidad de elementos por página",
+    description: 'Cantidad de elementos por página',
     example: 10,
     default: 10,
     required: false,
@@ -30,7 +31,7 @@ export class TareaPaginationQueryDto {
   limit?: number = 10;
 
   @ApiPropertyOptional({
-    description: "Búsqueda por código o descripción",
+    description: 'Búsqueda por código o descripción',
   })
   @IsOptional()
   @IsString()
@@ -39,28 +40,14 @@ export class TareaPaginationQueryDto {
 
 export class PaginatedTareaResultDto {
   @ApiProperty({
-    description: "Lista de tareas en la página actual",
+    description: 'Lista de tareas en la página actual',
     type: [TareaListDto],
   })
   data: TareaListDto[];
 
   @ApiProperty({
-    description: "Metadatos de la paginación",
-    example: {
-      total: 50,
-      page: 1,
-      limit: 10,
-      totalPages: 5,
-      hasNextPage: true,
-      hasPreviousPage: false,
-    },
+    description: 'Metadatos de la paginación',
+    type: PaginationMetaDto,
   })
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
+  meta: PaginationMetaDto;
 }

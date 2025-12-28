@@ -1,21 +1,14 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { VehiculoListDto } from "./vehiculo-list.dto";
-import { Type } from "class-transformer";
-import {
-  IsInt,
-  IsOptional,
-  Min,
-  Max,
-  IsString,
-  IsDateString,
-  IsIn,
-} from "class-validator";
-import { vehiculosEstado } from "@model/tables/vehiculo.model";
-import type { VehiculoEstado } from "@model/tables/vehiculo.model";
+import { ApiProperty } from '@nestjs/swagger';
+import { VehiculoListDto } from './vehiculo-list.dto';
+import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
+import { vehiculosEstado } from '@model/tables/vehiculo.model';
+import type { VehiculoEstado } from '@model/tables/vehiculo.model';
 
 export class VehiculoPaginationQueryDto {
   @ApiProperty({
-    description: "Número de página (comienza en 1)",
+    description: 'Número de página (comienza en 1)',
     example: 1,
     default: 1,
     required: false,
@@ -27,7 +20,7 @@ export class VehiculoPaginationQueryDto {
   page?: number = 1;
 
   @ApiProperty({
-    description: "Cantidad de elementos por página",
+    description: 'Cantidad de elementos por página',
     example: 10,
     default: 10,
     required: false,
@@ -40,7 +33,7 @@ export class VehiculoPaginationQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description: "Búsqueda por placa, marca o modelo del vehículo",
+    description: 'Búsqueda por placa, marca o modelo del vehículo',
     required: false,
   })
   @IsOptional()
@@ -48,7 +41,7 @@ export class VehiculoPaginationQueryDto {
   search?: string;
 
   @ApiProperty({
-    description: "Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)",
+    description: 'Fecha de inicio para filtrar por rango (formato: YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()
@@ -56,7 +49,7 @@ export class VehiculoPaginationQueryDto {
   fechaInicio?: string;
 
   @ApiProperty({
-    description: "Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)",
+    description: 'Fecha de fin para filtrar por rango (formato: YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()
@@ -64,7 +57,7 @@ export class VehiculoPaginationQueryDto {
   fechaFin?: string;
 
   @ApiProperty({
-    description: "Filtrar por estado del vehículo",
+    description: 'Filtrar por estado del vehículo',
     enum: vehiculosEstado.enumValues,
     example: vehiculosEstado.enumValues[0],
     required: false,
@@ -76,28 +69,14 @@ export class VehiculoPaginationQueryDto {
 
 export class PaginatedVehiculoResultDto {
   @ApiProperty({
-    description: "Lista de vehículos en la página actual",
+    description: 'Lista de vehículos en la página actual',
     type: [VehiculoListDto],
   })
   data: VehiculoListDto[];
 
   @ApiProperty({
-    description: "Metadatos de la paginación",
-    example: {
-      total: 50,
-      page: 1,
-      limit: 10,
-      totalPages: 5,
-      hasNextPage: true,
-      hasPreviousPage: false,
-    },
+    description: 'Metadatos de la paginación',
+    type: PaginationMetaDto,
   })
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
+  meta: PaginationMetaDto;
 }

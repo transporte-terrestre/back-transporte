@@ -44,4 +44,11 @@ export class UsuarioListDto {
     description: "Update date",
   })
   actualizadoEn: Date;
+
+  @ApiProperty({
+    example: null,
+    description: 'Deletion date (if applicable)',
+    nullable: true,
+  })
+  eliminadoEn: Date | null;
 }
