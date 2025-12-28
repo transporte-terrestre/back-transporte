@@ -1,68 +1,64 @@
-import { ApiProperty, OmitType } from "@nestjs/swagger";
-import {
-  mantenimientosTipo,
-  mantenimientosEstado,
-} from "@model/tables/mantenimiento.model";
-import type {
-  MantenimientoTipo,
-  MantenimientoEstado,
-} from "@model/tables/mantenimiento.model";
-import { VehiculoResultDto } from "../../vehiculos/dto/vehiculo-result.dto";
+import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { mantenimientosTipo, mantenimientosEstado } from '@model/tables/mantenimiento.model';
+import type { MantenimientoTipo, MantenimientoEstado } from '@model/tables/mantenimiento.model';
+import { VehiculoResultDto } from '../../vehiculos/dto/vehiculo-result.dto';
+
+export class VehiculoMantenimientoListDto extends OmitType(VehiculoResultDto, ['documentos']) {}
 
 export class MantenimientoListDto {
-  @ApiProperty({ example: 1, description: "Maintenance ID" })
+  @ApiProperty({ example: 1, description: 'Maintenance ID' })
   id: number;
 
-  @ApiProperty({ example: 1, description: "Vehicle ID" })
+  @ApiProperty({ example: 1, description: 'Vehicle ID' })
   vehiculoId: number;
 
   @ApiProperty({
-    type: () => OmitType(VehiculoResultDto, ["documentos"]),
-    description: "Vehicle details",
+    type: () => VehiculoMantenimientoListDto,
+    description: 'Vehicle details',
   })
-  vehiculo: Omit<VehiculoResultDto, "documentos">;
+  vehiculo: VehiculoMantenimientoListDto;
 
-  @ApiProperty({ example: 1, description: "Workshop ID" })
+  @ApiProperty({ example: 1, description: 'Workshop ID' })
   tallerId: number;
 
-  @ApiProperty({ example: "ORD-001", description: "Service Order Code" })
+  @ApiProperty({ example: 'ORD-001', description: 'Service Order Code' })
   codigoOrden: string | null;
 
   @ApiProperty({
     enum: mantenimientosTipo.enumValues,
     example: mantenimientosTipo.enumValues[0],
-    description: "Maintenance type",
+    description: 'Maintenance type',
   })
   tipo: MantenimientoTipo;
 
-  @ApiProperty({ example: "150.50", description: "Total Cost" })
+  @ApiProperty({ example: '150.50', description: 'Total Cost' })
   costoTotal: string;
 
-  @ApiProperty({ example: "Cambio de aceite", description: "Description" })
+  @ApiProperty({ example: 'Cambio de aceite', description: 'Description' })
   descripcion: string;
 
   @ApiProperty({
-    example: "2025-01-15T10:00:00Z",
-    description: "Date of entry",
+    example: '2025-01-15T10:00:00Z',
+    description: 'Date of entry',
   })
   fechaIngreso: Date;
 
-  @ApiProperty({ example: "2025-01-16T18:00:00Z", description: "Date of exit" })
+  @ApiProperty({ example: '2025-01-16T18:00:00Z', description: 'Date of exit' })
   fechaSalida: Date | null;
 
-  @ApiProperty({ example: 55000, description: "Mileage at maintenance" })
+  @ApiProperty({ example: 55000, description: 'Mileage at maintenance' })
   kilometraje: number;
 
   @ApiProperty({
     enum: mantenimientosEstado.enumValues,
     example: mantenimientosEstado.enumValues[0],
-    description: "Status",
+    description: 'Status',
   })
   estado: MantenimientoEstado;
 
   @ApiProperty({
-    example: "2023-01-01T00:00:00.000Z",
-    description: "Creation date",
+    example: '2023-01-01T00:00:00.000Z',
+    description: 'Creation date',
   })
   creadoEn: Date;
 }
