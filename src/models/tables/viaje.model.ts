@@ -20,6 +20,7 @@ export const viajes = pgTable('viajes', {
     .notNull(),
   tripulantes: text('tripulantes').array(),
   modalidadServicio: modalidadServicio('modalidad_servicio').default('regular').notNull(),
+  horasContrato: decimal('horas_contrato', { precision: 10, scale: 2 }).default('0.00').notNull(),
   estado: viajesEstado('estado').default('programado').notNull(),
   fechaSalida: timestamp('fecha_salida').notNull(),
   fechaLlegada: timestamp('fecha_llegada'),

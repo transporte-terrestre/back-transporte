@@ -1,16 +1,16 @@
-import { Injectable } from "@nestjs/common";
-import { ViajeRepository } from "@repository/viaje.repository";
-import { ViajeConductorRepository } from "@repository/viaje-conductor.repository";
-import { ViajeVehiculoRepository } from "@repository/viaje-vehiculo.repository";
-import { ViajeComentarioRepository } from "@repository/viaje-comentario.repository";
-import { RutaRepository } from "@repository/ruta.repository";
-import { ViajeCreateDto } from "./dto/viaje-create.dto";
-import { ViajeUpdateDto } from "./dto/viaje-update.dto";
-import { PaginatedViajeResultDto } from "./dto/viaje-paginated.dto";
-import { ViajeConductorDTO } from "@model/tables/viaje-conductor.model";
-import { ViajeVehiculoDTO } from "@model/tables/viaje-vehiculo.model";
-import { ViajeComentarioDTO } from "@model/tables/viaje-comentario.model";
-import { ViajeDTO } from "@model/tables/viaje.model";
+import { Injectable } from '@nestjs/common';
+import { ViajeRepository } from '@repository/viaje.repository';
+import { ViajeConductorRepository } from '@repository/viaje-conductor.repository';
+import { ViajeVehiculoRepository } from '@repository/viaje-vehiculo.repository';
+import { ViajeComentarioRepository } from '@repository/viaje-comentario.repository';
+import { RutaRepository } from '@repository/ruta.repository';
+import { ClienteRepository } from '@repository/cliente.repository';
+import { ViajeCreateDto } from './dto/viaje-create.dto';
+import { ViajeUpdateDto } from './dto/viaje-update.dto';
+import { PaginatedViajeResultDto } from './dto/viaje-paginated.dto';
+import { ViajeConductorDTO } from '@model/tables/viaje-conductor.model';
+import { ViajeVehiculoDTO } from '@model/tables/viaje-vehiculo.model';
+import { ViajeComentarioDTO } from '@model/tables/viaje-comentario.model';
 
 @Injectable()
 export class ViajesService {
@@ -19,7 +19,8 @@ export class ViajesService {
     private readonly viajeConductorRepository: ViajeConductorRepository,
     private readonly viajeVehiculoRepository: ViajeVehiculoRepository,
     private readonly viajeComentarioRepository: ViajeComentarioRepository,
-    private readonly rutaRepository: RutaRepository
+    private readonly rutaRepository: RutaRepository,
+    private readonly clienteRepository: ClienteRepository,
   ) {}
 
   async findAllPaginated(
@@ -30,13 +31,16 @@ export class ViajesService {
     fechaFin?: string,
     modalidadServicio?: string,
     tipoRuta?: string,
-    estado?: string
+    estado?: string,
   ): Promise<PaginatedViajeResultDto> {
-    const { data, total } = await this.viajeRepository.findAllPaginated(
-      page,
-      limit,
-      { search, fechaInicio, fechaFin, modalidadServicio, tipoRuta, estado }
-    );
+    const { data, total } = await this.viajeRepository.findAllPaginated(page, limit, {
+      search,
+      fechaInicio,
+      fechaFin,
+      modalidadServicio,
+      tipoRuta,
+      estado,
+    });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -62,6 +66,13 @@ export class ViajesService {
   async create(data: ViajeCreateDto) {
     const { conductorId, vehiculoId, ...viajeData } = data;
 
+    if (!viajeData.horasContrato) {
+      const cliente = await this.clienteRepository.findOne(viajeData.clienteId);
+      if (cliente) {
+        viajeData.horasContrato = cliente.horasContrato;
+      }
+    }
+
     const viaje = await this.viajeRepository.create(viajeData);
 
     if (conductorId) {
@@ -69,7 +80,7 @@ export class ViajesService {
         viajeId: viaje.id,
         conductorId,
         esPrincipal: true,
-        rol: "conductor",
+        rol: 'conductor',
       });
     }
 
@@ -78,7 +89,7 @@ export class ViajesService {
         viajeId: viaje.id,
         vehiculoId,
         esPrincipal: true,
-        rol: "principal",
+        rol: 'principal',
       });
     }
 
@@ -106,16 +117,8 @@ export class ViajesService {
     return await this.viajeConductorRepository.create(data);
   }
 
-  async updateConductor(
-    viajeId: number,
-    conductorId: number,
-    data: Partial<ViajeConductorDTO>
-  ) {
-    return await this.viajeConductorRepository.update(
-      viajeId,
-      conductorId,
-      data
-    );
+  async updateConductor(viajeId: number, conductorId: number, data: Partial<ViajeConductorDTO>) {
+    return await this.viajeConductorRepository.update(viajeId, conductorId, data);
   }
 
   async removeConductor(viajeId: number, conductorId: number) {
@@ -135,11 +138,7 @@ export class ViajesService {
     return await this.viajeVehiculoRepository.create(data);
   }
 
-  async updateVehiculo(
-    viajeId: number,
-    vehiculoId: number,
-    data: Partial<ViajeVehiculoDTO>
-  ) {
+  async updateVehiculo(viajeId: number, vehiculoId: number, data: Partial<ViajeVehiculoDTO>) {
     return await this.viajeVehiculoRepository.update(viajeId, vehiculoId, data);
   }
 
