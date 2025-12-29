@@ -6,12 +6,12 @@ export class TareaCreateDto {
   @IsString()
   @IsNotEmpty()
   codigo: string;
-
-  @ApiProperty({
-    example: "Cambio de aceite",
-    description: "Descripción de la tarea",
-  })
+  @ApiProperty({ example: "Cambio de aceite", description: "Nombre del trabajo" })
   @IsString()
   @IsNotEmpty()
-  descripcion: string;
+  nombreTrabajo: string;
+  @ApiProperty({ example: "Motor", description: "Grupo de la tarea" })
+  @IsString()
+  @IsNotEmpty()
+  grupo: string;
 }

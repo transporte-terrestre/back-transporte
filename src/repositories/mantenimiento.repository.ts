@@ -113,7 +113,8 @@ export class MantenimientoRepository {
         tarea: {
           id: tareas.id,
           codigo: tareas.codigo,
-          descripcion: tareas.descripcion,
+          nombreTrabajo: tareas.nombreTrabajo,
+          grupo: tareas.grupo,
         },
       })
       .from(mantenimientoTareas)

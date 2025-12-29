@@ -38,7 +38,8 @@ export class TareaRepository {
       conditions.push(
         or(
           like(tareas.codigo, searchTerm),
-          ilike(tareas.descripcion, searchTerm)
+          ilike(tareas.nombreTrabajo, searchTerm),
+          ilike(tareas.grupo, searchTerm)
         )!
       );
     }

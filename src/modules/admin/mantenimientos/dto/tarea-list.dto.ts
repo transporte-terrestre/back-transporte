@@ -7,11 +7,11 @@ export class TareaListDto {
   @ApiProperty({ example: "T-001", description: "Código de la tarea" })
   codigo: string;
 
-  @ApiProperty({
-    example: "Cambio de aceite",
-    description: "Descripción de la tarea",
-  })
-  descripcion: string;
+  @ApiProperty({ example: "Cambio de aceite", description: "Nombre del trabajo" })
+  nombreTrabajo: string;
+
+  @ApiProperty({ example: "Motor", description: "Grupo de la tarea" })
+  grupo: string;
 
   @ApiProperty({
     example: "2023-01-01T00:00:00.000Z",
