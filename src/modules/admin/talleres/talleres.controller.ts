@@ -8,8 +8,9 @@ import {
   Delete,
   Query,
   ParseIntPipe,
+  UseGuards,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 import { TalleresService } from "./talleres.service";
 import {
   PaginatedTallerResultDto,
@@ -18,8 +19,11 @@ import {
 import { TallerResultDto } from "./dto/taller-result.dto";
 import { TallerCreateDto } from "./dto/taller-create.dto";
 import { TallerUpdateDto } from "./dto/taller-update.dto";
+import { AuthGuard } from "@nestjs/passport";
 
 @ApiTags("Talleres")
+@ApiBearerAuth()
+@UseGuards(AuthGuard("jwt"))
 @Controller("taller")
 export class TalleresController {
   constructor(private readonly talleresService: TalleresService) {}

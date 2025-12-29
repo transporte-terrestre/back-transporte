@@ -1,38 +1,22 @@
-import { Injectable } from "@nestjs/common";
-import {
-  NotificacionRepository,
-  DocumentoVencimiento,
-} from "@repository/notificacion.repository";
+import { Injectable } from '@nestjs/common';
+import { NotificacionRepository, DocumentoVencimiento } from '@repository/notificacion.repository';
+import { PaginatedNotificacionResultDto } from './dto/notificacion-paginated.dto';
+import { NotificacionResultDto } from './dto/notificacion-result.dto';
+import { NotificacionCreateDto } from './dto/notificacion-create.dto';
+import { GenerarVencimientosResultDto, NotificacionPreviewDto, PreviewVencimientosResultDto } from './dto/notificacion-vencimiento.dto';
 
-// Types for notification preview/generation
-export interface NotificacionPreview {
-  titulo: string;
-  mensaje: string;
-  tipo: "info" | "warning" | "error" | "success";
-  entidad: "cliente" | "conductor" | "vehiculo" | "usuario";
-  entidadId: number;
-  entidadNombre: string;
-  tipoDocumento: string;
-  diasRestantes: number;
-}
+export type NotificacionPreview = NotificacionPreviewDto;
 
 @Injectable()
 export class NotificacionesService {
-  constructor(
-    private readonly notificacionRepository: NotificacionRepository
-  ) {}
+  constructor(private readonly notificacionRepository: NotificacionRepository) {}
 
-  // =============================================
-  // EXISTING METHODS
-  // =============================================
+  async findAllByUser(usuarioId: number, page: number = 1, limit: number = 10): Promise<PaginatedNotificacionResultDto> {
+    const { data, total } = await this.notificacionRepository.findAllPaginatedByUsuario(usuarioId, page, limit);
 
-  async findAllByUser(usuarioId: number, page: number = 1, limit: number = 10) {
-    const { data, total } =
-      await this.notificacionRepository.findAllPaginatedByUsuario(
-        usuarioId,
-        page,
-        limit
-      );
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
 
     return {
       data,
@@ -40,99 +24,100 @@ export class NotificacionesService {
         total,
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
       },
     };
   }
 
-  async create(data: any) {
-    return await this.notificacionRepository.create(data);
+  async create(data: NotificacionCreateDto): Promise<NotificacionResultDto> {
+    const result = await this.notificacionRepository.create(data);
+    return {
+      ...result,
+      leido: false,
+    } as NotificacionResultDto;
   }
 
-  async markAsRead(usuarioId: number, notificacionId: number) {
-    return await this.notificacionRepository.markAsRead(
-      usuarioId,
-      notificacionId
-    );
+  async markAsRead(usuarioId: number, notificacionId: number): Promise<NotificacionResultDto> {
+    const result = await this.notificacionRepository.markAsRead(usuarioId, notificacionId);
+    if (!result) {
+      throw new Error('Notificación no encontrada');
+    }
+    const notif = await this.notificacionRepository.findOne(notificacionId);
+    return {
+      ...notif,
+      leido: true,
+    } as NotificacionResultDto;
   }
 
-  // =============================================
-  // DOCUMENT EXPIRATION NOTIFICATION METHODS
-  // =============================================
+  async previewNotificacionesVencimiento(fecha: string, diasAnticipacion: number = 7): Promise<PreviewVencimientosResultDto> {
+    const fechaReferencia = new Date(fecha);
+    const documentosVencidos = await this.notificacionRepository.getDocumentosVencimientosPorFecha(fechaReferencia, diasAnticipacion);
+    const previews = this.transformarDocumentosANotificaciones(documentosVencidos);
 
-  /**
-   * TEST MODE: Preview notifications that would be generated for documents
-   * expiring within the anticipation window. Does NOT create notifications.
-   *
-   * @param fechaReferencia - Base date to check from
-   * @param diasAnticipacion - Days ahead to look (default 7)
-   * @returns Array of NotificacionPreview with potential notifications
-   */
-  async previewNotificacionesVencimiento(
-    fechaReferencia: Date,
-    diasAnticipacion: number = 7
-  ): Promise<NotificacionPreview[]> {
-    const documentosVencidos =
-      await this.notificacionRepository.getDocumentosVencimientosPorFecha(
-        fechaReferencia,
-        diasAnticipacion
-      );
+    const fechaLimite = new Date(fechaReferencia);
+    fechaLimite.setDate(fechaLimite.getDate() + diasAnticipacion);
 
-    return this.transformarDocumentosANotificaciones(documentosVencidos);
+    return {
+      parametros: {
+        fechaReferencia: fecha,
+        diasAnticipacion,
+        fechaLimite: fechaLimite.toISOString().split('T')[0],
+      },
+      totalDocumentosEncontrados: previews.length,
+      resumen: {
+        clientes: previews.filter((p) => p.entidad === 'cliente').length,
+        conductores: previews.filter((p) => p.entidad === 'conductor').length,
+        vehiculos: previews.filter((p) => p.entidad === 'vehiculo').length,
+        usuarios: previews.filter((p) => p.entidad === 'usuario').length,
+        vencidos: previews.filter((p) => p.diasRestantes < 0).length,
+        porVencer: previews.filter((p) => p.diasRestantes >= 0).length,
+      },
+      notificaciones: previews,
+    };
   }
 
-  /**
-   * PRODUCTION MODE: Check for expired documents and create notifications.
-   *
-   * @param fechaReferencia - Base date to check from
-   * @param diasAnticipacion - Days ahead to look (default 7)
-   * @returns Object with created notifications and previews
-   */
-  async generarNotificacionesVencimiento(
-    fechaReferencia: Date,
-    diasAnticipacion: number = 7
-  ) {
-    const documentosVencidos =
-      await this.notificacionRepository.getDocumentosVencimientosPorFecha(
-        fechaReferencia,
-        diasAnticipacion
-      );
+  async generarNotificacionesVencimiento(fecha: string, diasAnticipacion: number = 7): Promise<GenerarVencimientosResultDto> {
+    const fechaReferencia = new Date(fecha);
+    const documentosVencidos = await this.notificacionRepository.getDocumentosVencimientosPorFecha(fechaReferencia, diasAnticipacion);
 
-    const previews =
-      this.transformarDocumentosANotificaciones(documentosVencidos);
+    const previews = this.transformarDocumentosANotificaciones(documentosVencidos);
 
     if (previews.length === 0) {
       return {
-        message: "No hay documentos vencidos para notificar",
+        message: 'No hay documentos vencidos para notificar',
         created: 0,
         notifications: [],
+        previews: [],
+        parametros: {
+          fechaReferencia: fecha,
+          diasAnticipacion,
+        },
       };
     }
 
-    // Prepare data for bulk insert
     const notificacionesData = previews.map((preview) => ({
       titulo: preview.titulo,
       mensaje: preview.mensaje,
       tipo: preview.tipo,
     }));
 
-    const createdNotifications =
-      await this.notificacionRepository.createMany(notificacionesData);
+    const createdNotifications = await this.notificacionRepository.createMany(notificacionesData);
 
     return {
       message: `Se crearon ${createdNotifications.length} notificaciones`,
       created: createdNotifications.length,
-      notifications: createdNotifications,
+      notifications: createdNotifications.map((n) => ({ ...n, leido: false })) as NotificacionResultDto[],
       previews,
+      parametros: {
+        fechaReferencia: fecha,
+        diasAnticipacion,
+      },
     };
   }
 
-  /**
-   * Transforms document expiration data into notification previews
-   */
-  private transformarDocumentosANotificaciones(
-    documentos: DocumentoVencimiento[]
-  ): NotificacionPreview[] {
+  private transformarDocumentosANotificaciones(documentos: DocumentoVencimiento[]): NotificacionPreview[] {
     return documentos.map((doc) => {
       const { titulo, mensaje, tipo } = this.generarContenidoNotificacion(doc);
 
@@ -149,120 +134,98 @@ export class NotificacionesService {
     });
   }
 
-  /**
-   * Generates notification content based on document expiration status
-   */
   private generarContenidoNotificacion(doc: DocumentoVencimiento): {
     titulo: string;
     mensaje: string;
-    tipo: "info" | "warning" | "error" | "success";
+    tipo: 'info' | 'warning' | 'error' | 'success';
   } {
     const tipoDocFormateado = this.formatearTipoDocumento(doc.tipoDocumento);
     const entidadLabel = this.getEntidadLabel(doc.entidad);
 
     if (doc.diasRestantes < 0) {
-      // Document already expired
       const diasVencido = Math.abs(doc.diasRestantes);
       return {
-        titulo: `${tipoDocFormateado} vencido hace ${diasVencido} día${diasVencido > 1 ? "s" : ""}`,
+        titulo: `${tipoDocFormateado} vencido hace ${diasVencido} día${diasVencido > 1 ? 's' : ''}`,
         mensaje: `El documento "${tipoDocFormateado}" de ${entidadLabel} "${doc.entidadNombre}" venció el ${this.formatearFecha(doc.fechaExpiracion)}. Por favor actualice este documento lo antes posible.`,
-        tipo: "error",
+        tipo: 'error',
       };
     } else if (doc.diasRestantes === 0) {
-      // Expires today
       return {
         titulo: `${tipoDocFormateado} vence HOY`,
         mensaje: `El documento "${tipoDocFormateado}" de ${entidadLabel} "${doc.entidadNombre}" vence hoy ${this.formatearFecha(doc.fechaExpiracion)}. Tome acción inmediata.`,
-        tipo: "error",
+        tipo: 'error',
       };
     } else if (doc.diasRestantes <= 7) {
-      // Expires within a week
       return {
         titulo: `${tipoDocFormateado} próximo a vencer`,
-        mensaje: `El documento "${tipoDocFormateado}" de ${entidadLabel} "${doc.entidadNombre}" vencerá en ${doc.diasRestantes} día${doc.diasRestantes > 1 ? "s" : ""} (${this.formatearFecha(doc.fechaExpiracion)}). Planifique su renovación.`,
-        tipo: "warning",
+        mensaje: `El documento "${tipoDocFormateado}" de ${entidadLabel} "${doc.entidadNombre}" vencerá en ${doc.diasRestantes} día${doc.diasRestantes > 1 ? 's' : ''} (${this.formatearFecha(doc.fechaExpiracion)}). Planifique su renovación.`,
+        tipo: 'warning',
       };
     } else {
-      // More than a week away but still flagged
       return {
         titulo: `${tipoDocFormateado} por vencer`,
         mensaje: `El documento "${tipoDocFormateado}" de ${entidadLabel} "${doc.entidadNombre}" vencerá el ${this.formatearFecha(doc.fechaExpiracion)} (${doc.diasRestantes} días restantes).`,
-        tipo: "info",
+        tipo: 'info',
       };
     }
   }
 
-  /**
-   * Formats document type enum to human-readable string
-   */
   private formatearTipoDocumento(tipo: string): string {
     const formatMap: Record<string, string> = {
-      // Cliente
-      dni: "DNI",
-      ruc: "RUC",
-      contrato: "Contrato",
-      carta_compromiso: "Carta de Compromiso",
-      ficha_ruc: "Ficha RUC",
-      // Conductor
-      licencia_mtc: "Licencia MTC",
-      seguro_vida_ley: "Seguro Vida Ley",
-      sctr: "SCTR",
-      examen_medico: "Examen Médico",
-      psicosensometrico: "Psicosensométrico",
-      induccion_general: "Inducción General",
-      manejo_defensivo: "Manejo Defensivo",
-      licencia_interna: "Licencia Interna",
-      // Vehiculo
-      tarjeta_propiedad: "Tarjeta de Propiedad",
-      tarjeta_unica_circulacion: "TUC",
-      citv: "CITV",
-      soat: "SOAT",
-      poliza: "Póliza",
-      certificado_operatividad_factura: "Cert. Operatividad",
-      plan_mantenimiento_historico: "Plan Mantenimiento",
-      certificado_instalacion_gps: "Cert. GPS",
-      certificado_valor_anadido: "Cert. Valor Añadido",
-      constancia_gps: "Constancia GPS",
-      certificado_tacos: "Cert. Tacos",
-      certificado_extintores_hidrostatica: "Cert. Extintores",
-      certificado_norma_r66: "Cert. Norma R66",
-      certificado_laminados_lunas: "Cert. Laminados",
-      certificado_carroceria: "Cert. Carrocería",
-      certificado_caracteristicas_tecnicas: "Cert. Caract. Técnicas",
-      certificado_adas: "Cert. ADAS",
-      // General
-      otros: "Otros",
+      dni: 'DNI',
+      ruc: 'RUC',
+      contrato: 'Contrato',
+      carta_compromiso: 'Carta de Compromiso',
+      ficha_ruc: 'Ficha RUC',
+      licencia_mtc: 'Licencia MTC',
+      seguro_vida_ley: 'Seguro Vida Ley',
+      sctr: 'SCTR',
+      examen_medico: 'Examen Médico',
+      psicosensometrico: 'Psicosensométrico',
+      induccion_general: 'Inducción General',
+      manejo_defensivo: 'Manejo Defensivo',
+      licencia_interna: 'Licencia Interna',
+      tarjeta_propiedad: 'Tarjeta de Propiedad',
+      tarjeta_unica_circulacion: 'TUC',
+      citv: 'CITV',
+      soat: 'SOAT',
+      poliza: 'Póliza',
+      certificado_operatividad_factura: 'Cert. Operatividad',
+      plan_mantenimiento_historico: 'Plan Mantenimiento',
+      certificado_instalacion_gps: 'Cert. GPS',
+      certificado_valor_anadido: 'Cert. Valor Añadido',
+      constancia_gps: 'Constancia GPS',
+      certificado_tacos: 'Cert. Tacos',
+      certificado_extintores_hidrostatica: 'Cert. Extintores',
+      certificado_norma_r66: 'Cert. Norma R66',
+      certificado_laminados_lunas: 'Cert. Laminados',
+      certificado_carroceria: 'Cert. Carrocería',
+      certificado_caracteristicas_tecnicas: 'Cert. Caract. Técnicas',
+      certificado_adas: 'Cert. ADAS',
+      otros: 'Otros',
     };
 
-    return formatMap[tipo] || tipo.replace(/_/g, " ").toUpperCase();
+    return formatMap[tipo] || tipo.replace(/_/g, ' ').toUpperCase();
   }
 
-  /**
-   * Gets entity type label
-   */
   private getEntidadLabel(entidad: string): string {
     const labels: Record<string, string> = {
-      cliente: "Cliente",
-      conductor: "Conductor",
-      vehiculo: "Vehículo",
-      usuario: "Usuario",
+      cliente: 'Cliente',
+      conductor: 'Conductor',
+      vehiculo: 'Vehículo',
+      usuario: 'Usuario',
     };
     return labels[entidad] || entidad;
   }
 
-  /**
-   * Formats date to Spanish locale (handles timezone correctly)
-   */
   private formatearFecha(fechaStr: string): string {
-    // Parse date string as local time, not UTC
-    // "2025-12-08" should be Dec 8, not Dec 7
-    const [year, month, day] = fechaStr.split("-").map(Number);
-    const fecha = new Date(year, month - 1, day); // month is 0-indexed
+    const [year, month, day] = fechaStr.split('-').map(Number);
+    const fecha = new Date(year, month - 1, day);
 
-    return fecha.toLocaleDateString("es-PE", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+    return fecha.toLocaleDateString('es-PE', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
     });
   }
 }
