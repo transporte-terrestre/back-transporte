@@ -4,7 +4,7 @@ import type { MantenimientoTipo, MantenimientoEstado } from '@model/tables/mante
 import { VehiculoResultDto } from '../../vehiculos/dto/vehiculo-result.dto';
 import { TallerResultDto } from '../../talleres/dto/taller-result.dto';
 
-export class VehiculoMantenimientoListDto extends OmitType(VehiculoResultDto, ['documentos']) {}
+export class VehiculoMantenimientoListDto extends OmitType(VehiculoResultDto, ['documentos','propietarioNombre']) {}
 
 export class MantenimientoListDto {
   @ApiProperty({ example: 1, description: 'Maintenance ID' })

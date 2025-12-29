@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { vehiculosEstado } from '@model/tables/vehiculo.model';
-import type { VehiculoEstado } from '@model/tables/vehiculo.model';
+import { vehiculosEstado, combustibleEnum } from '@model/tables/vehiculo.model';
+import type { VehiculoEstado, CombustibleTipo } from '@model/tables/vehiculo.model';
 
 export class VehiculoListDto {
   @ApiProperty({ example: 1, description: 'Vehicle ID' })
@@ -9,8 +9,11 @@ export class VehiculoListDto {
   @ApiProperty({ example: 'ABC-123', description: 'Vehicle license plate' })
   placa: string;
 
+  @ApiPropertyOptional({ example: 'XYZ-789', description: 'Previous license plate' })
+  placaAnterior: string | null;
+
   @ApiPropertyOptional({ example: '00012', description: 'Internal vehicle code' })
-  codigoInterno: string;
+  codigoInterno: string | null;
 
   @ApiProperty({ example: 'Toyota', description: 'Vehicle brand' })
   marca: string;
@@ -24,6 +27,18 @@ export class VehiculoListDto {
   @ApiProperty({ example: 2020, description: 'Manufacturing year' })
   anio: number;
 
+  @ApiPropertyOptional({ example: 'VIN1234567890ABCD', description: 'VIN' })
+  vin: string | null;
+
+  @ApiPropertyOptional({ example: 'Blanco', description: 'Color' })
+  color: string | null;
+
+  @ApiPropertyOptional({
+    enum: combustibleEnum.enumValues,
+    description: 'Fuel type',
+  })
+  combustible: CombustibleTipo | null;
+
   @ApiProperty({ example: 50000, description: 'Current mileage' })
   kilometraje: number;
 
@@ -33,6 +48,12 @@ export class VehiculoListDto {
     description: 'Vehicle status',
   })
   estado: VehiculoEstado;
+
+  @ApiPropertyOptional({ example: 1, description: 'Owner ID' })
+  propietarioId: number | null;
+
+  @ApiPropertyOptional({ example: 'Empresa SAC', description: 'Owner Name' })
+  propietarioNombre: string | null;
 
   @ApiProperty({
     example: '2023-01-01T00:00:00.000Z',

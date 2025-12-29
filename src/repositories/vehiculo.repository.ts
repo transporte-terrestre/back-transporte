@@ -1,23 +1,11 @@
-import { Injectable } from "@nestjs/common";
-import {
-  eq,
-  or,
-  like,
-  and,
-  gte,
-  lte,
-  count,
-  sql,
-  ilike,
-  desc,
-  isNull,
-  getTableColumns,
-} from "drizzle-orm";
-import { database } from "@db/connection.db";
-import { vehiculos, VehiculoDTO } from "@model/tables/vehiculo.model";
-import { vehiculoDocumentos } from "@model/tables/vehiculo-documento.model";
-import { modelos } from "@model/tables/modelo.model";
-import { marcas } from "@model/tables/marca.model";
+import { Injectable } from '@nestjs/common';
+import { eq, or, like, and, gte, lte, count, sql, ilike, desc, isNull, getTableColumns } from 'drizzle-orm';
+import { database } from '@db/connection.db';
+import { vehiculos, VehiculoDTO } from '@model/tables/vehiculo.model';
+import { vehiculoDocumentos } from '@model/tables/vehiculo-documento.model';
+import { modelos } from '@model/tables/modelo.model';
+import { marcas } from '@model/tables/marca.model';
+import { propietarios } from '@model/tables/propietario.model';
 
 interface PaginationFilters {
   search?: string;
@@ -34,17 +22,15 @@ export class VehiculoRepository {
         ...getTableColumns(vehiculos),
         marca: marcas.nombre,
         modelo: modelos.nombre,
+        propietarioNombre: propietarios.nombreCompleto,
       })
       .from(vehiculos)
       .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
-      .innerJoin(marcas, eq(modelos.marcaId, marcas.id));
+      .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .leftJoin(propietarios, eq(vehiculos.propietarioId, propietarios.id));
   }
 
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-    filters?: PaginationFilters
-  ) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
@@ -55,8 +41,11 @@ export class VehiculoRepository {
           ilike(vehiculos.placa, `%${searchTerm}%`),
           ilike(marcas.nombre, `%${searchTerm}%`),
           ilike(modelos.nombre, `%${searchTerm}%`),
-          like(vehiculos.codigoInterno, `%${searchTerm}%`)
-        )
+          like(vehiculos.codigoInterno, `%${searchTerm}%`),
+          ilike(vehiculos.vin, `%${searchTerm}%`),
+          ilike(vehiculos.numeroMotor, `%${searchTerm}%`),
+          ilike(propietarios.nombreCompleto, `%${searchTerm}%`),
+        ),
       );
     }
 
@@ -66,15 +55,11 @@ export class VehiculoRepository {
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(gte(vehiculos.creadoEn, new Date(filters.fechaInicio)));
-      conditions.push(
-        lte(vehiculos.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(vehiculos.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     } else if (filters?.fechaInicio) {
       conditions.push(gte(vehiculos.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(
-        lte(vehiculos.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(vehiculos.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
     // Excluir eliminados
@@ -87,6 +72,7 @@ export class VehiculoRepository {
       .from(vehiculos)
       .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .leftJoin(propietarios, eq(vehiculos.propietarioId, propietarios.id))
       .where(whereClause);
 
     const data = await database
@@ -94,10 +80,12 @@ export class VehiculoRepository {
         ...getTableColumns(vehiculos),
         marca: marcas.nombre,
         modelo: modelos.nombre,
+        propietarioNombre: propietarios.nombreCompleto,
       })
       .from(vehiculos)
       .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .leftJoin(propietarios, eq(vehiculos.propietarioId, propietarios.id))
       .where(whereClause)
       .orderBy(desc(vehiculos.creadoEn))
       .limit(limit)
@@ -115,10 +103,12 @@ export class VehiculoRepository {
         ...getTableColumns(vehiculos),
         marca: marcas.nombre,
         modelo: modelos.nombre,
+        propietarioNombre: propietarios.nombreCompleto,
       })
       .from(vehiculos)
       .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .leftJoin(propietarios, eq(vehiculos.propietarioId, propietarios.id))
       .where(and(eq(vehiculos.id, id), isNull(vehiculos.eliminadoEn)));
     return result[0];
   }
@@ -138,11 +128,7 @@ export class VehiculoRepository {
   }
 
   async delete(id: number) {
-    const result = await database
-      .update(vehiculos)
-      .set({ eliminadoEn: new Date() })
-      .where(eq(vehiculos.id, id))
-      .returning();
+    const result = await database.update(vehiculos).set({ eliminadoEn: new Date() }).where(eq(vehiculos.id, id)).returning();
     return result[0];
   }
 }

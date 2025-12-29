@@ -26,7 +26,8 @@
       "@controller/*": ["src/controllers/*"],
       "@repository/*": ["src/repositories/*"],
       "@function/*": ["src/functions/*"],
-      "@config/*": ["src/config/*"]
+      "@config/*": ["src/config/*"],
+      "@common/*": ["src/common/*"]
     }
   }
 }

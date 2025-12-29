@@ -12,6 +12,8 @@ import { vehiculos } from '@model/tables/vehiculo.model';
 import { modelos } from '@model/tables/modelo.model';
 import { marcas } from '@model/tables/marca.model';
 import { usuarios } from '@model/tables/usuario.model';
+import { propietarioDocumentos } from '@model/tables/propietario-documento.model';
+import { propietarios } from '@model/tables/propietario.model';
 import { eq, and, desc, isNull, count, sql, lte, isNotNull } from 'drizzle-orm';
 
 // Types for document expiration results
@@ -47,11 +49,18 @@ export interface UsuarioDocumentoVencimiento extends DocumentoVencimientoBase {
   entidadNombre: string;
 }
 
+export interface PropietarioDocumentoVencimiento extends DocumentoVencimientoBase {
+  entidad: 'propietario';
+  entidadId: number;
+  entidadNombre: string;
+}
+
 export type DocumentoVencimiento =
   | ClienteDocumentoVencimiento
   | ConductorDocumentoVencimiento
   | VehiculoDocumentoVencimiento
-  | UsuarioDocumentoVencimiento;
+  | UsuarioDocumentoVencimiento
+  | PropietarioDocumentoVencimiento;
 
 @Injectable()
 export class NotificacionRepository {
@@ -150,6 +159,10 @@ export class NotificacionRepository {
     // 4. USUARIO DOCUMENTS
     const usuarioResults = await this.getUsuarioDocumentosVencidos(fechaLimite);
     results.push(...usuarioResults);
+
+    // 5. PROPIETARIO DOCUMENTS
+    const propietarioResults = await this.getPropietarioDocumentosVencidos(fechaLimite);
+    results.push(...propietarioResults);
 
     return results;
   }
@@ -358,6 +371,58 @@ export class NotificacionRepository {
 
     return results.map((r) => ({
       entidad: 'usuario' as const,
+      documentoId: r.documentoId,
+      tipoDocumento: r.tipoDocumento,
+      nombreDocumento: r.nombreDocumento,
+      fechaExpiracion: r.fechaExpiracion!,
+      entidadId: r.entidadId,
+      entidadNombre: r.entidadNombre,
+      diasRestantes: this.calcularDiasRestantes(r.fechaExpiracion!),
+    }));
+  }
+
+  private async getPropietarioDocumentosVencidos(fechaLimite: Date): Promise<PropietarioDocumentoVencimiento[]> {
+    const latestDocs = database
+      .select({
+        propietarioId: propietarioDocumentos.propietarioId,
+        tipo: propietarioDocumentos.tipo,
+        maxFechaExp: sql<string>`MAX(${propietarioDocumentos.fechaExpiracion})`.as('max_fecha_exp'),
+      })
+      .from(propietarioDocumentos)
+      .where(isNotNull(propietarioDocumentos.fechaExpiracion))
+      .groupBy(propietarioDocumentos.propietarioId, propietarioDocumentos.tipo)
+      .as('latest_docs');
+
+    const results = await database
+      .select({
+        documentoId: propietarioDocumentos.id,
+        tipoDocumento: propietarioDocumentos.tipo,
+        nombreDocumento: propietarioDocumentos.nombre,
+        fechaExpiracion: propietarioDocumentos.fechaExpiracion,
+        entidadId: propietarios.id,
+        entidadNombre: propietarios.nombreCompleto,
+      })
+      .from(propietarioDocumentos)
+      .innerJoin(propietarios, eq(propietarioDocumentos.propietarioId, propietarios.id))
+      .innerJoin(
+        latestDocs,
+        and(
+          eq(propietarioDocumentos.propietarioId, latestDocs.propietarioId),
+          eq(propietarioDocumentos.tipo, latestDocs.tipo),
+          eq(propietarioDocumentos.fechaExpiracion, latestDocs.maxFechaExp),
+        ),
+      )
+      .where(
+        and(
+          isNull(propietarios.eliminadoEn),
+          isNotNull(propietarioDocumentos.fechaExpiracion),
+          lte(propietarioDocumentos.fechaExpiracion, fechaLimite.toISOString().split('T')[0]),
+        ),
+      )
+      .orderBy(propietarioDocumentos.fechaExpiracion);
+
+    return results.map((r) => ({
+      entidad: 'propietario' as const,
       documentoId: r.documentoId,
       tipoDocumento: r.tipoDocumento,
       nombreDocumento: r.nombreDocumento,

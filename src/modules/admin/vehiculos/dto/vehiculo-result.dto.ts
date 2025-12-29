@@ -1,12 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { vehiculosEstado } from "@model/tables/vehiculo.model";
-import { VehiculoDocumentoResultDto } from "./vehiculo-documento-result.dto";
-import type { VehiculoEstado } from "@model/tables/vehiculo.model";
-import type { VehiculoDocumentoTipo } from "@model/tables/vehiculo-documento.model";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { vehiculosEstado, combustibleEnum } from '@model/tables/vehiculo.model';
+import { VehiculoDocumentoResultDto } from './vehiculo-documento-result.dto';
+import type { VehiculoEstado, CombustibleTipo } from '@model/tables/vehiculo.model';
+import type { VehiculoDocumentoTipo } from '@model/tables/vehiculo-documento.model';
 
-export class DocumentosAgrupadosVehiculoDto
-  implements Record<VehiculoDocumentoTipo, VehiculoDocumentoResultDto[]>
-{
+export class DocumentosAgrupadosVehiculoDto implements Record<VehiculoDocumentoTipo, VehiculoDocumentoResultDto[]> {
   @ApiProperty({ type: [VehiculoDocumentoResultDto] })
   tarjeta_propiedad: VehiculoDocumentoResultDto[];
 
@@ -63,59 +61,107 @@ export class DocumentosAgrupadosVehiculoDto
 }
 
 export class VehiculoResultDto {
-  @ApiProperty({ example: 1, description: "Vehicle ID" })
+  @ApiProperty({ example: 1, description: 'Vehicle ID' })
   id: number;
 
-  @ApiProperty({ example: "ABC-123", description: "Vehicle license plate" })
+  @ApiProperty({ example: 'ABC-123', description: 'Vehicle license plate' })
   placa: string;
 
+  @ApiPropertyOptional({ example: 'XYZ-789', description: 'Previous license plate' })
+  placaAnterior: string | null;
+
   @ApiPropertyOptional({
-    example: "0582",
-    description: "Internal vehicle code",
+    example: '0582',
+    description: 'Internal vehicle code',
   })
   codigoInterno: string | null;
 
-  @ApiProperty({ example: 1, description: "Vehicle model ID" })
+  @ApiProperty({ example: 1, description: 'Vehicle model ID' })
   modeloId: number;
 
-  @ApiProperty({ example: "Toyota", description: "Vehicle brand" })
+  @ApiProperty({ example: 'Toyota', description: 'Vehicle brand' })
   marca: string;
 
-  @ApiProperty({ example: "Corolla", description: "Vehicle model" })
+  @ApiProperty({ example: 'Corolla', description: 'Vehicle model' })
   modelo: string;
 
-  @ApiProperty({ example: 2020, description: "Manufacturing year" })
+  @ApiProperty({ example: 2020, description: 'Manufacturing year' })
   anio: number;
 
-  @ApiProperty({ example: 50000, description: "Current mileage" })
+  @ApiPropertyOptional({ example: 'VIN1234567890ABCD', description: 'VIN' })
+  vin: string | null;
+
+  @ApiPropertyOptional({ example: 'MOTOR123', description: 'Engine number' })
+  numeroMotor: string | null;
+
+  @ApiPropertyOptional({ example: 'SERIE123', description: 'Series number' })
+  numeroSerie: string | null;
+
+  @ApiPropertyOptional({ example: 'Blanco', description: 'Color' })
+  color: string | null;
+
+  @ApiPropertyOptional({
+    enum: combustibleEnum.enumValues,
+    description: 'Fuel type',
+  })
+  combustible: CombustibleTipo | null;
+
+  @ApiPropertyOptional({ example: 'PICK UP', description: 'Bodywork type' })
+  carroceria: string | null;
+
+  @ApiPropertyOptional({ example: 'N1', description: 'Vehicle category' })
+  categoria: string | null;
+
+  @ApiPropertyOptional({ example: '1500.50', description: 'Payload Kg' })
+  cargaUtil: string | null;
+
+  @ApiPropertyOptional({ example: '2500.00', description: 'Gross weight Kg' })
+  pesoBruto: string | null;
+
+  @ApiPropertyOptional({ example: '1000.00', description: 'Net weight Kg' })
+  pesoNeto: string | null;
+
+  @ApiPropertyOptional({ example: 2, description: 'Seats' })
+  asientos: number | null;
+
+  @ApiPropertyOptional({ example: 2, description: 'Axles' })
+  ejes: number | null;
+
+  @ApiProperty({ example: 50000, description: 'Current mileage' })
   kilometraje: number;
 
   @ApiProperty({
     enum: vehiculosEstado.enumValues,
     example: vehiculosEstado.enumValues[0],
-    description: "Vehicle status",
+    description: 'Vehicle status',
   })
   estado: VehiculoEstado;
 
+  @ApiPropertyOptional({ example: 1, description: 'Owner ID' })
+  propietarioId: number | null;
+
+  @ApiPropertyOptional({ example: 'Empresa SAC', description: 'Owner Name' })
+  propietarioNombre: string | null;
+
   @ApiPropertyOptional({
-    example: ["https://res.cloudinary.com/xxx/image.jpg"],
-    description: "Lista de URLs de imágenes del vehículo",
+    example: ['https://res.cloudinary.com/xxx/image.jpg'],
+    description: 'Lista de URLs de imágenes del vehículo',
     type: [String],
   })
   imagenes: string[];
 
   @ApiProperty({
-    example: "2023-01-01T00:00:00.000Z",
-    description: "Creation date",
+    example: '2023-01-01T00:00:00.000Z',
+    description: 'Creation date',
   })
   creadoEn: Date;
 
   @ApiProperty({
-    example: "2023-01-01T00:00:00.000Z",
-    description: "Update date",
+    example: '2023-01-01T00:00:00.000Z',
+    description: 'Update date',
   })
   actualizadoEn: Date;
 
-  @ApiProperty({ description: "Vehicle documents grouped by type" })
+  @ApiProperty({ description: 'Vehicle documents grouped by type' })
   documentos: DocumentosAgrupadosVehiculoDto;
 }
