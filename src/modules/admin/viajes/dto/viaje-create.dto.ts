@@ -66,6 +66,14 @@ export class ViajeCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' | 'actua
   @IsIn(modalidadServicio.enumValues, { each: true })
   modalidadServicio?: ViajeModalidadServicio;
 
+  @ApiPropertyOptional({
+    example: '8.00',
+    description: 'Horas contratadas (si no se especifica, se toma del cliente)',
+  })
+  @IsOptional()
+  @IsString()
+  horasContrato?: string;
+
   @ApiProperty({
     example: '2025-01-01T10:00:00Z',
     description: 'Departure date',

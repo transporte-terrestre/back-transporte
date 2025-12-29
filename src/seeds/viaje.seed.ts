@@ -74,6 +74,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[], ve
     clienteId: number;
     tripulantes: string[];
     modalidadServicio: (typeof modalidades)[number];
+    horasContrato: string;
     fechaSalida: Date;
     fechaLlegada?: Date;
     estado: (typeof estados)[number];
@@ -144,6 +145,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[], ve
         clienteId: cliente.id,
         tripulantes,
         modalidadServicio: randomElement(modalidades),
+        horasContrato: cliente.horasContrato || '0.00',
         fechaSalida: getDateTime(dayOffset, hourStart),
         estado,
         distanciaEstimada: distanciaEstimadaNum.toFixed(2),

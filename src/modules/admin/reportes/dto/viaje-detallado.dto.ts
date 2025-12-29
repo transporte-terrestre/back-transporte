@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ViajeDetalladoDto {
   @ApiProperty()
@@ -18,21 +18,29 @@ export class ViajeDetalladoDto {
 
   @ApiProperty({
     nullable: true,
-    description: "Distancia estimada del viaje en km",
+    description: 'Distancia estimada del viaje en km',
   })
   distanciaEstimada: string | null;
 
   @ApiProperty({
     nullable: true,
-    description: "Distancia real al final del viaje en km",
+    description: 'Distancia real al final del viaje en km',
   })
   distanciaFinal: string | null;
 
   @ApiProperty({
-    description:
-      "Diferencia entre distancia final y estimada (0 si no hay valores)",
+    description: 'Diferencia entre distancia final y estimada (0 si no hay valores)',
   })
   diferencia: number;
+
+  @ApiProperty({ description: 'Horas contratadas para este viaje' })
+  horasContrato: string;
+
+  @ApiProperty({ description: 'Horas totales de duración del viaje' })
+  horasTotales: number;
+
+  @ApiProperty({ description: 'Horas excedidas sobre el contrato' })
+  horasExcedidas: number;
 
   @ApiProperty()
   estado: string;
