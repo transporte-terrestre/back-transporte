@@ -1,19 +1,13 @@
-import { database } from "@db/connection.db";
-import { viajes } from "@model/tables/viaje.model";
-import { Ruta } from "@model/tables/ruta.model";
-import { Cliente } from "@model/tables/cliente.model";
-import { getDateTime } from "@function/date.function";
+import { database } from '@db/connection.db';
+import { viajes } from '@model/tables/viaje.model';
+import { Ruta } from '@model/tables/ruta.model';
+import { Cliente } from '@model/tables/cliente.model';
+import { getDateTime } from '@function/date.function';
 
-import { Conductor } from "@model/tables/conductor.model";
-import { Vehiculo } from "@model/tables/vehiculo.model";
-import {
-  ViajeConductorDTO,
-  viajeConductores,
-} from "@model/tables/viaje-conductor.model";
-import {
-  ViajeVehiculoDTO,
-  viajeVehiculos,
-} from "@model/tables/viaje-vehiculo.model";
+import { Conductor } from '@model/tables/conductor.model';
+import { Vehiculo } from '@model/tables/vehiculo.model';
+import { ViajeConductorDTO, viajeConductores } from '@model/tables/viaje-conductor.model';
+import { ViajeVehiculoDTO, viajeVehiculos } from '@model/tables/viaje-vehiculo.model';
 
 // Helper functions
 function randomInt(min: number, max: number): number {
@@ -24,65 +18,49 @@ function randomElement<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-const modalidades = [
-  "regular",
-  "expreso",
-  "ejecutivo",
-  "especial",
-  "turismo",
-] as const;
-const estados = ["programado", "en_progreso", "completado"] as const;
+const modalidades = ['regular', 'expreso', 'ejecutivo', 'especial', 'turismo'] as const;
+const estados = ['programado', 'en_progreso', 'completado'] as const;
 const tripulantesPool = [
-  "Carlos Mendoza",
-  "Ana Torres",
-  "Luis Ramírez",
-  "Jorge Flores",
-  "Patricia Díaz",
-  "Miguel Soto",
-  "Roberto Salas",
-  "Sandra Vega",
-  "Pedro Cruz",
-  "Fernando Rojas",
-  "Lucia Paredes",
-  "Andrés Morales",
-  "Carla Gutiérrez",
-  "Diego Vargas",
-  "Elena Castillo",
-  "Raúl Jiménez",
-  "Beatriz Núñez",
-  "Francisco Reyes",
-  "Gabriel Herrera",
-  "Mariana López",
+  'Carlos Mendoza',
+  'Ana Torres',
+  'Luis Ramírez',
+  'Jorge Flores',
+  'Patricia Díaz',
+  'Miguel Soto',
+  'Roberto Salas',
+  'Sandra Vega',
+  'Pedro Cruz',
+  'Fernando Rojas',
+  'Lucia Paredes',
+  'Andrés Morales',
+  'Carla Gutiérrez',
+  'Diego Vargas',
+  'Elena Castillo',
+  'Raúl Jiménez',
+  'Beatriz Núñez',
+  'Francisco Reyes',
+  'Gabriel Herrera',
+  'Mariana López',
 ];
 
 const rutasOcasionalesPool = [
-  "Lima - Playa de Máncora (Viaje especial)",
-  "Cusco - Valle Sagrado (Tour privado)",
-  "Arequipa - Cañón del Colca (Excursión)",
-  "Ica - Paracas (Servicio privado)",
-  "Trujillo - Huanchaco (Tour playero)",
-  "Lima - Lunahuaná (Aventura)",
-  "Puno - Islas Flotantes (Tour lacustre)",
-  "Nazca - Sobrevuelo Líneas de Nazca",
-  "Chiclayo - Señor de Sipán (Cultural)",
-  "Tarapoto - Cataratas de Ahuashiyacu",
+  'Lima - Playa de Máncora (Viaje especial)',
+  'Cusco - Valle Sagrado (Tour privado)',
+  'Arequipa - Cañón del Colca (Excursión)',
+  'Ica - Paracas (Servicio privado)',
+  'Trujillo - Huanchaco (Tour playero)',
+  'Lima - Lunahuaná (Aventura)',
+  'Puno - Islas Flotantes (Tour lacustre)',
+  'Nazca - Sobrevuelo Líneas de Nazca',
+  'Chiclayo - Señor de Sipán (Cultural)',
+  'Tarapoto - Cataratas de Ahuashiyacu',
 ];
 
-export async function seedViajes(
-  clientesData: Cliente[],
-  routesData: Ruta[],
-  vehiclesData: Vehiculo[],
-  driversData: Conductor[]
-) {
-  console.log("🌱 Seeding trips (enhanced with 3-5 per vehicle)...");
+export async function seedViajes(clientesData: Cliente[], routesData: Ruta[], vehiclesData: Vehiculo[], driversData: Conductor[]) {
+  console.log('🌱 Seeding trips (enhanced with 3-5 per vehicle)...');
 
-  if (
-    clientesData.length === 0 ||
-    routesData.length === 0 ||
-    vehiclesData.length === 0 ||
-    driversData.length === 0
-  ) {
-    console.log("⚠️ Skipping trips (missing dependencies)");
+  if (clientesData.length === 0 || routesData.length === 0 || vehiclesData.length === 0 || driversData.length === 0) {
+    console.log('⚠️ Skipping trips (missing dependencies)');
     return;
   }
 
@@ -92,7 +70,7 @@ export async function seedViajes(
     rutaOcasional?: string;
     distanciaEstimada?: string;
     distanciaFinal?: string;
-    tipoRuta: "fija" | "ocasional";
+    tipoRuta: 'fija' | 'ocasional';
     clienteId: number;
     tripulantes: string[];
     modalidadServicio: (typeof modalidades)[number];
@@ -118,8 +96,7 @@ export async function seedViajes(
       const cliente = randomElement(clientesData);
 
       // Pick random conductor (different for variety)
-      const conductor =
-        driversData[(vehicleIdx + tripNum) % driversData.length];
+      const conductor = driversData[(vehicleIdx + tripNum) % driversData.length];
 
       // Random time offset
       const hourStart = randomInt(6, 14);
@@ -128,11 +105,11 @@ export async function seedViajes(
       // Decide estado based on day offset
       let estado: (typeof estados)[number];
       if (dayOffset < -2) {
-        estado = "completado";
+        estado = 'completado';
       } else if (dayOffset <= 0) {
-        estado = Math.random() < 0.5 ? "en_progreso" : "completado";
+        estado = Math.random() < 0.5 ? 'en_progreso' : 'completado';
       } else {
-        estado = "programado";
+        estado = 'programado';
       }
 
       // Random tripulantes (1-3)
@@ -163,7 +140,7 @@ export async function seedViajes(
       const distanciaFinalNum = distanciaEstimadaNum + variacion;
 
       const viajeEntry: (typeof viajesData)[0] = {
-        tipoRuta: isFixed ? "fija" : "ocasional",
+        tipoRuta: isFixed ? 'fija' : 'ocasional',
         clienteId: cliente.id,
         tripulantes,
         modalidadServicio: randomElement(modalidades),
@@ -179,11 +156,9 @@ export async function seedViajes(
       }
 
       // Add arrival time and final distance for completed trips
-      if (estado === "completado") {
-        viajeEntry.fechaLlegada = getDateTime(
-          dayOffset,
-          hourStart + tripDuration
-        );
+      if (estado === 'completado') {
+        const llegadaDate = getDateTime(dayOffset, hourStart + tripDuration);
+        viajeEntry.fechaLlegada = llegadaDate;
         viajeEntry.distanciaFinal = distanciaFinalNum.toFixed(2);
       }
 
@@ -201,14 +176,9 @@ export async function seedViajes(
   }
 
   // Insert all viajes
-  const insertedViajes = await database
-    .insert(viajes)
-    .values(viajesData)
-    .returning({ id: viajes.id });
+  const insertedViajes = await database.insert(viajes).values(viajesData).returning({ id: viajes.id });
 
-  console.log(
-    `✅ ${insertedViajes.length} trips inserted. Assigning drivers and vehicles...`
-  );
+  console.log(`✅ ${insertedViajes.length} trips inserted. Assigning drivers and vehicles...`);
 
   // Create conductor and vehicle assignments
   const conductorInserts: ViajeConductorDTO[] = [];
@@ -221,14 +191,14 @@ export async function seedViajes(
       viajeId: viaje.id,
       conductorId: assignment.conductorId,
       esPrincipal: true,
-      rol: "conductor",
+      rol: 'conductor',
     });
 
     vehiculoInserts.push({
       viajeId: viaje.id,
       vehiculoId: assignment.vehiculoId,
       esPrincipal: true,
-      rol: "principal",
+      rol: 'principal',
     });
   });
 
@@ -240,5 +210,5 @@ export async function seedViajes(
     await database.insert(viajeVehiculos).values(vehiculoInserts);
   }
 
-  console.log("✅ Trip assignments completed!");
+  console.log('✅ Trip assignments completed!');
 }

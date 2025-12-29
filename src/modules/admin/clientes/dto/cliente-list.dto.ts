@@ -43,6 +43,12 @@ export class ClienteListDto {
   imagenes: string[];
 
   @ApiProperty({
+    example: '8.50',
+    description: 'Horas de contrato del cliente',
+  })
+  horasContrato: string;
+
+  @ApiProperty({
     example: '2023-01-01T00:00:00.000Z',
     description: 'Fecha de creación',
   })

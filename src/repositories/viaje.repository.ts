@@ -1,28 +1,17 @@
-import { Injectable } from "@nestjs/common";
-import {
-  eq,
-  like,
-  and,
-  gte,
-  lte,
-  count,
-  sql,
-  or,
-  isNull,
-  getTableColumns,
-} from "drizzle-orm";
-import { database } from "@db/connection.db";
-import { viajes, ViajeDTO } from "@model/tables/viaje.model";
-import { viajeConductores } from "@model/tables/viaje-conductor.model";
-import { conductores } from "@model/tables/conductor.model";
-import { viajeVehiculos } from "@model/tables/viaje-vehiculo.model";
-import { vehiculos } from "@model/tables/vehiculo.model";
-import { modelos } from "@model/tables/modelo.model";
-import { marcas } from "@model/tables/marca.model";
-import { rutas } from "@model/tables/ruta.model";
-import { clientes } from "@model/tables/cliente.model";
-import { viajeComentarios } from "@model/tables/viaje-comentario.model";
-import { usuarios } from "@model/tables/usuario.model";
+import { Injectable } from '@nestjs/common';
+import { eq, like, and, gte, lte, count, sql, or, isNull, getTableColumns } from 'drizzle-orm';
+import { database } from '@db/connection.db';
+import { viajes, ViajeDTO } from '@model/tables/viaje.model';
+import { viajeConductores } from '@model/tables/viaje-conductor.model';
+import { conductores } from '@model/tables/conductor.model';
+import { viajeVehiculos } from '@model/tables/viaje-vehiculo.model';
+import { vehiculos } from '@model/tables/vehiculo.model';
+import { modelos } from '@model/tables/modelo.model';
+import { marcas } from '@model/tables/marca.model';
+import { rutas } from '@model/tables/ruta.model';
+import { clientes } from '@model/tables/cliente.model';
+import { viajeComentarios } from '@model/tables/viaje-comentario.model';
+import { usuarios } from '@model/tables/usuario.model';
 
 interface PaginationFilters {
   search?: string;
@@ -39,11 +28,7 @@ export class ViajeRepository {
     return await database.select().from(viajes);
   }
 
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-    filters?: PaginationFilters
-  ) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
@@ -53,9 +38,7 @@ export class ViajeRepository {
     }
 
     if (filters?.modalidadServicio) {
-      conditions.push(
-        eq(sql`${viajes.modalidadServicio}::text`, filters.modalidadServicio)
-      );
+      conditions.push(eq(sql`${viajes.modalidadServicio}::text`, filters.modalidadServicio));
     }
 
     if (filters?.tipoRuta) {
@@ -68,15 +51,11 @@ export class ViajeRepository {
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
-      conditions.push(
-        lte(viajes.fechaSalida, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + 'T23:59:59')));
     } else if (filters?.fechaInicio) {
       conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(
-        lte(viajes.fechaSalida, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
     // Excluir eliminados
@@ -84,10 +63,7 @@ export class ViajeRepository {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(viajes)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(viajes).where(whereClause);
 
     const data = await database
       .select({
@@ -110,21 +86,9 @@ export class ViajeRepository {
       .from(viajes)
       .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
       .leftJoin(clientes, eq(clientes.id, viajes.clienteId))
-      .leftJoin(
-        viajeConductores,
-        and(
-          eq(viajeConductores.viajeId, viajes.id),
-          eq(viajeConductores.esPrincipal, true)
-        )
-      )
+      .leftJoin(viajeConductores, and(eq(viajeConductores.viajeId, viajes.id), eq(viajeConductores.esPrincipal, true)))
       .leftJoin(conductores, eq(conductores.id, viajeConductores.conductorId))
-      .leftJoin(
-        viajeVehiculos,
-        and(
-          eq(viajeVehiculos.viajeId, viajes.id),
-          eq(viajeVehiculos.esPrincipal, true)
-        )
-      )
+      .leftJoin(viajeVehiculos, and(eq(viajeVehiculos.viajeId, viajes.id), eq(viajeVehiculos.esPrincipal, true)))
       .leftJoin(vehiculos, eq(vehiculos.id, viajeVehiculos.vehiculoId))
       .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
@@ -189,9 +153,7 @@ export class ViajeRepository {
       .leftJoin(usuarios, eq(usuarios.id, viajeComentarios.usuarioId))
       .where(eq(viajeComentarios.viajeId, id));
 
-    const [conductoresList, vehiculosList, comentariosList] = await Promise.all(
-      [conductorsQuery, vehiculosQuery, comentariosQuery]
-    );
+    const [conductoresList, vehiculosList, comentariosList] = await Promise.all([conductorsQuery, vehiculosQuery, comentariosQuery]);
 
     return {
       ...viaje,
@@ -218,11 +180,7 @@ export class ViajeRepository {
   }
 
   async delete(id: number) {
-    const result = await database
-      .update(viajes)
-      .set({ eliminadoEn: new Date() })
-      .where(eq(viajes.id, id))
-      .returning();
+    const result = await database.update(viajes).set({ eliminadoEn: new Date() }).where(eq(viajes.id, id)).returning();
     return result[0];
   }
 }

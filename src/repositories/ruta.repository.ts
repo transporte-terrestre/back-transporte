@@ -1,18 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import {
-  eq,
-  or,
-  like,
-  and,
-  gte,
-  lte,
-  count,
-  ilike,
-  desc,
-  isNull,
-} from "drizzle-orm";
-import { database } from "@db/connection.db";
-import { rutas, RutaDTO } from "@model/tables/ruta.model";
+import { Injectable } from '@nestjs/common';
+import { eq, or, like, and, gte, lte, count, ilike, desc, isNull } from 'drizzle-orm';
+import { database } from '@db/connection.db';
+import { rutas, RutaDTO } from '@model/tables/ruta.model';
 
 interface PaginationFilters {
   search?: string;
@@ -26,35 +15,22 @@ export class RutaRepository {
     return await database.select().from(rutas);
   }
 
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-    filters?: PaginationFilters
-  ) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
     if (filters?.search) {
       const searchTerm = filters.search.trim();
-      conditions.push(
-        or(
-          ilike(rutas.origen, `%${searchTerm}%`),
-          ilike(rutas.destino, `%${searchTerm}%`)
-        )
-      );
+      conditions.push(or(ilike(rutas.origen, `%${searchTerm}%`), ilike(rutas.destino, `%${searchTerm}%`)));
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(gte(rutas.creadoEn, new Date(filters.fechaInicio)));
-      conditions.push(
-        lte(rutas.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(rutas.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     } else if (filters?.fechaInicio) {
       conditions.push(gte(rutas.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(
-        lte(rutas.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(rutas.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
     // Excluir eliminados
@@ -62,18 +38,9 @@ export class RutaRepository {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(rutas)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(rutas).where(whereClause);
 
-    const data = await database
-      .select()
-      .from(rutas)
-      .where(whereClause)
-      .orderBy(desc(rutas.creadoEn))
-      .limit(limit)
-      .offset(offset);
+    const data = await database.select().from(rutas).where(whereClause).orderBy(desc(rutas.creadoEn)).limit(limit).offset(offset);
 
     return {
       data,
@@ -104,11 +71,7 @@ export class RutaRepository {
   }
 
   async delete(id: number) {
-    const result = await database
-      .update(rutas)
-      .set({ eliminadoEn: new Date() })
-      .where(eq(rutas.id, id))
-      .returning();
+    const result = await database.update(rutas).set({ eliminadoEn: new Date() }).where(eq(rutas.id, id)).returning();
     return result[0];
   }
 }
