@@ -1,18 +1,17 @@
 import { Controller, Get, Post, Query, Param, UseGuards, ParseIntPipe, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { NotificacionesService } from './notificaciones.service';
 import { NotificacionCreateDto } from './dto/notificacion-create.dto';
 import { PaginatedNotificacionResultDto, NotificacionPaginationQueryDto } from './dto/notificacion-paginated.dto';
 import { NotificacionResultDto } from './dto/notificacion-result.dto';
 import { PreviewVencimientosResultDto, GenerarVencimientosResultDto, NotificacionVencimientoQueryDto } from './dto/notificacion-vencimiento.dto';
+import { SendEmailDto } from './dto/send-email.dto';
+import { SendConductorExpirationEmailDto } from './dto/send-conductor-expiration-email.dto';
 
 @ApiTags('Notificaciones')
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 @Controller('notificacion')
 export class NotificacionesController {
-  constructor(private readonly notificacionesService: NotificacionesService) {}
+  constructor(private readonly notificacionesService: NotificacionesService) { }
 
   @Get('find-all')
   @ApiOperation({ summary: 'Obtener notificaciones del usuario' })
@@ -33,6 +32,27 @@ export class NotificacionesController {
   @ApiResponse({ status: 200, type: NotificacionResultDto })
   async markAsRead(@Param('id', ParseIntPipe) id: number, @Query('userId', ParseIntPipe) userId: number): Promise<NotificacionResultDto> {
     return await this.notificacionesService.markAsRead(userId, id);
+  }
+
+  @Post('send-email')
+  @ApiOperation({ summary: 'Enviar un correo electrónico' })
+  @ApiResponse({ status: 200, description: 'Correo enviado correctamente' })
+  async sendEmail(@Body() sendEmailDto: SendEmailDto) {
+    return await this.notificacionesService.sendEmail(sendEmailDto);
+  }
+
+  @Post('send-conductor-expiration-email')
+  @ApiOperation({ summary: 'Enviar lista de conductores con documentos por vencer a un correo' })
+  @ApiResponse({ status: 200, description: 'Correo enviado con el reporte' })
+  async sendConductorExpirationEmail(@Body() dto: SendConductorExpirationEmailDto) {
+    return await this.notificacionesService.sendConductorExpirationEmail(dto.email, dto.diasAnticipacion);
+  }
+
+  @Post('notify-each-conductor')
+  @ApiOperation({ summary: 'Enviar correo personalizado a cada conductor con sus documentos por vencer' })
+  @ApiResponse({ status: 200, description: 'Proceso de notificación por correo finalizado' })
+  async notifyEachConductor(@Query('diasAnticipacion') diasAnticipacion?: number) {
+    return await this.notificacionesService.notifyEachConductor(diasAnticipacion ? Number(diasAnticipacion) : 7);
   }
 
   // =============================================

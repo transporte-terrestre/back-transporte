@@ -14,16 +14,21 @@ export const tareas = pgTable(
   {
     id: serial("id").primaryKey(),
     codigo: varchar("codigo", { length: 50 }).notNull(),
-    descripcion: varchar("descripcion", { length: 255 }).notNull(),
+    nombreTrabajo: varchar("nombre_trabajo", { length: 255 }).notNull(),
+    grupo: varchar("grupo", { length: 100 }).notNull(),
     creadoEn: timestamp("creado_en").defaultNow().notNull(),
     actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
     eliminadoEn: timestamp("eliminado_en"),
   },
   (t) => [
     index("tarea_codigo_idx").on(t.codigo),
-    index("tarea_descripcion_gin_idx").using(
+    index("tarea_nombre_trabajo_gin_idx").using(
       "gin",
-      sql`${t.descripcion} gin_trgm_ops`
+      sql`${t.nombreTrabajo} gin_trgm_ops`
+    ),
+    index("grupo_idx").using(
+      "gin",
+      sql`${t.grupo} gin_trgm_ops`
     ),
     uniqueIndex("tarea_codigo_unique_idx")
       .on(t.codigo)

@@ -31,15 +31,15 @@ export class ConductorListDto {
   numeroLicencia: string;
 
   @ApiProperty({
-    enum: conductoresCategoriaLicencia.enumValues,
-    example: conductoresCategoriaLicencia.enumValues[0],
+    enum: conductoresClaseLicencia.enumValues,
+    example: conductoresClaseLicencia.enumValues[0],
     description: "Driver license class",
   })
   claseLicencia: ConductorClaseLicencia;
 
   @ApiProperty({
-    enum: conductoresClaseLicencia.enumValues,
-    example: conductoresClaseLicencia.enumValues[0],
+    enum: conductoresCategoriaLicencia.enumValues,
+    example: conductoresCategoriaLicencia.enumValues[0],
     description: "Driver license category",
   })
   categoriaLicencia: ConductorCategoriaLicencia;

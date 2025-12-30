@@ -15,6 +15,7 @@ import { seedPropietarioDocumentos } from '@seed/propietario-documento.seed';
 import { seedConductorDocumentos } from '@seed/conductor-documento.seed';
 import { seedVehiculoDocumentos } from '@seed/vehiculo-documento.seed';
 import { seedUsuarioDocumentos } from '@seed/usuario-documento.seed';
+import { seedVehiculoPropietarios } from '@seed/vehiculo-propietario.seed';
 
 async function seed() {
   try {
@@ -31,7 +32,8 @@ async function seed() {
     const routesData = await seedRutas();
     const talleresData = await seedTalleres();
     await seedTareas(); // Catálogo de tareas de mantenimiento
-    const vehiclesData = await seedVehiculos(modelosData, propietariosData);
+    const vehiclesData = await seedVehiculos(modelosData);
+    await seedVehiculoPropietarios(vehiclesData, propietariosData);
 
     // 2. Related data
     await seedMantenimientos(vehiclesData, talleresData);

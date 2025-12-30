@@ -89,6 +89,12 @@ export class ViajeResultDto {
   modalidadServicio: ViajeModalidadServicio;
 
   @ApiProperty({
+    example: '8.00',
+    description: 'Horas contratadas',
+  })
+  horasContrato: string;
+
+  @ApiProperty({
     enum: viajesEstado.enumValues,
     example: viajesEstado.enumValues[0],
     description: 'Trip status',

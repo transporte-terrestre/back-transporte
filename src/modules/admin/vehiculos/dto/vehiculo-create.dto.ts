@@ -24,6 +24,12 @@ export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 
   @Min(1900)
   anio: number;
 
+  @ApiPropertyOptional({ example: 2021, description: 'Model year' })
+  @IsInt()
+  @Min(1900)
+  @IsOptional()
+  anioModelo: number | null;
+
   @ApiPropertyOptional({ example: 'VIN1234567890ABCD', description: 'Vehicle Identification Number' })
   @IsString()
   @IsOptional()
@@ -62,18 +68,18 @@ export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 
   @IsOptional()
   categoria: string | null;
 
-  @ApiPropertyOptional({ example: 1500.5, description: 'Payload capacity in Kg' })
-  @IsNumber()
+  @ApiPropertyOptional({ example: '1500.5', description: 'Payload capacity in Kg' })
+  @IsString()
   @IsOptional()
   cargaUtil: string | null;
 
-  @ApiPropertyOptional({ example: 2500.0, description: 'Gross weight in Kg' })
-  @IsNumber()
+  @ApiPropertyOptional({ example: '2500.0', description: 'Gross weight in Kg' })
+  @IsString()
   @IsOptional()
   pesoBruto: string | null;
 
-  @ApiPropertyOptional({ example: 1000.0, description: 'Net weight in Kg' })
-  @IsNumber()
+  @ApiPropertyOptional({ example: '1000.0', description: 'Net weight in Kg' })
+  @IsString()
   @IsOptional()
   pesoNeto: string | null;
 
@@ -83,11 +89,23 @@ export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 
   @IsOptional()
   asientos: number | null;
 
+  @ApiPropertyOptional({ example: 4, description: 'Number of passengers' })
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  pasajeros: number | null;
+
   @ApiPropertyOptional({ example: 2, description: 'Number of axles' })
   @IsInt()
   @Min(1)
   @IsOptional()
   ejes: number | null;
+
+  @ApiPropertyOptional({ example: 4, description: 'Number of wheels' })
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  ruedas: number | null;
 
   @ApiProperty({ example: 50000, description: 'Current mileage' })
   @IsInt()
@@ -103,11 +121,62 @@ export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 
   @IsIn(vehiculosEstado.enumValues)
   estado: VehiculoEstado;
 
-  @ApiPropertyOptional({ example: 1, description: 'Vehicle owner ID' })
-  @IsInt()
-  @Min(1)
+  // New fields
+  @ApiPropertyOptional({ example: 'Some notes', description: 'Annotations' })
+  @IsString()
   @IsOptional()
-  propietarioId: number | null;
+  anotaciones: string | null;
+
+  @ApiPropertyOptional({ example: 'Lima', description: 'Headquarters' })
+  @IsString()
+  @IsOptional()
+  sede: string | null;
+
+  @ApiPropertyOptional({ example: '110@3400', description: 'Power' })
+  @IsString()
+  @IsOptional()
+  potencia: string | null;
+
+  @ApiPropertyOptional({ example: '4x4', description: 'Rolling formula' })
+  @IsString()
+  @IsOptional()
+  formulaRodante: string | null;
+
+  @ApiPropertyOptional({ example: 'DX', description: 'Version' })
+  @IsString()
+  @IsOptional()
+  version: string | null;
+
+  @ApiPropertyOptional({ example: 4, description: 'Cylinders' })
+  @IsInt()
+  @IsOptional()
+  cilindros: number | null;
+
+  @ApiPropertyOptional({ example: '2.776', description: 'Displacement' })
+  @IsString()
+  @IsOptional()
+  cilindrada: string | null;
+
+  @ApiPropertyOptional({ example: '5.365', description: 'Length' })
+  @IsString()
+  @IsOptional()
+  longitud: string | null;
+
+  @ApiPropertyOptional({ example: '1.809', description: 'Height' })
+  @IsString()
+  @IsOptional()
+  altura: string | null;
+
+  @ApiPropertyOptional({ example: '1.9', description: 'Width' })
+  @IsString()
+  @IsOptional()
+  ancho: string | null;
+
+  @ApiPropertyOptional({ example: [1, 2], description: 'List of owner IDs', type: [Number] })
+  @IsArray()
+  @IsInt({ each: true })
+  @IsOptional()
+  propietarios?: number[];
 
   @ApiPropertyOptional({
     example: ['https://res.cloudinary.com/xxx/image.jpg'],
