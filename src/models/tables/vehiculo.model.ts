@@ -1,11 +1,10 @@
 import { pgEnum, pgTable, serial, varchar, integer, timestamp, text, index, uniqueIndex, decimal } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { modelos } from './modelo.model';
-import { propietarios } from './propietario.model';
 
 export const combustibleEnum = pgEnum('combustible_tipo', ['gasolina', 'diesel', 'gnv', 'glp', 'electrico', 'hibrido']);
 
-export const vehiculosEstado = pgEnum('vehiculos_estado', ['activo', 'taller', 'retirado']);
+export const vehiculosEstado = pgEnum('vehiculos_estado', ['disponible', 'circulacion', 'taller', 'retirado']);
 
 export const vehiculos = pgTable(
   'vehiculos',
@@ -19,6 +18,7 @@ export const vehiculos = pgTable(
       .references(() => modelos.id, { onDelete: 'restrict' }),
 
     anio: integer('anio').notNull(),
+    anioModelo: integer('anio_modelo'),
 
     vin: varchar('vin', { length: 50 }),
     numeroMotor: varchar('numero_motor', { length: 50 }),
@@ -33,14 +33,28 @@ export const vehiculos = pgTable(
     pesoBruto: decimal('peso_bruto_kg', { precision: 10, scale: 2 }),
     pesoNeto: decimal('peso_neto_kg', { precision: 10, scale: 2 }),
     asientos: integer('asientos').default(0),
+    pasajeros: integer('pasajeros').default(0),
     ejes: integer('ejes').default(2),
+    ruedas: integer('ruedas').default(4),
 
     kilometraje: integer('kilometraje').default(0).notNull(),
-    estado: vehiculosEstado('estado').default('activo').notNull(),
+    estado: vehiculosEstado('estado').default('disponible').notNull(),
     imagenes: text('imagenes').array().default([]),
 
     placaAnterior: varchar('placa_anterior', { length: 20 }),
-    propietarioId: integer('propietario_id').references(() => propietarios.id, { onDelete: 'restrict' }),
+
+    anotaciones: text('anotaciones'),
+    sede: varchar('sede', { length: 100 }),
+
+    potencia: varchar('potencia', { length: 50 }),
+    formulaRodante: varchar('formula_rodante', { length: 50 }),
+    version: varchar('version', { length: 50 }),
+    cilindros: integer('cilindros'),
+    cilindrada: varchar('cilindrada', { length: 50 }),
+
+    longitud: decimal('longitud', { precision: 10, scale: 2 }),
+    altura: decimal('altura', { precision: 10, scale: 2 }),
+    ancho: decimal('ancho', { precision: 10, scale: 2 }),
 
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
@@ -50,7 +64,6 @@ export const vehiculos = pgTable(
     index('vehiculos_modelo_id_idx').on(t.modeloId),
     index('vehiculos_placa_idx').using('gin', t.placa.op('gin_trgm_ops')),
     index('vehiculos_codigo_interno_idx').on(t.codigoInterno),
-    index('vehiculos_propietario_id_idx').on(t.propietarioId),
 
     index('vehiculos_vin_idx').on(t.vin),
     index('vehiculos_motor_idx').on(t.numeroMotor),

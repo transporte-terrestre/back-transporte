@@ -7,7 +7,7 @@ import { ClienteResultDto } from '@module/admin/clientes/dto/cliente-result.dto'
 import { RutaResultDto } from '@module/admin/rutas/dto/ruta-result.dto';
 
 export class ConductorViajeDto extends OmitType(ConductorResultDto, ['documentos']) {}
-export class VehiculoViajeDto extends OmitType(VehiculoResultDto, ['documentos','propietarioNombre']) {}
+export class VehiculoViajeDto extends OmitType(VehiculoResultDto, ['documentos', 'propietarios']) {}
 export class ClienteViajeDto extends OmitType(ClienteResultDto, ['documentos']) {}
 
 export class ViajeListDto {
