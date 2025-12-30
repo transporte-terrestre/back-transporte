@@ -211,7 +211,7 @@ export class NotificacionRepository {
       .orderBy(clienteDocumentos.fechaExpiracion);
 
     return results.map((r) => ({
-      entidad: 'cliente' as const,
+      entidad: 'cliente',
       documentoId: r.documentoId,
       tipoDocumento: r.tipoDocumento,
       nombreDocumento: r.nombreDocumento,
@@ -264,7 +264,7 @@ export class NotificacionRepository {
       .orderBy(conductorDocumentos.fechaExpiracion);
 
     return results.map((r) => ({
-      entidad: 'conductor' as const,
+      entidad: 'conductor',
       documentoId: r.documentoId,
       tipoDocumento: r.tipoDocumento,
       nombreDocumento: r.nombreDocumento,
@@ -321,7 +321,7 @@ export class NotificacionRepository {
       .orderBy(vehiculoDocumentos.fechaExpiracion);
 
     return results.map((r) => ({
-      entidad: 'vehiculo' as const,
+      entidad: 'vehiculo',
       documentoId: r.documentoId,
       tipoDocumento: r.tipoDocumento,
       nombreDocumento: r.nombreDocumento,
@@ -373,7 +373,7 @@ export class NotificacionRepository {
       .orderBy(usuarioDocumentos.fechaExpiracion);
 
     return results.map((r) => ({
-      entidad: 'usuario' as const,
+      entidad: 'usuario',
       documentoId: r.documentoId,
       tipoDocumento: r.tipoDocumento,
       nombreDocumento: r.nombreDocumento,
@@ -425,7 +425,7 @@ export class NotificacionRepository {
       .orderBy(propietarioDocumentos.fechaExpiracion);
 
     return results.map((r) => ({
-      entidad: 'propietario' as const,
+      entidad: 'propietario',
       documentoId: r.documentoId,
       tipoDocumento: r.tipoDocumento,
       nombreDocumento: r.nombreDocumento,

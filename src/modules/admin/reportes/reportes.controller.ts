@@ -6,6 +6,7 @@ import { ReporteDetalladoQueryDto } from './dto/reporte-detallado-query.dto';
 import { ViajeDetalladoDto } from './dto/viaje-detallado.dto';
 import { MantenimientoDetalladoVehiculoDto } from './dto/mantenimiento-detallado-vehiculo.dto';
 import { MantenimientoDetalladoTallerDto } from './dto/mantenimiento-detallado-taller.dto';
+import { ReporteConductorDto } from './dto/reporte-conductor.dto';
 
 @ApiTags('Reportes')
 @ApiBearerAuth()
@@ -85,5 +86,17 @@ export class ReportesController {
   })
   async getMantenimientosDetalladosPorTaller(@Param('id', ParseIntPipe) id: number, @Query() query: ReporteDetalladoQueryDto) {
     return await this.reportesService.getMantenimientosDetalladosPorTaller(id, query.fechaInicio, query.fechaFin);
+  }
+
+  @Get('conductores/general')
+  @ApiOperation({ summary: 'Reporte general de conductores con vencimientos' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista general de conductores con vencimientos',
+    type: ReporteConductorDto,
+    isArray: true,
+  })
+  async getReporteConductores() {
+    return await this.reportesService.getReporteConductores();
   }
 }

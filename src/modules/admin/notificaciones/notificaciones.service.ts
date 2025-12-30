@@ -83,7 +83,7 @@ export class NotificacionesService {
     const allExpirations = await this.notificacionRepository.getDocumentosVencimientosPorFecha(fechaReferencia, diasAnticipacion);
 
     // Filter only conductors
-    const conductorExpirations = allExpirations.filter(doc => doc.entidad === 'conductor') as (import('@repository/notificacion.repository').ConductorDocumentoVencimiento)[];
+    const conductorExpirations = allExpirations.filter(doc => doc.entidad === 'conductor');
 
     if (conductorExpirations.length === 0) {
       // Send email saying no expirations found? Or just return?
@@ -436,6 +436,7 @@ export class NotificacionesService {
       conductor: 'Conductor',
       vehiculo: 'Vehículo',
       usuario: 'Usuario',
+      propietario: 'Propietario',
     };
     return labels[entidad] || entidad;
   }
