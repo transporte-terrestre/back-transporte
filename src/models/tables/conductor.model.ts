@@ -28,6 +28,8 @@ export const conductores = pgTable(
     nombres: varchar("nombres", { length: 100 }).notNull(),
     apellidos: varchar("apellidos", { length: 100 }).notNull(),
     nombreCompleto: varchar("nombre_completo", { length: 200 }).notNull(),
+    email: varchar("email", { length: 150 }), // Optional for now to avoid migration issues with existing data without defaults
+    celular: varchar("celular", { length: 20 }),
     numeroLicencia: varchar("numero_licencia", { length: 20 }).notNull(),
     claseLicencia: conductoresClaseLicencia("clase_licencia").notNull(),
     categoriaLicencia:
@@ -51,6 +53,12 @@ export const conductores = pgTable(
       .where(sql`${t.eliminadoEn} IS NULL`),
     uniqueIndex("conductores_numero_licencia_unique_active_idx")
       .on(t.numeroLicencia)
+      .where(sql`${t.eliminadoEn} IS NULL`),
+    uniqueIndex("conductores_email_unique_active_idx")
+      .on(t.email)
+      .where(sql`${t.eliminadoEn} IS NULL`),
+    uniqueIndex("conductores_celular_unique_active_idx")
+      .on(t.celular)
       .where(sql`${t.eliminadoEn} IS NULL`),
   ]
 );

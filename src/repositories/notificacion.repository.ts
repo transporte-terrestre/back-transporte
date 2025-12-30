@@ -35,6 +35,7 @@ export interface ConductorDocumentoVencimiento extends DocumentoVencimientoBase 
   entidad: 'conductor';
   entidadId: number;
   entidadNombre: string;
+  email?: string | null;
 }
 
 export interface VehiculoDocumentoVencimiento extends DocumentoVencimientoBase {
@@ -241,6 +242,7 @@ export class NotificacionRepository {
         fechaExpiracion: conductorDocumentos.fechaExpiracion,
         entidadId: conductores.id,
         entidadNombre: conductores.nombreCompleto,
+        email: conductores.email,
       })
       .from(conductorDocumentos)
       .innerJoin(conductores, eq(conductorDocumentos.conductorId, conductores.id))
@@ -269,6 +271,7 @@ export class NotificacionRepository {
       fechaExpiracion: r.fechaExpiracion,
       entidadId: r.entidadId,
       entidadNombre: r.entidadNombre,
+      email: r.email,
       diasRestantes: this.calcularDiasRestantes(r.fechaExpiracion),
     }));
   }

@@ -1,15 +1,50 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { NotificacionRepository, DocumentoVencimiento } from '@repository/notificacion.repository';
 import { PaginatedNotificacionResultDto } from './dto/notificacion-paginated.dto';
 import { NotificacionResultDto } from './dto/notificacion-result.dto';
 import { NotificacionCreateDto } from './dto/notificacion-create.dto';
 import { GenerarVencimientosResultDto, NotificacionPreviewDto, PreviewVencimientosResultDto } from './dto/notificacion-vencimiento.dto';
+import { SendEmailDto } from './dto/send-email.dto';
+import * as nodemailer from 'nodemailer';
 
 export type NotificacionPreview = NotificacionPreviewDto;
 
 @Injectable()
 export class NotificacionesService {
-  constructor(private readonly notificacionRepository: NotificacionRepository) {}
+  constructor(private readonly notificacionRepository: NotificacionRepository) { }
+
+  async sendEmail(dto: SendEmailDto): Promise<{ message: string }> {
+    const user = process.env.GMAIL_EMAIL;
+    const pass = process.env.GMAIL_PASSWORD;
+
+    if (!user || !pass) {
+      console.error('Faltan credenciales GMAIL_EMAIL o GMAIL_PASSWORD en .env');
+      throw new InternalServerErrorException('Configuración de correo incompleta en el servidor');
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user,
+        pass,
+      },
+    });
+
+    try {
+      const info = await transporter.sendMail({
+        from: `"Notificaciones Transporte" <${user}>`,
+        to: dto.to,
+        subject: dto.subject,
+        text: dto.text,
+        html: dto.html || dto.text, // Fallback to text if html is missing, though type definition makes html optional
+      });
+      console.log('Correo enviado: %s', info.messageId);
+      return { message: 'Correo enviado correctamente' };
+    } catch (error) {
+      console.error('Error enviando correo:', error);
+      throw new InternalServerErrorException('No se pudo enviar el correo: ' + (error as any).message);
+    }
+  }
 
   async findAllByUser(usuarioId: number, page: number = 1, limit: number = 10): Promise<PaginatedNotificacionResultDto> {
     const { data, total } = await this.notificacionRepository.findAllPaginatedByUsuario(usuarioId, page, limit);
@@ -37,6 +72,193 @@ export class NotificacionesService {
       ...result,
       leido: false,
     } as NotificacionResultDto;
+  }
+
+
+  async sendConductorExpirationEmail(email: string, diasAnticipacion: number = 7): Promise<{ message: string; count: number }> {
+    const today = new Date().toISOString().split('T')[0];
+    const fechaReferencia = new Date(today);
+
+    // Get all expirations
+    const allExpirations = await this.notificacionRepository.getDocumentosVencimientosPorFecha(fechaReferencia, diasAnticipacion);
+
+    // Filter only conductors
+    const conductorExpirations = allExpirations.filter(doc => doc.entidad === 'conductor') as (import('@repository/notificacion.repository').ConductorDocumentoVencimiento)[];
+
+    if (conductorExpirations.length === 0) {
+      // Send email saying no expirations found? Or just return?
+      // Let's send an email saying everything is OK.
+      await this.sendEmail({
+        to: email,
+        subject: 'Reporte de Vencimientos de Conductores',
+        text: 'No hay documentos de conductores próximos a vencer.',
+        html: '<h3>Reporte de Vencimientos</h3><p>No se encontraron documentos de conductores próximos a vencer en los siguientes ' + diasAnticipacion + ' días.</p>'
+      });
+      return { message: 'No se encontraron vencimientos. Correo de reporte vacío enviado.', count: 0 };
+    }
+
+    // Sort by expiration date (most urgent first)
+    conductorExpirations.sort((a, b) => a.diasRestantes - b.diasRestantes);
+
+    // Generate HTML Table
+    let htmlContent = `
+      <h2>Reporte de Documentos de Conductores por Vencer</h2>
+      <p>Se encontraron <strong>${conductorExpirations.length}</strong> documentos con vencimiento próximo (dentro de ${diasAnticipacion} días) o vencidos.</p>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+          <tr style="background-color: #f2f2f2;">
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Conductor</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Documento</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Fecha Venc.</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    conductorExpirations.forEach(doc => {
+      const dias = doc.diasRestantes;
+      let estadoColor = '#28a745'; // Green
+      let estadoText = 'Vigente';
+
+      if (dias < 0) {
+        estadoColor = '#dc3545'; // Red
+        estadoText = `Vencido hace ${Math.abs(dias)} días`;
+      } else if (dias === 0) {
+        estadoColor = '#dc3545';
+        estadoText = 'Vence HOY';
+      } else if (dias <= 7) {
+        estadoColor = '#ffc107'; // Yellow
+        estadoText = `Vence en ${dias} días`;
+      }
+
+      htmlContent += `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd;">${doc.entidadNombre}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${this.formatearTipoDocumento(doc.tipoDocumento)} - ${doc.nombreDocumento}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${this.formatearFecha(doc.fechaExpiracion)}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: ${estadoColor}; font-weight: bold;">${estadoText}</td>
+        </tr>
+      `;
+    });
+
+    htmlContent += `
+        </tbody>
+      </table>
+      <p style="margin-top: 20px; font-size: 12px; color: #666;">Generado automáticamente por el Sistema de Transporte.</p>
+    `;
+
+    await this.sendEmail({
+      to: email,
+      subject: `[ALERTA] ${conductorExpirations.length} Documentos de Conductores por Vencer`,
+      text: `Se encontraron ${conductorExpirations.length} documentos de conductores por vencer. Por favor revise el formato HTML.`,
+      html: htmlContent
+    });
+
+    return { message: 'Correo enviado correctamente con la lista de conductores.', count: conductorExpirations.length };
+  }
+
+  async notifyEachConductor(diasAnticipacion: number = 7): Promise<{ message: string; successful: number; failed: number }> {
+    const today = new Date().toISOString().split('T')[0];
+    const fechaReferencia = new Date(today);
+
+    // Get all expirations
+    const allExpirations = await this.notificacionRepository.getDocumentosVencimientosPorFecha(fechaReferencia, diasAnticipacion);
+
+    // Filter only conductors and ensure they have an email
+    const conductorExpirations = allExpirations.filter(doc => doc.entidad === 'conductor') as (import('@repository/notificacion.repository').ConductorDocumentoVencimiento)[];
+
+    if (conductorExpirations.length === 0) {
+      return { message: 'No se encontraron documentos de conductores por vencer.', successful: 0, failed: 0 };
+    }
+
+    // Group by Email
+    const conductorsMap = new Map<string, { name: string; docs: typeof conductorExpirations }>();
+
+    conductorExpirations.forEach(doc => {
+      if (doc.email) {
+        if (!conductorsMap.has(doc.email)) {
+          conductorsMap.set(doc.email, { name: doc.entidadNombre, docs: [] });
+        }
+        conductorsMap.get(doc.email)!.docs.push(doc);
+      } else {
+        console.warn(`Conductor ${doc.entidadNombre} (ID: ${doc.entidadId}) tiene documentos vencidos pero NO tiene email registrado.`);
+      }
+    });
+
+    let successful = 0;
+    let failed = 0;
+
+    for (const [email, { name, docs }] of conductorsMap.entries()) {
+      try {
+        // Sort docs by urgency
+        docs.sort((a, b) => a.diasRestantes - b.diasRestantes);
+
+        let htmlContent = `
+          <h3>Estimado/a ${name},</h3>
+          <p>Le informamos que tiene los siguientes documentos pendientes de renovación o vencidos:</p>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <thead>
+              <tr style="background-color: #f2f2f2;">
+                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Documento</th>
+                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Fecha Vencimiento</th>
+                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        docs.forEach(doc => {
+          const dias = doc.diasRestantes;
+          let estadoColor = '#28a745';
+          let estadoText = 'Vigente';
+
+          if (dias < 0) {
+            estadoColor = '#dc3545';
+            estadoText = `Vencido hace ${Math.abs(dias)} días`;
+          } else if (dias === 0) {
+            estadoColor = '#dc3545';
+            estadoText = 'Vence HOY';
+          } else if (dias <= 7) {
+            estadoColor = '#ffc107';
+            estadoText = `Vence en ${dias} días`;
+          }
+
+          htmlContent += `
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd;">${this.formatearTipoDocumento(doc.tipoDocumento)} - ${doc.nombreDocumento}</td>
+              <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${this.formatearFecha(doc.fechaExpiracion)}</td>
+              <td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: ${estadoColor}; font-weight: bold;">${estadoText}</td>
+            </tr>
+          `;
+        });
+
+        htmlContent += `
+            </tbody>
+          </table>
+          <p>Por favor, gestione la renovación de estos documentos a la brevedad para evitar inconvenientes en sus operaciones.</p>
+          <p style="font-size: 12px; color: #888;">Atentamente,<br>El equipo de Gestión de Transporte</p>
+        `;
+
+        await this.sendEmail({
+          to: email,
+          subject: 'Aviso de Vencimiento de Documentos',
+          text: `Estimado ${name}, tiene ${docs.length} documento(s) por vencer. Por favor revise el correo HTML para más detalles.`,
+          html: htmlContent,
+        });
+
+        successful++;
+      } catch (error) {
+        console.error(`Error enviando correo a conductor ${email}:`, error);
+        failed++;
+      }
+    }
+
+    return {
+      message: `Proceso finalizado. Correos enviados: ${successful}, Fallidos: ${failed}. Conductores sin email ignorados: ${conductorExpirations.length - conductorsMap.size}`,
+      successful,
+      failed
+    };
   }
 
   async markAsRead(usuarioId: number, notificacionId: number): Promise<NotificacionResultDto> {
