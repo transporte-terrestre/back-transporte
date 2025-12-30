@@ -11,7 +11,7 @@ export type NotificacionPreview = NotificacionPreviewDto;
 
 @Injectable()
 export class NotificacionesService {
-  constructor(private readonly notificacionRepository: NotificacionRepository) { }
+  constructor(private readonly notificacionRepository: NotificacionRepository) {}
 
   async sendEmail(dto: SendEmailDto): Promise<{ message: string }> {
     const user = process.env.GMAIL_EMAIL;
@@ -74,8 +74,7 @@ export class NotificacionesService {
     } as NotificacionResultDto;
   }
 
-
-  async sendConductorExpirationEmail(email: string, diasAnticipacion: number = 7): Promise<{ message: string; count: number }> {
+  async notifyEachAdmin(diasAnticipacion: number = 7): Promise<{ message: string; count: number }> {
     const today = new Date().toISOString().split('T')[0];
     const fechaReferencia = new Date(today);
 
@@ -83,18 +82,34 @@ export class NotificacionesService {
     const allExpirations = await this.notificacionRepository.getDocumentosVencimientosPorFecha(fechaReferencia, diasAnticipacion);
 
     // Filter only conductors
-    const conductorExpirations = allExpirations.filter(doc => doc.entidad === 'conductor');
+    const conductorExpirations = allExpirations.filter((doc) => doc.entidad === 'conductor');
+
+    // Get all admins
+    const admins = await this.notificacionRepository.findUsersByRole('admin');
+    const adminEmails = admins.map((u) => u.email).filter((e) => e);
+
+    if (adminEmails.length === 0) {
+      return { message: 'No hay administradores a quienes enviar el reporte.', count: 0 };
+    }
 
     if (conductorExpirations.length === 0) {
-      // Send email saying no expirations found? Or just return?
-      // Let's send an email saying everything is OK.
-      await this.sendEmail({
-        to: email,
-        subject: 'Reporte de Vencimientos de Conductores',
-        text: 'No hay documentos de conductores próximos a vencer.',
-        html: '<h3>Reporte de Vencimientos</h3><p>No se encontraron documentos de conductores próximos a vencer en los siguientes ' + diasAnticipacion + ' días.</p>'
-      });
-      return { message: 'No se encontraron vencimientos. Correo de reporte vacío enviado.', count: 0 };
+      // Send email saying no expirations found to all admins
+      for (const email of adminEmails) {
+        try {
+          await this.sendEmail({
+            to: email,
+            subject: 'Reporte de Vencimientos de Conductores',
+            text: 'No hay documentos de conductores próximos a vencer.',
+            html:
+              '<h3>Reporte de Vencimientos</h3><p>No se encontraron documentos de conductores próximos a vencer en los siguientes ' +
+              diasAnticipacion +
+              ' días.</p>',
+          });
+        } catch (e) {
+          console.error(`Error sending "no expiration" email to admin ${email}`, e);
+        }
+      }
+      return { message: 'No se encontraron vencimientos. Reporte enviado a admins.', count: 0 };
     }
 
     // Sort by expiration date (most urgent first)
@@ -116,7 +131,7 @@ export class NotificacionesService {
         <tbody>
     `;
 
-    conductorExpirations.forEach(doc => {
+    conductorExpirations.forEach((doc) => {
       const dias = doc.diasRestantes;
       let estadoColor = '#28a745'; // Green
       let estadoText = 'Vigente';
@@ -148,14 +163,25 @@ export class NotificacionesService {
       <p style="margin-top: 20px; font-size: 12px; color: #666;">Generado automáticamente por el Sistema de Transporte.</p>
     `;
 
-    await this.sendEmail({
-      to: email,
-      subject: `[ALERTA] ${conductorExpirations.length} Documentos de Conductores por Vencer`,
-      text: `Se encontraron ${conductorExpirations.length} documentos de conductores por vencer. Por favor revise el formato HTML.`,
-      html: htmlContent
-    });
+    let successful = 0;
+    for (const email of adminEmails) {
+      try {
+        await this.sendEmail({
+          to: email,
+          subject: `[ALERTA] ${conductorExpirations.length} Documentos de Conductores por Vencer`,
+          text: `Se encontraron ${conductorExpirations.length} documentos de conductores por vencer. Por favor revise el formato HTML.`,
+          html: htmlContent,
+        });
+        successful++;
+      } catch (e) {
+        console.error(`Error sending email to admin ${email}`, e);
+      }
+    }
 
-    return { message: 'Correo enviado correctamente con la lista de conductores.', count: conductorExpirations.length };
+    return {
+      message: `Correo enviado a ${successful}/${adminEmails.length} administradores con la lista de conductores.`,
+      count: conductorExpirations.length,
+    };
   }
 
   async notifyEachConductor(diasAnticipacion: number = 7): Promise<{ message: string; successful: number; failed: number }> {
@@ -166,7 +192,9 @@ export class NotificacionesService {
     const allExpirations = await this.notificacionRepository.getDocumentosVencimientosPorFecha(fechaReferencia, diasAnticipacion);
 
     // Filter only conductors and ensure they have an email
-    const conductorExpirations = allExpirations.filter(doc => doc.entidad === 'conductor') as (import('@repository/notificacion.repository').ConductorDocumentoVencimiento)[];
+    const conductorExpirations = allExpirations.filter(
+      (doc) => doc.entidad === 'conductor',
+    ) as import('@repository/notificacion.repository').ConductorDocumentoVencimiento[];
 
     if (conductorExpirations.length === 0) {
       return { message: 'No se encontraron documentos de conductores por vencer.', successful: 0, failed: 0 };
@@ -175,7 +203,7 @@ export class NotificacionesService {
     // Group by Email
     const conductorsMap = new Map<string, { name: string; docs: typeof conductorExpirations }>();
 
-    conductorExpirations.forEach(doc => {
+    conductorExpirations.forEach((doc) => {
       if (doc.email) {
         if (!conductorsMap.has(doc.email)) {
           conductorsMap.set(doc.email, { name: doc.entidadNombre, docs: [] });
@@ -208,7 +236,7 @@ export class NotificacionesService {
             <tbody>
         `;
 
-        docs.forEach(doc => {
+        docs.forEach((doc) => {
           const dias = doc.diasRestantes;
           let estadoColor = '#28a745';
           let estadoText = 'Vigente';
@@ -257,7 +285,7 @@ export class NotificacionesService {
     return {
       message: `Proceso finalizado. Correos enviados: ${successful}, Fallidos: ${failed}. Conductores sin email ignorados: ${conductorExpirations.length - conductorsMap.size}`,
       successful,
-      failed
+      failed,
     };
   }
 

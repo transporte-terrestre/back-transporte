@@ -14,7 +14,7 @@ export async function seedUsuarios() {
         nombres: "Erick Stip",
         apellidos: "Flores Santos",
         nombreCompleto: "Erick Stip Flores Santos",
-        email: "erick@gmail.com",
+        email: "xerickcua@gmail.com",
         contrasenia: hashedPassword,
         roles: ["admin"],
       },
@@ -38,9 +38,9 @@ export async function seedUsuarios() {
         nombres: "Diego",
         apellidos: "Ramirez Torres",
         nombreCompleto: "Diego Ramirez Torres",
-        email: "diego.ramirez@gmail.com",
+        email: "erixcel.evolution.api@gmail.com",
         contrasenia: hashedPassword,
-        roles: ["empleado"],
+        roles: ["admin"],
       },
       {
         nombres: "Valentina",
@@ -54,7 +54,7 @@ export async function seedUsuarios() {
         nombres: "Lucas",
         apellidos: "Fernandez Castro",
         nombreCompleto: "Lucas Fernandez Castro",
-        email: "lucas.fernandez@gmail.com",
+        email: "erixcel.gemini.1@gmail.com",
         contrasenia: hashedPassword,
         roles: ["empleado"],
       },
@@ -88,7 +88,7 @@ export async function seedUsuarios() {
         nombreCompleto: "Santiago Torres Diaz",
         email: "santiago.torres@gmail.com",
         contrasenia: hashedPassword,
-        roles: ["admin"],
+        roles: ["empleado"],
       },
       {
         nombres: "Emma",
@@ -128,7 +128,7 @@ export async function seedUsuarios() {
         nombreCompleto: "Martina Vega Silva",
         email: "martina.vega@gmail.com",
         contrasenia: hashedPassword,
-        roles: ["admin"],
+        roles: ["empleado"],
       },
       {
         nombres: "Nicolas",
@@ -168,7 +168,7 @@ export async function seedUsuarios() {
         nombreCompleto: "Thiago Salazar Mora",
         email: "thiago.salazar@gmail.com",
         contrasenia: hashedPassword,
-        roles: ["admin"],
+        roles: ["empleado"],
       },
       {
         nombres: "Renata",
@@ -208,7 +208,7 @@ export async function seedUsuarios() {
         nombreCompleto: "Antonella Flores Vera",
         email: "antonella.flores@gmail.com",
         contrasenia: hashedPassword,
-        roles: ["admin"],
+        roles: ["empleado"],
       },
       {
         nombres: "Felipe",
@@ -248,7 +248,7 @@ export async function seedUsuarios() {
         nombreCompleto: "Samuel Parra Gamboa",
         email: "samuel.parra@gmail.com",
         contrasenia: hashedPassword,
-        roles: ["admin"],
+        roles: ["empleado"],
       },
     ])
     .returning();

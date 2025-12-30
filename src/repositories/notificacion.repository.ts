@@ -467,4 +467,18 @@ export class NotificacionRepository {
 
     return diffDays;
   }
+
+  async findUsersByRole(role: string) {
+    return await database
+      .select({
+        id: usuarios.id,
+        nombres: usuarios.nombres,
+        apellidos: usuarios.apellidos,
+        nombreCompleto: usuarios.nombreCompleto,
+        email: usuarios.email,
+        roles: usuarios.roles,
+      })
+      .from(usuarios)
+      .where(and(sql`${role} = ANY(${usuarios.roles})`, isNull(usuarios.eliminadoEn)));
+  }
 }
