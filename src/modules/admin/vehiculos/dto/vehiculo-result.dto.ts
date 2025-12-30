@@ -96,9 +96,6 @@ export class VehiculoResultDto {
   @ApiProperty({ example: 2020, description: 'Manufacturing year' })
   anio: number;
 
-  @ApiPropertyOptional({ example: 2021, description: 'Model year' })
-  anioModelo: number | null;
-
   @ApiPropertyOptional({ example: 'VIN1234567890ABCD', description: 'VIN' })
   vin: string | null;
 
@@ -185,7 +182,7 @@ export class VehiculoResultDto {
   @ApiPropertyOptional({ example: '1.90', description: 'Width' })
   ancho: string | null;
 
-  @ApiProperty({ type: [PropietarioVehiculoDto], description: 'List of owners'})
+  @ApiProperty({ type: [PropietarioVehiculoDto], description: 'List of owners' })
   propietarios: PropietarioVehiculoDto[];
 
   @ApiPropertyOptional({

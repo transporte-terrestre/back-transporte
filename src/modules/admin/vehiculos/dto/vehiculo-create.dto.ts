@@ -24,12 +24,6 @@ export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 
   @Min(1900)
   anio: number;
 
-  @ApiPropertyOptional({ example: 2021, description: 'Model year' })
-  @IsInt()
-  @Min(1900)
-  @IsOptional()
-  anioModelo: number | null;
-
   @ApiPropertyOptional({ example: 'VIN1234567890ABCD', description: 'Vehicle Identification Number' })
   @IsString()
   @IsOptional()
