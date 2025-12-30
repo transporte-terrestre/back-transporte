@@ -1,19 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { database } from "@db/connection.db";
-import { usuarios, Usuario, UsuarioDTO } from "@model/tables/usuario.model";
-import {
-  eq,
-  or,
-  like,
-  and,
-  gte,
-  lte,
-  count,
-  sql,
-  ilike,
-  desc,
-  isNull,
-} from "drizzle-orm";
+import { Injectable } from '@nestjs/common';
+import { database } from '@db/connection.db';
+import { usuarios, Usuario, UsuarioDTO } from '@model/tables/usuario.model';
+import { eq, or, like, and, gte, lte, count, sql, ilike, desc, isNull } from 'drizzle-orm';
 
 interface PaginationFilters {
   search?: string;
@@ -28,11 +16,7 @@ export class UsuarioRepository {
     return await database.select().from(usuarios);
   }
 
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-    filters?: PaginationFilters
-  ) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
@@ -43,8 +27,8 @@ export class UsuarioRepository {
           ilike(usuarios.nombreCompleto, `%${searchTerm}%`),
           like(usuarios.email, `%${searchTerm}%`),
           like(usuarios.nombres, `%${searchTerm}%`),
-          like(usuarios.apellidos, `%${searchTerm}%`)
-        )
+          like(usuarios.apellidos, `%${searchTerm}%`),
+        ),
       );
     }
 
@@ -54,15 +38,11 @@ export class UsuarioRepository {
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(gte(usuarios.creadoEn, new Date(filters.fechaInicio)));
-      conditions.push(
-        lte(usuarios.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(usuarios.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     } else if (filters?.fechaInicio) {
       conditions.push(gte(usuarios.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(
-        lte(usuarios.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(usuarios.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
     // Excluir eliminados
@@ -70,10 +50,7 @@ export class UsuarioRepository {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(usuarios)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(usuarios).where(whereClause);
 
     const data = await database
       .select({
@@ -162,21 +139,17 @@ export class UsuarioRepository {
   }
 
   async delete(id: number) {
-    const result = await database
-      .update(usuarios)
-      .set({ eliminadoEn: new Date() })
-      .where(eq(usuarios.id, id))
-      .returning({
-        id: usuarios.id,
-        nombres: usuarios.nombres,
-        apellidos: usuarios.apellidos,
-        nombreCompleto: usuarios.nombreCompleto,
-        email: usuarios.email,
-        roles: usuarios.roles,
-        fotocheck: usuarios.fotocheck,
-        creadoEn: usuarios.creadoEn,
-        actualizadoEn: usuarios.actualizadoEn,
-      });
+    const result = await database.update(usuarios).set({ eliminadoEn: new Date() }).where(eq(usuarios.id, id)).returning({
+      id: usuarios.id,
+      nombres: usuarios.nombres,
+      apellidos: usuarios.apellidos,
+      nombreCompleto: usuarios.nombreCompleto,
+      email: usuarios.email,
+      roles: usuarios.roles,
+      fotocheck: usuarios.fotocheck,
+      creadoEn: usuarios.creadoEn,
+      actualizadoEn: usuarios.actualizadoEn,
+    });
     return result[0];
   }
 }

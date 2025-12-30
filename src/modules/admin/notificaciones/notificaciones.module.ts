@@ -1,7 +1,7 @@
-import { Module } from "@nestjs/common";
-import { NotificacionesController } from "./notificaciones.controller";
-import { NotificacionesService } from "./notificaciones.service";
-import { NotificacionRepository } from "@repository/notificacion.repository";
+import { Module } from '@nestjs/common';
+import { NotificacionesController } from './notificaciones.controller';
+import { NotificacionesService } from './notificaciones.service';
+import { NotificacionRepository } from '@repository/notificacion.repository';
 
 @Module({
   controllers: [NotificacionesController],

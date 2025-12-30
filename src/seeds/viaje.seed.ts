@@ -83,11 +83,12 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[], ve
   // Track which vehicle->driver->client assignments to make
   const assignments: { vehiculoId: number; conductorId: number }[] = [];
 
-  let dayOffset = -60; // Start from 60 days ago
-
   for (let vehicleIdx = 0; vehicleIdx < vehiclesData.length; vehicleIdx++) {
     const vehicle = vehiclesData[vehicleIdx];
     const numTrips = randomInt(3, 5); // 3 to 5 trips per vehicle
+
+    // Reset dayOffset for each vehicle, starting well in the past to ensure most are completed
+    let dayOffset = randomInt(-90, -15); // Start between 90 and 15 days ago
 
     for (let tripNum = 0; tripNum < numTrips; tripNum++) {
       // Decide fixed or occasional route (80% fixed, 20% occasional)
@@ -101,14 +102,14 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[], ve
 
       // Random time offset
       const hourStart = randomInt(6, 14);
-      const tripDuration = randomInt(2, 8); // 2 to 8 hours
+      const tripDuration = randomInt(2, 14); // 2 to 14 hours
 
       // Decide estado based on day offset
       let estado: (typeof estados)[number];
-      if (dayOffset < -2) {
+      if (dayOffset < -1) {
         estado = 'completado';
-      } else if (dayOffset <= 0) {
-        estado = Math.random() < 0.5 ? 'en_progreso' : 'completado';
+      } else if (dayOffset <= 1) {
+        estado = Math.random() < 0.3 ? 'en_progreso' : 'completado';
       } else {
         estado = 'programado';
       }
@@ -173,7 +174,7 @@ export async function seedViajes(clientesData: Cliente[], routesData: Ruta[], ve
       });
 
       // Move forward in time for variety
-      dayOffset += randomInt(1, 3);
+      dayOffset += randomInt(2, 7); // Bigger gaps between trips
     }
   }
 

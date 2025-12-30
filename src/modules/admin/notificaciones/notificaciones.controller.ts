@@ -6,12 +6,11 @@ import { PaginatedNotificacionResultDto, NotificacionPaginationQueryDto } from '
 import { NotificacionResultDto } from './dto/notificacion-result.dto';
 import { PreviewVencimientosResultDto, GenerarVencimientosResultDto, NotificacionVencimientoQueryDto } from './dto/notificacion-vencimiento.dto';
 import { SendEmailDto } from './dto/send-email.dto';
-import { SendConductorExpirationEmailDto } from './dto/send-conductor-expiration-email.dto';
 
 @ApiTags('Notificaciones')
 @Controller('notificacion')
 export class NotificacionesController {
-  constructor(private readonly notificacionesService: NotificacionesService) { }
+  constructor(private readonly notificacionesService: NotificacionesService) {}
 
   @Get('find-all')
   @ApiOperation({ summary: 'Obtener notificaciones del usuario' })
@@ -41,11 +40,11 @@ export class NotificacionesController {
     return await this.notificacionesService.sendEmail(sendEmailDto);
   }
 
-  @Post('send-conductor-expiration-email')
-  @ApiOperation({ summary: 'Enviar lista de conductores con documentos por vencer a un correo' })
-  @ApiResponse({ status: 200, description: 'Correo enviado con el reporte' })
-  async sendConductorExpirationEmail(@Body() dto: SendConductorExpirationEmailDto) {
-    return await this.notificacionesService.sendConductorExpirationEmail(dto.email, dto.diasAnticipacion);
+  @Post('notify-each-admin')
+  @ApiOperation({ summary: 'Enviar lista de conductores con documentos por vencer a todos los administradores' })
+  @ApiResponse({ status: 200, description: 'Correos enviados con el reporte' })
+  async notifyEachAdmin(@Query('diasAnticipacion') diasAnticipacion?: number) {
+    return await this.notificacionesService.notifyEachAdmin(diasAnticipacion ? Number(diasAnticipacion) : 7);
   }
 
   @Post('notify-each-conductor')
