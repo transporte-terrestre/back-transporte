@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { vehiculosEstado, combustibleEnum } from '@model/tables/vehiculo.model';
 import type { VehiculoEstado, CombustibleTipo } from '@model/tables/vehiculo.model';
+import { IsOptional } from 'class-validator';
 
 export class VehiculoListDto {
   @ApiProperty({ example: 1, description: 'Vehicle ID' })
@@ -49,11 +50,8 @@ export class VehiculoListDto {
   })
   estado: VehiculoEstado;
 
-  @ApiPropertyOptional({ example: 1, description: 'Owner ID' })
-  propietarioId: number | null;
-
-  @ApiPropertyOptional({ example: 'Empresa SAC', description: 'Owner Name' })
-  propietarioNombre: string | null;
+  @ApiPropertyOptional({ type: [String], description: 'List of owners names', default: [] })
+  propietarios_nombres?: string[];
 
   @ApiProperty({
     example: '2023-01-01T00:00:00.000Z',

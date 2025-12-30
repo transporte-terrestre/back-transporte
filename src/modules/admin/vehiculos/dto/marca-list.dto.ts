@@ -1,4 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsOptional } from "class-validator";
 
 export class MarcaListDto {
   @ApiProperty({ example: 1, description: "ID de la marca" })
@@ -7,10 +8,10 @@ export class MarcaListDto {
   @ApiProperty({ example: "Toyota", description: "Nombre de la marca" })
   nombre: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: ["Corolla", "Camry", "RAV4"],
     description: "Lista de nombres de modelos de la marca",
-    type: [String],
+    type: [String]
   })
   modelos: string[];
 
