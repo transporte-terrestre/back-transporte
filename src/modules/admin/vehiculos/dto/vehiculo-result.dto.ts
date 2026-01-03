@@ -68,6 +68,14 @@ export class PropietarioVehiculoDto {
   nombre: string;
 }
 
+export class ProveedorVehiculoDto {
+  @ApiProperty({ example: 1, description: 'Supplier ID' })
+  id: number;
+
+  @ApiProperty({ example: 'Repuestos SAC', description: 'Supplier Name' })
+  nombre: string;
+}
+
 export class VehiculoResultDto {
   @ApiProperty({ example: 1, description: 'Vehicle ID' })
   id: number;
@@ -184,6 +192,9 @@ export class VehiculoResultDto {
 
   @ApiProperty({ type: [PropietarioVehiculoDto], description: 'List of owners' })
   propietarios: PropietarioVehiculoDto[];
+
+  @ApiProperty({ type: [ProveedorVehiculoDto], description: 'List of suppliers' })
+  proveedores: ProveedorVehiculoDto[];
 
   @ApiPropertyOptional({
     example: ['https://res.cloudinary.com/xxx/image.jpg'],

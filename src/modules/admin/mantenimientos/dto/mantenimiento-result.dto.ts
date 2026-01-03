@@ -6,7 +6,7 @@ import { MantenimientoTareaResultDto } from './mantenimiento-tarea-result.dto';
 import { MantenimientoDocumentoResultDto } from './mantenimiento-documento-result.dto';
 import { TallerResultDto } from '@module/admin/talleres/dto/taller-result.dto';
 
-export class VehiculoMantenimientoResultDto extends OmitType(VehiculoResultDto, ['documentos']) {}
+export class VehiculoMantenimientoResultDto extends OmitType(VehiculoResultDto, ['documentos','propietarios','proveedores']) {}
 
 export class DocumentosAgrupadosMantenimientoDto {
   @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
@@ -39,7 +39,7 @@ export class MantenimientoResultDto {
     type: () => VehiculoMantenimientoResultDto,
     description: 'Vehicle details',
   })
-  vehiculo: VehiculoResultDto;
+  vehiculo: VehiculoMantenimientoResultDto;
 
   @ApiProperty({ example: 1, description: 'Workshop ID' })
   tallerId: number;
