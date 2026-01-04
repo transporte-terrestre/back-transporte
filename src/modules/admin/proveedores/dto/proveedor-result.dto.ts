@@ -1,7 +1,22 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { proveedoresTipoDocumento } from '@model/tables/proveedor.model';
-import type { ProveedorTipoDocumento } from '@model/tables/proveedor.model';
 import { ProveedorDocumentoResultDto } from './proveedor-documento-result.dto';
+import { proveedoresTipoDocumento } from '@model/tables/proveedor.model';
+import type { ProveedorDocumentoTipo } from '@model/tables/proveedor-documento.model';
+import type { ProveedorTipoDocumento } from '@model/tables/proveedor.model';
+
+export class DocumentosAgrupadosProveedorDto implements Record<ProveedorDocumentoTipo, ProveedorDocumentoResultDto[]> {
+  @ApiProperty({ type: [ProveedorDocumentoResultDto] })
+  dni: ProveedorDocumentoResultDto[];
+
+  @ApiProperty({ type: [ProveedorDocumentoResultDto] })
+  ruc: ProveedorDocumentoResultDto[];
+
+  @ApiProperty({ type: [ProveedorDocumentoResultDto] })
+  contrato: ProveedorDocumentoResultDto[];
+
+  @ApiProperty({ type: [ProveedorDocumentoResultDto] })
+  otros: ProveedorDocumentoResultDto[];
+}
 
 export class ProveedorResultDto {
   @ApiProperty({ example: 1, description: 'ID del proveedor' })
@@ -78,6 +93,6 @@ export class ProveedorResultDto {
   })
   actualizadoEn: Date;
 
-  @ApiProperty({ description: 'Documentos del proveedor', type: [ProveedorDocumentoResultDto] })
-  documentos: ProveedorDocumentoResultDto[];
+  @ApiProperty({ description: 'Proveedor documents grouped by type' })
+  documentos: DocumentosAgrupadosProveedorDto;
 }

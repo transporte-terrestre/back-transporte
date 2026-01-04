@@ -4,7 +4,8 @@ import { ProveedorUpdateDto } from './dto/proveedor-update.dto';
 import { ProveedorRepository } from '@repository/proveedor.repository';
 import { ProveedorDocumentoRepository } from '@repository/proveedor-documento.repository';
 import { PaginatedProveedorResultDto } from './dto/proveedor-paginated.dto';
-import { ProveedorDocumentoDTO } from '@model/tables/proveedor-documento.model';
+import { ProveedorDocumentoDTO, proveedorDocumentosTipo } from '@model/tables/proveedor-documento.model';
+import { DocumentosAgrupadosProveedorDto } from './dto/proveedor-result.dto';
 import { ProveedorDTO } from '@model/tables/proveedor.model';
 
 interface DatabaseError {
@@ -56,9 +57,14 @@ export class ProveedoresService {
     const proveedor = await this.proveedorRepository.findOne(id);
     const documentos = await this.proveedorDocumentoRepository.findByProveedorId(id);
 
+    const documentosAgrupados = proveedorDocumentosTipo.enumValues.reduce((acc, tipo) => {
+      acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
+      return acc;
+    }, {} as DocumentosAgrupadosProveedorDto);
+
     return {
       ...proveedor,
-      documentos,
+      documentos: documentosAgrupados,
     };
   }
 

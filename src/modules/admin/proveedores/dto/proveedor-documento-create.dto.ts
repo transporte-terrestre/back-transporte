@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsInt, IsString, IsOptional, IsArray } from 'class-validator';
-import { ProveedorDocumentoDTO } from '@model/tables/proveedor-documento.model';
+import { IsNotEmpty, IsInt, IsIn, IsString, IsDateString, IsOptional } from 'class-validator';
+import { ProveedorDocumentoDTO, proveedorDocumentosTipo } from '@model/tables/proveedor-documento.model';
+import type { ProveedorDocumentoTipo } from '@model/tables/proveedor-documento.model';
 
 export class ProveedorDocumentoCreateDto implements Omit<ProveedorDocumentoDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
   @ApiProperty({ example: 1, description: 'ID del proveedor' })
@@ -8,41 +9,43 @@ export class ProveedorDocumentoCreateDto implements Omit<ProveedorDocumentoDTO, 
   @IsNotEmpty()
   proveedorId: number;
 
-  @ApiProperty({ example: 'RUC', description: 'Tipo de documento' })
+  @ApiProperty({
+    description: 'Tipo de documento',
+    enum: proveedorDocumentosTipo.enumValues,
+    default: proveedorDocumentosTipo.enumValues[0],
+  })
+  @IsIn(proveedorDocumentosTipo.enumValues, { each: true })
+  @IsNotEmpty()
+  tipo: ProveedorDocumentoTipo;
+
+  @ApiProperty({ example: 'Documento 1', description: 'Nombre del documento' })
   @IsString()
   @IsNotEmpty()
-  tipo: string;
+  nombre: string;
 
-  @ApiProperty({ example: '20123456789', description: 'Número del documento', required: false })
+  @ApiProperty({
+    example: 'https://storage.example.com/documentos/dni-12345678.pdf',
+    description: 'URL del documento',
+  })
   @IsString()
+  @IsNotEmpty()
+  url: string;
+
+  @ApiProperty({
+    example: '2025-12-31',
+    description: 'Fecha de expiración del documento',
+    required: false,
+  })
+  @IsDateString()
   @IsOptional()
-  numero?: string | null;
+  fechaExpiracion?: string;
 
   @ApiProperty({
     example: '2023-01-15',
     description: 'Fecha de emisión del documento',
     required: false,
   })
-  @IsString()
+  @IsDateString()
   @IsOptional()
-  fechaEmision?: string | null;
-
-  @ApiProperty({
-    example: '2025-12-31',
-    description: 'Fecha de vencimiento del documento',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  fechaVencimiento?: string | null;
-
-  @ApiProperty({
-    example: ['https://storage.example.com/documentos/ruc.pdf'],
-    description: 'URLs de los archivos del documento',
-    type: [String],
-  })
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  archivos?: string[];
+  fechaEmision?: string;
 }

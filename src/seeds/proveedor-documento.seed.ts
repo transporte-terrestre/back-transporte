@@ -17,29 +17,29 @@ export async function seedProveedorDocumentos(proveedoresData: Proveedor[]) {
       // Documentos para empresas
       documentos.push({
         proveedorId: proveedor.id,
-        tipo: 'Ficha RUC',
-        numero: proveedor.ruc || '',
+        tipo: 'ruc' as const,
+        nombre: proveedor.ruc || '',
+        url: 'https://iili.io/fubznoB.jpg',
         fechaEmision: '2023-01-15',
-        fechaVencimiento: null,
-        archivos: ['https://iili.io/fubznoB.jpg'],
+        fechaExpiracion: null,
       });
       documentos.push({
         proveedorId: proveedor.id,
-        tipo: 'Certificado de Proveedor',
-        numero: `CERT-${proveedor.id}`,
+        tipo: 'contrato' as const,
+        nombre: `CERT-${proveedor.id}`,
+        url: 'https://iili.io/fubzuSa.jpg',
         fechaEmision: '2024-06-01',
-        fechaVencimiento: '2025-06-01',
-        archivos: ['https://iili.io/fubzuSa.jpg'],
+        fechaExpiracion: '2025-06-01',
       });
     } else {
       // Documentos para personas naturales
       documentos.push({
         proveedorId: proveedor.id,
-        tipo: 'DNI',
-        numero: proveedor.dni || '',
+        tipo: 'dni' as const,
+        nombre: proveedor.dni || '',
+        url: 'https://iili.io/fubzRHJ.jpg',
         fechaEmision: '2020-03-10',
-        fechaVencimiento: '2030-03-10',
-        archivos: ['https://iili.io/fubzRHJ.jpg'],
+        fechaExpiracion: '2030-03-10',
       });
     }
   }

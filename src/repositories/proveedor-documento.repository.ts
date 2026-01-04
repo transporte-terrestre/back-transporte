@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
 import { proveedorDocumentos, ProveedorDocumento, ProveedorDocumentoDTO } from '@model/tables/proveedor-documento.model';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class ProveedorDocumentoRepository {
@@ -9,14 +9,14 @@ export class ProveedorDocumentoRepository {
     return await database
       .select()
       .from(proveedorDocumentos)
-      .where(and(eq(proveedorDocumentos.proveedorId, proveedorId), isNull(proveedorDocumentos.eliminadoEn)));
+      .where(eq(proveedorDocumentos.proveedorId, proveedorId));
   }
 
   async findOne(id: number) {
     const result = await database
       .select()
       .from(proveedorDocumentos)
-      .where(and(eq(proveedorDocumentos.id, id), isNull(proveedorDocumentos.eliminadoEn)));
+      .where(eq(proveedorDocumentos.id, id));
     return result[0];
   }
 
@@ -36,8 +36,7 @@ export class ProveedorDocumentoRepository {
 
   async delete(id: number) {
     const result = await database
-      .update(proveedorDocumentos)
-      .set({ eliminadoEn: new Date() })
+      .delete(proveedorDocumentos)
       .where(eq(proveedorDocumentos.id, id))
       .returning();
     return result[0];
