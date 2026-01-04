@@ -18,7 +18,6 @@ export const vehiculos = pgTable(
       .references(() => modelos.id, { onDelete: 'restrict' }),
 
     anio: integer('anio').notNull(),
-    anioModelo: integer('anio_modelo'),
 
     vin: varchar('vin', { length: 50 }),
     numeroMotor: varchar('numero_motor', { length: 50 }),

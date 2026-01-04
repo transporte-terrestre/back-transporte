@@ -15,6 +15,7 @@ export async function seedConductores() {
         numeroLicencia: "Q07864165",
         claseLicencia: "A",
         categoriaLicencia: "Uno",
+        email: "xerickcua@gmail.com",
         fotocheck: ["https://iili.io/fub7gEl.webp"],
       },
       {
@@ -35,6 +36,7 @@ export async function seedConductores() {
         numeroLicencia: "Q09123456",
         claseLicencia: "A",
         categoriaLicencia: "Tres",
+        email: "erixcel.evolution.api@gmail.com",
         fotocheck: ["https://iili.io/fub7spe.webp"],
       },
       {
@@ -45,6 +47,7 @@ export async function seedConductores() {
         numeroLicencia: "Q09234567",
         claseLicencia: "B",
         categoriaLicencia: "Uno",
+        email: "erixcel.gemini.1@gmail.com",
         fotocheck: ["https://iili.io/fub7QTu.webp"],
       },
       {

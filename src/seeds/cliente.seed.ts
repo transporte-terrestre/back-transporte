@@ -70,6 +70,7 @@ export async function seedClientes() {
         email: 'miguel.torres@gmail.com',
         telefono: '978123456',
         direccion: 'Av. La Marina 789, Callao',
+        horasContrato: '10.00',
         imagenes: ['https://iili.io/fubzYtp.jpg'],
       },
       {
@@ -80,6 +81,7 @@ export async function seedClientes() {
         email: 'sofia.ramirez@hotmail.com',
         telefono: '934567890',
         direccion: 'Jr. Union 234, Huancayo',
+        horasContrato: '12.00',
         imagenes: ['https://iili.io/fubzlVI.jpg'],
       },
       {
@@ -90,6 +92,7 @@ export async function seedClientes() {
         email: 'jorge.castro@outlook.com',
         telefono: '967890123',
         direccion: 'Calle Real 567, Piura',
+        horasContrato: '9.00',
         imagenes: ['https://iili.io/fubzGln.jpg'],
       },
       {
@@ -100,6 +103,7 @@ export async function seedClientes() {
         email: 'elena.sanchez@gmail.com',
         telefono: '921234567',
         direccion: 'Av. Universitaria 890, Lima',
+        horasContrato: '11.00',
         imagenes: ['https://iili.io/fubzXRf.jpg'],
       },
       {
@@ -110,6 +114,7 @@ export async function seedClientes() {
         email: null,
         telefono: '945678901',
         direccion: 'Jr. Comercio 123, Tacna',
+        horasContrato: '8.50',
         imagenes: ['https://iili.io/fubzjDl.jpg'],
       },
       {
@@ -120,6 +125,7 @@ export async function seedClientes() {
         email: 'patricia.vega@gmail.com',
         telefono: '989012345',
         direccion: 'Av. Bolognesi 456, Arequipa',
+        horasContrato: '10.50',
         imagenes: ['https://iili.io/fubzNx2.jpg'],
       },
       {
@@ -130,6 +136,7 @@ export async function seedClientes() {
         email: 'fernando.jimenez@hotmail.com',
         telefono: '956123456',
         direccion: 'Calle Grau 789, Cusco',
+        horasContrato: '9.50',
         imagenes: ['https://iili.io/fubzvf9.jpg'],
       },
       {
@@ -140,6 +147,7 @@ export async function seedClientes() {
         email: 'rosa.nunez@outlook.com',
         telefono: '923456780',
         direccion: 'Jr. Libertad 234, Iquitos',
+        horasContrato: '11.50',
         imagenes: ['https://iili.io/fubzgHb.jpg'],
       },
       {
@@ -150,6 +158,7 @@ export async function seedClientes() {
         email: 'alberto.herrera@gmail.com',
         telefono: '912345670',
         direccion: 'Av. Ejercito 567, Cajamarca',
+        horasContrato: '8.00',
         imagenes: ['https://iili.io/fubz4Ox.jpg'],
       },
       {
@@ -160,6 +169,7 @@ export async function seedClientes() {
         email: null,
         telefono: '978901234',
         direccion: 'Calle Ayacucho 890, Pucallpa',
+        horasContrato: '10.00',
         imagenes: ['https://iili.io/fubz6DQ.jpg'],
       },
       {
@@ -170,6 +180,7 @@ export async function seedClientes() {
         email: 'cesar.salazar@gmail.com',
         telefono: '934567801',
         direccion: 'Jr. San Martin 123, Tumbes',
+        horasContrato: '9.50',
         imagenes: ['https://iili.io/fubzLiP.jpg'],
       },
       {
@@ -180,6 +191,7 @@ export async function seedClientes() {
         email: 'monica.rios@hotmail.com',
         telefono: '967890124',
         direccion: 'Av. Miraflores 456, Lima',
+        horasContrato: '12.00',
         imagenes: ['https://iili.io/fubzt0F.jpg'],
       },
       {
@@ -190,6 +202,7 @@ export async function seedClientes() {
         email: 'gabriel.mendez@outlook.com',
         telefono: '921234568',
         direccion: 'Calle Progreso 789, Chimbote',
+        horasContrato: '8.50',
         imagenes: ['https://iili.io/fubzmJa.jpg'],
       },
       {
@@ -200,6 +213,7 @@ export async function seedClientes() {
         email: 'valeria.ochoa@gmail.com',
         telefono: '945678902',
         direccion: 'Jr. Independencia 234, Huaraz',
+        horasContrato: '10.50',
         imagenes: ['https://iili.io/fubzp5J.jpg'],
       },
       {
@@ -210,6 +224,7 @@ export async function seedClientes() {
         email: null,
         telefono: '989012346',
         direccion: 'Av. Industrial 567, Sullana',
+        horasContrato: '9.00',
         imagenes: ['https://iili.io/fubzyOv.jpg'],
       },
       {
@@ -220,6 +235,7 @@ export async function seedClientes() {
         email: 'adriana.flores@gmail.com',
         telefono: '956123457',
         direccion: 'Calle Victoria 890, Ilo',
+        horasContrato: '11.00',
         imagenes: ['https://iili.io/fubIJxp.jpg'],
       },
       {
@@ -230,6 +246,7 @@ export async function seedClientes() {
         email: 'javier.acosta@hotmail.com',
         telefono: '923456781',
         direccion: 'Jr. Progreso 123, Juliaca',
+        horasContrato: '9.50',
         imagenes: ['https://iili.io/fubIdWN.jpg'],
       },
       {
@@ -240,6 +257,7 @@ export async function seedClientes() {
         email: 'claudia.miranda@outlook.com',
         telefono: '912345671',
         direccion: 'Av. Pacifico 456, Talara',
+        horasContrato: '10.00',
         imagenes: ['https://iili.io/fubIFft.jpg'],
       },
       {
@@ -250,6 +268,7 @@ export async function seedClientes() {
         email: 'ernesto.campos@gmail.com',
         telefono: '978901235',
         direccion: 'Calle Central 789, Ica',
+        horasContrato: '8.50',
         imagenes: ['https://iili.io/fubIK0X.jpg'],
       },
       {
@@ -260,6 +279,7 @@ export async function seedClientes() {
         email: null,
         telefono: '934567802',
         direccion: 'Jr. America 234, Chincha',
+        horasContrato: '11.50',
         imagenes: ['https://iili.io/fubIBJs.jpg'],
       },
       {
@@ -270,6 +290,7 @@ export async function seedClientes() {
         email: 'marcos.parra@gmail.com',
         telefono: '967890125',
         direccion: 'Av. Los Heroes 567, Pisco',
+        horasContrato: '8.00',
         imagenes: ['https://iili.io/fubInef.jpg'],
       },
       {
@@ -280,6 +301,7 @@ export async function seedClientes() {
         email: 'silvia.ortiz@hotmail.com',
         telefono: '921234569',
         direccion: 'Calle Los Olivos 890, Nazca',
+        horasContrato: '9.00',
         imagenes: ['https://iili.io/fubIzzl.jpg'],
       },
       {
@@ -290,6 +312,7 @@ export async function seedClientes() {
         email: 'hector.velasquez@outlook.com',
         telefono: '945678903',
         direccion: 'Jr. Las Palmeras 123, Ayacucho',
+        horasContrato: '10.50',
         imagenes: ['https://iili.io/fubIAq7.jpg'],
       },
       {
@@ -300,6 +323,7 @@ export async function seedClientes() {
         email: 'gloria.cardenas@gmail.com',
         telefono: '989012347',
         direccion: 'Av. Los Pinos 456, Huanuco',
+        horasContrato: '11.00',
         imagenes: ['https://iili.io/fubI5ge.jpg'],
       },
       {
@@ -310,6 +334,7 @@ export async function seedClientes() {
         email: null,
         telefono: '956123458',
         direccion: 'Calle Las Flores 789, Tingo Maria',
+        horasContrato: '8.00',
         imagenes: ['https://iili.io/fubIa5b.jpg'],
       },
     ])

@@ -10,6 +10,8 @@ import { rutas } from '@model/tables/ruta.model';
 import { eq, desc, and, gte, lte, sql } from 'drizzle-orm';
 import { mantenimientos } from '@model/tables/mantenimiento.model';
 import { talleres } from '@model/tables/taller.model';
+import { conductores } from '@model/tables/conductor.model';
+import { conductorDocumentos } from '@model/tables/conductor-documento.model';
 
 @Injectable()
 export class ReportesRepository {
@@ -196,5 +198,25 @@ export class ReportesRepository {
       .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
       .where(and(...filters))
       .orderBy(desc(mantenimientos.fechaIngreso));
+  }
+
+  async getReporteConductores() {
+    return await database
+      .select({
+        id: conductores.id,
+        dni: conductores.dni,
+        nombres: conductores.nombres,
+        apellidos: conductores.apellidos,
+        numeroLicencia: conductores.numeroLicencia,
+        claseLicencia: conductores.claseLicencia,
+        categoriaLicencia: conductores.categoriaLicencia,
+        documentoTipo: conductorDocumentos.tipo,
+        documentoFechaExpiracion: conductorDocumentos.fechaExpiracion,
+        documentoFechaEmision: conductorDocumentos.fechaEmision,
+      })
+      .from(conductores)
+      .leftJoin(conductorDocumentos, eq(conductores.id, conductorDocumentos.conductorId))
+      .where(sql`${conductores.eliminadoEn} IS NULL`)
+      .orderBy(conductores.apellidos, conductores.nombres);
   }
 }

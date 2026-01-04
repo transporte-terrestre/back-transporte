@@ -10,12 +10,15 @@ import { seedViajes } from '@seed/viaje.seed';
 import { seedUsuarios } from '@seed/usuario.seed';
 import { seedClientes } from '@seed/cliente.seed';
 import { seedPropietarios } from '@seed/propietario.seed';
+import { seedProveedores } from '@seed/proveedor.seed';
 import { seedClienteDocumentos } from '@seed/cliente-documento.seed';
 import { seedPropietarioDocumentos } from '@seed/propietario-documento.seed';
+import { seedProveedorDocumentos } from '@seed/proveedor-documento.seed';
 import { seedConductorDocumentos } from '@seed/conductor-documento.seed';
 import { seedVehiculoDocumentos } from '@seed/vehiculo-documento.seed';
 import { seedUsuarioDocumentos } from '@seed/usuario-documento.seed';
 import { seedVehiculoPropietarios } from '@seed/vehiculo-propietario.seed';
+import { seedVehiculoProveedores } from '@seed/vehiculo-proveedor.seed';
 
 async function seed() {
   try {
@@ -27,6 +30,7 @@ async function seed() {
     const driversData = await seedConductores();
     const clientesData = await seedClientes();
     const propietariosData = await seedPropietarios();
+    const proveedoresData = await seedProveedores();
     const marcasData = await seedMarcas();
     const modelosData = await seedModelos(marcasData);
     const routesData = await seedRutas();
@@ -34,6 +38,7 @@ async function seed() {
     await seedTareas(); // Catálogo de tareas de mantenimiento
     const vehiclesData = await seedVehiculos(modelosData);
     await seedVehiculoPropietarios(vehiclesData, propietariosData);
+    await seedVehiculoProveedores(vehiclesData, proveedoresData);
 
     // 2. Related data
     await seedMantenimientos(vehiclesData, talleresData);
@@ -44,6 +49,7 @@ async function seed() {
     await seedConductorDocumentos(driversData);
     await seedClienteDocumentos(clientesData);
     await seedPropietarioDocumentos(propietariosData);
+    await seedProveedorDocumentos(proveedoresData);
     await seedVehiculoDocumentos(vehiclesData);
 
     console.log('\n✨ Database seeding completed successfully!');

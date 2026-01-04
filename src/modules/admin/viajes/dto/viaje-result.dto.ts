@@ -21,7 +21,7 @@ export class ViajeConductorDetalleDto extends OmitType(ConductorResultDto, ['doc
   rol: string;
 }
 
-export class ViajeVehiculoDetalleDto extends OmitType(VehiculoResultDto, ['documentos']) {
+export class ViajeVehiculoDetalleDto extends OmitType(VehiculoResultDto, ['documentos', 'propietarios', 'proveedores']) {
   @ApiProperty({ example: true, description: 'Es vehículo principal' })
   esPrincipal: boolean;
 

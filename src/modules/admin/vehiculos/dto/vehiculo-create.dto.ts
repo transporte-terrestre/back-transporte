@@ -24,12 +24,6 @@ export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 
   @Min(1900)
   anio: number;
 
-  @ApiPropertyOptional({ example: 2021, description: 'Model year' })
-  @IsInt()
-  @Min(1900)
-  @IsOptional()
-  anioModelo: number | null;
-
   @ApiPropertyOptional({ example: 'VIN1234567890ABCD', description: 'Vehicle Identification Number' })
   @IsString()
   @IsOptional()
@@ -177,6 +171,12 @@ export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 
   @IsInt({ each: true })
   @IsOptional()
   propietarios?: number[];
+
+  @ApiPropertyOptional({ example: [1, 2], description: 'List of supplier IDs', type: [Number] })
+  @IsArray()
+  @IsInt({ each: true })
+  @IsOptional()
+  proveedores?: number[];
 
   @ApiPropertyOptional({
     example: ['https://res.cloudinary.com/xxx/image.jpg'],
