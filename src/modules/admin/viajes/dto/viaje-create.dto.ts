@@ -1,8 +1,8 @@
-import { IsInt, IsIn, IsNotEmpty, IsDate, IsOptional, IsString, IsArray } from 'class-validator';
+import { IsInt, IsIn, IsNotEmpty, IsDate, IsOptional, IsString, IsArray, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ViajeDTO, viajesEstado, modalidadServicio, viajesTipoRuta } from '@db/tables/viaje.table';
-import type { ViajeEstado, ViajeModalidadServicio, ViajeTipoRuta } from '@db/tables/viaje.table';
+import { ViajeDTO, viajesEstado, modalidadServicio, viajesTipoRuta, viajesTurno } from '@db/tables/viaje.table';
+import type { ViajeEstado, ViajeModalidadServicio, ViajeTipoRuta, ViajeTurno } from '@db/tables/viaje.table';
 
 export class ViajeCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
   @ApiPropertyOptional({ example: 1, description: 'ID de la ruta programada' })
@@ -93,12 +93,30 @@ export class ViajeCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' | 'actua
 
   @ApiPropertyOptional({
     enum: viajesEstado.enumValues,
-    description: 'Trip status',
+    description: 'Estado del viaje',
     default: viajesEstado.enumValues[0],
   })
   @IsOptional()
   @IsIn(viajesEstado.enumValues, { each: true })
   estado: ViajeEstado;
+
+  @ApiPropertyOptional({
+    enum: viajesTurno.enumValues,
+    description: 'Turno del viaje (día o noche)',
+    example: 'dia',
+  })
+  @IsOptional()
+  @IsIn(viajesTurno.enumValues, { each: true })
+  turno?: ViajeTurno;
+
+  @ApiPropertyOptional({
+    example: '242155',
+    description: 'Número de vale de combustible',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  numeroVale?: string;
 
   @ApiPropertyOptional({
     example: 1,

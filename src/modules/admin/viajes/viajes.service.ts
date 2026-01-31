@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ViajeRepository } from '@repository/viaje.repository';
 import { ViajeConductorRepository } from '@repository/viaje-conductor.repository';
 import { ViajeVehiculoRepository } from '@repository/viaje-vehiculo.repository';
 import { ViajeComentarioRepository } from '@repository/viaje-comentario.repository';
+import { ViajeServicioRepository } from '@repository/viaje-servicio.repository';
 import { RutaRepository } from '@repository/ruta.repository';
 import { ClienteRepository } from '@repository/cliente.repository';
 import { ViajeCreateDto } from './dto/viaje-create.dto';
@@ -11,6 +12,8 @@ import { PaginatedViajeResultDto } from './dto/viaje-paginated.dto';
 import { ViajeConductorDTO } from '@db/tables/viaje-conductor.table';
 import { ViajeVehiculoDTO } from '@db/tables/viaje-vehiculo.table';
 import { ViajeComentarioDTO } from '@db/tables/viaje-comentario.table';
+import { ViajeServicioCreateDto } from './dto/viaje-servicio-create.dto';
+import { ViajeServicioUpdateDto } from './dto/viaje-servicio-update.dto';
 
 @Injectable()
 export class ViajesService {
@@ -19,6 +22,7 @@ export class ViajesService {
     private readonly viajeConductorRepository: ViajeConductorRepository,
     private readonly viajeVehiculoRepository: ViajeVehiculoRepository,
     private readonly viajeComentarioRepository: ViajeComentarioRepository,
+    private readonly viajeServicioRepository: ViajeServicioRepository,
     private readonly rutaRepository: RutaRepository,
     private readonly clienteRepository: ClienteRepository,
   ) {}
@@ -165,5 +169,40 @@ export class ViajesService {
 
   async deleteComentario(id: number) {
     return await this.viajeComentarioRepository.delete(id);
+  }
+
+  // ========== SERVICIOS (Tramos del viaje) ==========
+  async findServicios(viajeId: number) {
+    return await this.viajeServicioRepository.findByViajeIdWithParadas(viajeId);
+  }
+
+  async findServicio(servicioId: number) {
+    const servicio = await this.viajeServicioRepository.findOne(servicioId);
+    if (!servicio) {
+      throw new NotFoundException(`Servicio con ID ${servicioId} no encontrado`);
+    }
+    return servicio;
+  }
+
+  async createServicio(viajeId: number, data: ViajeServicioCreateDto) {
+    // Obtener el orden máximo actual y sumar 1
+    const maxOrden = await this.viajeServicioRepository.getMaxOrden(viajeId);
+    return await this.viajeServicioRepository.create({
+      ...data,
+      viajeId,
+      orden: maxOrden + 1,
+    });
+  }
+
+  async updateServicio(servicioId: number, data: ViajeServicioUpdateDto) {
+    return await this.viajeServicioRepository.update(servicioId, data);
+  }
+
+  async deleteServicio(servicioId: number) {
+    return await this.viajeServicioRepository.delete(servicioId);
+  }
+
+  async reordenarServicios(viajeId: number, servicios: { id: number; orden: number }[]) {
+    return await this.viajeServicioRepository.reordenar(viajeId, servicios);
   }
 }

@@ -1,11 +1,11 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
-import { viajesEstado, modalidadServicio, viajesTipoRuta } from '@db/tables/viaje.table';
+import { viajesEstado, modalidadServicio, viajesTipoRuta, viajesTurno } from '@db/tables/viaje.table';
 import { ConductorResultDto } from '../../conductores/dto/conductor-result.dto';
 import { VehiculoResultDto } from '../../vehiculos/dto/vehiculo-result.dto';
 import { ClienteResultDto } from '../../clientes/dto/cliente-result.dto';
 import { viajeConductoresRol } from '@db/tables/viaje-conductor.table';
 import { viajeVehiculosRol } from '@db/tables/viaje-vehiculo.table';
-import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta } from '@db/tables/viaje.table';
+import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta, ViajeTurno } from '@db/tables/viaje.table';
 import { ViajeComentarioResultDto } from './viaje-comentario-result.dto';
 import { RutaResultDto } from '@module/admin/rutas/dto/ruta-result.dto';
 
@@ -97,9 +97,22 @@ export class ViajeResultDto {
   @ApiProperty({
     enum: viajesEstado.enumValues,
     example: viajesEstado.enumValues[0],
-    description: 'Trip status',
+    description: 'Estado del viaje',
   })
   estado: ViajeEstado;
+
+  @ApiPropertyOptional({
+    enum: viajesTurno.enumValues,
+    example: 'dia',
+    description: 'Turno del viaje (día o noche)',
+  })
+  turno?: ViajeTurno;
+
+  @ApiPropertyOptional({
+    example: '242155',
+    description: 'Número de vale de combustible',
+  })
+  numeroVale?: string;
 
   @ApiProperty({
     example: '2025-01-01T10:00:00Z',

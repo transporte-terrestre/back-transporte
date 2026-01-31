@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Put } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ViajesService } from './viajes.service';
 import { ViajeCreateDto } from './dto/viaje-create.dto';
@@ -15,6 +15,10 @@ import { ViajeVehiculoResultDto } from './dto/viaje-vehiculo-result.dto';
 import { ViajeComentarioCreateDto } from './dto/viaje-comentario-create.dto';
 import { ViajeComentarioUpdateDto } from './dto/viaje-comentario-update.dto';
 import { ViajeComentarioResultDto } from './dto/viaje-comentario-result.dto';
+import { ViajeServicioCreateDto } from './dto/viaje-servicio-create.dto';
+import { ViajeServicioUpdateDto } from './dto/viaje-servicio-update.dto';
+import { ViajeServicioResultDto } from './dto/viaje-servicio-result.dto';
+import { ViajeServicioReordenarDto } from './dto/viaje-servicio-reordenar.dto';
 
 @ApiTags('viajes')
 @ApiBearerAuth()
@@ -222,5 +226,54 @@ export class ViajesController {
   @ApiResponse({ status: 200, type: ViajeComentarioResultDto })
   deleteComentario(@Param('id') id: string) {
     return this.viajesService.deleteComentario(+id);
+  }
+
+  // ========== SERVICIOS (Tramos del viaje) ==========
+  @Get(':viajeId/servicios')
+  @ApiOperation({ summary: 'Obtener todos los servicios/tramos de un viaje' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 200, type: [ViajeServicioResultDto] })
+  findServicios(@Param('viajeId') viajeId: string) {
+    return this.viajesService.findServicios(+viajeId);
+  }
+
+  @Get('servicio/:id')
+  @ApiOperation({ summary: 'Obtener un servicio/tramo por ID' })
+  @ApiParam({ name: 'id', description: 'ID del servicio', type: Number })
+  @ApiResponse({ status: 200, type: ViajeServicioResultDto })
+  findServicio(@Param('id') id: string) {
+    return this.viajesService.findServicio(+id);
+  }
+
+  @Post(':viajeId/servicio/create')
+  @ApiOperation({ summary: 'Crear un nuevo servicio/tramo para un viaje' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 201, type: ViajeServicioResultDto })
+  createServicio(@Param('viajeId') viajeId: string, @Body() createDto: ViajeServicioCreateDto) {
+    return this.viajesService.createServicio(+viajeId, createDto);
+  }
+
+  @Patch('servicio/update/:id')
+  @ApiOperation({ summary: 'Actualizar un servicio/tramo' })
+  @ApiParam({ name: 'id', description: 'ID del servicio', type: Number })
+  @ApiResponse({ status: 200, type: ViajeServicioResultDto })
+  updateServicio(@Param('id') id: string, @Body() updateDto: ViajeServicioUpdateDto) {
+    return this.viajesService.updateServicio(+id, updateDto);
+  }
+
+  @Delete('servicio/delete/:id')
+  @ApiOperation({ summary: 'Eliminar un servicio/tramo' })
+  @ApiParam({ name: 'id', description: 'ID del servicio', type: Number })
+  @ApiResponse({ status: 200, type: ViajeServicioResultDto })
+  deleteServicio(@Param('id') id: string) {
+    return this.viajesService.deleteServicio(+id);
+  }
+
+  @Put(':viajeId/servicios/reordenar')
+  @ApiOperation({ summary: 'Reordenar los servicios/tramos de un viaje' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 200, type: [ViajeServicioResultDto] })
+  reordenarServicios(@Param('viajeId') viajeId: string, @Body() reordenarDto: ViajeServicioReordenarDto) {
+    return this.viajesService.reordenarServicios(+viajeId, reordenarDto.servicios);
   }
 }
