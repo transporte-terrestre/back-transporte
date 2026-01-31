@@ -8,7 +8,7 @@ import { MantenimientoDetalladoVehiculoDto } from './dto/mantenimiento-detallado
 import { MantenimientoDetalladoTallerDto } from './dto/mantenimiento-detallado-taller.dto';
 import { ReporteConductorDto } from './dto/reporte-conductor.dto';
 
-@ApiTags('Reportes')
+@ApiTags('reportes')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('reportes')

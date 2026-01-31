@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, like, and, gte, lte, count, sql, or, isNull, getTableColumns } from 'drizzle-orm';
+import { eq, like, and, gte, lte, count, sql, isNull, getTableColumns, inArray } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { viajes, ViajeDTO } from '@db/tables/viaje.table';
 import { viajeConductores } from '@db/tables/viaje-conductor.table';
@@ -20,6 +20,7 @@ interface PaginationFilters {
   modalidadServicio?: string;
   tipoRuta?: string;
   estado?: string;
+  conductoresId?: number[];
 }
 
 @Injectable()
@@ -56,6 +57,17 @@ export class ViajeRepository {
       conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
       conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + 'T23:59:59')));
+    }
+
+    // Filtrar por conductores
+    if (filters?.conductoresId && filters.conductoresId.length > 0) {
+      // Subconsulta para obtener los IDs de viajes que tienen estos conductores
+      const viajesConConductores = database
+        .select({ viajeId: viajeConductores.viajeId })
+        .from(viajeConductores)
+        .where(inArray(viajeConductores.conductorId, filters.conductoresId));
+
+      conditions.push(inArray(viajes.id, viajesConConductores));
     }
 
     // Excluir eliminados

@@ -1,14 +1,14 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ClientesService } from './clientes.service';
-import { ClienteCreateDto } from './dto/cliente-create.dto';
-import { ClienteUpdateDto } from './dto/cliente-update.dto';
-import { ClienteResultDto } from './dto/cliente-result.dto';
+import { ClienteCreateDto } from './dto/cliente/cliente-create.dto';
+import { ClienteUpdateDto } from './dto/cliente/cliente-update.dto';
+import { ClienteResultDto } from './dto/cliente/cliente-result.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { ClientePaginationQueryDto, PaginatedClienteResultDto } from './dto/cliente-paginated.dto';
-import { ClienteDocumentoCreateDto } from './dto/cliente-documento-create.dto';
-import { ClienteDocumentoUpdateDto } from './dto/cliente-documento-update.dto';
-import { ClienteDocumentoResultDto } from './dto/cliente-documento-result.dto';
+import { ClientePaginationQueryDto, PaginatedClienteResultDto } from './dto/cliente/cliente-paginated.dto';
+import { ClienteDocumentoCreateDto } from './dto/cliente-documento/cliente-documento-create.dto';
+import { ClienteDocumentoUpdateDto } from './dto/cliente-documento/cliente-documento-update.dto';
+import { ClienteDocumentoResultDto } from './dto/cliente-documento/cliente-documento-result.dto';
 
 @ApiTags('clientes')
 @ApiBearerAuth()

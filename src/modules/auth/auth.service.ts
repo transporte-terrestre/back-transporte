@@ -6,8 +6,8 @@ import { LoginDto } from './dto/login.dto';
 import { LoginResultDto } from './dto/login-result.dto';
 import { ConductorLoginDto } from './dto/conductor-login.dto';
 import { ConductorLoginResultDto } from './dto/conductor-login-result.dto';
-import { UsuarioDTO } from '@db/tables/usuario.table';
-import { ConductorDTO } from '@db/tables/conductor.table';
+import { Usuario } from '@db/tables/usuario.table';
+import { Conductor } from '@db/tables/conductor.table';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<UsuarioDTO> {
+  async validateUser(email: string, pass: string): Promise<Usuario> {
     const user = await this.usuarioRepository.findByEmail(email);
     if (user && (await bcrypt.compare(pass, user.contrasenia))) {
       return user;
@@ -32,14 +32,14 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    const payload = { email: user.email, sub: user.id, roles: user.roles, tipo: 'usuario' };
+    const payload = { sub: user.id, tipo: 'usuario' };
     return {
       accessToken: this.jwtService.sign(payload),
       user: user,
     };
   }
 
-  async validateConductor(email: string, pass: string): Promise<ConductorDTO> {
+  async validateConductor(email: string, pass: string): Promise<Conductor> {
     const conductor = await this.conductorRepository.findByEmail(email);
     if (!conductor || !conductor.contrasenia) {
       return null;
@@ -57,27 +57,13 @@ export class AuthService {
     }
 
     const payload = {
-      email: conductor.email,
       sub: conductor.id,
       tipo: 'conductor',
-      dni: conductor.dni,
     };
 
     return {
       accessToken: this.jwtService.sign(payload),
-      conductor: {
-        id: conductor.id,
-        dni: conductor.dni,
-        nombres: conductor.nombres,
-        apellidos: conductor.apellidos,
-        nombreCompleto: conductor.nombreCompleto,
-        email: conductor.email,
-        celular: conductor.celular,
-        numeroLicencia: conductor.numeroLicencia,
-        claseLicencia: conductor.claseLicencia,
-        categoriaLicencia: conductor.categoriaLicencia,
-        fotocheck: conductor.fotocheck,
-      },
+      conductor: conductor,
     };
   }
 }

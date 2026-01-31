@@ -1,15 +1,15 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Put } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { RutasService } from './rutas.service';
-import { RutaCreateDto } from './dto/ruta-create.dto';
-import { RutaUpdateDto } from './dto/ruta-update.dto';
-import { RutaResultDto } from './dto/ruta-result.dto';
+import { RutaCreateDto } from './dto/ruta/ruta-create.dto';
+import { RutaUpdateDto } from './dto/ruta/ruta-update.dto';
+import { RutaResultDto } from './dto/ruta/ruta-result.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { RutaPaginationQueryDto, PaginatedRutaResultDto } from './dto/ruta-paginated.dto';
-import { RutaParadaCreateDto } from './dto/ruta-parada-create.dto';
-import { RutaParadaUpdateDto } from './dto/ruta-parada-update.dto';
-import { RutaParadaResultDto } from './dto/ruta-parada-result.dto';
-import { RutaParadaReordenarDto } from './dto/ruta-parada-reordenar.dto';
+import { RutaPaginationQueryDto, PaginatedRutaResultDto } from './dto/ruta/ruta-paginated.dto';
+import { RutaParadaCreateDto } from './dto/ruta-parada/ruta-parada-create.dto';
+import { RutaParadaUpdateDto } from './dto/ruta-parada/ruta-parada-update.dto';
+import { RutaParadaResultDto } from './dto/ruta-parada/ruta-parada-result.dto';
+import { RutaParadaReordenarDto } from './dto/ruta-parada/ruta-parada-reordenar.dto';
 
 @ApiTags('rutas')
 @ApiBearerAuth()

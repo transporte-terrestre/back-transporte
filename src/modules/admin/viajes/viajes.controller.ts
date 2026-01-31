@@ -1,24 +1,31 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Put, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ViajesService } from './viajes.service';
-import { ViajeCreateDto } from './dto/viaje-create.dto';
-import { ViajeUpdateDto } from './dto/viaje-update.dto';
-import { ViajeResultDto } from './dto/viaje-result.dto';
+import { ViajeCreateDto } from './dto/viaje/viaje-create.dto';
+import { ViajeUpdateDto } from './dto/viaje/viaje-update.dto';
+import { ViajeResultDto } from './dto/viaje/viaje-result.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { ViajePaginationQueryDto, PaginatedViajeResultDto } from './dto/viaje-paginated.dto';
-import { ViajeConductorCreateDto } from './dto/viaje-conductor-create.dto';
-import { ViajeConductorUpdateDto } from './dto/viaje-conductor-update.dto';
-import { ViajeConductorResultDto } from './dto/viaje-conductor-result.dto';
-import { ViajeVehiculoCreateDto } from './dto/viaje-vehiculo-create.dto';
-import { ViajeVehiculoUpdateDto } from './dto/viaje-vehiculo-update.dto';
-import { ViajeVehiculoResultDto } from './dto/viaje-vehiculo-result.dto';
-import { ViajeComentarioCreateDto } from './dto/viaje-comentario-create.dto';
-import { ViajeComentarioUpdateDto } from './dto/viaje-comentario-update.dto';
-import { ViajeComentarioResultDto } from './dto/viaje-comentario-result.dto';
-import { ViajeServicioCreateDto } from './dto/viaje-servicio-create.dto';
-import { ViajeServicioUpdateDto } from './dto/viaje-servicio-update.dto';
-import { ViajeServicioResultDto } from './dto/viaje-servicio-result.dto';
-import { ViajeServicioReordenarDto } from './dto/viaje-servicio-reordenar.dto';
+import { ViajePaginationQueryDto, PaginatedViajeResultDto } from './dto/viaje/viaje-paginated.dto';
+import { ViajeConductorCreateDto } from './dto/viaje-conductor/viaje-conductor-create.dto';
+import { ViajeConductorUpdateDto } from './dto/viaje-conductor/viaje-conductor-update.dto';
+import { ViajeConductorResultDto } from './dto/viaje-conductor/viaje-conductor-result.dto';
+import { ViajeVehiculoCreateDto } from './dto/viaje-vehiculo/viaje-vehiculo-create.dto';
+import { ViajeVehiculoUpdateDto } from './dto/viaje-vehiculo/viaje-vehiculo-update.dto';
+import { ViajeVehiculoResultDto } from './dto/viaje-vehiculo/viaje-vehiculo-result.dto';
+import { ViajeComentarioCreateDto } from './dto/viaje-comentario/viaje-comentario-create.dto';
+import { ViajeComentarioUpdateDto } from './dto/viaje-comentario/viaje-comentario-update.dto';
+import { ViajeComentarioResultDto } from './dto/viaje-comentario/viaje-comentario-result.dto';
+import { ViajeServicioCreateDto } from './dto/viaje-servicio/viaje-servicio-create.dto';
+import { ViajeServicioUpdateDto } from './dto/viaje-servicio/viaje-servicio-update.dto';
+import { ViajeServicioResultDto } from './dto/viaje-servicio/viaje-servicio-result.dto';
+import { ViajeServicioReordenarDto } from './dto/viaje-servicio/viaje-servicio-reordenar.dto';
+import { ChecklistItemCreateDto } from './dto/checklist-item/checklist-item-create.dto';
+import { ChecklistItemUpdateDto } from './dto/checklist-item/checklist-item-update.dto';
+import { ChecklistItemResultDto } from './dto/checklist-item/checklist-item-result.dto';
+import { ViajeChecklistCreateDto } from './dto/viaje-checklist/viaje-checklist-create.dto';
+import { ViajeChecklistUpdateDto } from './dto/viaje-checklist/viaje-checklist-update.dto';
+import { ViajeChecklistResultDto } from './dto/viaje-checklist/viaje-checklist-result.dto';
+import { ViajeChecklistItemUpdateDto } from './dto/viaje-checklist/viaje-checklist-item-update.dto';
 
 @ApiTags('viajes')
 @ApiBearerAuth()
@@ -31,10 +38,10 @@ export class ViajesController {
   @ApiOperation({
     summary: 'Obtener viajes con paginación, búsqueda y filtros',
     description:
-      'Busca por estado, ruta ocasional y modalidad. Filtra por rango de fechas, modalidad de servicio y tipo de viaje (ocasional o regular).',
+      'Busca por estado, ruta ocasional y modalidad. Filtra por rango de fechas, modalidad de servicio y tipo de viaje (ocasional o regular). Si el token es de un conductor, solo retorna sus viajes asignados.',
   })
   @ApiResponse({ status: 200, type: PaginatedViajeResultDto })
-  findAll(@Query() query: ViajePaginationQueryDto) {
+  findAll(@Query() query: ViajePaginationQueryDto, @Request() req: { user: { sub: number; tipo: string } }) {
     return this.viajesService.findAllPaginated(
       query.page,
       query.limit,
@@ -44,35 +51,37 @@ export class ViajesController {
       query.modalidadServicio,
       query.tipoRuta,
       query.estado,
+      query.conductoresId,
+      req.user,
     );
   }
 
   @Get('find-one/:id')
-  @ApiOperation({ summary: 'Get a trip by ID' })
-  @ApiParam({ name: 'id', type: 'number', description: 'Trip ID' })
+  @ApiOperation({ summary: 'Obtener viaje por ID' })
+  @ApiParam({ name: 'id', type: 'number', description: 'ID del viaje' })
   @ApiResponse({ status: 200, type: ViajeResultDto })
   findOne(@Param('id') id: string) {
     return this.viajesService.findOne(+id);
   }
 
   @Post('create')
-  @ApiOperation({ summary: 'Create a new trip' })
+  @ApiOperation({ summary: 'Crear un nuevo viaje' })
   @ApiResponse({ status: 200, type: ViajeResultDto })
   create(@Body() createViajeDto: ViajeCreateDto) {
     return this.viajesService.create(createViajeDto);
   }
 
   @Patch('update/:id')
-  @ApiOperation({ summary: 'Update a trip' })
-  @ApiParam({ name: 'id', type: 'number', description: 'Trip ID' })
+  @ApiOperation({ summary: 'Actualizar un viaje' })
+  @ApiParam({ name: 'id', type: 'number', description: 'ID del viaje' })
   @ApiResponse({ status: 200, type: ViajeResultDto })
   update(@Param('id') id: string, @Body() updateViajeDto: ViajeUpdateDto) {
     return this.viajesService.update(+id, updateViajeDto);
   }
 
   @Delete('delete/:id')
-  @ApiOperation({ summary: 'Delete a trip' })
-  @ApiParam({ name: 'id', type: 'number', description: 'Trip ID' })
+  @ApiOperation({ summary: 'Eliminar un viaje' })
+  @ApiParam({ name: 'id', type: 'number', description: 'ID del viaje' })
   @ApiResponse({ status: 200, type: ViajeResultDto })
   remove(@Param('id') id: string) {
     return this.viajesService.delete(+id);
@@ -90,11 +99,7 @@ export class ViajesController {
   @Get(':viajeId/conductor/:conductorId')
   @ApiOperation({ summary: 'Obtener un conductor específico de un viaje' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
-  @ApiParam({
-    name: 'conductorId',
-    description: 'ID del conductor',
-    type: Number,
-  })
+  @ApiParam({ name: 'conductorId', description: 'ID del conductor', type: Number })
   @ApiResponse({ status: 200, type: ViajeConductorResultDto })
   findConductor(@Param('viajeId') viajeId: string, @Param('conductorId') conductorId: string) {
     return this.viajesService.findConductor(+viajeId, +conductorId);
@@ -110,11 +115,7 @@ export class ViajesController {
   @Patch(':viajeId/conductor/:conductorId')
   @ApiOperation({ summary: 'Actualizar asignación de conductor' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
-  @ApiParam({
-    name: 'conductorId',
-    description: 'ID del conductor',
-    type: Number,
-  })
+  @ApiParam({ name: 'conductorId', description: 'ID del conductor', type: Number })
   @ApiResponse({ status: 200, type: ViajeConductorResultDto })
   updateConductor(@Param('viajeId') viajeId: string, @Param('conductorId') conductorId: string, @Body() updateDto: ViajeConductorUpdateDto) {
     return this.viajesService.updateConductor(+viajeId, +conductorId, updateDto);
@@ -123,11 +124,7 @@ export class ViajesController {
   @Delete(':viajeId/conductor/:conductorId')
   @ApiOperation({ summary: 'Remover conductor de un viaje' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
-  @ApiParam({
-    name: 'conductorId',
-    description: 'ID del conductor',
-    type: Number,
-  })
+  @ApiParam({ name: 'conductorId', description: 'ID del conductor', type: Number })
   @ApiResponse({ status: 200, type: ViajeConductorResultDto })
   removeConductor(@Param('viajeId') viajeId: string, @Param('conductorId') conductorId: string) {
     return this.viajesService.removeConductor(+viajeId, +conductorId);
@@ -145,11 +142,7 @@ export class ViajesController {
   @Get(':viajeId/vehiculo/:vehiculoId')
   @ApiOperation({ summary: 'Obtener un vehículo específico de un viaje' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
-  @ApiParam({
-    name: 'vehiculoId',
-    description: 'ID del vehículo',
-    type: Number,
-  })
+  @ApiParam({ name: 'vehiculoId', description: 'ID del vehículo', type: Number })
   @ApiResponse({ status: 200, type: ViajeVehiculoResultDto })
   findVehiculo(@Param('viajeId') viajeId: string, @Param('vehiculoId') vehiculoId: string) {
     return this.viajesService.findVehiculo(+viajeId, +vehiculoId);
@@ -165,11 +158,7 @@ export class ViajesController {
   @Patch(':viajeId/vehiculo/:vehiculoId')
   @ApiOperation({ summary: 'Actualizar asignación de vehículo' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
-  @ApiParam({
-    name: 'vehiculoId',
-    description: 'ID del vehículo',
-    type: Number,
-  })
+  @ApiParam({ name: 'vehiculoId', description: 'ID del vehículo', type: Number })
   @ApiResponse({ status: 200, type: ViajeVehiculoResultDto })
   updateVehiculo(@Param('viajeId') viajeId: string, @Param('vehiculoId') vehiculoId: string, @Body() updateDto: ViajeVehiculoUpdateDto) {
     return this.viajesService.updateVehiculo(+viajeId, +vehiculoId, updateDto);
@@ -178,11 +167,7 @@ export class ViajesController {
   @Delete(':viajeId/vehiculo/:vehiculoId')
   @ApiOperation({ summary: 'Remover vehículo de un viaje' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
-  @ApiParam({
-    name: 'vehiculoId',
-    description: 'ID del vehículo',
-    type: Number,
-  })
+  @ApiParam({ name: 'vehiculoId', description: 'ID del vehículo', type: Number })
   @ApiResponse({ status: 200, type: ViajeVehiculoResultDto })
   removeVehiculo(@Param('viajeId') viajeId: string, @Param('vehiculoId') vehiculoId: string) {
     return this.viajesService.removeVehiculo(+viajeId, +vehiculoId);
@@ -275,5 +260,100 @@ export class ViajesController {
   @ApiResponse({ status: 200, type: [ViajeServicioResultDto] })
   reordenarServicios(@Param('viajeId') viajeId: string, @Body() reordenarDto: ViajeServicioReordenarDto) {
     return this.viajesService.reordenarServicios(+viajeId, reordenarDto.servicios);
+  }
+
+  // ========== CHECKLIST ITEMS (Catálogo) ==========
+  @Get('checklist-item/find-all')
+  @ApiOperation({ summary: 'Obtener todos los items del catálogo de checklist' })
+  @ApiResponse({ status: 200, type: [ChecklistItemResultDto] })
+  findAllChecklistItems() {
+    return this.viajesService.findAllChecklistItems();
+  }
+
+  @Get('checklist-item/:id')
+  @ApiOperation({ summary: 'Obtener un item del catálogo por ID' })
+  @ApiParam({ name: 'id', description: 'ID del item', type: Number })
+  @ApiResponse({ status: 200, type: ChecklistItemResultDto })
+  findChecklistItem(@Param('id') id: string) {
+    return this.viajesService.findChecklistItem(+id);
+  }
+
+  @Post('checklist-item/create')
+  @ApiOperation({ summary: 'Crear un nuevo item en el catálogo' })
+  @ApiResponse({ status: 201, type: ChecklistItemResultDto })
+  createChecklistItem(@Body() createDto: ChecklistItemCreateDto) {
+    return this.viajesService.createChecklistItem(createDto);
+  }
+
+  @Patch('checklist-item/update/:id')
+  @ApiOperation({ summary: 'Actualizar un item del catálogo' })
+  @ApiParam({ name: 'id', description: 'ID del item', type: Number })
+  @ApiResponse({ status: 200, type: ChecklistItemResultDto })
+  updateChecklistItem(@Param('id') id: string, @Body() updateDto: ChecklistItemUpdateDto) {
+    return this.viajesService.updateChecklistItem(+id, updateDto);
+  }
+
+  @Delete('checklist-item/delete/:id')
+  @ApiOperation({ summary: 'Eliminar un item del catálogo' })
+  @ApiParam({ name: 'id', description: 'ID del item', type: Number })
+  @ApiResponse({ status: 200, type: ChecklistItemResultDto })
+  deleteChecklistItem(@Param('id') id: string) {
+    return this.viajesService.deleteChecklistItem(+id);
+  }
+
+  // ========== VIAJE CHECKLISTS ==========
+  @Get(':viajeId/checklists')
+  @ApiOperation({ summary: 'Obtener los checklists de un viaje (salida/entrada)' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 200, type: [ViajeChecklistResultDto] })
+  findChecklists(@Param('viajeId') viajeId: string) {
+    return this.viajesService.findChecklists(+viajeId);
+  }
+
+  @Get('checklist/:id')
+  @ApiOperation({ summary: 'Obtener un checklist con todos sus items' })
+  @ApiParam({ name: 'id', description: 'ID del checklist', type: Number })
+  @ApiResponse({ status: 200, type: ViajeChecklistResultDto })
+  findChecklist(@Param('id') id: string) {
+    return this.viajesService.findChecklist(+id);
+  }
+
+  @Post(':viajeId/checklist/create')
+  @ApiOperation({ summary: 'Crear un checklist para un viaje (salida/entrada)' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 201, type: ViajeChecklistResultDto })
+  createChecklist(@Param('viajeId') viajeId: string, @Body() createDto: ViajeChecklistCreateDto) {
+    return this.viajesService.createChecklist(+viajeId, createDto);
+  }
+
+  @Patch('checklist/update/:id')
+  @ApiOperation({ summary: 'Actualizar observaciones del checklist' })
+  @ApiParam({ name: 'id', description: 'ID del checklist', type: Number })
+  @ApiResponse({ status: 200, type: ViajeChecklistResultDto })
+  updateChecklist(@Param('id') id: string, @Body() updateDto: ViajeChecklistUpdateDto) {
+    return this.viajesService.updateChecklist(+id, updateDto);
+  }
+
+  @Post('checklist/:id/validar')
+  @ApiOperation({ summary: 'Validar un checklist (marcar como revisado)' })
+  @ApiParam({ name: 'id', description: 'ID del checklist', type: Number })
+  @ApiResponse({ status: 200, type: ViajeChecklistResultDto })
+  validarChecklist(@Param('id') id: string, @Request() req: { user: { id: number } }) {
+    return this.viajesService.validarChecklist(+id, req.user.id);
+  }
+
+  @Patch('checklist-item-viaje/update/:id')
+  @ApiOperation({ summary: 'Marcar/desmarcar un item del checklist de viaje' })
+  @ApiParam({ name: 'id', description: 'ID del item del checklist', type: Number })
+  updateViajeChecklistItem(@Param('id') id: string, @Body() updateDto: ViajeChecklistItemUpdateDto) {
+    return this.viajesService.updateViajeChecklistItem(+id, updateDto);
+  }
+
+  @Delete('checklist/delete/:id')
+  @ApiOperation({ summary: 'Eliminar un checklist' })
+  @ApiParam({ name: 'id', description: 'ID del checklist', type: Number })
+  @ApiResponse({ status: 200, type: ViajeChecklistResultDto })
+  deleteChecklist(@Param('id') id: string) {
+    return this.viajesService.deleteChecklist(+id);
   }
 }

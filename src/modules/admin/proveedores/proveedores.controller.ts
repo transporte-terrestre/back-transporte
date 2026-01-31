@@ -1,14 +1,14 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ProveedoresService } from './proveedores.service';
-import { ProveedorCreateDto } from './dto/proveedor-create.dto';
-import { ProveedorUpdateDto } from './dto/proveedor-update.dto';
-import { ProveedorResultDto } from './dto/proveedor-result.dto';
+import { ProveedorCreateDto } from './dto/proveedor/proveedor-create.dto';
+import { ProveedorUpdateDto } from './dto/proveedor/proveedor-update.dto';
+import { ProveedorResultDto } from './dto/proveedor/proveedor-result.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { ProveedorPaginationQueryDto, PaginatedProveedorResultDto } from './dto/proveedor-paginated.dto';
-import { ProveedorDocumentoCreateDto } from './dto/proveedor-documento-create.dto';
-import { ProveedorDocumentoUpdateDto } from './dto/proveedor-documento-update.dto';
-import { ProveedorDocumentoResultDto } from './dto/proveedor-documento-result.dto';
+import { ProveedorPaginationQueryDto, PaginatedProveedorResultDto } from './dto/proveedor/proveedor-paginated.dto';
+import { ProveedorDocumentoCreateDto } from './dto/proveedor-documento/proveedor-documento-create.dto';
+import { ProveedorDocumentoUpdateDto } from './dto/proveedor-documento/proveedor-documento-update.dto';
+import { ProveedorDocumentoResultDto } from './dto/proveedor-documento/proveedor-documento-result.dto';
 
 @ApiTags('proveedores')
 @ApiBearerAuth()

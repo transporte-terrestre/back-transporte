@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RutaRepository } from '@repository/ruta.repository';
 import { RutaParadaRepository } from '@repository/ruta-parada.repository';
-import { RutaCreateDto } from './dto/ruta-create.dto';
-import { RutaUpdateDto } from './dto/ruta-update.dto';
-import { PaginatedRutaResultDto } from './dto/ruta-paginated.dto';
-import { RutaParadaCreateDto } from './dto/ruta-parada-create.dto';
-import { RutaParadaUpdateDto } from './dto/ruta-parada-update.dto';
+import { RutaCreateDto } from './dto/ruta/ruta-create.dto';
+import { RutaUpdateDto } from './dto/ruta/ruta-update.dto';
+import { PaginatedRutaResultDto } from './dto/ruta/ruta-paginated.dto';
+import { RutaParadaCreateDto } from './dto/ruta-parada/ruta-parada-create.dto';
+import { RutaParadaUpdateDto } from './dto/ruta-parada/ruta-parada-update.dto';
 
 @Injectable()
 export class RutasService {

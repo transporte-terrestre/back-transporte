@@ -1,11 +1,11 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConductorRepository } from '@repository/conductor.repository';
 import { ConductorDocumentoRepository } from '@repository/conductor-documento.repository';
-import { ConductorCreateDto } from './dto/conductor-create.dto';
-import { ConductorUpdateDto } from './dto/conductor-update.dto';
-import { PaginatedConductorResultDto } from './dto/conductor-paginated.dto';
+import { ConductorCreateDto } from './dto/conductor/conductor-create.dto';
+import { ConductorUpdateDto } from './dto/conductor/conductor-update.dto';
+import { PaginatedConductorResultDto } from './dto/conductor/conductor-paginated.dto';
 import { ConductorDocumentoDTO, conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
-import { DocumentosAgrupadosConductorDto } from './dto/conductor-result.dto';
+import { DocumentosAgrupadosConductorDto } from './dto/conductor/conductor-result.dto';
 import { ConductorDTO } from '@db/tables/conductor.table';
 import * as bcrypt from 'bcrypt';
 

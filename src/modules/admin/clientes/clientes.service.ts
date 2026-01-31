@@ -1,11 +1,11 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { ClienteCreateDto } from './dto/cliente-create.dto';
-import { ClienteUpdateDto } from './dto/cliente-update.dto';
+import { ClienteCreateDto } from './dto/cliente/cliente-create.dto';
+import { ClienteUpdateDto } from './dto/cliente/cliente-update.dto';
 import { ClienteRepository } from '@repository/cliente.repository';
 import { ClienteDocumentoRepository } from '@repository/cliente-documento.repository';
-import { PaginatedClienteResultDto } from './dto/cliente-paginated.dto';
+import { PaginatedClienteResultDto } from './dto/cliente/cliente-paginated.dto';
 import { ClienteDocumentoDTO, clienteDocumentosTipo } from '@db/tables/cliente-documento.table';
-import { DocumentosAgrupadosClienteDto } from './dto/cliente-result.dto';
+import { DocumentosAgrupadosClienteDto } from './dto/cliente/cliente-result.dto';
 import { ClienteDTO } from '@db/tables/cliente.table';
 
 interface DatabaseError {

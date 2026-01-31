@@ -1,10 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { NotificacionRepository, DocumentoVencimiento } from '@repository/notificacion.repository';
-import { PaginatedNotificacionResultDto } from './dto/notificacion-paginated.dto';
-import { NotificacionResultDto } from './dto/notificacion-result.dto';
-import { NotificacionCreateDto } from './dto/notificacion-create.dto';
-import { GenerarVencimientosResultDto, NotificacionPreviewDto, PreviewVencimientosResultDto } from './dto/notificacion-vencimiento.dto';
-import { SendEmailDto } from './dto/send-email.dto';
+import { PaginatedNotificacionResultDto } from './dto/notificacion/notificacion-paginated.dto';
+import { NotificacionResultDto } from './dto/notificacion/notificacion-result.dto';
+import { NotificacionCreateDto } from './dto/notificacion/notificacion-create.dto';
+import { GenerarVencimientosResultDto, NotificacionPreviewDto, PreviewVencimientosResultDto } from './dto/notificacion/notificacion-vencimiento.dto';
+import { SendEmailDto } from './dto/email/send-email.dto';
 import * as nodemailer from 'nodemailer';
 
 export type NotificacionPreview = NotificacionPreviewDto;

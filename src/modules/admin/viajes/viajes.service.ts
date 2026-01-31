@@ -1,19 +1,31 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { ViajeRepository } from '@repository/viaje.repository';
 import { ViajeConductorRepository } from '@repository/viaje-conductor.repository';
 import { ViajeVehiculoRepository } from '@repository/viaje-vehiculo.repository';
 import { ViajeComentarioRepository } from '@repository/viaje-comentario.repository';
 import { ViajeServicioRepository } from '@repository/viaje-servicio.repository';
+import { ChecklistItemRepository } from '@repository/checklist-item.repository';
+import { ViajeChecklistRepository } from '@repository/viaje-checklist.repository';
 import { RutaRepository } from '@repository/ruta.repository';
 import { ClienteRepository } from '@repository/cliente.repository';
-import { ViajeCreateDto } from './dto/viaje-create.dto';
-import { ViajeUpdateDto } from './dto/viaje-update.dto';
-import { PaginatedViajeResultDto } from './dto/viaje-paginated.dto';
+import { ViajeCreateDto } from './dto/viaje/viaje-create.dto';
+import { ViajeUpdateDto } from './dto/viaje/viaje-update.dto';
+import { PaginatedViajeResultDto } from './dto/viaje/viaje-paginated.dto';
 import { ViajeConductorDTO } from '@db/tables/viaje-conductor.table';
 import { ViajeVehiculoDTO } from '@db/tables/viaje-vehiculo.table';
 import { ViajeComentarioDTO } from '@db/tables/viaje-comentario.table';
-import { ViajeServicioCreateDto } from './dto/viaje-servicio-create.dto';
-import { ViajeServicioUpdateDto } from './dto/viaje-servicio-update.dto';
+import { ViajeServicioCreateDto } from './dto/viaje-servicio/viaje-servicio-create.dto';
+import { ViajeServicioUpdateDto } from './dto/viaje-servicio/viaje-servicio-update.dto';
+import { ViajeChecklistCreateDto } from './dto/viaje-checklist/viaje-checklist-create.dto';
+import { ViajeChecklistUpdateDto } from './dto/viaje-checklist/viaje-checklist-update.dto';
+import { ViajeChecklistItemUpdateDto } from './dto/viaje-checklist/viaje-checklist-item-update.dto';
+import { ChecklistItemCreateDto } from './dto/checklist-item/checklist-item-create.dto';
+import { ChecklistItemUpdateDto } from './dto/checklist-item/checklist-item-update.dto';
+
+interface UsuarioAutenticado {
+  sub: number;
+  tipo: string;
+}
 
 @Injectable()
 export class ViajesService {
@@ -23,6 +35,8 @@ export class ViajesService {
     private readonly viajeVehiculoRepository: ViajeVehiculoRepository,
     private readonly viajeComentarioRepository: ViajeComentarioRepository,
     private readonly viajeServicioRepository: ViajeServicioRepository,
+    private readonly checklistItemRepository: ChecklistItemRepository,
+    private readonly viajeChecklistRepository: ViajeChecklistRepository,
     private readonly rutaRepository: RutaRepository,
     private readonly clienteRepository: ClienteRepository,
   ) {}
@@ -36,7 +50,12 @@ export class ViajesService {
     modalidadServicio?: string,
     tipoRuta?: string,
     estado?: string,
+    conductoresId?: number[],
+    usuario?: UsuarioAutenticado,
   ): Promise<PaginatedViajeResultDto> {
+    // Si el token es de un conductor, filtrar automáticamente solo sus viajes
+    const conductoresFiltro = usuario?.tipo === 'conductor' ? [usuario.sub] : conductoresId;
+
     const { data, total } = await this.viajeRepository.findAllPaginated(page, limit, {
       search,
       fechaInicio,
@@ -44,6 +63,7 @@ export class ViajesService {
       modalidadServicio,
       tipoRuta,
       estado,
+      conductoresId: conductoresFiltro,
     });
 
     const totalPages = Math.ceil(total / limit);
@@ -185,7 +205,6 @@ export class ViajesService {
   }
 
   async createServicio(viajeId: number, data: ViajeServicioCreateDto) {
-    // Obtener el orden máximo actual y sumar 1
     const maxOrden = await this.viajeServicioRepository.getMaxOrden(viajeId);
     return await this.viajeServicioRepository.create({
       ...data,
@@ -204,5 +223,89 @@ export class ViajesService {
 
   async reordenarServicios(viajeId: number, servicios: { id: number; orden: number }[]) {
     return await this.viajeServicioRepository.reordenar(viajeId, servicios);
+  }
+
+  // ========== CHECKLIST ITEMS (Catálogo) ==========
+  async findAllChecklistItems() {
+    return await this.checklistItemRepository.findAll();
+  }
+
+  async findChecklistItem(id: number) {
+    const item = await this.checklistItemRepository.findOne(id);
+    if (!item) {
+      throw new NotFoundException(`Item de checklist con ID ${id} no encontrado`);
+    }
+    return item;
+  }
+
+  async createChecklistItem(data: ChecklistItemCreateDto) {
+    return await this.checklistItemRepository.create(data);
+  }
+
+  async updateChecklistItem(id: number, data: ChecklistItemUpdateDto) {
+    return await this.checklistItemRepository.update(id, data);
+  }
+
+  async deleteChecklistItem(id: number) {
+    return await this.checklistItemRepository.delete(id);
+  }
+
+  // ========== VIAJE CHECKLISTS ==========
+  async findChecklists(viajeId: number) {
+    return await this.viajeChecklistRepository.findByViajeId(viajeId);
+  }
+
+  async findChecklist(checklistId: number) {
+    const checklist = await this.viajeChecklistRepository.findOneWithItems(checklistId);
+    if (!checklist) {
+      throw new NotFoundException(`Checklist con ID ${checklistId} no encontrado`);
+    }
+    return checklist;
+  }
+
+  async createChecklist(viajeId: number, data: ViajeChecklistCreateDto) {
+    const existente = await this.viajeChecklistRepository.findByViajeIdAndTipo(viajeId, data.tipo);
+    if (existente) {
+      throw new ConflictException(`Ya existe un checklist de ${data.tipo} para este viaje`);
+    }
+
+    const checklist = await this.viajeChecklistRepository.create({
+      viajeId,
+      tipo: data.tipo,
+      observaciones: data.observaciones,
+    });
+
+    const items = await this.checklistItemRepository.findAll();
+
+    const checklistItems = items.map((item) => ({
+      viajeChecklistId: checklist.id,
+      checklistItemId: item.id,
+      completado: false,
+    }));
+
+    if (checklistItems.length > 0) {
+      await this.viajeChecklistRepository.createManyItems(checklistItems);
+    }
+
+    return await this.viajeChecklistRepository.findOneWithItems(checklist.id);
+  }
+
+  async updateChecklist(checklistId: number, data: ViajeChecklistUpdateDto) {
+    return await this.viajeChecklistRepository.update(checklistId, data);
+  }
+
+  async validarChecklist(checklistId: number, usuarioId: number) {
+    return await this.viajeChecklistRepository.update(checklistId, {
+      validadoPor: usuarioId,
+      validadoEn: new Date(),
+    });
+  }
+
+  async updateViajeChecklistItem(itemId: number, data: ViajeChecklistItemUpdateDto) {
+    return await this.viajeChecklistRepository.updateItem(itemId, data);
+  }
+
+  async deleteChecklist(checklistId: number) {
+    return await this.viajeChecklistRepository.delete(checklistId);
   }
 }

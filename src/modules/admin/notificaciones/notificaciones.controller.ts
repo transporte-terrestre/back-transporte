@@ -1,13 +1,17 @@
 import { Controller, Get, Post, Query, Param, UseGuards, ParseIntPipe, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { NotificacionesService } from './notificaciones.service';
-import { NotificacionCreateDto } from './dto/notificacion-create.dto';
-import { PaginatedNotificacionResultDto, NotificacionPaginationQueryDto } from './dto/notificacion-paginated.dto';
-import { NotificacionResultDto } from './dto/notificacion-result.dto';
-import { PreviewVencimientosResultDto, GenerarVencimientosResultDto, NotificacionVencimientoQueryDto } from './dto/notificacion-vencimiento.dto';
-import { SendEmailDto } from './dto/send-email.dto';
+import { NotificacionCreateDto } from './dto/notificacion/notificacion-create.dto';
+import { PaginatedNotificacionResultDto, NotificacionPaginationQueryDto } from './dto/notificacion/notificacion-paginated.dto';
+import { NotificacionResultDto } from './dto/notificacion/notificacion-result.dto';
+import {
+  PreviewVencimientosResultDto,
+  GenerarVencimientosResultDto,
+  NotificacionVencimientoQueryDto,
+} from './dto/notificacion/notificacion-vencimiento.dto';
+import { SendEmailDto } from './dto/email/send-email.dto';
 
-@ApiTags('Notificaciones')
+@ApiTags('notificaciones')
 @Controller('notificacion')
 export class NotificacionesController {
   constructor(private readonly notificacionesService: NotificacionesService) {}

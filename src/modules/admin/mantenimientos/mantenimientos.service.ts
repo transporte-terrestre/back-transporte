@@ -1,19 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { MantenimientoRepository } from '@repository/mantenimiento.repository';
 import { TareaRepository } from '@repository/tarea.repository';
-import { MantenimientoCreateDto } from './dto/mantenimiento-create.dto';
-import { MantenimientoUpdateDto } from './dto/mantenimiento-update.dto';
-import { PaginatedMantenimientoResultDto } from './dto/mantenimiento-paginated.dto';
-import { PaginatedTareaResultDto } from './dto/tarea-paginated.dto';
-import { TareaCreateDto } from './dto/tarea-create.dto';
-import { TareaUpdateDto } from './dto/tarea-update.dto';
-import { MantenimientoTareaCreateDto } from './dto/mantenimiento-tarea-create.dto';
-import { MantenimientoTareaUpdateDto } from './dto/mantenimiento-tarea-update.dto';
-import { MantenimientoDocumentoCreateDto } from './dto/mantenimiento-documento-create.dto';
-import { MantenimientoDocumentoUpdateDto } from './dto/mantenimiento-documento-update.dto';
+import { MantenimientoCreateDto } from './dto/mantenimiento/mantenimiento-create.dto';
+import { MantenimientoUpdateDto } from './dto/mantenimiento/mantenimiento-update.dto';
+import { PaginatedMantenimientoResultDto } from './dto/mantenimiento/mantenimiento-paginated.dto';
+import { PaginatedTareaResultDto } from './dto/tarea/tarea-paginated.dto';
+import { TareaCreateDto } from './dto/tarea/tarea-create.dto';
+import { TareaUpdateDto } from './dto/tarea/tarea-update.dto';
+import { MantenimientoTareaCreateDto } from './dto/mantenimiento-tarea/mantenimiento-tarea-create.dto';
+import { MantenimientoTareaUpdateDto } from './dto/mantenimiento-tarea/mantenimiento-tarea-update.dto';
+import { MantenimientoDocumentoCreateDto } from './dto/mantenimiento-documento/mantenimiento-documento-create.dto';
+import { MantenimientoDocumentoUpdateDto } from './dto/mantenimiento-documento/mantenimiento-documento-update.dto';
 
 import { MantenimientoDocumentoDTO, mantenimientoDocumentosTipo } from '@db/tables/mantenimiento-documento.table';
-import { DocumentosAgrupadosMantenimientoDto } from './dto/mantenimiento-result.dto';
+import { DocumentosAgrupadosMantenimientoDto } from './dto/mantenimiento/mantenimiento-result.dto';
 
 @Injectable()
 export class MantenimientosService {

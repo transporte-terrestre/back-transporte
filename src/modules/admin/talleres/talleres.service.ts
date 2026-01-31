@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { TallerRepository } from "@repository/taller.repository";
-import { TallerCreateDto } from "./dto/taller-create.dto";
-import { TallerUpdateDto } from "./dto/taller-update.dto";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { TallerRepository } from '@repository/taller.repository';
+import { TallerCreateDto } from './dto/taller/taller-create.dto';
+import { TallerUpdateDto } from './dto/taller/taller-update.dto';
 
 @Injectable()
 export class TalleresService {
@@ -11,19 +11,8 @@ export class TalleresService {
     return await this.tallerRepository.create(createTallerDto);
   }
 
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-    search?: string,
-    fechaInicio?: string,
-    fechaFin?: string,
-    tipo?: string
-  ) {
-    const { data, total } = await this.tallerRepository.findAllPaginated(
-      page,
-      limit,
-      { search, fechaInicio, fechaFin, tipo }
-    );
+  async findAllPaginated(page: number = 1, limit: number = 10, search?: string, fechaInicio?: string, fechaFin?: string, tipo?: string) {
+    const { data, total } = await this.tallerRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin, tipo });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;

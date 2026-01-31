@@ -3,15 +3,15 @@ import { VehiculoRepository } from '@repository/vehiculo.repository';
 import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repository';
 import { MarcaRepository } from '@repository/marca.repository';
 import { ModeloRepository } from '@repository/modelo.repository';
-import { VehiculoCreateDto } from './dto/vehiculo-create.dto';
-import { VehiculoUpdateDto } from './dto/vehiculo-update.dto';
-import { PaginatedVehiculoResultDto } from './dto/vehiculo-paginated.dto';
+import { VehiculoCreateDto } from './dto/vehiculo/vehiculo-create.dto';
+import { VehiculoUpdateDto } from './dto/vehiculo/vehiculo-update.dto';
+import { PaginatedVehiculoResultDto } from './dto/vehiculo/vehiculo-paginated.dto';
 import { VehiculoDocumentoDTO, vehiculoDocumentosTipo } from '@db/tables/vehiculo-documento.table';
-import { DocumentosAgrupadosVehiculoDto } from './dto/vehiculo-result.dto';
-import { MarcaCreateDto } from './dto/marca-create.dto';
-import { MarcaUpdateDto } from './dto/marca-update.dto';
-import { ModeloCreateDto } from './dto/modelo-create.dto';
-import { ModeloUpdateDto } from './dto/modelo-update.dto';
+import { DocumentosAgrupadosVehiculoDto } from './dto/vehiculo/vehiculo-result.dto';
+import { MarcaCreateDto } from './dto/marca/marca-create.dto';
+import { MarcaUpdateDto } from './dto/marca/marca-update.dto';
+import { ModeloCreateDto } from './dto/modelo/modelo-create.dto';
+import { ModeloUpdateDto } from './dto/modelo/modelo-update.dto';
 
 @Injectable()
 export class VehiculosService {

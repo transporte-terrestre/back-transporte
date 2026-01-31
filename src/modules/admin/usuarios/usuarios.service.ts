@@ -1,11 +1,11 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { UsuarioCreateDto } from './dto/usuario-create.dto';
-import { UsuarioUpdateDto } from './dto/usuario-update.dto';
+import { UsuarioCreateDto } from './dto/usuario/usuario-create.dto';
+import { UsuarioUpdateDto } from './dto/usuario/usuario-update.dto';
 import { UsuarioRepository } from '@repository/usuario.repository';
 import { UsuarioDocumentoRepository } from '@repository/usuario-documento.repository';
-import { PaginatedUsuarioResultDto } from './dto/usuario-paginated.dto';
+import { PaginatedUsuarioResultDto } from './dto/usuario/usuario-paginated.dto';
 import { UsuarioDocumentoDTO, usuarioDocumentosTipo } from '@db/tables/usuario-documento.table';
-import { DocumentosAgrupadosDto } from './dto/usuario-result.dto';
+import { DocumentosAgrupadosDto } from './dto/usuario/usuario-result.dto';
 import { UsuarioDTO } from '@db/tables/usuario.table';
 import * as bcrypt from 'bcrypt';
 

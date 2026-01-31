@@ -6,6 +6,8 @@ import { ViajeConductorRepository } from '@repository/viaje-conductor.repository
 import { ViajeVehiculoRepository } from '@repository/viaje-vehiculo.repository';
 import { ViajeComentarioRepository } from '@repository/viaje-comentario.repository';
 import { ViajeServicioRepository } from '@repository/viaje-servicio.repository';
+import { ChecklistItemRepository } from '@repository/checklist-item.repository';
+import { ViajeChecklistRepository } from '@repository/viaje-checklist.repository';
 import { RutaRepository } from '@repository/ruta.repository';
 import { ClienteRepository } from '@repository/cliente.repository';
 
@@ -18,9 +20,11 @@ import { ClienteRepository } from '@repository/cliente.repository';
     ViajeVehiculoRepository,
     ViajeComentarioRepository,
     ViajeServicioRepository,
+    ChecklistItemRepository,
+    ViajeChecklistRepository,
     RutaRepository,
     ClienteRepository,
   ],
-  exports: [ViajeServicioRepository],
+  exports: [ViajeServicioRepository, ChecklistItemRepository, ViajeChecklistRepository],
 })
 export class ViajesModule {}
