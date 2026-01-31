@@ -74,6 +74,14 @@ export class ConductorRepository {
     return result[0];
   }
 
+  async findByEmail(email: string) {
+    const result = await database
+      .select()
+      .from(conductores)
+      .where(and(eq(conductores.email, email), isNull(conductores.eliminadoEn)));
+    return result[0];
+  }
+
   async create(data: ConductorDTO) {
     const result = await database.insert(conductores).values(data).returning();
     return result[0];

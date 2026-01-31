@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConductorRepository } from '@repository/conductor.repository';
 import { ConductorDocumentoRepository } from '@repository/conductor-documento.repository';
 import { ConductorCreateDto } from './dto/conductor-create.dto';
@@ -7,6 +7,13 @@ import { PaginatedConductorResultDto } from './dto/conductor-paginated.dto';
 import { ConductorDocumentoDTO, conductorDocumentosTipo } from '@db/tables/conductor-documento.model';
 import { DocumentosAgrupadosConductorDto } from './dto/conductor-result.dto';
 import { ConductorDTO } from '@db/tables/conductor.model';
+import * as bcrypt from 'bcrypt';
+
+interface DatabaseError {
+  code?: string;
+  constraint?: string;
+  cause?: DatabaseError;
+}
 
 @Injectable()
 export class ConductoresService {
@@ -66,26 +73,78 @@ export class ConductoresService {
     };
   }
 
-  create(data: ConductorCreateDto) {
-    const nombreCompleto = `${data.nombres} ${data.apellidos}`;
-    return this.conductorRepository.create({
-      ...data,
-      nombreCompleto,
-    });
+  async create(data: ConductorCreateDto) {
+    try {
+      const nombreCompleto = `${data.nombres} ${data.apellidos}`;
+      const dataToCreate: Partial<ConductorDTO> = {
+        ...data,
+        nombreCompleto,
+      };
+
+      // Hashear la contraseña si se proporciona
+      if (data.contrasenia) {
+        dataToCreate.contrasenia = await bcrypt.hash(data.contrasenia, 10);
+      }
+
+      return await this.conductorRepository.create(dataToCreate as ConductorDTO);
+    } catch (error: unknown) {
+      const dbError = error as DatabaseError;
+      if (dbError.cause?.code === '23505') {
+        if (dbError.cause.constraint?.includes('email')) {
+          throw new BadRequestException(['El correo electrónico ya está registrado']);
+        }
+        if (dbError.cause.constraint?.includes('dni')) {
+          throw new BadRequestException(['El DNI ya está registrado']);
+        }
+        if (dbError.cause.constraint?.includes('licencia')) {
+          throw new BadRequestException(['El número de licencia ya está registrado']);
+        }
+        if (dbError.cause.constraint?.includes('celular')) {
+          throw new BadRequestException(['El número de celular ya está registrado']);
+        }
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
+      }
+      throw error;
+    }
   }
 
   async update(id: number, data: ConductorUpdateDto) {
-    const dataToUpdate: Partial<ConductorDTO> = { ...data };
+    try {
+      const dataToUpdate: Partial<ConductorDTO> = { ...data };
 
-    // Auto-generate nombreCompleto if nombres or apellidos are being updated
-    if (data.nombres || data.apellidos) {
-      const current = await this.conductorRepository.findOne(id);
-      const nombres = data.nombres ?? current.nombres;
-      const apellidos = data.apellidos ?? current.apellidos;
-      dataToUpdate.nombreCompleto = `${nombres} ${apellidos}`;
+      // Hashear la contraseña si se proporciona
+      if (data.contrasenia) {
+        dataToUpdate.contrasenia = await bcrypt.hash(data.contrasenia, 10);
+      }
+
+      // Auto-generate nombreCompleto if nombres or apellidos are being updated
+      if (data.nombres || data.apellidos) {
+        const current = await this.conductorRepository.findOne(id);
+        const nombres = data.nombres ?? current.nombres;
+        const apellidos = data.apellidos ?? current.apellidos;
+        dataToUpdate.nombreCompleto = `${nombres} ${apellidos}`;
+      }
+
+      return await this.conductorRepository.update(id, dataToUpdate);
+    } catch (error: unknown) {
+      const dbError = error as DatabaseError;
+      if (dbError.cause?.code === '23505') {
+        if (dbError.cause.constraint?.includes('email')) {
+          throw new BadRequestException(['El correo electrónico ya está registrado']);
+        }
+        if (dbError.cause.constraint?.includes('dni')) {
+          throw new BadRequestException(['El DNI ya está registrado']);
+        }
+        if (dbError.cause.constraint?.includes('licencia')) {
+          throw new BadRequestException(['El número de licencia ya está registrado']);
+        }
+        if (dbError.cause.constraint?.includes('celular')) {
+          throw new BadRequestException(['El número de celular ya está registrado']);
+        }
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
+      }
+      throw error;
     }
-
-    return this.conductorRepository.update(id, dataToUpdate);
   }
 
   delete(id: number) {
