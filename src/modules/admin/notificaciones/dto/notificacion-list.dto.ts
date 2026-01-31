@@ -1,6 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { notificacionTipo } from "@model/tables/notificacion.model";
-import type { NotificacionTipo } from "@model/tables/notificacion.model";
+import { ApiProperty } from '@nestjs/swagger';
+import { notificacionTipo } from '@db/tables/notificacion.model';
+import type { NotificacionTipo } from '@db/tables/notificacion.model';
 
 export class NotificacionListDto {
   @ApiProperty()
@@ -12,7 +12,7 @@ export class NotificacionListDto {
   @ApiProperty()
   mensaje: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     enum: notificacionTipo.enumValues,
     default: notificacionTipo.enumValues[0],
     required: false,

@@ -1,12 +1,12 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsIn, IsString, IsDateString, IsOptional } from "class-validator";
-import { vehiculoDocumentosTipo } from "@model/tables/vehiculo-documento.model";
-import type { VehiculoDocumentoTipo } from "@model/tables/vehiculo-documento.model";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsIn, IsString, IsDateString, IsOptional } from 'class-validator';
+import { vehiculoDocumentosTipo } from '@db/tables/vehiculo-documento.model';
+import type { VehiculoDocumentoTipo } from '@db/tables/vehiculo-documento.model';
 
 export class VehiculoDocumentoUpdateDto {
   @ApiProperty({
     enum: vehiculoDocumentosTipo.enumValues,
-    description: "Tipo de documento",
+    description: 'Tipo de documento',
     default: vehiculoDocumentosTipo.enumValues[0],
     required: false,
   })
@@ -15,8 +15,8 @@ export class VehiculoDocumentoUpdateDto {
   tipo?: VehiculoDocumentoTipo;
 
   @ApiProperty({
-    example: "https://storage.example.com/documentos/soat-ABC123.pdf",
-    description: "URL del documento",
+    example: 'https://storage.example.com/documentos/soat-ABC123.pdf',
+    description: 'URL del documento',
     required: false,
   })
   @IsString()
@@ -24,8 +24,8 @@ export class VehiculoDocumentoUpdateDto {
   url?: string;
 
   @ApiProperty({
-    example: "2025-12-31",
-    description: "Fecha de expiración del documento",
+    example: '2025-12-31',
+    description: 'Fecha de expiración del documento',
     required: false,
   })
   @IsDateString()
@@ -33,8 +33,8 @@ export class VehiculoDocumentoUpdateDto {
   fechaExpiracion?: string;
 
   @ApiProperty({
-    example: "2023-01-15",
-    description: "Fecha de emisión del documento",
+    example: '2023-01-15',
+    description: 'Fecha de emisión del documento',
     required: false,
   })
   @IsDateString()

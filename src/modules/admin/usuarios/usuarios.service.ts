@@ -1,16 +1,13 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
-import { UsuarioCreateDto } from "./dto/usuario-create.dto";
-import { UsuarioUpdateDto } from "./dto/usuario-update.dto";
-import { UsuarioRepository } from "@repository/usuario.repository";
-import { UsuarioDocumentoRepository } from "@repository/usuario-documento.repository";
-import { PaginatedUsuarioResultDto } from "./dto/usuario-paginated.dto";
-import {
-  UsuarioDocumentoDTO,
-  usuarioDocumentosTipo,
-} from "@model/tables/usuario-documento.model";
-import { DocumentosAgrupadosDto } from "./dto/usuario-result.dto";
-import { UsuarioDTO } from "@model/tables/usuario.model";
-import * as bcrypt from "bcrypt";
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { UsuarioCreateDto } from './dto/usuario-create.dto';
+import { UsuarioUpdateDto } from './dto/usuario-update.dto';
+import { UsuarioRepository } from '@repository/usuario.repository';
+import { UsuarioDocumentoRepository } from '@repository/usuario-documento.repository';
+import { PaginatedUsuarioResultDto } from './dto/usuario-paginated.dto';
+import { UsuarioDocumentoDTO, usuarioDocumentosTipo } from '@db/tables/usuario-documento.model';
+import { DocumentosAgrupadosDto } from './dto/usuario-result.dto';
+import { UsuarioDTO } from '@db/tables/usuario.model';
+import * as bcrypt from 'bcrypt';
 
 interface DatabaseError {
   code?: string;
@@ -22,7 +19,7 @@ interface DatabaseError {
 export class UsuariosService {
   constructor(
     private readonly usuarioRepository: UsuarioRepository,
-    private readonly usuarioDocumentoRepository: UsuarioDocumentoRepository
+    private readonly usuarioDocumentoRepository: UsuarioDocumentoRepository,
   ) {}
 
   async findAllPaginated(
@@ -31,13 +28,9 @@ export class UsuariosService {
     search?: string,
     fechaInicio?: string,
     fechaFin?: string,
-    rol?: string
+    rol?: string,
   ): Promise<PaginatedUsuarioResultDto> {
-    const { data, total } = await this.usuarioRepository.findAllPaginated(
-      page,
-      limit,
-      { search, fechaInicio, fechaFin, rol }
-    );
+    const { data, total } = await this.usuarioRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin, rol });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -58,15 +51,11 @@ export class UsuariosService {
 
   async findOne(id: number) {
     const usuario = await this.usuarioRepository.findOne(id);
-    const documentos =
-      await this.usuarioDocumentoRepository.findByUsuarioId(id);
-    const documentosAgrupados = usuarioDocumentosTipo.enumValues.reduce(
-      (acc, tipo) => {
-        acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
-        return acc;
-      },
-      {} as DocumentosAgrupadosDto
-    );
+    const documentos = await this.usuarioDocumentoRepository.findByUsuarioId(id);
+    const documentosAgrupados = usuarioDocumentosTipo.enumValues.reduce((acc, tipo) => {
+      acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
+      return acc;
+    }, {} as DocumentosAgrupadosDto);
 
     return {
       ...usuario,
@@ -76,10 +65,7 @@ export class UsuariosService {
 
   async create(createUsuarioDto: UsuarioCreateDto) {
     try {
-      const hashedPassword = await bcrypt.hash(
-        createUsuarioDto.contrasenia,
-        10
-      );
+      const hashedPassword = await bcrypt.hash(createUsuarioDto.contrasenia, 10);
       const nombreCompleto = `${createUsuarioDto.nombres} ${createUsuarioDto.apellidos}`;
       const usuario = await this.usuarioRepository.create({
         ...createUsuarioDto,
@@ -97,15 +83,11 @@ export class UsuariosService {
       };
     } catch (error: unknown) {
       const dbError = error as DatabaseError;
-      if (dbError.cause.code === "23505") {
-        if (dbError.cause.constraint?.includes("email")) {
-          throw new BadRequestException([
-            "El correo electrónico ya está registrado",
-          ]);
+      if (dbError.cause.code === '23505') {
+        if (dbError.cause.constraint?.includes('email')) {
+          throw new BadRequestException(['El correo electrónico ya está registrado']);
         }
-        throw new BadRequestException([
-          "Ya existe un registro con estos datos",
-        ]);
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
       }
       throw error;
     }
@@ -116,10 +98,7 @@ export class UsuariosService {
       const dataToUpdate: Partial<UsuarioDTO> = { ...updateUsuarioDto };
 
       if (dataToUpdate.contrasenia) {
-        dataToUpdate.contrasenia = await bcrypt.hash(
-          dataToUpdate.contrasenia,
-          10
-        );
+        dataToUpdate.contrasenia = await bcrypt.hash(dataToUpdate.contrasenia, 10);
       }
 
       // Auto-generate nombreCompleto if nombres or apellidos are being updated
@@ -133,15 +112,11 @@ export class UsuariosService {
       return await this.usuarioRepository.update(id, dataToUpdate);
     } catch (error: unknown) {
       const dbError = error as DatabaseError;
-      if (dbError.cause.code === "23505") {
-        if (dbError.cause.constraint?.includes("email")) {
-          throw new BadRequestException([
-            "El correo electrónico ya está registrado",
-          ]);
+      if (dbError.cause.code === '23505') {
+        if (dbError.cause.constraint?.includes('email')) {
+          throw new BadRequestException(['El correo electrónico ya está registrado']);
         }
-        throw new BadRequestException([
-          "Ya existe un registro con estos datos",
-        ]);
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
       }
       throw error;
     }
@@ -157,9 +132,7 @@ export class UsuariosService {
   }
 
   async createDocumento(data: Partial<UsuarioDocumentoDTO>) {
-    return await this.usuarioDocumentoRepository.create(
-      data as UsuarioDocumentoDTO
-    );
+    return await this.usuarioDocumentoRepository.create(data as UsuarioDocumentoDTO);
   }
 
   async updateDocumento(id: number, data: Partial<UsuarioDocumentoDTO>) {

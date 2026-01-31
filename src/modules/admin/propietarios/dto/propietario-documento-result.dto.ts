@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PropietarioDocumentoDTO, propietarioDocumentosTipo } from '@model/tables/propietario-documento.model';
-import type { PropietarioDocumentoTipo } from '@model/tables/propietario-documento.model';
+import { PropietarioDocumentoDTO, propietarioDocumentosTipo } from '@db/tables/propietario-documento.model';
+import type { PropietarioDocumentoTipo } from '@db/tables/propietario-documento.model';
 
 export class PropietarioDocumentoResultDto implements PropietarioDocumentoDTO {
   @ApiProperty({ example: 1, description: 'ID del documento' })

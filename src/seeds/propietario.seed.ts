@@ -1,5 +1,5 @@
 import { database } from '@db/connection.db';
-import { propietarios } from '@model/tables/propietario.model';
+import { propietarios } from '@db/tables/propietario.model';
 
 export async function seedPropietarios() {
   console.log('🌱 Seeding propietarios...');

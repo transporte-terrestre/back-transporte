@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { vehiculosEstado, combustibleEnum } from '@model/tables/vehiculo.model';
-import type { VehiculoEstado, CombustibleTipo } from '@model/tables/vehiculo.model';
+import { vehiculosEstado, combustibleEnum } from '@db/tables/vehiculo.model';
+import type { VehiculoEstado, CombustibleTipo } from '@db/tables/vehiculo.model';
 import { IsOptional } from 'class-validator';
 
 export class VehiculoListDto {

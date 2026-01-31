@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { eq, and, count } from "drizzle-orm";
 import { database } from "@db/connection.db";
-import { viajeComentarios, ViajeComentarioDTO } from "@model/tables/viaje-comentario.model";
+import { viajeComentarios, ViajeComentarioDTO } from "@db/tables/viaje-comentario.model";
 
 @Injectable()
 export class ViajeComentarioRepository {

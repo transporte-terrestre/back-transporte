@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ClienteDocumentoResultDto } from './cliente-documento-result.dto';
-import { clientesTipoDocumento } from '@model/tables/cliente.model';
-import type { ClienteDocumentoTipo } from '@model/tables/cliente-documento.model';
-import type { ClienteTipoDocumento } from '@model/tables/cliente.model';
+import { clientesTipoDocumento } from '@db/tables/cliente.model';
+import type { ClienteDocumentoTipo } from '@db/tables/cliente-documento.model';
+import type { ClienteTipoDocumento } from '@db/tables/cliente.model';
 
 export class DocumentosAgrupadosClienteDto implements Record<ClienteDocumentoTipo, ClienteDocumentoResultDto[]> {
   @ApiProperty({ type: [ClienteDocumentoResultDto] })

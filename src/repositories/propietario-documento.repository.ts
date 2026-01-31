@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, and, gte, lte, count } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { propietarioDocumentos, PropietarioDocumentoDTO } from '@model/tables/propietario-documento.model';
+import { propietarioDocumentos, PropietarioDocumentoDTO } from '@db/tables/propietario-documento.model';
 
 interface PaginationFilters {
   propietarioId?: number;

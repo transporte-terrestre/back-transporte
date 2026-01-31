@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { eq, like, and, gte, lte, count, sql, or, isNull, getTableColumns } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { viajes, ViajeDTO } from '@model/tables/viaje.model';
-import { viajeConductores } from '@model/tables/viaje-conductor.model';
-import { conductores } from '@model/tables/conductor.model';
-import { viajeVehiculos } from '@model/tables/viaje-vehiculo.model';
-import { vehiculos } from '@model/tables/vehiculo.model';
-import { modelos } from '@model/tables/modelo.model';
-import { marcas } from '@model/tables/marca.model';
-import { rutas } from '@model/tables/ruta.model';
-import { clientes } from '@model/tables/cliente.model';
-import { viajeComentarios } from '@model/tables/viaje-comentario.model';
-import { usuarios } from '@model/tables/usuario.model';
+import { viajes, ViajeDTO } from '@db/tables/viaje.model';
+import { viajeConductores } from '@db/tables/viaje-conductor.model';
+import { conductores } from '@db/tables/conductor.model';
+import { viajeVehiculos } from '@db/tables/viaje-vehiculo.model';
+import { vehiculos } from '@db/tables/vehiculo.model';
+import { modelos } from '@db/tables/modelo.model';
+import { marcas } from '@db/tables/marca.model';
+import { rutas } from '@db/tables/ruta.model';
+import { clientes } from '@db/tables/cliente.model';
+import { viajeComentarios } from '@db/tables/viaje-comentario.model';
+import { usuarios } from '@db/tables/usuario.model';
 
 interface PaginationFilters {
   search?: string;

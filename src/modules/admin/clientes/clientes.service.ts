@@ -1,15 +1,12 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
-import { ClienteCreateDto } from "./dto/cliente-create.dto";
-import { ClienteUpdateDto } from "./dto/cliente-update.dto";
-import { ClienteRepository } from "@repository/cliente.repository";
-import { ClienteDocumentoRepository } from "@repository/cliente-documento.repository";
-import { PaginatedClienteResultDto } from "./dto/cliente-paginated.dto";
-import {
-  ClienteDocumentoDTO,
-  clienteDocumentosTipo,
-} from "@model/tables/cliente-documento.model";
-import { DocumentosAgrupadosClienteDto } from "./dto/cliente-result.dto";
-import { ClienteDTO } from "@model/tables/cliente.model";
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { ClienteCreateDto } from './dto/cliente-create.dto';
+import { ClienteUpdateDto } from './dto/cliente-update.dto';
+import { ClienteRepository } from '@repository/cliente.repository';
+import { ClienteDocumentoRepository } from '@repository/cliente-documento.repository';
+import { PaginatedClienteResultDto } from './dto/cliente-paginated.dto';
+import { ClienteDocumentoDTO, clienteDocumentosTipo } from '@db/tables/cliente-documento.model';
+import { DocumentosAgrupadosClienteDto } from './dto/cliente-result.dto';
+import { ClienteDTO } from '@db/tables/cliente.model';
 
 interface DatabaseError {
   code?: string;
@@ -21,7 +18,7 @@ interface DatabaseError {
 export class ClientesService {
   constructor(
     private readonly clienteRepository: ClienteRepository,
-    private readonly clienteDocumentoRepository: ClienteDocumentoRepository
+    private readonly clienteDocumentoRepository: ClienteDocumentoRepository,
   ) {}
 
   async findAllPaginated(
@@ -30,18 +27,14 @@ export class ClientesService {
     search?: string,
     fechaInicio?: string,
     fechaFin?: string,
-    tipoDocumento?: string
+    tipoDocumento?: string,
   ): Promise<PaginatedClienteResultDto> {
-    const { data, total } = await this.clienteRepository.findAllPaginated(
-      page,
-      limit,
-      {
-        search,
-        fechaInicio,
-        fechaFin,
-        tipoDocumento,
-      }
-    );
+    const { data, total } = await this.clienteRepository.findAllPaginated(page, limit, {
+      search,
+      fechaInicio,
+      fechaFin,
+      tipoDocumento,
+    });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -62,17 +55,13 @@ export class ClientesService {
 
   async findOne(id: number) {
     const cliente = await this.clienteRepository.findOne(id);
-    const documentos =
-      await this.clienteDocumentoRepository.findByClienteId(id);
+    const documentos = await this.clienteDocumentoRepository.findByClienteId(id);
 
     // Agrupar documentos por tipo de forma dinámica y tipada
-    const documentosAgrupados = clienteDocumentosTipo.enumValues.reduce(
-      (acc, tipo) => {
-        acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
-        return acc;
-      },
-      {} as DocumentosAgrupadosClienteDto
-    );
+    const documentosAgrupados = clienteDocumentosTipo.enumValues.reduce((acc, tipo) => {
+      acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
+      return acc;
+    }, {} as DocumentosAgrupadosClienteDto);
 
     return {
       ...cliente,
@@ -89,18 +78,14 @@ export class ClientesService {
       });
     } catch (error: unknown) {
       const dbError = error as DatabaseError;
-      if (dbError.cause.code === "23505") {
-        if (dbError.cause.constraint?.includes("email")) {
-          throw new BadRequestException([
-            "El correo electrónico ya está registrado",
-          ]);
+      if (dbError.cause.code === '23505') {
+        if (dbError.cause.constraint?.includes('email')) {
+          throw new BadRequestException(['El correo electrónico ya está registrado']);
         }
-        if (dbError.cause.constraint?.includes("dni")) {
-          throw new BadRequestException(["El DNI ya está registrado"]);
+        if (dbError.cause.constraint?.includes('dni')) {
+          throw new BadRequestException(['El DNI ya está registrado']);
         }
-        throw new BadRequestException([
-          "Ya existe un registro con estos datos",
-        ]);
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
       }
       throw error;
     }
@@ -122,18 +107,14 @@ export class ClientesService {
     } catch (error: unknown) {
       const dbError = error as DatabaseError;
       const pgError = dbError.cause || dbError;
-      if (pgError.code === "23505") {
-        if (pgError.constraint?.includes("email")) {
-          throw new BadRequestException([
-            "El correo electrónico ya está registrado",
-          ]);
+      if (pgError.code === '23505') {
+        if (pgError.constraint?.includes('email')) {
+          throw new BadRequestException(['El correo electrónico ya está registrado']);
         }
-        if (pgError.constraint?.includes("dni")) {
-          throw new BadRequestException(["El DNI ya está registrado"]);
+        if (pgError.constraint?.includes('dni')) {
+          throw new BadRequestException(['El DNI ya está registrado']);
         }
-        throw new BadRequestException([
-          "Ya existe un registro con estos datos",
-        ]);
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
       }
       throw error;
     }
@@ -149,9 +130,7 @@ export class ClientesService {
   }
 
   async createDocumento(data: Partial<ClienteDocumentoDTO>) {
-    return await this.clienteDocumentoRepository.create(
-      data as ClienteDocumentoDTO
-    );
+    return await this.clienteDocumentoRepository.create(data as ClienteDocumentoDTO);
   }
 
   async updateDocumento(id: number, data: Partial<ClienteDocumentoDTO>) {

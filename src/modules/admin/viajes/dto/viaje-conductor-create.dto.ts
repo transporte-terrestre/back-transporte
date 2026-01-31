@@ -1,24 +1,22 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsInt, IsIn, IsBoolean, IsOptional } from "class-validator";
-import { ViajeConductorDTO, viajeConductoresRol } from "@model/tables/viaje-conductor.model";
-import type { ViajeConductorRol } from "@model/tables/viaje-conductor.model";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsInt, IsIn, IsBoolean, IsOptional } from 'class-validator';
+import { ViajeConductorDTO, viajeConductoresRol } from '@db/tables/viaje-conductor.model';
+import type { ViajeConductorRol } from '@db/tables/viaje-conductor.model';
 
-export class ViajeConductorCreateDto
-  implements Omit<ViajeConductorDTO, "creadoEn" | "actualizadoEn">
-{
-  @ApiProperty({ example: 1, description: "ID del viaje" })
+export class ViajeConductorCreateDto implements Omit<ViajeConductorDTO, 'creadoEn' | 'actualizadoEn'> {
+  @ApiProperty({ example: 1, description: 'ID del viaje' })
   @IsInt()
   @IsNotEmpty()
   viajeId: number;
 
-  @ApiProperty({ example: 1, description: "ID del conductor" })
+  @ApiProperty({ example: 1, description: 'ID del conductor' })
   @IsInt()
   @IsNotEmpty()
   conductorId: number;
 
   @ApiProperty({
     example: true,
-    description: "Indica si es el conductor principal",
+    description: 'Indica si es el conductor principal',
     default: false,
   })
   @IsBoolean()
@@ -27,7 +25,7 @@ export class ViajeConductorCreateDto
 
   @ApiProperty({
     enum: viajeConductoresRol.enumValues,
-    description: "Rol del conductor en el viaje",
+    description: 'Rol del conductor en el viaje',
     default: viajeConductoresRol.enumValues[0],
     required: false,
   })

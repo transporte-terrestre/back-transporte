@@ -1,6 +1,6 @@
 import { database } from "@db/connection.db";
-import { vehiculoDocumentos } from "@model/tables/vehiculo-documento.model";
-import { Vehiculo } from "@model/tables/vehiculo.model";
+import { vehiculoDocumentos } from "@db/tables/vehiculo-documento.model";
+import { Vehiculo } from "@db/tables/vehiculo.model";
 import { getDate } from "@function/date.function";
 
 const DEFAULT_PDF_URL =

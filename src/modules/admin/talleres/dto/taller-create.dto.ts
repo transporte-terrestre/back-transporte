@@ -1,21 +1,12 @@
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-  IsIn,
-} from "class-validator";
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { TallerDTO, talleresTipo } from "@model/tables/taller.model";
-import type { TallerTipo } from "@model/tables/taller.model";
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, IsIn } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TallerDTO, talleresTipo } from '@db/tables/taller.model';
+import type { TallerTipo } from '@db/tables/taller.model';
 
-export class TallerCreateDto
-  implements Omit<TallerDTO, "id" | "creadoEn" | "actualizadoEn">
-{
+export class TallerCreateDto implements Omit<TallerDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
   @ApiPropertyOptional({
-    example: "20123456789",
-    description: "RUC del taller",
+    example: '20123456789',
+    description: 'RUC del taller',
   })
   @IsString()
   @IsOptional()
@@ -23,8 +14,8 @@ export class TallerCreateDto
   ruc?: string | null;
 
   @ApiProperty({
-    example: "Taller Mecánico SAC",
-    description: "Razón Social del taller",
+    example: 'Taller Mecánico SAC',
+    description: 'Razón Social del taller',
   })
   @IsString()
   @IsNotEmpty()
@@ -32,8 +23,8 @@ export class TallerCreateDto
   razonSocial: string;
 
   @ApiPropertyOptional({
-    example: "Taller Express",
-    description: "Nombre Comercial del taller",
+    example: 'Taller Express',
+    description: 'Nombre Comercial del taller',
   })
   @IsString()
   @IsOptional()
@@ -43,15 +34,15 @@ export class TallerCreateDto
   @ApiProperty({
     enum: talleresTipo.enumValues,
     default: talleresTipo.enumValues[0],
-    description: "Tipo de taller (interno, externo)",
+    description: 'Tipo de taller (interno, externo)',
   })
   @IsIn(talleresTipo.enumValues, { each: true })
   @IsNotEmpty()
   tipo: TallerTipo;
 
   @ApiPropertyOptional({
-    example: "987654321",
-    description: "Teléfono del taller",
+    example: '987654321',
+    description: 'Teléfono del taller',
   })
   @IsString()
   @IsOptional()
@@ -59,8 +50,8 @@ export class TallerCreateDto
   telefono?: string | null;
 
   @ApiPropertyOptional({
-    example: "contacto@taller.com",
-    description: "Email del taller",
+    example: 'contacto@taller.com',
+    description: 'Email del taller',
   })
   @IsEmail()
   @IsOptional()
@@ -68,8 +59,8 @@ export class TallerCreateDto
   email?: string | null;
 
   @ApiPropertyOptional({
-    example: "Av. Industrial 555",
-    description: "Dirección del taller",
+    example: 'Av. Industrial 555',
+    description: 'Dirección del taller',
   })
   @IsString()
   @IsOptional()

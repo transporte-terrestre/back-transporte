@@ -1,22 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
-import { proveedorDocumentos, ProveedorDocumento, ProveedorDocumentoDTO } from '@model/tables/proveedor-documento.model';
+import { proveedorDocumentos, ProveedorDocumento, ProveedorDocumentoDTO } from '@db/tables/proveedor-documento.model';
 import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class ProveedorDocumentoRepository {
   async findByProveedorId(proveedorId: number) {
-    return await database
-      .select()
-      .from(proveedorDocumentos)
-      .where(eq(proveedorDocumentos.proveedorId, proveedorId));
+    return await database.select().from(proveedorDocumentos).where(eq(proveedorDocumentos.proveedorId, proveedorId));
   }
 
   async findOne(id: number) {
-    const result = await database
-      .select()
-      .from(proveedorDocumentos)
-      .where(eq(proveedorDocumentos.id, id));
+    const result = await database.select().from(proveedorDocumentos).where(eq(proveedorDocumentos.id, id));
     return result[0];
   }
 
@@ -35,10 +29,7 @@ export class ProveedorDocumentoRepository {
   }
 
   async delete(id: number) {
-    const result = await database
-      .delete(proveedorDocumentos)
-      .where(eq(proveedorDocumentos.id, id))
-      .returning();
+    const result = await database.delete(proveedorDocumentos).where(eq(proveedorDocumentos.id, id)).returning();
     return result[0];
   }
 }

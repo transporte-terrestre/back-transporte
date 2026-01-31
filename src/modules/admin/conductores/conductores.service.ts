@@ -1,21 +1,18 @@
-import { Injectable } from "@nestjs/common";
-import { ConductorRepository } from "@repository/conductor.repository";
-import { ConductorDocumentoRepository } from "@repository/conductor-documento.repository";
-import { ConductorCreateDto } from "./dto/conductor-create.dto";
-import { ConductorUpdateDto } from "./dto/conductor-update.dto";
-import { PaginatedConductorResultDto } from "./dto/conductor-paginated.dto";
-import {
-  ConductorDocumentoDTO,
-  conductorDocumentosTipo,
-} from "@model/tables/conductor-documento.model";
-import { DocumentosAgrupadosConductorDto } from "./dto/conductor-result.dto";
-import { ConductorDTO } from "@model/tables/conductor.model";
+import { Injectable } from '@nestjs/common';
+import { ConductorRepository } from '@repository/conductor.repository';
+import { ConductorDocumentoRepository } from '@repository/conductor-documento.repository';
+import { ConductorCreateDto } from './dto/conductor-create.dto';
+import { ConductorUpdateDto } from './dto/conductor-update.dto';
+import { PaginatedConductorResultDto } from './dto/conductor-paginated.dto';
+import { ConductorDocumentoDTO, conductorDocumentosTipo } from '@db/tables/conductor-documento.model';
+import { DocumentosAgrupadosConductorDto } from './dto/conductor-result.dto';
+import { ConductorDTO } from '@db/tables/conductor.model';
 
 @Injectable()
 export class ConductoresService {
   constructor(
     private readonly conductorRepository: ConductorRepository,
-    private readonly conductorDocumentoRepository: ConductorDocumentoRepository
+    private readonly conductorDocumentoRepository: ConductorDocumentoRepository,
   ) {}
 
   async findAllPaginated(
@@ -25,13 +22,15 @@ export class ConductoresService {
     fechaInicio?: string,
     fechaFin?: string,
     claseLicencia?: string,
-    categoriaLicencia?: string
+    categoriaLicencia?: string,
   ): Promise<PaginatedConductorResultDto> {
-    const { data, total } = await this.conductorRepository.findAllPaginated(
-      page,
-      limit,
-      { search, fechaInicio, fechaFin, claseLicencia, categoriaLicencia }
-    );
+    const { data, total } = await this.conductorRepository.findAllPaginated(page, limit, {
+      search,
+      fechaInicio,
+      fechaFin,
+      claseLicencia,
+      categoriaLicencia,
+    });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -52,18 +51,14 @@ export class ConductoresService {
 
   async findOne(id: number) {
     const conductor = await this.conductorRepository.findOne(id);
-    const documentos =
-      await this.conductorDocumentoRepository.findByConductorId(id);
+    const documentos = await this.conductorDocumentoRepository.findByConductorId(id);
 
     // Agrupar documentos por tipo
     // Agrupar documentos por tipo de forma dinámica y tipada
-    const documentosAgrupados = conductorDocumentosTipo.enumValues.reduce(
-      (acc, tipo) => {
-        acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
-        return acc;
-      },
-      {} as DocumentosAgrupadosConductorDto
-    );
+    const documentosAgrupados = conductorDocumentosTipo.enumValues.reduce((acc, tipo) => {
+      acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
+      return acc;
+    }, {} as DocumentosAgrupadosConductorDto);
 
     return {
       ...conductor,
@@ -103,9 +98,7 @@ export class ConductoresService {
   }
 
   async createDocumento(data: Partial<ConductorDocumentoDTO>) {
-    return await this.conductorDocumentoRepository.create(
-      data as ConductorDocumentoDTO
-    );
+    return await this.conductorDocumentoRepository.create(data as ConductorDocumentoDTO);
   }
 
   async updateDocumento(id: number, data: Partial<ConductorDocumentoDTO>) {

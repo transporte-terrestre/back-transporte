@@ -8,9 +8,9 @@ import { ClienteRepository } from '@repository/cliente.repository';
 import { ViajeCreateDto } from './dto/viaje-create.dto';
 import { ViajeUpdateDto } from './dto/viaje-update.dto';
 import { PaginatedViajeResultDto } from './dto/viaje-paginated.dto';
-import { ViajeConductorDTO } from '@model/tables/viaje-conductor.model';
-import { ViajeVehiculoDTO } from '@model/tables/viaje-vehiculo.model';
-import { ViajeComentarioDTO } from '@model/tables/viaje-comentario.model';
+import { ViajeConductorDTO } from '@db/tables/viaje-conductor.model';
+import { ViajeVehiculoDTO } from '@db/tables/viaje-vehiculo.model';
+import { ViajeComentarioDTO } from '@db/tables/viaje-comentario.model';
 
 @Injectable()
 export class ViajesService {

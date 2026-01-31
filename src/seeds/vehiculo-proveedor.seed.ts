@@ -1,7 +1,7 @@
 import { database } from '@db/connection.db';
-import { vehiculoProveedores } from '@model/tables/vehiculo-proveedor.model';
-import { Vehiculo } from '@model/tables/vehiculo.model';
-import { Proveedor } from '@model/tables/proveedor.model';
+import { vehiculoProveedores } from '@db/tables/vehiculo-proveedor.model';
+import { Vehiculo } from '@db/tables/vehiculo.model';
+import { Proveedor } from '@db/tables/proveedor.model';
 
 function randomElements<T>(arr: readonly T[], count: number): T[] {
   const shuffled = [...arr].sort(() => 0.5 - Math.random());

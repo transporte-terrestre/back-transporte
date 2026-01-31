@@ -3,8 +3,8 @@ import { ClienteListDto } from './cliente-list.dto';
 import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
-import { clientesTipoDocumento } from '@model/tables/cliente.model';
-import type { ClienteTipoDocumento } from '@model/tables/cliente.model';
+import { clientesTipoDocumento } from '@db/tables/cliente.model';
+import type { ClienteTipoDocumento } from '@db/tables/cliente.model';
 
 export class ClientePaginationQueryDto {
   @ApiProperty({

@@ -1,4 +1,4 @@
-import { propietariosTipoDocumento } from '@model/tables/propietario.model';
+import { propietariosTipoDocumento } from '@db/tables/propietario.model';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class PropietarioListDto {

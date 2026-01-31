@@ -1,34 +1,33 @@
-import { database } from "@db/connection.db";
-import { conductorDocumentos } from "@model/tables/conductor-documento.model";
-import { Conductor } from "@model/tables/conductor.model";
-import { getDate } from "@function/date.function";
+import { database } from '@db/connection.db';
+import { conductorDocumentos } from '@db/tables/conductor-documento.model';
+import { Conductor } from '@db/tables/conductor.model';
+import { getDate } from '@function/date.function';
 
-const DEFAULT_PDF_URL =
-  "https://res.cloudinary.com/dm0qhq2rk/image/upload/v1766044501/mantenimientos/Ejemplo%20de%20certificado_1766044500270.pdf";
+const DEFAULT_PDF_URL = 'https://res.cloudinary.com/dm0qhq2rk/image/upload/v1766044501/mantenimientos/Ejemplo%20de%20certificado_1766044500270.pdf';
 
 // Helper to format Date to YYYY-MM-DD string
-const formatDate = (date: Date): string => date.toISOString().split("T")[0];
+const formatDate = (date: Date): string => date.toISOString().split('T')[0];
 
 export async function seedConductorDocumentos(conductoresData: Conductor[]) {
-  console.log("🌱 Seeding driver documents...");
+  console.log('🌱 Seeding driver documents...');
 
   if (conductoresData.length === 0) {
-    console.log("⚠️ Skipping driver documents (no drivers)");
+    console.log('⚠️ Skipping driver documents (no drivers)');
     return;
   }
 
   const documentosData: Array<{
     conductorId: number;
     tipo:
-      | "dni"
-      | "licencia_mtc"
-      | "seguro_vida_ley"
-      | "sctr"
-      | "examen_medico"
-      | "psicosensometrico"
-      | "induccion_general"
-      | "manejo_defensivo"
-      | "licencia_interna";
+      | 'dni'
+      | 'licencia_mtc'
+      | 'seguro_vida_ley'
+      | 'sctr'
+      | 'examen_medico'
+      | 'psicosensometrico'
+      | 'induccion_general'
+      | 'manejo_defensivo'
+      | 'licencia_interna';
     nombre: string;
     url: string;
     fechaExpiracion: string;
@@ -45,7 +44,7 @@ export async function seedConductorDocumentos(conductoresData: Conductor[]) {
     // DNI - long validity
     documentosData.push({
       conductorId: conductor.id,
-      tipo: "dni",
+      tipo: 'dni',
       nombre: `DNI_${conductor.dni}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-730)),
@@ -62,7 +61,7 @@ export async function seedConductorDocumentos(conductoresData: Conductor[]) {
     }
     documentosData.push({
       conductorId: conductor.id,
-      tipo: "licencia_mtc",
+      tipo: 'licencia_mtc',
       nombre: `Licencia_MTC_${conductor.numeroLicencia}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-365)),
@@ -72,7 +71,7 @@ export async function seedConductorDocumentos(conductoresData: Conductor[]) {
     // Seguro Vida Ley - all valid
     documentosData.push({
       conductorId: conductor.id,
-      tipo: "seguro_vida_ley",
+      tipo: 'seguro_vida_ley',
       nombre: `Seguro_Vida_Ley_${conductor.nombreCompleto}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-180)),
@@ -82,7 +81,7 @@ export async function seedConductorDocumentos(conductoresData: Conductor[]) {
     // SCTR - all valid
     documentosData.push({
       conductorId: conductor.id,
-      tipo: "sctr",
+      tipo: 'sctr',
       nombre: `SCTR_${conductor.nombreCompleto}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-90)),
@@ -92,7 +91,7 @@ export async function seedConductorDocumentos(conductoresData: Conductor[]) {
     // Examen Médico - all valid
     documentosData.push({
       conductorId: conductor.id,
-      tipo: "examen_medico",
+      tipo: 'examen_medico',
       nombre: `Examen_Medico_${conductor.nombreCompleto}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-330)),
@@ -103,7 +102,7 @@ export async function seedConductorDocumentos(conductoresData: Conductor[]) {
     if (i < 12) {
       documentosData.push({
         conductorId: conductor.id,
-        tipo: "psicosensometrico",
+        tipo: 'psicosensometrico',
         nombre: `Psicosensometrico_${conductor.nombreCompleto}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-700)),
@@ -115,7 +114,7 @@ export async function seedConductorDocumentos(conductoresData: Conductor[]) {
     if (i < 10) {
       documentosData.push({
         conductorId: conductor.id,
-        tipo: "induccion_general",
+        tipo: 'induccion_general',
         nombre: `Induccion_General_${conductor.nombreCompleto}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-365)),
@@ -127,7 +126,7 @@ export async function seedConductorDocumentos(conductoresData: Conductor[]) {
     if (i < 8) {
       documentosData.push({
         conductorId: conductor.id,
-        tipo: "manejo_defensivo",
+        tipo: 'manejo_defensivo',
         nombre: `Manejo_Defensivo_${conductor.nombreCompleto}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-400)),
@@ -139,7 +138,7 @@ export async function seedConductorDocumentos(conductoresData: Conductor[]) {
     if (i < 6) {
       documentosData.push({
         conductorId: conductor.id,
-        tipo: "licencia_interna",
+        tipo: 'licencia_interna',
         nombre: `Licencia_Interna_${conductor.nombreCompleto}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-350)),
@@ -149,7 +148,5 @@ export async function seedConductorDocumentos(conductoresData: Conductor[]) {
   }
 
   await database.insert(conductorDocumentos).values(documentosData);
-  console.log(
-    `✅ ${documentosData.length} driver documents inserted (${expiringCount} expiring soon)`
-  );
+  console.log(`✅ ${documentosData.length} driver documents inserted (${expiringCount} expiring soon)`);
 }

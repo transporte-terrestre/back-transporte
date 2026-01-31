@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { notificacionTipo } from '@model/tables/notificacion.model';
-import type { NotificacionTipo } from '@model/tables/notificacion.model';
+import { notificacionTipo } from '@db/tables/notificacion.model';
+import type { NotificacionTipo } from '@db/tables/notificacion.model';
 
 export class NotificacionResultDto {
   @ApiProperty({ example: 1 })

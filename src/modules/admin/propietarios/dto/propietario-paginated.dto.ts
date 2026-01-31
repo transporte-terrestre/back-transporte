@@ -3,7 +3,7 @@ import { IsOptional, IsString, IsInt, Min, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PropietarioListDto } from './propietario-list.dto';
 import { PaginationMetaDto } from '@common/dto/pagination-meta.dto';
-import { propietariosTipoDocumento } from '@model/tables/propietario.model';
+import { propietariosTipoDocumento } from '@db/tables/propietario.model';
 
 export class PropietarioPaginationQueryDto {
   @ApiPropertyOptional({ example: 1, description: 'Número de página' })

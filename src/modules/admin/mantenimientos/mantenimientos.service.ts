@@ -12,7 +12,7 @@ import { MantenimientoTareaUpdateDto } from './dto/mantenimiento-tarea-update.dt
 import { MantenimientoDocumentoCreateDto } from './dto/mantenimiento-documento-create.dto';
 import { MantenimientoDocumentoUpdateDto } from './dto/mantenimiento-documento-update.dto';
 
-import { MantenimientoDocumentoDTO, mantenimientoDocumentosTipo } from '@model/tables/mantenimiento-documento.model';
+import { MantenimientoDocumentoDTO, mantenimientoDocumentosTipo } from '@db/tables/mantenimiento-documento.model';
 import { DocumentosAgrupadosMantenimientoDto } from './dto/mantenimiento-result.dto';
 
 @Injectable()

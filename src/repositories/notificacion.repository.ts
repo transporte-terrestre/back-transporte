@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
-import { notificaciones } from '@model/tables/notificacion.model';
-import { notificacionesLeidas } from '@model/tables/notificacion-leida.model';
-import { clienteDocumentos } from '@model/tables/cliente-documento.model';
-import { conductorDocumentos } from '@model/tables/conductor-documento.model';
-import { vehiculoDocumentos } from '@model/tables/vehiculo-documento.model';
-import { usuarioDocumentos } from '@model/tables/usuario-documento.model';
-import { clientes } from '@model/tables/cliente.model';
-import { conductores } from '@model/tables/conductor.model';
-import { vehiculos } from '@model/tables/vehiculo.model';
-import { modelos } from '@model/tables/modelo.model';
-import { marcas } from '@model/tables/marca.model';
-import { usuarios } from '@model/tables/usuario.model';
-import { propietarioDocumentos } from '@model/tables/propietario-documento.model';
-import { propietarios } from '@model/tables/propietario.model';
+import { notificaciones } from '@db/tables/notificacion.model';
+import { notificacionesLeidas } from '@db/tables/notificacion-leida.model';
+import { clienteDocumentos } from '@db/tables/cliente-documento.model';
+import { conductorDocumentos } from '@db/tables/conductor-documento.model';
+import { vehiculoDocumentos } from '@db/tables/vehiculo-documento.model';
+import { usuarioDocumentos } from '@db/tables/usuario-documento.model';
+import { clientes } from '@db/tables/cliente.model';
+import { conductores } from '@db/tables/conductor.model';
+import { vehiculos } from '@db/tables/vehiculo.model';
+import { modelos } from '@db/tables/modelo.model';
+import { marcas } from '@db/tables/marca.model';
+import { usuarios } from '@db/tables/usuario.model';
+import { propietarioDocumentos } from '@db/tables/propietario-documento.model';
+import { propietarios } from '@db/tables/propietario.model';
 import { eq, and, desc, isNull, count, sql, lte, isNotNull } from 'drizzle-orm';
 
 // Types for document expiration results

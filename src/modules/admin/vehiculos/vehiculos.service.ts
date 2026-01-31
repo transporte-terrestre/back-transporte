@@ -1,20 +1,17 @@
-import { Injectable } from "@nestjs/common";
-import { VehiculoRepository } from "@repository/vehiculo.repository";
-import { VehiculoDocumentoRepository } from "@repository/vehiculo-documento.repository";
-import { MarcaRepository } from "@repository/marca.repository";
-import { ModeloRepository } from "@repository/modelo.repository";
-import { VehiculoCreateDto } from "./dto/vehiculo-create.dto";
-import { VehiculoUpdateDto } from "./dto/vehiculo-update.dto";
-import { PaginatedVehiculoResultDto } from "./dto/vehiculo-paginated.dto";
-import {
-  VehiculoDocumentoDTO,
-  vehiculoDocumentosTipo,
-} from "@model/tables/vehiculo-documento.model";
-import { DocumentosAgrupadosVehiculoDto } from "./dto/vehiculo-result.dto";
-import { MarcaCreateDto } from "./dto/marca-create.dto";
-import { MarcaUpdateDto } from "./dto/marca-update.dto";
-import { ModeloCreateDto } from "./dto/modelo-create.dto";
-import { ModeloUpdateDto } from "./dto/modelo-update.dto";
+import { Injectable } from '@nestjs/common';
+import { VehiculoRepository } from '@repository/vehiculo.repository';
+import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repository';
+import { MarcaRepository } from '@repository/marca.repository';
+import { ModeloRepository } from '@repository/modelo.repository';
+import { VehiculoCreateDto } from './dto/vehiculo-create.dto';
+import { VehiculoUpdateDto } from './dto/vehiculo-update.dto';
+import { PaginatedVehiculoResultDto } from './dto/vehiculo-paginated.dto';
+import { VehiculoDocumentoDTO, vehiculoDocumentosTipo } from '@db/tables/vehiculo-documento.model';
+import { DocumentosAgrupadosVehiculoDto } from './dto/vehiculo-result.dto';
+import { MarcaCreateDto } from './dto/marca-create.dto';
+import { MarcaUpdateDto } from './dto/marca-update.dto';
+import { ModeloCreateDto } from './dto/modelo-create.dto';
+import { ModeloUpdateDto } from './dto/modelo-update.dto';
 
 @Injectable()
 export class VehiculosService {
@@ -22,7 +19,7 @@ export class VehiculosService {
     private readonly vehiculoRepository: VehiculoRepository,
     private readonly vehiculoDocumentoRepository: VehiculoDocumentoRepository,
     private readonly marcaRepository: MarcaRepository,
-    private readonly modeloRepository: ModeloRepository
+    private readonly modeloRepository: ModeloRepository,
   ) {}
 
   async findAllPaginated(
@@ -31,13 +28,9 @@ export class VehiculosService {
     search?: string,
     fechaInicio?: string,
     fechaFin?: string,
-    estado?: string
+    estado?: string,
   ): Promise<PaginatedVehiculoResultDto> {
-    const { data, total } = await this.vehiculoRepository.findAllPaginated(
-      page,
-      limit,
-      { search, fechaInicio, fechaFin, estado }
-    );
+    const { data, total } = await this.vehiculoRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin, estado });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -58,16 +51,12 @@ export class VehiculosService {
 
   async findOne(id: number) {
     const vehiculo = await this.vehiculoRepository.findOne(id);
-    const documentos =
-      await this.vehiculoDocumentoRepository.findByVehiculoId(id);
+    const documentos = await this.vehiculoDocumentoRepository.findByVehiculoId(id);
 
-    const documentosAgrupados = vehiculoDocumentosTipo.enumValues.reduce(
-      (acc, tipo) => {
-        acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
-        return acc;
-      },
-      {} as DocumentosAgrupadosVehiculoDto
-    );
+    const documentosAgrupados = vehiculoDocumentosTipo.enumValues.reduce((acc, tipo) => {
+      acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
+      return acc;
+    }, {} as DocumentosAgrupadosVehiculoDto);
 
     return {
       ...vehiculo,
@@ -82,7 +71,7 @@ export class VehiculosService {
   }
 
   private generarCodigoInterno(id: number): string {
-    return String(id).padStart(5, "0");
+    return String(id).padStart(5, '0');
   }
 
   update(id: number, data: VehiculoUpdateDto) {
@@ -99,9 +88,7 @@ export class VehiculosService {
   }
 
   async createDocumento(data: Partial<VehiculoDocumentoDTO>) {
-    return await this.vehiculoDocumentoRepository.create(
-      data as VehiculoDocumentoDTO
-    );
+    return await this.vehiculoDocumentoRepository.create(data as VehiculoDocumentoDTO);
   }
 
   async updateDocumento(id: number, data: Partial<VehiculoDocumentoDTO>) {
@@ -114,18 +101,8 @@ export class VehiculosService {
 
   // ========== MARCAS ==========
 
-  async findAllMarcasPaginated(
-    page: number = 1,
-    limit: number = 10,
-    search?: string,
-    fechaInicio?: string,
-    fechaFin?: string
-  ) {
-    const { data, total } = await this.marcaRepository.findAllPaginated(
-      page,
-      limit,
-      { search, fechaInicio, fechaFin }
-    );
+  async findAllMarcasPaginated(page: number = 1, limit: number = 10, search?: string, fechaInicio?: string, fechaFin?: string) {
+    const { data, total } = await this.marcaRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -162,19 +139,8 @@ export class VehiculosService {
 
   // ========== MODELOS ==========
 
-  async findAllModelosPaginated(
-    page: number = 1,
-    limit: number = 10,
-    search?: string,
-    marcaId?: number,
-    fechaInicio?: string,
-    fechaFin?: string
-  ) {
-    const { data, total } = await this.modeloRepository.findAllPaginated(
-      page,
-      limit,
-      { search, marcaId, fechaInicio, fechaFin }
-    );
+  async findAllModelosPaginated(page: number = 1, limit: number = 10, search?: string, marcaId?: number, fechaInicio?: string, fechaFin?: string) {
+    const { data, total } = await this.modeloRepository.findAllPaginated(page, limit, { search, marcaId, fechaInicio, fechaFin });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;

@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty, IsInt, Min, IsOptional, IsIn, IsArray, IsNumber } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { VehiculoDTO, vehiculosEstado, combustibleEnum } from '@model/tables/vehiculo.model';
-import type { VehiculoEstado, CombustibleTipo } from '@model/tables/vehiculo.model';
+import { VehiculoDTO, vehiculosEstado, combustibleEnum } from '@db/tables/vehiculo.model';
+import type { VehiculoEstado, CombustibleTipo } from '@db/tables/vehiculo.model';
 
 export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 'actualizadoEn' | 'codigoInterno'> {
   @ApiProperty({ example: 'ABC-123', description: 'Vehicle license plate' })

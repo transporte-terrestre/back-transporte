@@ -1,6 +1,6 @@
 import { database } from '@db/connection.db';
-import { proveedorDocumentos } from '@model/tables/proveedor-documento.model';
-import { Proveedor } from '@model/tables/proveedor.model';
+import { proveedorDocumentos } from '@db/tables/proveedor-documento.model';
+import { Proveedor } from '@db/tables/proveedor.model';
 
 export async function seedProveedorDocumentos(proveedoresData: Proveedor[]) {
   console.log('🌱 Seeding proveedor-documentos...');

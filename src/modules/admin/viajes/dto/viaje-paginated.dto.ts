@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
-import { modalidadServicio, viajesTipoRuta, viajesEstado } from '@model/tables/viaje.model';
-import type { ViajeModalidadServicio, ViajeTipoRuta, ViajeEstado } from '@model/tables/viaje.model';
+import { modalidadServicio, viajesTipoRuta, viajesEstado } from '@db/tables/viaje.model';
+import type { ViajeModalidadServicio, ViajeTipoRuta, ViajeEstado } from '@db/tables/viaje.model';
 import { ViajeListDto } from './viaje-list.dto';
 import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
 

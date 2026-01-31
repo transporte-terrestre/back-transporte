@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ProveedorDocumentoDTO, proveedorDocumentosTipo } from '@model/tables/proveedor-documento.model';
-import type { ProveedorDocumentoTipo } from '@model/tables/proveedor-documento.model';
+import { ProveedorDocumentoDTO, proveedorDocumentosTipo } from '@db/tables/proveedor-documento.model';
+import type { ProveedorDocumentoTipo } from '@db/tables/proveedor-documento.model';
 
 export class ProveedorDocumentoResultDto implements ProveedorDocumentoDTO {
   @ApiProperty({ example: 1, description: 'ID del documento' })

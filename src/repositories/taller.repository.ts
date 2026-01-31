@@ -1,18 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import {
-  eq,
-  or,
-  like,
-  and,
-  gte,
-  lte,
-  count,
-  ilike,
-  desc,
-  sql,
-} from "drizzle-orm";
-import { database } from "@db/connection.db";
-import { talleres, TallerDTO } from "@model/tables/taller.model";
+import { Injectable } from '@nestjs/common';
+import { eq, or, like, and, gte, lte, count, ilike, desc, sql } from 'drizzle-orm';
+import { database } from '@db/connection.db';
+import { talleres, TallerDTO } from '@db/tables/taller.model';
 
 interface PaginationFilters {
   search?: string;
@@ -27,11 +16,7 @@ export class TallerRepository {
     return await database.select().from(talleres);
   }
 
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-    filters?: PaginationFilters
-  ) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
@@ -43,8 +28,8 @@ export class TallerRepository {
           ilike(talleres.nombreComercial, `%${searchTerm}%`),
           like(talleres.ruc, `%${searchTerm}%`),
           like(talleres.telefono, `%${searchTerm}%`),
-          like(talleres.email, `%${searchTerm}%`)
-        )
+          like(talleres.email, `%${searchTerm}%`),
+        ),
       );
     }
 
@@ -54,31 +39,18 @@ export class TallerRepository {
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(gte(talleres.creadoEn, new Date(filters.fechaInicio)));
-      conditions.push(
-        lte(talleres.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(talleres.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     } else if (filters?.fechaInicio) {
       conditions.push(gte(talleres.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(
-        lte(talleres.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(talleres.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(talleres)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(talleres).where(whereClause);
 
-    const data = await database
-      .select()
-      .from(talleres)
-      .where(whereClause)
-      .orderBy(desc(talleres.creadoEn))
-      .limit(limit)
-      .offset(offset);
+    const data = await database.select().from(talleres).where(whereClause).orderBy(desc(talleres.creadoEn)).limit(limit).offset(offset);
 
     return {
       data,
@@ -87,10 +59,7 @@ export class TallerRepository {
   }
 
   async findOne(id: number) {
-    const result = await database
-      .select()
-      .from(talleres)
-      .where(eq(talleres.id, id));
+    const result = await database.select().from(talleres).where(eq(talleres.id, id));
     return result[0];
   }
 
@@ -109,10 +78,7 @@ export class TallerRepository {
   }
 
   async delete(id: number) {
-    const result = await database
-      .delete(talleres)
-      .where(eq(talleres.id, id))
-      .returning();
+    const result = await database.delete(talleres).where(eq(talleres.id, id)).returning();
     return result[0];
   }
 }

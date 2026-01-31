@@ -1,18 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { database } from "@db/connection.db";
-import { modelos, ModeloDTO } from "@model/tables/modelo.model";
-import { marcas } from "@model/tables/marca.model";
-import {
-  eq,
-  count,
-  and,
-  gte,
-  lte,
-  ilike,
-  desc,
-  isNull,
-  getTableColumns,
-} from "drizzle-orm";
+import { Injectable } from '@nestjs/common';
+import { database } from '@db/connection.db';
+import { modelos, ModeloDTO } from '@db/tables/modelo.model';
+import { marcas } from '@db/tables/marca.model';
+import { eq, count, and, gte, lte, ilike, desc, isNull, getTableColumns } from 'drizzle-orm';
 
 interface PaginationFilters {
   search?: string;
@@ -23,11 +13,7 @@ interface PaginationFilters {
 
 @Injectable()
 export class ModeloRepository {
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-    filters?: PaginationFilters
-  ) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
@@ -42,24 +28,17 @@ export class ModeloRepository {
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(gte(modelos.creadoEn, new Date(filters.fechaInicio)));
-      conditions.push(
-        lte(modelos.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(modelos.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     } else if (filters?.fechaInicio) {
       conditions.push(gte(modelos.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(
-        lte(modelos.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(modelos.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
     conditions.push(isNull(modelos.eliminadoEn));
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(modelos)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(modelos).where(whereClause);
 
     const data = await database
       .select({
@@ -110,11 +89,7 @@ export class ModeloRepository {
   }
 
   async delete(id: number) {
-    const result = await database
-      .update(modelos)
-      .set({ eliminadoEn: new Date() })
-      .where(eq(modelos.id, id))
-      .returning();
+    const result = await database.update(modelos).set({ eliminadoEn: new Date() }).where(eq(modelos.id, id)).returning();
     return result[0];
   }
 }

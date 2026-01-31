@@ -1,12 +1,12 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { mantenimientosTipo, mantenimientosEstado } from '@model/tables/mantenimiento.model';
-import type { MantenimientoTipo, MantenimientoEstado } from '@model/tables/mantenimiento.model';
+import { mantenimientosTipo, mantenimientosEstado } from '@db/tables/mantenimiento.model';
+import type { MantenimientoTipo, MantenimientoEstado } from '@db/tables/mantenimiento.model';
 import { VehiculoResultDto } from '../../vehiculos/dto/vehiculo-result.dto';
 import { MantenimientoTareaResultDto } from './mantenimiento-tarea-result.dto';
 import { MantenimientoDocumentoResultDto } from './mantenimiento-documento-result.dto';
 import { TallerResultDto } from '@module/admin/talleres/dto/taller-result.dto';
 
-export class VehiculoMantenimientoResultDto extends OmitType(VehiculoResultDto, ['documentos','propietarios','proveedores']) {}
+export class VehiculoMantenimientoResultDto extends OmitType(VehiculoResultDto, ['documentos', 'propietarios', 'proveedores']) {}
 
 export class DocumentosAgrupadosMantenimientoDto {
   @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
