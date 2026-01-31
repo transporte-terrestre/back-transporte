@@ -7,7 +7,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "node dist/src/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
@@ -28,6 +28,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@azure/storage-blob": "^12.29.1",
     "@nestjs/common": "^11.0.17",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.1",

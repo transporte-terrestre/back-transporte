@@ -172,6 +172,12 @@ export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 
   @IsOptional()
   propietarios?: number[];
 
+  @ApiPropertyOptional({ example: [1, 2], description: 'List of supplier IDs', type: [Number] })
+  @IsArray()
+  @IsInt({ each: true })
+  @IsOptional()
+  proveedores?: number[];
+
   @ApiPropertyOptional({
     example: ['https://res.cloudinary.com/xxx/image.jpg'],
     description: 'Lista de URLs de imágenes del vehículo',

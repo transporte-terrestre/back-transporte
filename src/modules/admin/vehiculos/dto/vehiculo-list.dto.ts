@@ -53,6 +53,9 @@ export class VehiculoListDto {
   @ApiPropertyOptional({ type: [String], description: 'List of owners names', default: [] })
   propietarios_nombres?: string[];
 
+  @ApiPropertyOptional({ type: [String], description: 'List of suppliers names', default: [] })
+  proveedores_nombres?: string[];
+
   @ApiProperty({
     example: '2023-01-01T00:00:00.000Z',
     description: 'Creation date',

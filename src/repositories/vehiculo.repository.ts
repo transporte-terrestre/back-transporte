@@ -6,6 +6,8 @@ import { modelos } from '@model/tables/modelo.model';
 import { marcas } from '@model/tables/marca.model';
 import { propietarios } from '@model/tables/propietario.model';
 import { vehiculoPropietarios } from '@model/tables/vehiculo-propietario.model';
+import { proveedores } from '@model/tables/proveedor.model';
+import { vehiculoProveedores } from '@model/tables/vehiculo-proveedor.model';
 
 interface PaginationFilters {
   search?: string;
@@ -93,9 +95,16 @@ export class VehiculoRepository {
           .innerJoin(propietarios, eq(vehiculoPropietarios.propietarioId, propietarios.id))
           .where(eq(vehiculoPropietarios.vehiculoId, vehiculo.id));
 
+        const suppliers = await database
+          .select({ nombre: proveedores.nombreCompleto })
+          .from(vehiculoProveedores)
+          .innerJoin(proveedores, eq(vehiculoProveedores.proveedorId, proveedores.id))
+          .where(eq(vehiculoProveedores.vehiculoId, vehiculo.id));
+
         return {
           ...vehiculo,
           propietarios_nombres: owners.map((o) => o.nombre),
+          proveedores_nombres: suppliers.map((s) => s.nombre),
         };
       }),
     );
@@ -131,14 +140,24 @@ export class VehiculoRepository {
       .innerJoin(propietarios, eq(vehiculoPropietarios.propietarioId, propietarios.id))
       .where(eq(vehiculoPropietarios.vehiculoId, id));
 
+    const suppliers = await database
+      .select({
+        id: proveedores.id,
+        nombre: proveedores.nombreCompleto,
+      })
+      .from(vehiculoProveedores)
+      .innerJoin(proveedores, eq(vehiculoProveedores.proveedorId, proveedores.id))
+      .where(eq(vehiculoProveedores.vehiculoId, id));
+
     return {
       ...vehiculo,
       propietarios: owners,
+      proveedores: suppliers,
     };
   }
 
-  async create(data: Omit<VehiculoDTO, 'id' | 'creadoEn' | 'actualizadoEn' | 'eliminadoEn'> & { propietarios?: number[] }) {
-    const { propietarios: propietariosIds, ...vehiculoData } = data;
+  async create(data: Omit<VehiculoDTO, 'id' | 'creadoEn' | 'actualizadoEn' | 'eliminadoEn'> & { propietarios?: number[]; proveedores?: number[] }) {
+    const { propietarios: propietariosIds, proveedores: proveedoresIds, ...vehiculoData } = data;
 
     return await database.transaction(async (tx) => {
       const [newVehiculo] = await tx
@@ -155,12 +174,21 @@ export class VehiculoRepository {
         );
       }
 
+      if (proveedoresIds && proveedoresIds.length > 0) {
+        await tx.insert(vehiculoProveedores).values(
+          proveedoresIds.map((sid) => ({
+            vehiculoId: newVehiculo.id,
+            proveedorId: sid,
+          })),
+        );
+      }
+
       return newVehiculo;
     });
   }
 
-  async update(id: number, data: Partial<VehiculoDTO> & { propietarios?: number[] }) {
-    const { propietarios: propietariosIds, ...vehiculoData } = data;
+  async update(id: number, data: Partial<VehiculoDTO> & { propietarios?: number[]; proveedores?: number[] }) {
+    const { propietarios: propietariosIds, proveedores: proveedoresIds, ...vehiculoData } = data;
 
     return await database.transaction(async (tx) => {
       let updatedVehiculo = undefined;
@@ -186,6 +214,22 @@ export class VehiculoRepository {
             propietariosIds.map((pid) => ({
               vehiculoId: id,
               propietarioId: pid,
+            })),
+          );
+        }
+      }
+
+      // Update suppliers if provided
+      if (proveedoresIds !== undefined) {
+        // Delete existing relationships
+        await tx.delete(vehiculoProveedores).where(eq(vehiculoProveedores.vehiculoId, id));
+
+        // Insert new relationships
+        if (proveedoresIds.length > 0) {
+          await tx.insert(vehiculoProveedores).values(
+            proveedoresIds.map((sid) => ({
+              vehiculoId: id,
+              proveedorId: sid,
             })),
           );
         }
