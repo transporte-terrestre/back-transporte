@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { usuariosRol } from '@db/tables/usuario.model';
+import { usuariosRol } from '@db/tables/usuario.table';
 import { UsuarioDocumentoResultDto } from './usuario-documento-result.dto';
 
-import type { UsuarioRol } from '@db/tables/usuario.model';
-import type { UsuarioDocumentoTipo } from '@db/tables/usuario-documento.model';
+import type { UsuarioRol } from '@db/tables/usuario.table';
+import type { UsuarioDocumentoTipo } from '@db/tables/usuario-documento.table';
 
 export class DocumentosAgrupadosDto implements Record<UsuarioDocumentoTipo, UsuarioDocumentoResultDto[]> {
   @ApiProperty({ type: [UsuarioDocumentoResultDto] })

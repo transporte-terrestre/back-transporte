@@ -1,5 +1,5 @@
 import { database } from '@db/connection.db';
-import { usuarios } from '@db/tables/usuario.model';
+import { usuarios } from '@db/tables/usuario.table';
 import * as bcrypt from 'bcrypt';
 
 export async function seedUsuarios() {

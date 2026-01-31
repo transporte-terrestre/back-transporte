@@ -1,5 +1,5 @@
 import { pgTable, serial, integer, text, timestamp, pgEnum, date } from 'drizzle-orm/pg-core';
-import { mantenimientos } from './mantenimiento.model';
+import { mantenimientos } from './mantenimiento.table';
 
 export const mantenimientoDocumentosTipo = pgEnum('mantenimiento_documentos_tipo', [
   'factura',

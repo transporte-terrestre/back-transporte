@@ -1,5 +1,5 @@
 import { pgTable, serial, pgEnum, date, timestamp, text, integer } from 'drizzle-orm/pg-core';
-import { conductores } from './conductor.model';
+import { conductores } from './conductor.table';
 
 export const conductorDocumentosTipo = pgEnum('conductor_documentos_tipo', [
   'dni',

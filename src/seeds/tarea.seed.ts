@@ -1,5 +1,5 @@
 import { database } from '@db/connection.db';
-import { tareas } from '@db/tables/tarea.model';
+import { tareas } from '@db/tables/tarea.table';
 
 export async function seedTareas() {
   console.log('🌱 Seeding tasks catalog...');

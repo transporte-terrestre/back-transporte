@@ -1,6 +1,6 @@
 import { pgTable, integer, timestamp, boolean, pgEnum, primaryKey } from 'drizzle-orm/pg-core';
-import { viajes } from './viaje.model';
-import { conductores } from './conductor.model';
+import { viajes } from './viaje.table';
+import { conductores } from './conductor.table';
 
 export const viajeConductoresRol = pgEnum('viaje_conductores_rol', ['conductor', 'copiloto', 'auxiliar']);
 

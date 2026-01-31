@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { eq, or, like, and, gte, lte, count, sql, isNull, getTableColumns } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { mantenimientos, MantenimientoDTO } from '@db/tables/mantenimiento.model';
-import { vehiculos } from '@db/tables/vehiculo.model';
-import { modelos } from '@db/tables/modelo.model';
-import { marcas } from '@db/tables/marca.model';
-import { talleres } from '@db/tables/taller.model';
-import { mantenimientoTareas } from '@db/tables/mantenimiento-tarea.model';
-import { mantenimientoDocumentos } from '@db/tables/mantenimiento-documento.model';
-import { tareas } from '@db/tables/tarea.model';
+import { mantenimientos, MantenimientoDTO } from '@db/tables/mantenimiento.table';
+import { vehiculos } from '@db/tables/vehiculo.table';
+import { modelos } from '@db/tables/modelo.table';
+import { marcas } from '@db/tables/marca.table';
+import { talleres } from '@db/tables/taller.table';
+import { mantenimientoTareas } from '@db/tables/mantenimiento-tarea.table';
+import { mantenimientoDocumentos } from '@db/tables/mantenimiento-documento.table';
+import { tareas } from '@db/tables/tarea.table';
 
 interface PaginationFilters {
   search?: string;

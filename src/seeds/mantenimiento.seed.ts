@@ -1,7 +1,7 @@
 import { database } from '@db/connection.db';
-import { mantenimientos } from '@db/tables/mantenimiento.model';
-import { Taller } from '@db/tables/taller.model';
-import { Vehiculo } from '@db/tables/vehiculo.model';
+import { mantenimientos } from '@db/tables/mantenimiento.table';
+import { Taller } from '@db/tables/taller.table';
+import { Vehiculo } from '@db/tables/vehiculo.table';
 import { getDate } from '@function/date.function';
 import { eq, and, isNull, count } from 'drizzle-orm';
 

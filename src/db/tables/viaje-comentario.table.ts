@@ -1,6 +1,6 @@
 import { pgTable, serial, integer, timestamp, text, pgEnum } from 'drizzle-orm/pg-core';
-import { usuarios } from './usuario.model';
-import { viajes } from './viaje.model';
+import { usuarios } from './usuario.table';
+import { viajes } from './viaje.table';
 
 export const viajeComentariosTipo = pgEnum('viaje_comentarios_tipo', ['observacion', 'incidencia', 'novedad', 'general']);
 

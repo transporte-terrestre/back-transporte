@@ -1,7 +1,7 @@
 import { IsArray, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, IsIn, IsNumber, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ClienteDTO, clientesTipoDocumento } from '@db/tables/cliente.model';
-import type { ClienteTipoDocumento } from '@db/tables/cliente.model';
+import { ClienteDTO, clientesTipoDocumento } from '@db/tables/cliente.table';
+import type { ClienteTipoDocumento } from '@db/tables/cliente.table';
 
 export class ClienteCreateDto implements Omit<ClienteDTO, 'id' | 'nombreCompleto' | 'creadoEn' | 'actualizadoEn'> {
   @ApiProperty({

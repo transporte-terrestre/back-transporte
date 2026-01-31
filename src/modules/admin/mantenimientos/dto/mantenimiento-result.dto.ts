@@ -1,6 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { mantenimientosTipo, mantenimientosEstado } from '@db/tables/mantenimiento.model';
-import type { MantenimientoTipo, MantenimientoEstado } from '@db/tables/mantenimiento.model';
+import { mantenimientosTipo, mantenimientosEstado } from '@db/tables/mantenimiento.table';
+import type { MantenimientoTipo, MantenimientoEstado } from '@db/tables/mantenimiento.table';
 import { VehiculoResultDto } from '../../vehiculos/dto/vehiculo-result.dto';
 import { MantenimientoTareaResultDto } from './mantenimiento-tarea-result.dto';
 import { MantenimientoDocumentoResultDto } from './mantenimiento-documento-result.dto';

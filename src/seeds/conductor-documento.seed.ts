@@ -1,6 +1,6 @@
 import { database } from '@db/connection.db';
-import { conductorDocumentos } from '@db/tables/conductor-documento.model';
-import { Conductor } from '@db/tables/conductor.model';
+import { conductorDocumentos } from '@db/tables/conductor-documento.table';
+import { Conductor } from '@db/tables/conductor.table';
 import { getDate } from '@function/date.function';
 
 const DEFAULT_PDF_URL = 'https://res.cloudinary.com/dm0qhq2rk/image/upload/v1766044501/mantenimientos/Ejemplo%20de%20certificado_1766044500270.pdf';

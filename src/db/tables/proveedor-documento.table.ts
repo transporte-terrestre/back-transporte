@@ -1,5 +1,5 @@
 import { pgTable, serial, pgEnum, date, timestamp, text, integer } from 'drizzle-orm/pg-core';
-import { proveedores } from './proveedor.model';
+import { proveedores } from './proveedor.table';
 
 export const proveedorDocumentosTipo = pgEnum('proveedor_documentos_tipo', ['dni', 'ruc', 'contrato', 'otros']);
 

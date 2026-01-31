@@ -1,6 +1,6 @@
 import { database } from '@db/connection.db';
-import { Modelo, modelos } from '@db/tables/modelo.model';
-import { Marca } from '@db/tables/marca.model';
+import { Modelo, modelos } from '@db/tables/modelo.table';
+import { Marca } from '@db/tables/marca.table';
 
 // Mapa de modelos por marca (mínimo 5 modelos por marca)
 const modelosPorMarca: Record<string, string[]> = {

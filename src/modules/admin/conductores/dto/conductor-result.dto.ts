@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.model';
+import { conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.table';
 import { ConductorDocumentoResultDto } from './conductor-documento-result.dto';
-import type { ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.model';
-import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.model';
+import type { ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.table';
+import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 
 export class DocumentosAgrupadosConductorDto implements Record<ConductorDocumentoTipo, ConductorDocumentoResultDto[]> {
   @ApiProperty({ type: [ConductorDocumentoResultDto] })

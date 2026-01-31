@@ -1,5 +1,5 @@
 import { pgTable, serial, pgEnum, date, timestamp, text, integer } from 'drizzle-orm/pg-core';
-import { clientes } from './cliente.model';
+import { clientes } from './cliente.table';
 
 export const clienteDocumentosTipo = pgEnum('cliente_documentos_tipo', ['dni', 'ruc', 'contrato', 'carta_compromiso', 'ficha_ruc', 'otros']);
 

@@ -3,8 +3,8 @@ import { VehiculoListDto } from './vehiculo-list.dto';
 import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
-import { vehiculosEstado } from '@db/tables/vehiculo.model';
-import type { VehiculoEstado } from '@db/tables/vehiculo.model';
+import { vehiculosEstado } from '@db/tables/vehiculo.table';
+import type { VehiculoEstado } from '@db/tables/vehiculo.table';
 
 export class VehiculoPaginationQueryDto {
   @ApiProperty({

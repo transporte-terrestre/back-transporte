@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.model';
-import type { ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.model';
+import { conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.table';
+import type { ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.table';
 
 export class ConductorListDto {
   @ApiProperty({ example: 1, description: 'Driver ID' })

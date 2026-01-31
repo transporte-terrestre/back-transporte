@@ -1,5 +1,5 @@
 import { database } from '@db/connection.db';
-import { conductores } from '@db/tables/conductor.model';
+import { conductores } from '@db/tables/conductor.table';
 
 export async function seedConductores() {
   console.log('🌱 Seeding drivers...');

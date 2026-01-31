@@ -1,6 +1,6 @@
 import { pgTable, serial, integer, varchar, boolean, timestamp, time } from 'drizzle-orm/pg-core';
-import { mantenimientos } from './mantenimiento.model';
-import { tareas } from './tarea.model';
+import { mantenimientos } from './mantenimiento.table';
+import { tareas } from './tarea.table';
 
 // Relación muchos a muchos entre mantenimientos y tareas
 export const mantenimientoTareas = pgTable('mantenimiento_tareas', {

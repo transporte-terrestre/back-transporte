@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, and, gte, lte, count } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { conductorDocumentos, ConductorDocumentoDTO } from '@db/tables/conductor-documento.model';
+import { conductorDocumentos, ConductorDocumentoDTO } from '@db/tables/conductor-documento.table';
 
 interface PaginationFilters {
   conductorId?: number;

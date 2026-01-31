@@ -1,6 +1,6 @@
 import { database } from '@db/connection.db';
-import { clienteDocumentos } from '@db/tables/cliente-documento.model';
-import { Cliente } from '@db/tables/cliente.model';
+import { clienteDocumentos } from '@db/tables/cliente-documento.table';
+import { Cliente } from '@db/tables/cliente.table';
 import { getDate } from '@function/date.function';
 
 const DEFAULT_PDF_URL = 'https://res.cloudinary.com/dm0qhq2rk/image/upload/v1766044501/mantenimientos/Ejemplo%20de%20certificado_1766044500270.pdf';

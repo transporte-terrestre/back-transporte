@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsInt, IsIn, IsString, IsOptional } from 'class-validator';
-import { ViajeComentarioDTO, viajeComentariosTipo } from '@db/tables/viaje-comentario.model';
-import type { ViajeComentarioTipo } from '@db/tables/viaje-comentario.model';
+import { ViajeComentarioDTO, viajeComentariosTipo } from '@db/tables/viaje-comentario.table';
+import type { ViajeComentarioTipo } from '@db/tables/viaje-comentario.table';
 
 export class ViajeComentarioCreateDto implements Omit<ViajeComentarioDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
   @ApiProperty({ example: 1, description: 'ID del viaje' })

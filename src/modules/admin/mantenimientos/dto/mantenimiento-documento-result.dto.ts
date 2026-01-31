@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { mantenimientoDocumentosTipo } from '@db/tables/mantenimiento-documento.model';
-import type { MantenimientoDocumentoTipo } from '@db/tables/mantenimiento-documento.model';
+import { mantenimientoDocumentosTipo } from '@db/tables/mantenimiento-documento.table';
+import type { MantenimientoDocumentoTipo } from '@db/tables/mantenimiento-documento.table';
 
 export class MantenimientoDocumentoResultDto {
   @ApiProperty()

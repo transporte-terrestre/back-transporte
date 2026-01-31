@@ -1,5 +1,5 @@
 import { database } from '@db/connection.db';
-import { marcas } from '@db/tables/marca.model';
+import { marcas } from '@db/tables/marca.table';
 
 export async function seedMarcas() {
   console.log('🌱 Seeding brands...');

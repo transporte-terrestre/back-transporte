@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProveedorDocumentoResultDto } from './proveedor-documento-result.dto';
-import { proveedoresTipoDocumento } from '@db/tables/proveedor.model';
-import type { ProveedorDocumentoTipo } from '@db/tables/proveedor-documento.model';
-import type { ProveedorTipoDocumento } from '@db/tables/proveedor.model';
+import { proveedoresTipoDocumento } from '@db/tables/proveedor.table';
+import type { ProveedorDocumentoTipo } from '@db/tables/proveedor-documento.table';
+import type { ProveedorTipoDocumento } from '@db/tables/proveedor.table';
 
 export class DocumentosAgrupadosProveedorDto implements Record<ProveedorDocumentoTipo, ProveedorDocumentoResultDto[]> {
   @ApiProperty({ type: [ProveedorDocumentoResultDto] })

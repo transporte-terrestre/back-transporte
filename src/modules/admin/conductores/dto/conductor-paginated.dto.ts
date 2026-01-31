@@ -3,8 +3,8 @@ import { ConductorListDto } from './conductor-list.dto';
 import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
-import { conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.model';
-import type { ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.model';
+import { conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.table';
+import type { ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.table';
 
 export class ConductorPaginationQueryDto {
   @ApiProperty({

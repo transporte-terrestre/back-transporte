@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { talleresTipo } from '@db/tables/taller.model';
-import type { TallerTipo } from '@db/tables/taller.model';
+import { talleresTipo } from '@db/tables/taller.table';
+import type { TallerTipo } from '@db/tables/taller.table';
 
 export class TallerListDto {
   @ApiProperty({ example: 1, description: 'ID del taller' })

@@ -1,8 +1,8 @@
 import { IsInt, IsString, IsNotEmpty, IsIn, IsOptional, IsDate } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { MantenimientoDTO, mantenimientosTipo, mantenimientosEstado } from '@db/tables/mantenimiento.model';
-import type { MantenimientoTipo, MantenimientoEstado } from '@db/tables/mantenimiento.model';
+import { MantenimientoDTO, mantenimientosTipo, mantenimientosEstado } from '@db/tables/mantenimiento.table';
+import type { MantenimientoTipo, MantenimientoEstado } from '@db/tables/mantenimiento.table';
 
 export class MantenimientoCreateDto implements Omit<MantenimientoDTO, 'id' | 'creadoEn' | 'actualizadoEn' | 'codigoOrden'> {
   @ApiProperty({ example: 1, description: 'Vehicle ID' })

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, ilike, or, count, getTableColumns, isNull, and, like } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { tareas, TareaDTO } from '@db/tables/tarea.model';
+import { tareas, TareaDTO } from '@db/tables/tarea.table';
 
 interface PaginationFilters {
   search?: string;

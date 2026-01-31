@@ -1,6 +1,6 @@
 import { database } from '@db/connection.db';
-import { Vehiculo, vehiculos } from '@db/tables/vehiculo.model';
-import { Modelo } from '@db/tables/modelo.model';
+import { Vehiculo, vehiculos } from '@db/tables/vehiculo.table';
+import { Modelo } from '@db/tables/modelo.table';
 import { eq } from 'drizzle-orm';
 
 function randomElement<T>(arr: readonly T[]): T {

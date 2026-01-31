@@ -1,4 +1,4 @@
-import { proveedoresTipoDocumento } from '@db/tables/proveedor.model';
+import { proveedoresTipoDocumento } from '@db/tables/proveedor.table';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ProveedorListDto {

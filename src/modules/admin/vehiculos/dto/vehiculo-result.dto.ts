@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { vehiculosEstado, combustibleEnum } from '@db/tables/vehiculo.model';
+import { vehiculosEstado, combustibleEnum } from '@db/tables/vehiculo.table';
 import { VehiculoDocumentoResultDto } from './vehiculo-documento-result.dto';
-import type { VehiculoEstado, CombustibleTipo } from '@db/tables/vehiculo.model';
-import type { VehiculoDocumentoTipo } from '@db/tables/vehiculo-documento.model';
+import type { VehiculoEstado, CombustibleTipo } from '@db/tables/vehiculo.table';
+import type { VehiculoDocumentoTipo } from '@db/tables/vehiculo-documento.table';
 
 export class DocumentosAgrupadosVehiculoDto implements Record<VehiculoDocumentoTipo, VehiculoDocumentoResultDto[]> {
   @ApiProperty({ type: [VehiculoDocumentoResultDto] })

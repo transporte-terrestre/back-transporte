@@ -1,7 +1,7 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TallerDTO, talleresTipo } from '@db/tables/taller.model';
-import type { TallerTipo } from '@db/tables/taller.model';
+import { TallerDTO, talleresTipo } from '@db/tables/taller.table';
+import type { TallerTipo } from '@db/tables/taller.table';
 
 export class TallerCreateDto implements Omit<TallerDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
   @ApiPropertyOptional({

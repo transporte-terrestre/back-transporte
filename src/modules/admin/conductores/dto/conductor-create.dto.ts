@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty, IsIn, IsArray, IsOptional, MinLength, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ConductorDTO, conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.model';
-import type { ConductorCategoriaLicencia, ConductorClaseLicencia } from '@db/tables/conductor.model';
+import { ConductorDTO, conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.table';
+import type { ConductorCategoriaLicencia, ConductorClaseLicencia } from '@db/tables/conductor.table';
 
 export class ConductorCreateDto implements Omit<ConductorDTO, 'id' | 'nombreCompleto' | 'creadoEn' | 'actualizadoEn'> {
   @ApiProperty({ example: '12345678', description: 'DNI del conductor' })

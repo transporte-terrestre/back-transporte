@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsString, IsDateString, IsOptional } from 'class-validator';
-import { clienteDocumentosTipo } from '@db/tables/cliente-documento.model';
-import type { ClienteDocumentoTipo } from '@db/tables/cliente-documento.model';
+import { clienteDocumentosTipo } from '@db/tables/cliente-documento.table';
+import type { ClienteDocumentoTipo } from '@db/tables/cliente-documento.table';
 
 export class ClienteDocumentoUpdateDto {
   @ApiProperty({

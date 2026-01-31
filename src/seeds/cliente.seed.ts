@@ -1,5 +1,5 @@
 import { database } from '@db/connection.db';
-import { clientes } from '@db/tables/cliente.model';
+import { clientes } from '@db/tables/cliente.table';
 
 export async function seedClientes() {
   console.log('🌱 Seeding clients...');

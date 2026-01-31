@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
-import { usuarios, Usuario, UsuarioDTO } from '@db/tables/usuario.model';
+import { usuarios, Usuario, UsuarioDTO } from '@db/tables/usuario.table';
 import { eq, or, like, and, gte, lte, count, sql, ilike, desc, isNull } from 'drizzle-orm';
 
 interface PaginationFilters {

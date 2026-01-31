@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
-import { vehiculos } from '@db/tables/vehiculo.model';
-import { conductores } from '@db/tables/conductor.model';
-import { viajes } from '@db/tables/viaje.model';
-import { mantenimientos } from '@db/tables/mantenimiento.model';
-import { rutas } from '@db/tables/ruta.model';
-import { viajeConductores } from '@db/tables/viaje-conductor.model';
-import { viajeVehiculos } from '@db/tables/viaje-vehiculo.model';
-import { clientes } from '@db/tables/cliente.model';
+import { vehiculos } from '@db/tables/vehiculo.table';
+import { conductores } from '@db/tables/conductor.table';
+import { viajes } from '@db/tables/viaje.table';
+import { mantenimientos } from '@db/tables/mantenimiento.table';
+import { rutas } from '@db/tables/ruta.table';
+import { viajeConductores } from '@db/tables/viaje-conductor.table';
+import { viajeVehiculos } from '@db/tables/viaje-vehiculo.table';
+import { clientes } from '@db/tables/cliente.table';
 import { count, eq, gte, lte, and, desc, sql } from 'drizzle-orm';
 
 @Injectable()

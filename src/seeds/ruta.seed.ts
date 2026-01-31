@@ -1,5 +1,5 @@
 import { database } from '@db/connection.db';
-import { rutas } from '@db/tables/ruta.model';
+import { rutas } from '@db/tables/ruta.table';
 
 export async function seedRutas() {
   console.log('🌱 Seeding routes...');

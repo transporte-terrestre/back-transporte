@@ -1,6 +1,6 @@
 import { pgEnum, pgTable, serial, varchar, integer, timestamp, text, index, uniqueIndex, decimal } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { modelos } from './modelo.model';
+import { modelos } from './modelo.table';
 
 export const combustibleEnum = pgEnum('combustible_tipo', ['gasolina', 'diesel', 'gnv', 'glp', 'electrico', 'hibrido']);
 

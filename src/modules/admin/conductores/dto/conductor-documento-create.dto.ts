@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsInt, IsIn, IsString, IsDateString } from 'class-validator';
-import { ConductorDocumentoDTO, conductorDocumentosTipo } from '@db/tables/conductor-documento.model';
-import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.model';
+import { ConductorDocumentoDTO, conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
+import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 
 export class ConductorDocumentoCreateDto implements Omit<ConductorDocumentoDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
   @ApiProperty({ example: 1, description: 'ID del conductor' })

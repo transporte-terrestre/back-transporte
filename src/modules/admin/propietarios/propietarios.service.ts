@@ -4,9 +4,9 @@ import { PropietarioUpdateDto } from './dto/propietario-update.dto';
 import { PropietarioRepository } from '@repository/propietario.repository';
 import { PropietarioDocumentoRepository } from '@repository/propietario-documento.repository';
 import { PaginatedPropietarioResultDto } from './dto/propietario-paginated.dto';
-import { PropietarioDocumentoDTO, propietarioDocumentosTipo } from '@db/tables/propietario-documento.model';
+import { PropietarioDocumentoDTO, propietarioDocumentosTipo } from '@db/tables/propietario-documento.table';
 import { DocumentosAgrupadosPropietarioDto } from './dto/propietario-result.dto';
-import { PropietarioDTO } from '@db/tables/propietario.model';
+import { PropietarioDTO } from '@db/tables/propietario.table';
 
 interface DatabaseError {
   code?: string;

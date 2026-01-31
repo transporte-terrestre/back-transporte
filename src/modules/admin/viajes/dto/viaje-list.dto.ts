@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
-import { viajesEstado, modalidadServicio, viajesTipoRuta } from '@db/tables/viaje.model';
-import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta } from '@db/tables/viaje.model';
+import { viajesEstado, modalidadServicio, viajesTipoRuta } from '@db/tables/viaje.table';
+import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta } from '@db/tables/viaje.table';
 import { ConductorResultDto } from '@module/admin/conductores/dto/conductor-result.dto';
 import { VehiculoResultDto } from '@module/admin/vehiculos/dto/vehiculo-result.dto';
 import { ClienteResultDto } from '@module/admin/clientes/dto/cliente-result.dto';

@@ -2,20 +2,20 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { dbConfig } from '@db/config.db';
 
-import { vehiculos } from '@db/tables/vehiculo.model';
-import { conductores } from '@db/tables/conductor.model';
-import { mantenimientos } from '@db/tables/mantenimiento.model';
-import { rutas } from '@db/tables/ruta.model';
-import { viajes } from '@db/tables/viaje.model';
-import { usuarios } from '@db/tables/usuario.model';
-import { clientes } from '@db/tables/cliente.model';
-import { conductorDocumentos } from '@db/tables/conductor-documento.model';
-import { usuarioDocumentos } from '@db/tables/usuario-documento.model';
-import { clienteDocumentos } from '@db/tables/cliente-documento.model';
-import { vehiculoDocumentos } from '@db/tables/vehiculo-documento.model';
-import { viajeConductores } from '@db/tables/viaje-conductor.model';
-import { viajeVehiculos } from '@db/tables/viaje-vehiculo.model';
-import { viajeComentarios } from '@db/tables/viaje-comentario.model';
+import { vehiculos } from '@db/tables/vehiculo.table';
+import { conductores } from '@db/tables/conductor.table';
+import { mantenimientos } from '@db/tables/mantenimiento.table';
+import { rutas } from '@db/tables/ruta.table';
+import { viajes } from '@db/tables/viaje.table';
+import { usuarios } from '@db/tables/usuario.table';
+import { clientes } from '@db/tables/cliente.table';
+import { conductorDocumentos } from '@db/tables/conductor-documento.table';
+import { usuarioDocumentos } from '@db/tables/usuario-documento.table';
+import { clienteDocumentos } from '@db/tables/cliente-documento.table';
+import { vehiculoDocumentos } from '@db/tables/vehiculo-documento.table';
+import { viajeConductores } from '@db/tables/viaje-conductor.table';
+import { viajeVehiculos } from '@db/tables/viaje-vehiculo.table';
+import { viajeComentarios } from '@db/tables/viaje-comentario.table';
 
 const pool = new Pool(dbConfig);
 

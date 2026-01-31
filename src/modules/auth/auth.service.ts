@@ -6,8 +6,8 @@ import { LoginDto } from './dto/login.dto';
 import { LoginResultDto } from './dto/login-result.dto';
 import { ConductorLoginDto } from './dto/conductor-login.dto';
 import { ConductorLoginResultDto } from './dto/conductor-login-result.dto';
-import { UsuarioDTO } from '@db/tables/usuario.model';
-import { ConductorDTO } from '@db/tables/conductor.model';
+import { UsuarioDTO } from '@db/tables/usuario.table';
+import { ConductorDTO } from '@db/tables/conductor.table';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()

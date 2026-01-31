@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { usuariosRol } from '@db/tables/usuario.model';
-import type { UsuarioRol } from '@db/tables/usuario.model';
+import { usuariosRol } from '@db/tables/usuario.table';
+import type { UsuarioRol } from '@db/tables/usuario.table';
 
 export class UsuarioListDto {
   @ApiProperty({ example: 1, description: 'User ID' })

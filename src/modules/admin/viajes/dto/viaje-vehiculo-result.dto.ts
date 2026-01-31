@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { viajeVehiculosRol } from '@db/tables/viaje-vehiculo.model';
-import type { ViajeVehiculoRol } from '@db/tables/viaje-vehiculo.model';
+import { viajeVehiculosRol } from '@db/tables/viaje-vehiculo.table';
+import type { ViajeVehiculoRol } from '@db/tables/viaje-vehiculo.table';
 
 export class ViajeVehiculoResultDto {
   @ApiProperty({ example: 1, description: 'ID del viaje' })

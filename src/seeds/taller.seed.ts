@@ -1,5 +1,5 @@
 import { database } from '@db/connection.db';
-import { talleres } from '@db/tables/taller.model';
+import { talleres } from '@db/tables/taller.table';
 
 export async function seedTalleres() {
   console.log('🌱 Seeding workshops...');

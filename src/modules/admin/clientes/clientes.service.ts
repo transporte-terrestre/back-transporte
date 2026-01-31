@@ -4,9 +4,9 @@ import { ClienteUpdateDto } from './dto/cliente-update.dto';
 import { ClienteRepository } from '@repository/cliente.repository';
 import { ClienteDocumentoRepository } from '@repository/cliente-documento.repository';
 import { PaginatedClienteResultDto } from './dto/cliente-paginated.dto';
-import { ClienteDocumentoDTO, clienteDocumentosTipo } from '@db/tables/cliente-documento.model';
+import { ClienteDocumentoDTO, clienteDocumentosTipo } from '@db/tables/cliente-documento.table';
 import { DocumentosAgrupadosClienteDto } from './dto/cliente-result.dto';
-import { ClienteDTO } from '@db/tables/cliente.model';
+import { ClienteDTO } from '@db/tables/cliente.table';
 
 interface DatabaseError {
   code?: string;

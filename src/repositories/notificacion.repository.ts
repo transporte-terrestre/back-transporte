@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
-import { notificaciones } from '@db/tables/notificacion.model';
-import { notificacionesLeidas } from '@db/tables/notificacion-leida.model';
-import { clienteDocumentos } from '@db/tables/cliente-documento.model';
-import { conductorDocumentos } from '@db/tables/conductor-documento.model';
-import { vehiculoDocumentos } from '@db/tables/vehiculo-documento.model';
-import { usuarioDocumentos } from '@db/tables/usuario-documento.model';
-import { clientes } from '@db/tables/cliente.model';
-import { conductores } from '@db/tables/conductor.model';
-import { vehiculos } from '@db/tables/vehiculo.model';
-import { modelos } from '@db/tables/modelo.model';
-import { marcas } from '@db/tables/marca.model';
-import { usuarios } from '@db/tables/usuario.model';
-import { propietarioDocumentos } from '@db/tables/propietario-documento.model';
-import { propietarios } from '@db/tables/propietario.model';
+import { notificaciones } from '@db/tables/notificacion.table';
+import { notificacionesLeidas } from '@db/tables/notificacion-leida.table';
+import { clienteDocumentos } from '@db/tables/cliente-documento.table';
+import { conductorDocumentos } from '@db/tables/conductor-documento.table';
+import { vehiculoDocumentos } from '@db/tables/vehiculo-documento.table';
+import { usuarioDocumentos } from '@db/tables/usuario-documento.table';
+import { clientes } from '@db/tables/cliente.table';
+import { conductores } from '@db/tables/conductor.table';
+import { vehiculos } from '@db/tables/vehiculo.table';
+import { modelos } from '@db/tables/modelo.table';
+import { marcas } from '@db/tables/marca.table';
+import { usuarios } from '@db/tables/usuario.table';
+import { propietarioDocumentos } from '@db/tables/propietario-documento.table';
+import { propietarios } from '@db/tables/propietario.table';
 import { eq, and, desc, isNull, count, sql, lte, isNotNull } from 'drizzle-orm';
 
 // Types for document expiration results

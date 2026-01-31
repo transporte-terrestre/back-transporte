@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, and, gte, lte, count } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { vehiculoDocumentos, VehiculoDocumentoDTO } from '@db/tables/vehiculo-documento.model';
+import { vehiculoDocumentos, VehiculoDocumentoDTO } from '@db/tables/vehiculo-documento.table';
 
 interface PaginationFilters {
   vehiculoId?: number;

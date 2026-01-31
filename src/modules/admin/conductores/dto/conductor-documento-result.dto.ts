@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { conductorDocumentosTipo } from '@db/tables/conductor-documento.model';
-import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.model';
+import { conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
+import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 
 export class ConductorDocumentoResultDto {
   @ApiProperty({ example: 1, description: 'ID del documento' })

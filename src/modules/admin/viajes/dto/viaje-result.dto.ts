@@ -1,11 +1,11 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
-import { viajesEstado, modalidadServicio, viajesTipoRuta } from '@db/tables/viaje.model';
+import { viajesEstado, modalidadServicio, viajesTipoRuta } from '@db/tables/viaje.table';
 import { ConductorResultDto } from '../../conductores/dto/conductor-result.dto';
 import { VehiculoResultDto } from '../../vehiculos/dto/vehiculo-result.dto';
 import { ClienteResultDto } from '../../clientes/dto/cliente-result.dto';
-import { viajeConductoresRol } from '@db/tables/viaje-conductor.model';
-import { viajeVehiculosRol } from '@db/tables/viaje-vehiculo.model';
-import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta } from '@db/tables/viaje.model';
+import { viajeConductoresRol } from '@db/tables/viaje-conductor.table';
+import { viajeVehiculosRol } from '@db/tables/viaje-vehiculo.table';
+import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta } from '@db/tables/viaje.table';
 import { ViajeComentarioResultDto } from './viaje-comentario-result.dto';
 import { RutaResultDto } from '@module/admin/rutas/dto/ruta-result.dto';
 

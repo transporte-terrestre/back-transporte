@@ -1,4 +1,4 @@
-import { clientesTipoDocumento } from '@db/tables/cliente.model';
+import { clientesTipoDocumento } from '@db/tables/cliente.table';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ClienteListDto {

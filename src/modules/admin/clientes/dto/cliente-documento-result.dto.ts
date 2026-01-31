@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { clienteDocumentosTipo } from '@db/tables/cliente-documento.model';
-import type { ClienteDocumentoTipo } from '@db/tables/cliente-documento.model';
+import { clienteDocumentosTipo } from '@db/tables/cliente-documento.table';
+import type { ClienteDocumentoTipo } from '@db/tables/cliente-documento.table';
 
 export class ClienteDocumentoResultDto {
   @ApiProperty({ example: 1, description: 'ID del documento' })

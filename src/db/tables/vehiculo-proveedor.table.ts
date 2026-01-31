@@ -1,6 +1,6 @@
 import { pgTable, integer, timestamp, primaryKey } from 'drizzle-orm/pg-core';
-import { vehiculos } from './vehiculo.model';
-import { proveedores } from './proveedor.model';
+import { vehiculos } from './vehiculo.table';
+import { proveedores } from './proveedor.table';
 
 export const vehiculoProveedores = pgTable(
   'vehiculo_proveedores',

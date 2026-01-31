@@ -1,8 +1,8 @@
 import { pgTable, serial, varchar, integer, decimal, timestamp, text, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { talleres } from './taller.model';
+import { talleres } from './taller.table';
 import { pgEnum } from 'drizzle-orm/pg-core';
-import { vehiculos } from './vehiculo.model';
+import { vehiculos } from './vehiculo.table';
 
 export const mantenimientosTipo = pgEnum('mantenimientos_tipo', ['preventivo', 'correctivo']);
 

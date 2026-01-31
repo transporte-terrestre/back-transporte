@@ -1,7 +1,7 @@
 import { IsArray, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PropietarioDTO, propietariosTipoDocumento } from '@db/tables/propietario.model';
-import type { PropietarioTipoDocumento } from '@db/tables/propietario.model';
+import { PropietarioDTO, propietariosTipoDocumento } from '@db/tables/propietario.table';
+import type { PropietarioTipoDocumento } from '@db/tables/propietario.table';
 
 export class PropietarioCreateDto implements Omit<PropietarioDTO, 'id' | 'nombreCompleto' | 'creadoEn' | 'actualizadoEn'> {
   @ApiProperty({

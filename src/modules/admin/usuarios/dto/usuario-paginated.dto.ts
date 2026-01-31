@@ -3,8 +3,8 @@ import { UsuarioListDto } from './usuario-list.dto';
 import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
-import { usuariosRol } from '@db/tables/usuario.model';
-import type { UsuarioRol } from '@db/tables/usuario.model';
+import { usuariosRol } from '@db/tables/usuario.table';
+import type { UsuarioRol } from '@db/tables/usuario.table';
 
 export class UsuarioPaginationQueryDto {
   @ApiProperty({

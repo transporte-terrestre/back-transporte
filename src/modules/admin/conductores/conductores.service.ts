@@ -4,9 +4,9 @@ import { ConductorDocumentoRepository } from '@repository/conductor-documento.re
 import { ConductorCreateDto } from './dto/conductor-create.dto';
 import { ConductorUpdateDto } from './dto/conductor-update.dto';
 import { PaginatedConductorResultDto } from './dto/conductor-paginated.dto';
-import { ConductorDocumentoDTO, conductorDocumentosTipo } from '@db/tables/conductor-documento.model';
+import { ConductorDocumentoDTO, conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
 import { DocumentosAgrupadosConductorDto } from './dto/conductor-result.dto';
-import { ConductorDTO } from '@db/tables/conductor.model';
+import { ConductorDTO } from '@db/tables/conductor.table';
 import * as bcrypt from 'bcrypt';
 
 interface DatabaseError {

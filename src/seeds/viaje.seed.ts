@@ -1,13 +1,13 @@
 import { database } from '@db/connection.db';
-import { viajes } from '@db/tables/viaje.model';
-import { Ruta } from '@db/tables/ruta.model';
-import { Cliente } from '@db/tables/cliente.model';
+import { viajes } from '@db/tables/viaje.table';
+import { Ruta } from '@db/tables/ruta.table';
+import { Cliente } from '@db/tables/cliente.table';
 import { getDateTime } from '@function/date.function';
 
-import { Conductor } from '@db/tables/conductor.model';
-import { Vehiculo } from '@db/tables/vehiculo.model';
-import { ViajeConductorDTO, viajeConductores } from '@db/tables/viaje-conductor.model';
-import { ViajeVehiculoDTO, viajeVehiculos } from '@db/tables/viaje-vehiculo.model';
+import { Conductor } from '@db/tables/conductor.table';
+import { Vehiculo } from '@db/tables/vehiculo.table';
+import { ViajeConductorDTO, viajeConductores } from '@db/tables/viaje-conductor.table';
+import { ViajeVehiculoDTO, viajeVehiculos } from '@db/tables/viaje-vehiculo.table';
 
 // Helper functions
 function randomInt(min: number, max: number): number {

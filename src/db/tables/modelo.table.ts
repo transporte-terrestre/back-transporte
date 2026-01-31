@@ -1,6 +1,6 @@
 import { pgTable, serial, text, integer, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { marcas } from './marca.model';
+import { marcas } from './marca.table';
 
 export const modelos = pgTable(
   'modelos',

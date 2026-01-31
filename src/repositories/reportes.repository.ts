@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
-import { vehiculos } from '@db/tables/vehiculo.model';
-import { modelos } from '@db/tables/modelo.model';
-import { marcas } from '@db/tables/marca.model';
-import { viajes } from '@db/tables/viaje.model';
-import { viajeVehiculos } from '@db/tables/viaje-vehiculo.model';
-import { viajeConductores } from '@db/tables/viaje-conductor.model';
-import { rutas } from '@db/tables/ruta.model';
+import { vehiculos } from '@db/tables/vehiculo.table';
+import { modelos } from '@db/tables/modelo.table';
+import { marcas } from '@db/tables/marca.table';
+import { viajes } from '@db/tables/viaje.table';
+import { viajeVehiculos } from '@db/tables/viaje-vehiculo.table';
+import { viajeConductores } from '@db/tables/viaje-conductor.table';
+import { rutas } from '@db/tables/ruta.table';
 import { eq, desc, and, gte, lte, sql } from 'drizzle-orm';
-import { mantenimientos } from '@db/tables/mantenimiento.model';
-import { talleres } from '@db/tables/taller.model';
-import { conductores } from '@db/tables/conductor.model';
-import { conductorDocumentos } from '@db/tables/conductor-documento.model';
+import { mantenimientos } from '@db/tables/mantenimiento.table';
+import { talleres } from '@db/tables/taller.table';
+import { conductores } from '@db/tables/conductor.table';
+import { conductorDocumentos } from '@db/tables/conductor-documento.table';
 
 @Injectable()
 export class ReportesRepository {

@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
-import { talleresTipo } from '@db/tables/taller.model';
-import type { TallerTipo } from '@db/tables/taller.model';
+import { talleresTipo } from '@db/tables/taller.table';
+import type { TallerTipo } from '@db/tables/taller.table';
 import { TallerListDto } from './taller-list.dto';
 import { PaginationMetaDto } from '../../../../common/dto/pagination-meta.dto';
 

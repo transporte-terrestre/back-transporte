@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsString, IsDateString, IsOptional } from 'class-validator';
-import { conductorDocumentosTipo } from '@db/tables/conductor-documento.model';
-import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.model';
+import { conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
+import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 
 export class ConductorDocumentoUpdateDto {
   @ApiProperty({

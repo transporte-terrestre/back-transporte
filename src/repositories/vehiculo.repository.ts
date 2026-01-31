@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { eq, or, like, and, gte, lte, count, sql, ilike, desc, isNull, getTableColumns, inArray } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { vehiculos, VehiculoDTO } from '@db/tables/vehiculo.model';
-import { modelos } from '@db/tables/modelo.model';
-import { marcas } from '@db/tables/marca.model';
-import { propietarios } from '@db/tables/propietario.model';
-import { vehiculoPropietarios } from '@db/tables/vehiculo-propietario.model';
-import { proveedores } from '@db/tables/proveedor.model';
-import { vehiculoProveedores } from '@db/tables/vehiculo-proveedor.model';
+import { vehiculos, VehiculoDTO } from '@db/tables/vehiculo.table';
+import { modelos } from '@db/tables/modelo.table';
+import { marcas } from '@db/tables/marca.table';
+import { propietarios } from '@db/tables/propietario.table';
+import { vehiculoPropietarios } from '@db/tables/vehiculo-propietario.table';
+import { proveedores } from '@db/tables/proveedor.table';
+import { vehiculoProveedores } from '@db/tables/vehiculo-proveedor.table';
 
 interface PaginationFilters {
   search?: string;

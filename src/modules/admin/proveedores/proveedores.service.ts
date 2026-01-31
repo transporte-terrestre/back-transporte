@@ -4,9 +4,9 @@ import { ProveedorUpdateDto } from './dto/proveedor-update.dto';
 import { ProveedorRepository } from '@repository/proveedor.repository';
 import { ProveedorDocumentoRepository } from '@repository/proveedor-documento.repository';
 import { PaginatedProveedorResultDto } from './dto/proveedor-paginated.dto';
-import { ProveedorDocumentoDTO, proveedorDocumentosTipo } from '@db/tables/proveedor-documento.model';
+import { ProveedorDocumentoDTO, proveedorDocumentosTipo } from '@db/tables/proveedor-documento.table';
 import { DocumentosAgrupadosProveedorDto } from './dto/proveedor-result.dto';
-import { ProveedorDTO } from '@db/tables/proveedor.model';
+import { ProveedorDTO } from '@db/tables/proveedor.table';
 
 interface DatabaseError {
   code?: string;

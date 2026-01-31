@@ -6,7 +6,7 @@ import { ModeloRepository } from '@repository/modelo.repository';
 import { VehiculoCreateDto } from './dto/vehiculo-create.dto';
 import { VehiculoUpdateDto } from './dto/vehiculo-update.dto';
 import { PaginatedVehiculoResultDto } from './dto/vehiculo-paginated.dto';
-import { VehiculoDocumentoDTO, vehiculoDocumentosTipo } from '@db/tables/vehiculo-documento.model';
+import { VehiculoDocumentoDTO, vehiculoDocumentosTipo } from '@db/tables/vehiculo-documento.table';
 import { DocumentosAgrupadosVehiculoDto } from './dto/vehiculo-result.dto';
 import { MarcaCreateDto } from './dto/marca-create.dto';
 import { MarcaUpdateDto } from './dto/marca-update.dto';

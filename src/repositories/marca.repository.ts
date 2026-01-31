@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
-import { marcas, MarcaDTO } from '@db/tables/marca.model';
-import { modelos } from '@db/tables/modelo.model';
+import { marcas, MarcaDTO } from '@db/tables/marca.table';
+import { modelos } from '@db/tables/modelo.table';
 import { eq, count, and, gte, lte, ilike, desc, isNull } from 'drizzle-orm';
 
 interface PaginationFilters {

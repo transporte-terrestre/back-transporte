@@ -1,6 +1,6 @@
 import { pgTable, serial, integer, timestamp, pgEnum, varchar, boolean, text, decimal } from 'drizzle-orm/pg-core';
-import { rutas } from './ruta.model';
-import { clientes } from './cliente.model';
+import { rutas } from './ruta.table';
+import { clientes } from './cliente.table';
 
 export const viajesEstado = pgEnum('viajes_estado', ['programado', 'en_progreso', 'completado', 'cancelado']);
 

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsBoolean, IsOptional } from 'class-validator';
-import { viajeVehiculosRol } from '@db/tables/viaje-vehiculo.model';
-import type { ViajeVehiculoRol } from '@db/tables/viaje-vehiculo.model';
+import { viajeVehiculosRol } from '@db/tables/viaje-vehiculo.table';
+import type { ViajeVehiculoRol } from '@db/tables/viaje-vehiculo.table';
 
 export class ViajeVehiculoUpdateDto {
   @ApiProperty({
