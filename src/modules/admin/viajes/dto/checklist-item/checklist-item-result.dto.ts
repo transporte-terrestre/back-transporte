@@ -29,4 +29,7 @@ export class ChecklistItemResultDto {
 
   @ApiProperty({ description: 'Fecha actualización' })
   actualizadoEn: Date;
+
+  @ApiProperty({ description: 'Fecha eliminación' })
+  eliminadoEn: Date;
 }

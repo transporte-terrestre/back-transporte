@@ -12,6 +12,7 @@ import { rutas } from '@db/tables/ruta.table';
 import { clientes } from '@db/tables/cliente.table';
 import { viajeComentarios } from '@db/tables/viaje-comentario.table';
 import { usuarios } from '@db/tables/usuario.table';
+import { viajeChecklists } from '@db/tables/viaje-checklist.table';
 
 interface PaginationFilters {
   search?: string;
@@ -165,7 +166,29 @@ export class ViajeRepository {
       .leftJoin(usuarios, eq(usuarios.id, viajeComentarios.usuarioId))
       .where(eq(viajeComentarios.viajeId, id));
 
-    const [conductoresList, vehiculosList, comentariosList] = await Promise.all([conductorsQuery, vehiculosQuery, comentariosQuery]);
+    // Consulta optimizada para checklists - solo tipo y validadoEn
+    const checklistsQuery = database
+      .select({
+        tipo: viajeChecklists.tipo,
+        validadoEn: viajeChecklists.validadoEn,
+      })
+      .from(viajeChecklists)
+      .where(eq(viajeChecklists.viajeId, id));
+
+    const [conductoresList, vehiculosList, comentariosList, checklistsList] = await Promise.all([
+      conductorsQuery,
+      vehiculosQuery,
+      comentariosQuery,
+      checklistsQuery,
+    ]);
+
+    // Determinar estados de validación
+    let checkInSalida = false;
+    let checkInLlegada = false;
+    for (const checklist of checklistsList) {
+      if (checklist.tipo === 'salida' && checklist.validadoEn !== null) checkInSalida = true;
+      if (checklist.tipo === 'llegada' && checklist.validadoEn !== null) checkInLlegada = true;
+    }
 
     return {
       ...viaje,
@@ -174,6 +197,8 @@ export class ViajeRepository {
       conductores: conductoresList,
       vehiculos: vehiculosList,
       comentarios: comentariosList,
+      checkInSalida,
+      checkInLlegada,
     };
   }
 

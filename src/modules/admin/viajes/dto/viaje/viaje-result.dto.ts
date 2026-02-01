@@ -154,4 +154,10 @@ export class ViajeResultDto {
 
   @ApiPropertyOptional({ type: RutaResultDto })
   ruta?: Omit<RutaResultDto, 'documentos'>;
+
+  @ApiProperty({ example: false, description: 'Indica si el checklist de salida fue validado' })
+  checkInSalida: boolean;
+
+  @ApiProperty({ example: false, description: 'Indica si el checklist de llegada fue validado' })
+  checkInLlegada: boolean;
 }

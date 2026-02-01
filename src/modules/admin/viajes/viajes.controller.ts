@@ -22,10 +22,9 @@ import { ViajeServicioReordenarDto } from './dto/viaje-servicio/viaje-servicio-r
 import { ChecklistItemCreateDto } from './dto/checklist-item/checklist-item-create.dto';
 import { ChecklistItemUpdateDto } from './dto/checklist-item/checklist-item-update.dto';
 import { ChecklistItemResultDto } from './dto/checklist-item/checklist-item-result.dto';
-import { ViajeChecklistCreateDto } from './dto/viaje-checklist/viaje-checklist-create.dto';
-import { ViajeChecklistUpdateDto } from './dto/viaje-checklist/viaje-checklist-update.dto';
 import { ViajeChecklistResultDto } from './dto/viaje-checklist/viaje-checklist-result.dto';
-import { ViajeChecklistItemUpdateDto } from './dto/viaje-checklist/viaje-checklist-item-update.dto';
+import { ViajeChecklistUpsertBodyDto, ViajeChecklistUpsertQueryDto } from './dto/viaje-checklist/viaje-checklist-upsert.dto';
+import { ViajeChecklistQueryDto } from './dto/viaje-checklist/viaje-checklist-query.dto';
 
 @ApiTags('viajes')
 @ApiBearerAuth()
@@ -302,51 +301,25 @@ export class ViajesController {
   }
 
   // ========== VIAJE CHECKLISTS ==========
-  @Get(':viajeId/checklists')
-  @ApiOperation({ summary: 'Obtener los checklists de un viaje (salida/entrada)' })
+  @Get(':viajeId/checklist')
+  @ApiOperation({ summary: 'Obtener un checklist de un viaje por tipo (salida/llegada)' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
-  @ApiResponse({ status: 200, type: [ViajeChecklistResultDto] })
-  findChecklists(@Param('viajeId') viajeId: string) {
-    return this.viajesService.findChecklists(+viajeId);
-  }
-
-  @Get('checklist/:id')
-  @ApiOperation({ summary: 'Obtener un checklist con todos sus items' })
-  @ApiParam({ name: 'id', description: 'ID del checklist', type: Number })
   @ApiResponse({ status: 200, type: ViajeChecklistResultDto })
-  findChecklist(@Param('id') id: string) {
-    return this.viajesService.findChecklist(+id);
+  findChecklistByTipo(@Param('viajeId') viajeId: string, @Query() query: ViajeChecklistQueryDto) {
+    return this.viajesService.findChecklistByViajeIdAndTipo(+viajeId, query.tipo);
   }
 
-  @Post(':viajeId/checklist/create')
-  @ApiOperation({ summary: 'Crear un checklist para un viaje (salida/entrada)' })
+  @Post(':viajeId/checklist/upsert')
+  @ApiOperation({ summary: 'Crear o actualizar un checklist de viaje (salida/llegada)' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
-  @ApiResponse({ status: 201, type: ViajeChecklistResultDto })
-  createChecklist(@Param('viajeId') viajeId: string, @Body() createDto: ViajeChecklistCreateDto) {
-    return this.viajesService.createChecklist(+viajeId, createDto);
-  }
-
-  @Patch('checklist/update/:id')
-  @ApiOperation({ summary: 'Actualizar observaciones del checklist' })
-  @ApiParam({ name: 'id', description: 'ID del checklist', type: Number })
   @ApiResponse({ status: 200, type: ViajeChecklistResultDto })
-  updateChecklist(@Param('id') id: string, @Body() updateDto: ViajeChecklistUpdateDto) {
-    return this.viajesService.updateChecklist(+id, updateDto);
-  }
-
-  @Post('checklist/:id/validar')
-  @ApiOperation({ summary: 'Validar un checklist (marcar como revisado)' })
-  @ApiParam({ name: 'id', description: 'ID del checklist', type: Number })
-  @ApiResponse({ status: 200, type: ViajeChecklistResultDto })
-  validarChecklist(@Param('id') id: string, @Request() req: { user: { id: number } }) {
-    return this.viajesService.validarChecklist(+id, req.user.id);
-  }
-
-  @Patch('checklist-item-viaje/update/:id')
-  @ApiOperation({ summary: 'Marcar/desmarcar un item del checklist de viaje' })
-  @ApiParam({ name: 'id', description: 'ID del item del checklist', type: Number })
-  updateViajeChecklistItem(@Param('id') id: string, @Body() updateDto: ViajeChecklistItemUpdateDto) {
-    return this.viajesService.updateViajeChecklistItem(+id, updateDto);
+  upsertChecklist(
+    @Param('viajeId') viajeId: string,
+    @Query() query: ViajeChecklistUpsertQueryDto,
+    @Body() body: ViajeChecklistUpsertBodyDto,
+    @Request() req: { user: { sub: number } },
+  ) {
+    return this.viajesService.upsertChecklist(+viajeId, query.tipo, body, req.user.sub);
   }
 
   @Delete('checklist/delete/:id')

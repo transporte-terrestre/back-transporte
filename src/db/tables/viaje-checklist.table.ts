@@ -3,7 +3,7 @@ import { sql } from 'drizzle-orm';
 import { viajes } from './viaje.table';
 import { usuarios } from './usuario.table';
 
-export const viajeChecklistTipo = pgEnum('viaje_checklist_tipo', ['salida', 'entrada']);
+export const viajeChecklistTipo = pgEnum('viaje_checklist_tipo', ['salida', 'llegada']);
 
 export const viajeChecklists = pgTable(
   'viaje_checklists',

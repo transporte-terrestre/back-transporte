@@ -18,7 +18,7 @@ import { ViajeServicioCreateDto } from './dto/viaje-servicio/viaje-servicio-crea
 import { ViajeServicioUpdateDto } from './dto/viaje-servicio/viaje-servicio-update.dto';
 import { ViajeChecklistCreateDto } from './dto/viaje-checklist/viaje-checklist-create.dto';
 import { ViajeChecklistUpdateDto } from './dto/viaje-checklist/viaje-checklist-update.dto';
-import { ViajeChecklistItemUpdateDto } from './dto/viaje-checklist/viaje-checklist-item-update.dto';
+import { ViajeChecklistUpsertBodyDto } from './dto/viaje-checklist/viaje-checklist-upsert.dto';
 import { ChecklistItemCreateDto } from './dto/checklist-item/checklist-item-create.dto';
 import { ChecklistItemUpdateDto } from './dto/checklist-item/checklist-item-update.dto';
 
@@ -294,18 +294,103 @@ export class ViajesService {
     return await this.viajeChecklistRepository.update(checklistId, data);
   }
 
-  async validarChecklist(checklistId: number, usuarioId: number) {
-    return await this.viajeChecklistRepository.update(checklistId, {
-      validadoPor: usuarioId,
-      validadoEn: new Date(),
-    });
-  }
-
-  async updateViajeChecklistItem(itemId: number, data: ViajeChecklistItemUpdateDto) {
-    return await this.viajeChecklistRepository.updateItem(itemId, data);
-  }
-
   async deleteChecklist(checklistId: number) {
     return await this.viajeChecklistRepository.delete(checklistId);
+  }
+
+  async upsertChecklist(viajeId: number, tipo: 'salida' | 'llegada', data: ViajeChecklistUpsertBodyDto, validadoPor: number) {
+    let checklist = await this.viajeChecklistRepository.findByViajeIdAndTipo(viajeId, tipo);
+
+    if (!checklist) {
+      // Crear el checklist con validación automática
+      checklist = await this.viajeChecklistRepository.create({
+        viajeId,
+        tipo,
+        observaciones: data.observaciones,
+        validadoPor,
+        validadoEn: new Date(),
+      });
+    } else {
+      // Actualizar checklist existente con validación
+      checklist = await this.viajeChecklistRepository.update(checklist.id, {
+        observaciones: data.observaciones,
+        validadoPor,
+        validadoEn: new Date(),
+      });
+    }
+
+    // Upsert de los items
+    const itemsToUpsert = data.items.map((item) => ({
+      checklistItemId: item.id,
+      completado: item.completado,
+      observacion: item.observacion,
+    }));
+
+    await this.viajeChecklistRepository.upsertItems(checklist.id, itemsToUpsert);
+    return await this.viajeChecklistRepository.findOneWithItems(checklist.id);
+  }
+
+  async findChecklistByViajeIdAndTipo(viajeId: number, tipo: 'salida' | 'llegada') {
+    const checklist = await this.viajeChecklistRepository.findOneWithItemsByViajeIdAndTipo(viajeId, tipo);
+
+    // Obtener todos los items del catálogo
+    const catalogoItems = await this.checklistItemRepository.findAll();
+
+    // Si no existe el checklist, devolver un template vacío
+    if (!checklist) {
+      return {
+        id: null,
+        viajeId,
+        tipo,
+        validadoPor: null,
+        validadoEn: null,
+        observaciones: null,
+        creadoEn: null,
+        actualizadoEn: null,
+        items: catalogoItems.map((item) => ({
+          viajeChecklistId: null,
+          checklistItemId: item.id,
+          completado: false,
+          observacion: null,
+          creadoEn: null,
+          actualizadoEn: null,
+          seccion: item.seccion,
+          nombre: item.nombre,
+          descripcion: item.descripcion,
+          icono: item.icono,
+          orden: item.orden,
+        })),
+      };
+    }
+
+    // Si existe el checklist, hacer merge con el catálogo
+    const itemsExistentesMap = new Map(checklist.items.map((item) => [item.checklistItemId, item]));
+
+    const itemsMerged = catalogoItems.map((catalogoItem) => {
+      const itemExistente = itemsExistentesMap.get(catalogoItem.id);
+
+      if (itemExistente) {
+        return itemExistente;
+      }
+
+      return {
+        viajeChecklistId: checklist.id,
+        checklistItemId: catalogoItem.id,
+        completado: false,
+        observacion: null,
+        creadoEn: null,
+        actualizadoEn: null,
+        seccion: catalogoItem.seccion,
+        nombre: catalogoItem.nombre,
+        descripcion: catalogoItem.descripcion,
+        icono: catalogoItem.icono,
+        orden: catalogoItem.orden,
+      };
+    });
+
+    return {
+      ...checklist,
+      items: itemsMerged,
+    };
   }
 }
