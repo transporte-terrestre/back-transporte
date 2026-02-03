@@ -1,7 +1,7 @@
 import { IsInt, IsIn, IsNotEmpty, IsDate, IsOptional, IsString, IsArray, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ViajeDTO, viajesEstado, modalidadServicio, viajesTipoRuta, viajesTurno } from '@db/tables/viaje.table';
+import { ViajeDTO, viajesEstado, modalidadServicio, viajesTipoRuta, viajesTurno, viajesSentido } from '@db/tables/viaje.table';
 import type { ViajeEstado, ViajeModalidadServicio, ViajeTipoRuta, ViajeTurno } from '@db/tables/viaje.table';
 
 export class ViajeCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
@@ -108,6 +108,15 @@ export class ViajeCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' | 'actua
   @IsOptional()
   @IsIn(viajesTurno.enumValues, { each: true })
   turno?: ViajeTurno;
+
+  @ApiPropertyOptional({
+    enum: viajesSentido.enumValues,
+    description: 'Sentido del viaje (ida o vuelta)',
+    default: 'ida',
+  })
+  @IsOptional()
+  @IsIn(viajesSentido.enumValues, { each: true })
+  sentido?: 'ida' | 'vuelta';
 
   @ApiPropertyOptional({
     example: '242155',

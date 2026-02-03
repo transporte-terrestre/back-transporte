@@ -479,4 +479,66 @@ export class NotificacionesService {
       year: 'numeric',
     });
   }
+
+  async notifyChecklistMissingItems(
+    viajeId: number,
+    tipo: string,
+    itemsFaltantes: { nombre: string; seccion: string }[],
+  ): Promise<{ message: string; count: number }> {
+    const admins = await this.notificacionRepository.findUsersByRole('admin');
+    const adminEmails = admins.map((u) => u.email).filter((e) => e);
+
+    if (adminEmails.length === 0 || itemsFaltantes.length === 0) {
+      return { message: 'No se enviaron notificaciones', count: 0 };
+    }
+
+    let htmlContent = `
+      <h2>Alerta de Checklist Incompleto</h2>
+      <p>Se ha registrado un checklist de <strong>${tipo.toUpperCase()}</strong> para el Viaje #${viajeId} con items faltantes.</p>
+      <p>Los siguientes documentos/items no fueron marcados como completados:</p>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+          <tr style="background-color: #f2f2f2;">
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Sección</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item Faltante</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    itemsFaltantes.forEach((item) => {
+      htmlContent += `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.seccion}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; color: #dc3545; font-weight: bold;">${item.nombre}</td>
+        </tr>
+      `;
+    });
+
+    htmlContent += `
+        </tbody>
+      </table>
+      <p style="margin-top: 20px; font-size: 12px; color: #666;">Sistema de Gestión de Transporte</p>
+    `;
+
+    let successful = 0;
+    for (const email of adminEmails) {
+      try {
+        await this.sendEmail({
+          to: email,
+          subject: `[ALERTA] Checklist Incompleto - Viaje #${viajeId} (${tipo})`,
+          text: `El checklist de ${tipo} del viaje #${viajeId} tiene ${itemsFaltantes.length} items faltantes.`,
+          html: htmlContent,
+        });
+        successful++;
+      } catch (e) {
+        console.error(`Error sending checklist alert to admin ${email}`, e);
+      }
+    }
+
+    return {
+      message: `Notificación enviada a ${successful}/${adminEmails.length} administradores.`,
+      count: itemsFaltantes.length,
+    };
+  }
 }

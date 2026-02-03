@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
-import { viajesEstado, modalidadServicio, viajesTipoRuta } from '@db/tables/viaje.table';
-import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta } from '@db/tables/viaje.table';
+import { viajesEstado, modalidadServicio, viajesTipoRuta, viajesTurno, viajesSentido } from '@db/tables/viaje.table';
+import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta, ViajeTurno, ViajeSentido } from '@db/tables/viaje.table';
 import { ConductorResultDto } from '@module/admin/conductores/dto/conductor/conductor-result.dto';
 import { VehiculoResultDto } from '@module/admin/vehiculos/dto/vehiculo/vehiculo-result.dto';
 import { ClienteResultDto } from '@module/admin/clientes/dto/cliente/cliente-result.dto';
@@ -64,6 +64,20 @@ export class ViajeListDto {
     description: 'Trip status',
   })
   estado: ViajeEstado;
+
+  @ApiPropertyOptional({
+    enum: viajesTurno.enumValues,
+    example: 'dia',
+    description: 'Turno del viaje (día o noche)',
+  })
+  turno?: ViajeTurno;
+
+  @ApiProperty({
+    enum: viajesSentido.enumValues,
+    example: 'ida',
+    description: 'Sentido del viaje (ida o vuelta)',
+  })
+  sentido: ViajeSentido;
 
   @ApiProperty({
     example: '2025-01-01T10:00:00Z',

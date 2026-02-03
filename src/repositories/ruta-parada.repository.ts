@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, ilike, asc, isNull } from 'drizzle-orm';
+import { eq, and, ilike, asc, isNull, sql, gte } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { rutaParadas, RutaParadaDTO } from '@db/tables/ruta-parada.table';
 
@@ -75,5 +75,12 @@ export class RutaParadaRepository {
       resultados.push(result[0]);
     }
     return resultados;
+  }
+
+  async shiftOrders(rutaId: number, fromOrden: number) {
+    await database
+      .update(rutaParadas)
+      .set({ orden: sql`${rutaParadas.orden} + 1` })
+      .where(and(eq(rutaParadas.rutaId, rutaId), gte(rutaParadas.orden, fromOrden), isNull(rutaParadas.eliminadoEn)));
   }
 }

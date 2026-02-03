@@ -41,4 +41,7 @@ export class ViajeChecklistResultDto {
 
   @ApiPropertyOptional({ type: [ViajeChecklistItemDetalleDto], description: 'Items del checklist' })
   items?: ViajeChecklistItemDetalleDto[];
+
+  @ApiPropertyOptional({ example: 'Notificación enviada por items faltantes.', description: 'Mensaje de estado de notificación' })
+  message?: string;
 }

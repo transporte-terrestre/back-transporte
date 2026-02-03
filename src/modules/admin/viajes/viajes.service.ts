@@ -21,6 +21,7 @@ import { ViajeChecklistUpdateDto } from './dto/viaje-checklist/viaje-checklist-u
 import { ViajeChecklistUpsertBodyDto } from './dto/viaje-checklist/viaje-checklist-upsert.dto';
 import { ChecklistItemCreateDto } from './dto/checklist-item/checklist-item-create.dto';
 import { ChecklistItemUpdateDto } from './dto/checklist-item/checklist-item-update.dto';
+import { NotificacionesService } from '../notificaciones/notificaciones.service';
 
 interface UsuarioAutenticado {
   sub: number;
@@ -39,6 +40,7 @@ export class ViajesService {
     private readonly viajeChecklistRepository: ViajeChecklistRepository,
     private readonly rutaRepository: RutaRepository,
     private readonly clienteRepository: ClienteRepository,
+    private readonly notificacionesService: NotificacionesService,
   ) {}
 
   async findAllPaginated(
@@ -327,7 +329,30 @@ export class ViajesService {
     }));
 
     await this.viajeChecklistRepository.upsertItems(checklist.id, itemsToUpsert);
-    return await this.viajeChecklistRepository.findOneWithItems(checklist.id);
+    const checklistActualizado = await this.viajeChecklistRepository.findOneWithItems(checklist.id);
+
+    // Fire & Forget: Notificar a admins si faltan documentos
+    let message = 'Checklist guardado correctamente. Todos los documentos están completos.';
+
+    if (checklistActualizado && checklistActualizado.items) {
+      const itemsFaltantes = checklistActualizado.items
+        .filter((item) => !item.completado)
+        .map((item) => ({ nombre: item.nombre, seccion: item.seccion }));
+
+      if (itemsFaltantes.length > 0) {
+        this.notificacionesService
+          .notifyChecklistMissingItems(viajeId, tipo, itemsFaltantes)
+          .catch((err) => console.error('Error enviando notificacion de checklist incompleto:', err));
+
+        const listaItems = itemsFaltantes.map((i) => `• ${i.nombre}`).join('\n');
+        message = `Se ha enviado notificación a los administradores por los siguientes documentos faltantes:\n${listaItems}`;
+      }
+    }
+
+    return {
+      ...checklistActualizado,
+      message,
+    };
   }
 
   async findChecklistByViajeIdAndTipo(viajeId: number, tipo: 'salida' | 'llegada') {

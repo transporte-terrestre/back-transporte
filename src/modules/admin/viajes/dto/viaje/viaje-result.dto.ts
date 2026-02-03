@@ -1,11 +1,11 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
-import { viajesEstado, modalidadServicio, viajesTipoRuta, viajesTurno } from '@db/tables/viaje.table';
+import { viajesEstado, modalidadServicio, viajesTipoRuta, viajesTurno, viajesSentido } from '@db/tables/viaje.table';
 import { ConductorResultDto } from '../../../conductores/dto/conductor/conductor-result.dto';
 import { VehiculoResultDto } from '../../../vehiculos/dto/vehiculo/vehiculo-result.dto';
 import { ClienteResultDto } from '../../../clientes/dto/cliente/cliente-result.dto';
 import { viajeConductoresRol } from '@db/tables/viaje-conductor.table';
 import { viajeVehiculosRol } from '@db/tables/viaje-vehiculo.table';
-import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta, ViajeTurno } from '@db/tables/viaje.table';
+import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta, ViajeTurno, ViajeSentido } from '@db/tables/viaje.table';
 import { ViajeComentarioResultDto } from '../viaje-comentario/viaje-comentario-result.dto';
 import { RutaResultDto } from '@module/admin/rutas/dto/ruta/ruta-result.dto';
 
@@ -107,6 +107,13 @@ export class ViajeResultDto {
     description: 'Turno del viaje (día o noche)',
   })
   turno?: ViajeTurno;
+
+  @ApiProperty({
+    enum: viajesSentido.enumValues,
+    example: 'ida',
+    description: 'Sentido del viaje (ida o vuelta)',
+  })
+  sentido: ViajeSentido;
 
   @ApiPropertyOptional({
     example: '242155',

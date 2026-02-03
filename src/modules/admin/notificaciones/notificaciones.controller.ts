@@ -20,7 +20,7 @@ export class NotificacionesController {
   @ApiOperation({ summary: 'Obtener notificaciones del usuario' })
   @ApiResponse({ status: 200, type: PaginatedNotificacionResultDto })
   async findAll(@Query() query: NotificacionPaginationQueryDto) {
-    return await this.notificacionesService.findAllByUser(query.userId, query.page || 1, query.limit || 10);
+    return await this.notificacionesService.findAllByUser(query.userId, query.page, query.limit);
   }
 
   @Post('create')
@@ -36,6 +36,25 @@ export class NotificacionesController {
   async markAsRead(@Param('id', ParseIntPipe) id: number, @Query('userId', ParseIntPipe) userId: number): Promise<NotificacionResultDto> {
     return await this.notificacionesService.markAsRead(userId, id);
   }
+
+  @Get('vencimientos/test')
+  @ApiOperation({ summary: 'TEST: Previsualizar notificaciones de documentos por vencer' })
+  @ApiResponse({ status: 200, type: PreviewVencimientosResultDto })
+  async previewVencimientos(@Query() query: NotificacionVencimientoQueryDto): Promise<PreviewVencimientosResultDto> {
+    return await this.notificacionesService.previewNotificacionesVencimiento(query.fecha, query.diasAnticipacion);
+  }
+
+  @Post('vencimientos/generar')
+  @ApiOperation({
+    summary: 'Generar y guardar notificaciones de documentos por vencer',
+    description: 'Busca documentos por vencer/vencidos y CREA las notificaciones en la base de datos.',
+  })
+  @ApiResponse({ status: 201, type: GenerarVencimientosResultDto })
+  async generarVencimientos(@Query() query: NotificacionVencimientoQueryDto): Promise<GenerarVencimientosResultDto> {
+    return await this.notificacionesService.generarNotificacionesVencimiento(query.fecha, query.diasAnticipacion);
+  }
+
+  // Email
 
   @Post('send-email')
   @ApiOperation({ summary: 'Enviar un correo electrónico' })
@@ -58,24 +77,5 @@ export class NotificacionesController {
     return await this.notificacionesService.notifyEachConductor(diasAnticipacion ? Number(diasAnticipacion) : 7);
   }
 
-  // =============================================
-  // DOCUMENT EXPIRATION ENDPOINTS
-  // =============================================
 
-  @Get('vencimientos/test')
-  @ApiOperation({ summary: 'TEST: Previsualizar notificaciones de documentos por vencer' })
-  @ApiResponse({ status: 200, type: PreviewVencimientosResultDto })
-  async previewVencimientos(@Query() query: NotificacionVencimientoQueryDto): Promise<PreviewVencimientosResultDto> {
-    return await this.notificacionesService.previewNotificacionesVencimiento(query.fecha, query.diasAnticipacion);
-  }
-
-  @Post('vencimientos/generar')
-  @ApiOperation({
-    summary: 'Generar y guardar notificaciones de documentos por vencer',
-    description: 'Busca documentos por vencer/vencidos y CREA las notificaciones en la base de datos.',
-  })
-  @ApiResponse({ status: 201, type: GenerarVencimientosResultDto })
-  async generarVencimientos(@Query() query: NotificacionVencimientoQueryDto): Promise<GenerarVencimientosResultDto> {
-    return await this.notificacionesService.generarNotificacionesVencimiento(query.fecha, query.diasAnticipacion);
-  }
 }

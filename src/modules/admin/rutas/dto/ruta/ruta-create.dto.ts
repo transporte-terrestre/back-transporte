@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsLatitude, IsLongitude } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { RutaDTO } from '@db/tables/ruta.table';
 
@@ -16,21 +16,25 @@ export class RutaCreateDto implements Omit<RutaDTO, 'id' | 'creadoEn' | 'actuali
   @ApiProperty({ example: '-12.0464', description: 'Origin latitude' })
   @IsString()
   @IsNotEmpty()
+  @IsLatitude({ message: 'La latitud de origen debe estar entre -90 y 90' })
   origenLat: string;
 
   @ApiProperty({ example: '-77.0428', description: 'Origin longitude' })
   @IsString()
   @IsNotEmpty()
+  @IsLongitude({ message: 'La longitud de origen debe estar entre -180 y 180' })
   origenLng: string;
 
   @ApiProperty({ example: '-14.0678', description: 'Destination latitude' })
   @IsString()
   @IsNotEmpty()
+  @IsLatitude({ message: 'La latitud de destino debe estar entre -90 y 90' })
   destinoLat: string;
 
   @ApiProperty({ example: '-75.7286', description: 'Destination longitude' })
   @IsString()
   @IsNotEmpty()
+  @IsLongitude({ message: 'La longitud de destino debe estar entre -180 y 180' })
   destinoLng: string;
 
   @ApiProperty({ example: '300.5', description: 'Distance in km' })

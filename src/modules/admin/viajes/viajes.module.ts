@@ -10,6 +10,7 @@ import { ChecklistItemRepository } from '@repository/checklist-item.repository';
 import { ViajeChecklistRepository } from '@repository/viaje-checklist.repository';
 import { RutaRepository } from '@repository/ruta.repository';
 import { ClienteRepository } from '@repository/cliente.repository';
+import { NotificacionesModule } from '../notificaciones/notificaciones.module';
 
 @Module({
   controllers: [ViajesController],
@@ -25,6 +26,7 @@ import { ClienteRepository } from '@repository/cliente.repository';
     RutaRepository,
     ClienteRepository,
   ],
+  imports: [NotificacionesModule],
   exports: [ViajeServicioRepository, ChecklistItemRepository, ViajeChecklistRepository],
 })
 export class ViajesModule {}
