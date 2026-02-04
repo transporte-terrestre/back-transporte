@@ -1,18 +1,7 @@
-import { config } from 'dotenv';
 import { Pool } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
-
-config();
-
-const dbConfig = {
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT || '5432'),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  ssl: process.env.PROD === 'true',
-};
+import { dbConfig } from '@db/config.db';
 
 async function migrate() {
   const pool = new Pool(dbConfig);
@@ -31,7 +20,16 @@ async function migrate() {
     `);
 
     // Leer archivos de migración
-    const migrationsDir = path.join(__dirname, 'migrations');
+    const versionDir = process.env.DB_VERSION || '';
+    const migrationsDir = path.join(__dirname, 'migrations', versionDir);
+
+    if (!fs.existsSync(migrationsDir)) {
+      console.error(`❌ Directorio de migraciones no encontrado: ${migrationsDir}`);
+      process.exit(1);
+    }
+
+    console.log(`📂 Buscando migraciones en: migrations/${versionDir}`);
+
     const files = fs
       .readdirSync(migrationsDir)
       .filter((f) => f.endsWith('.sql'))
