@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, like, and, gte, lte, count, sql, or, isNull, getTableColumns } from 'drizzle-orm';
+import { eq, like, and, gte, lte, count, sql, or, isNull, getTableColumns, desc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { viajes, ViajeDTO } from '@model/tables/viaje.model';
 import { viajeConductores } from '@model/tables/viaje-conductor.model';
@@ -93,6 +93,7 @@ export class ViajeRepository {
       .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .where(whereClause)
+      .orderBy(desc(viajes.fechaSalida))
       .limit(limit)
       .offset(offset);
 
