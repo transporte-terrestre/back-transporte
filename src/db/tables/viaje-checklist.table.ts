@@ -1,5 +1,4 @@
 import { pgTable, serial, integer, timestamp, pgEnum, text, index, uniqueIndex } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
 import { viajes } from './viaje.table';
 import { usuarios } from './usuario.table';
 
@@ -21,7 +20,6 @@ export const viajeChecklists = pgTable(
   },
   (t) => [
     index('viaje_checklists_viaje_id_idx').on(t.viajeId),
-    // Un viaje solo puede tener un checklist de salida y uno de entrada
     uniqueIndex('viaje_checklists_viaje_tipo_unique_idx').on(t.viajeId, t.tipo),
   ],
 );

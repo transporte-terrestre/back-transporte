@@ -4,14 +4,50 @@ import { Type } from 'class-transformer';
 import { viajeChecklistTipo } from '@db/tables/viaje-checklist.table';
 import type { ViajeChecklistTipo } from '@db/tables/viaje-checklist.table';
 
+export class ChecklistRespuestaJsonDto {
+  @ApiPropertyOptional({ example: true, description: 'Valor booleano (para checks)' })
+  @IsOptional()
+  @IsBoolean()
+  check?: boolean;
+
+  @ApiPropertyOptional({ example: 'Texto libre', description: 'Valor de texto o fecha' })
+  @IsOptional()
+  @IsString()
+  valor?: string;
+
+  @ApiPropertyOptional({ example: 'http://foto.com/img.jpg', description: 'URL de foto' })
+  @IsOptional()
+  @IsString()
+  foto?: string;
+
+  @ApiPropertyOptional({ example: ['opcion1'], description: 'Selección múltiple' })
+  @IsOptional()
+  @IsArray()
+  seleccion?: string[];
+}
+
 export class ChecklistItemUpsertDto {
   @ApiProperty({ example: 1, description: 'ID del item del catálogo de checklist' })
   @IsInt()
   id: number;
 
-  @ApiProperty({ example: true, description: 'Si el item está completado/marcado' })
+  @ApiProperty({ example: 100, description: 'ID de la versión de configuración (vehiculo_checklist_documents)' })
+  @IsInt()
+  vehiculoChecklistDocumentId: number;
+
+  @ApiProperty({ type: ChecklistRespuestaJsonDto, description: 'Respuestas del formulario en formato JSON estructurado' })
+  @ValidateNested()
+  @Type(() => ChecklistRespuestaJsonDto)
+  respuestaJson: ChecklistRespuestaJsonDto;
+
+  @ApiProperty({ example: false, description: 'Si se detectaron hallazgos en este checklist' })
   @IsBoolean()
-  completado: boolean;
+  tieneHallazgos: boolean;
+
+  @ApiPropertyOptional({ example: true, description: 'DEPRECATED: Si el item está completado/marcado' })
+  @IsBoolean()
+  @IsOptional()
+  completado?: boolean;
 
   @ApiPropertyOptional({ example: 'Sin novedad', description: 'Observación del item' })
   @IsOptional()

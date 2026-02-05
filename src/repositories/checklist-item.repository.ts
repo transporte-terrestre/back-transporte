@@ -6,19 +6,7 @@ import { checklistItems, ChecklistItemDTO } from '@db/tables/checklist-item.tabl
 @Injectable()
 export class ChecklistItemRepository {
   async findAll() {
-    return await database
-      .select()
-      .from(checklistItems)
-      .where(and(eq(checklistItems.activo, true), isNull(checklistItems.eliminadoEn)))
-      .orderBy(asc(checklistItems.seccion), asc(checklistItems.orden));
-  }
-
-  async findBySeccion(seccion: 'conductor' | 'supervision') {
-    return await database
-      .select()
-      .from(checklistItems)
-      .where(and(eq(checklistItems.seccion, seccion), eq(checklistItems.activo, true), isNull(checklistItems.eliminadoEn)))
-      .orderBy(asc(checklistItems.orden));
+    return await database.select().from(checklistItems).where(isNull(checklistItems.eliminadoEn)).orderBy(asc(checklistItems.nombre));
   }
 
   async findOne(id: number) {
@@ -26,6 +14,14 @@ export class ChecklistItemRepository {
       .select()
       .from(checklistItems)
       .where(and(eq(checklistItems.id, id), isNull(checklistItems.eliminadoEn)));
+    return result[0];
+  }
+
+  async findByNombre(nombre: string) {
+    const result = await database
+      .select()
+      .from(checklistItems)
+      .where(and(eq(checklistItems.nombre, nombre), isNull(checklistItems.eliminadoEn)));
     return result[0];
   }
 

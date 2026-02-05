@@ -1,14 +1,8 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, IsBoolean, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ChecklistItemDTO, checklistItemSeccion } from '@db/tables/checklist-item.table';
-import type { ChecklistItemSeccion } from '@db/tables/checklist-item.table';
+import { ChecklistItemDTO } from '@db/tables/checklist-item.table';
 
-export class ChecklistItemCreateDto implements Omit<ChecklistItemDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
-  @ApiProperty({ enum: checklistItemSeccion.enumValues, description: 'Sección del checklist' })
-  @IsIn(checklistItemSeccion.enumValues)
-  @IsNotEmpty()
-  seccion: ChecklistItemSeccion;
-
+export class ChecklistItemCreateDto implements Omit<ChecklistItemDTO, 'id' | 'creadoEn' | 'actualizadoEn' | 'eliminadoEn'> {
   @ApiProperty({ example: 'Reporte diario', description: 'Nombre del item' })
   @IsString()
   @IsNotEmpty()
@@ -18,19 +12,4 @@ export class ChecklistItemCreateDto implements Omit<ChecklistItemDTO, 'id' | 'cr
   @IsString()
   @IsOptional()
   descripcion?: string;
-
-  @ApiPropertyOptional({ example: 'clipboard', description: 'Icono del item' })
-  @IsString()
-  @IsOptional()
-  icono?: string;
-
-  @ApiPropertyOptional({ example: 1, description: 'Orden del item' })
-  @IsInt()
-  @IsOptional()
-  orden?: number;
-
-  @ApiPropertyOptional({ example: true, description: 'Item activo' })
-  @IsBoolean()
-  @IsOptional()
-  activo?: boolean;
 }

@@ -8,6 +8,7 @@ import { ChecklistItemRepository } from '@repository/checklist-item.repository';
 import { ViajeChecklistRepository } from '@repository/viaje-checklist.repository';
 import { RutaRepository } from '@repository/ruta.repository';
 import { ClienteRepository } from '@repository/cliente.repository';
+import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository'; // Inyectado
 import { ViajeCreateDto } from './dto/viaje/viaje-create.dto';
 import { ViajeUpdateDto } from './dto/viaje/viaje-update.dto';
 import { PaginatedViajeResultDto } from './dto/viaje/viaje-paginated.dto';
@@ -38,6 +39,7 @@ export class ViajesService {
     private readonly viajeServicioRepository: ViajeServicioRepository,
     private readonly checklistItemRepository: ChecklistItemRepository,
     private readonly viajeChecklistRepository: ViajeChecklistRepository,
+    private readonly vehiculoChecklistDocumentRepository: VehiculoChecklistDocumentRepository, // Inyectado
     private readonly rutaRepository: RutaRepository,
     private readonly clienteRepository: ClienteRepository,
     private readonly notificacionesService: NotificacionesService,
@@ -85,7 +87,7 @@ export class ViajesService {
     };
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     return this.viajeRepository.findOne(id);
   }
 
@@ -277,17 +279,8 @@ export class ViajesService {
       observaciones: data.observaciones,
     });
 
-    const items = await this.checklistItemRepository.findAll();
-
-    const checklistItems = items.map((item) => ({
-      viajeChecklistId: checklist.id,
-      checklistItemId: item.id,
-      completado: false,
-    }));
-
-    if (checklistItems.length > 0) {
-      await this.viajeChecklistRepository.createManyItems(checklistItems);
-    }
+    // No creamos items automáticos aquí. Los items se crean cuando se guarda la ejecución (upsert)
+    // basándose en la configuración activa del vehículo.
 
     return await this.viajeChecklistRepository.findOneWithItems(checklist.id);
   }
@@ -323,8 +316,9 @@ export class ViajesService {
 
     // Upsert de los items
     const itemsToUpsert = data.items.map((item) => ({
-      checklistItemId: item.id,
-      completado: item.completado,
+      checklistItemId: item.id, // ID del Catálogo
+      vehiculoChecklistDocumentId: item.vehiculoChecklistDocumentId, // Nuevo: ID Versión (Documento)
+      // Eliminados respuestaJson y tieneHallazgos
       observacion: item.observacion,
     }));
 
@@ -332,22 +326,7 @@ export class ViajesService {
     const checklistActualizado = await this.viajeChecklistRepository.findOneWithItems(checklist.id);
 
     // Fire & Forget: Notificar a admins si faltan documentos
-    let message = 'Checklist guardado correctamente. Todos los documentos están completos.';
-
-    if (checklistActualizado && checklistActualizado.items) {
-      const itemsFaltantes = checklistActualizado.items
-        .filter((item) => !item.completado)
-        .map((item) => ({ nombre: item.nombre, seccion: item.seccion }));
-
-      if (itemsFaltantes.length > 0) {
-        this.notificacionesService
-          .notifyChecklistMissingItems(viajeId, tipo, itemsFaltantes)
-          .catch((err) => console.error('Error enviando notificacion de checklist incompleto:', err));
-
-        const listaItems = itemsFaltantes.map((i) => `• ${i.nombre}`).join('\n');
-        message = `Se ha enviado notificación a los administradores por los siguientes documentos faltantes:\n${listaItems}`;
-      }
-    }
+    let message = 'Checklist guardado correctamente.';
 
     return {
       ...checklistActualizado,
@@ -358,64 +337,38 @@ export class ViajesService {
   async findChecklistByViajeIdAndTipo(viajeId: number, tipo: 'salida' | 'llegada') {
     const checklist = await this.viajeChecklistRepository.findOneWithItemsByViajeIdAndTipo(viajeId, tipo);
 
-    // Obtener todos los items del catálogo
-    const catalogoItems = await this.checklistItemRepository.findAll();
-
-    // Si no existe el checklist, devolver un template vacío
     if (!checklist) {
+      // Si no existe, Construir template basado en Vehículo Principal
+      const vehiculos = await this.viajeVehiculoRepository.findByViajeId(viajeId);
+      const principal = vehiculos.find((v) => v.rol === 'principal') || vehiculos[0];
+
+      if (!principal) return null; // Sin vehículo, no hay checklist posible
+
+      const activeDocs = await this.vehiculoChecklistDocumentRepository.findAllActiveByVehiculoId(principal.vehiculoId);
+      if (!activeDocs || activeDocs.length === 0) return null;
+
+      // Obtener nombres de los tipos de checklist para enriquecer la respuesta
+      const allChecklistItems = await this.checklistItemRepository.findAll();
+
+      // Mapear a estructura virtual similar a ViajeChecklist
       return {
-        id: null,
+        id: 0, // ID virtual
         viajeId,
         tipo,
-        validadoPor: null,
-        validadoEn: null,
-        observaciones: null,
-        creadoEn: null,
-        actualizadoEn: null,
-        items: catalogoItems.map((item) => ({
-          viajeChecklistId: null,
-          checklistItemId: item.id,
-          completado: false,
-          observacion: null,
-          creadoEn: null,
-          actualizadoEn: null,
-          seccion: item.seccion,
-          nombre: item.nombre,
-          descripcion: item.descripcion,
-          icono: item.icono,
-          orden: item.orden,
-        })),
+        items: activeDocs.map((doc) => {
+          const catalogItem = allChecklistItems.find((c) => c.id === doc.checklistItemId);
+          return {
+            id: doc.checklistItemId,
+            checklistItemId: doc.checklistItemId,
+            vehiculoChecklistDocumentId: doc.id,
+            checklistItem: catalogItem ? { id: catalogItem.id, nombre: catalogItem.nombre } : null,
+            observacion: null,
+            eliminadoEn: null,
+          };
+        }),
       };
     }
 
-    // Si existe el checklist, hacer merge con el catálogo
-    const itemsExistentesMap = new Map(checklist.items.map((item) => [item.checklistItemId, item]));
-
-    const itemsMerged = catalogoItems.map((catalogoItem) => {
-      const itemExistente = itemsExistentesMap.get(catalogoItem.id);
-
-      if (itemExistente) {
-        return itemExistente;
-      }
-
-      return {
-        viajeChecklistId: checklist.id,
-        checklistItemId: catalogoItem.id,
-        completado: false,
-        observacion: null,
-        creadoEn: null,
-        actualizadoEn: null,
-        seccion: catalogoItem.seccion,
-        nombre: catalogoItem.nombre,
-        descripcion: catalogoItem.descripcion,
-        icono: catalogoItem.icono,
-        orden: catalogoItem.orden,
-      };
-    });
-
-    return {
-      ...checklist,
-      items: itemsMerged,
-    };
+    return checklist;
   }
 }

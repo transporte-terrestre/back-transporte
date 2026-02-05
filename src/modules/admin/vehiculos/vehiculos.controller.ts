@@ -17,6 +17,15 @@ import { ModeloCreateDto } from './dto/modelo/modelo-create.dto';
 import { ModeloUpdateDto } from './dto/modelo/modelo-update.dto';
 import { ModeloResultDto } from './dto/modelo/modelo-result.dto';
 import { ModeloPaginationQueryDto, PaginatedModeloResultDto } from './dto/modelo/modelo-paginated.dto';
+import { VehiculoChecklistDocumentCreateDto } from './dto/checklist-document/create-checklist-document.dto';
+import { LucesEmergenciaAlarmasDto } from './dto/checklist-document/types/luces-emergencia-alarmas.dto';
+import { HojaInspeccionDto } from './dto/checklist-document/types/hoja-inspeccion.dto';
+import { InspeccionDocumentosDto } from './dto/checklist-document/types/inspeccion-documentos.dto';
+import { CinturonesSeguridadDto } from './dto/checklist-document/types/cinturones-seguridad.dto';
+import { InspeccionHerramientasDto } from './dto/checklist-document/types/inspeccion-herramientas.dto';
+import { InspeccionBotiquinesDto } from './dto/checklist-document/types/inspeccion-botiquines.dto';
+import { KitAntiderramesDto } from './dto/checklist-document/types/kit-antiderrames.dto';
+import { RevisionVehiculosDto } from './dto/checklist-document/types/revision-vehiculos.dto';
 
 @ApiTags('vehiculos')
 @ApiBearerAuth()
@@ -177,5 +186,79 @@ export class VehiculosController {
   @ApiResponse({ status: 200, type: ModeloResultDto })
   deleteModelo(@Param('id') id: string) {
     return this.vehiculosService.deleteModelo(+id);
+  }
+
+  // ========== CHECKLIST UPSERTS CON VIAJE ==========
+
+  // 1. Luces de Emergencia y Alarmas
+  @Post(':id/viaje/:viajeId/checklist-document/luces-emergencia-alarmas/upsert')
+  @ApiOperation({ summary: 'Configurar Checklist: Luces de Emergencia y Alarmas' })
+  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
+  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
+  async upsertLuces(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: LucesEmergenciaAlarmasDto) {
+    return this.vehiculosService.upsertLucesChecklist(+id, +viajeId, data);
+  }
+
+  // 2. Hoja de Inspección
+  @Post(':id/viaje/:viajeId/checklist-document/hoja-inspeccion/upsert')
+  @ApiOperation({ summary: 'Configurar Checklist: Hoja de Inspección' })
+  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
+  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
+  async upsertHojaInspeccion(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: HojaInspeccionDto) {
+    return this.vehiculosService.upsertHojaInspeccion(+id, +viajeId, data);
+  }
+
+  // 3. Inspección de Documentos
+  @Post(':id/viaje/:viajeId/checklist-document/inspeccion-documentos/upsert')
+  @ApiOperation({ summary: 'Configurar Checklist: Inspección de Documentos' })
+  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
+  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
+  async upsertInspeccionDocumentos(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: InspeccionDocumentosDto) {
+    return this.vehiculosService.upsertInspeccionDocumentos(+id, +viajeId, data);
+  }
+
+  // 4. Cinturones de Seguridad
+  @Post(':id/viaje/:viajeId/checklist-document/cinturones-seguridad/upsert')
+  @ApiOperation({ summary: 'Configurar Checklist: Cinturones de Seguridad' })
+  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
+  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
+  async upsertCinturones(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: CinturonesSeguridadDto) {
+    return this.vehiculosService.upsertCinturones(+id, +viajeId, data);
+  }
+
+  // 5. Inspección de Herramientas
+  @Post(':id/viaje/:viajeId/checklist-document/inspeccion-herramientas/upsert')
+  @ApiOperation({ summary: 'Configurar Checklist: Inspección de Herramientas' })
+  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
+  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
+  async upsertHerramientas(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: InspeccionHerramientasDto) {
+    return this.vehiculosService.upsertHerramientas(+id, +viajeId, data);
+  }
+
+  // 6. Inspección de Botiquines
+  @Post(':id/viaje/:viajeId/checklist-document/inspeccion-botiquines/upsert')
+  @ApiOperation({ summary: 'Configurar Checklist: Inspección de Botiquines' })
+  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
+  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
+  async upsertBotiquines(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: InspeccionBotiquinesDto) {
+    return this.vehiculosService.upsertBotiquines(+id, +viajeId, data);
+  }
+
+  // 7. Kit Antiderrames
+  @Post(':id/viaje/:viajeId/checklist-document/kit-antiderrames/upsert')
+  @ApiOperation({ summary: 'Configurar Checklist: Kit Antiderrames' })
+  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
+  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
+  async upsertKitAntiderrames(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: KitAntiderramesDto) {
+    return this.vehiculosService.upsertKitAntiderrames(+id, +viajeId, data);
+  }
+
+  // 8. Revisión de Vehículos
+  @Post(':id/viaje/:viajeId/checklist-document/revision-vehiculos/upsert')
+  @ApiOperation({ summary: 'Configurar Checklist: Revisión de Vehículos' })
+  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
+  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
+  async upsertRevisionVehiculos(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: RevisionVehiculosDto) {
+    return this.vehiculosService.upsertRevisionVehiculos(+id, +viajeId, data);
   }
 }
