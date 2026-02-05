@@ -1,21 +1,19 @@
 -- Insertar items del catálogo de checklist
+-- Incluye campo ORDEN. Seccion y Activo removidos.
 
--- Sección CONDUCTOR
-INSERT INTO checklist_items (seccion, nombre, descripcion, orden, activo) VALUES
-('conductor', 'Reporte diario', 'Bitácora actualizada', 1, true),
-('conductor', 'IPERC continuo', 'Identificación de peligros', 2, true),
-('conductor', 'Hoja de inspección', 'Pre-uso del vehículo', 3, true),
-('conductor', 'Manifiesto de pasajeros', 'Lista completa', 4, true);
+INSERT INTO checklist_items (nombre, descripcion, orden) VALUES
+-- CONDUCTOR
+('IPERC continuo', 'Identificación de peligros (Sección Conductor)', 1),
+('Hoja de inspección', 'Pre-uso del vehículo (Sección Conductor)', 2),
 
--- Sección SUPERVISIÓN
-INSERT INTO checklist_items (seccion, nombre, descripcion, orden, activo) VALUES
-('supervision', 'Inspección de documentos', 'Vigencia y validez', 1, true),
-('supervision', 'Luces de emergencia y alarmas', 'Funcionamiento correcto', 2, true),
-('supervision', 'Cinturones de seguridad', 'Estado y anclajes', 3, true),
-('supervision', 'Inspección de herramientas', 'Kit completo', 4, true),
-('supervision', 'Inspección de botiquines', 'Contenido completo', 5, true),
-('supervision', 'Kit anti derrames', 'Disponibilidad', 6, true),
-('supervision', 'Revisión de vehículos', 'Estado general', 7, true);
+-- SUPERVISION
+('Inspección de documentos', 'Vigencia y validez (Sección Supervisión)', 3),
+('Luces de emergencia y alarmas', 'Funcionamiento correcto (Sección Supervisión)', 4),
+('Cinturones de seguridad', 'Estado y anclajes (Sección Supervisión)', 5),
+('Inspección de herramientas', 'Kit completo (Sección Supervisión)', 6),
+('Inspección de botiquines', 'Contenido completo (Sección Supervisión)', 7),
+('Kit anti derrames', 'Disponibilidad (Sección Supervisión)', 8),
+('Revisión de vehículos', 'Estado general (Sección Supervisión)', 9);
 
 -- Verificar
-SELECT id, seccion, nombre, descripcion, orden FROM checklist_items ORDER BY seccion, orden;
+SELECT * FROM checklist_items ORDER BY orden;

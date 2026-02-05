@@ -1,17 +1,31 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { viajeChecklistTipo } from '@db/tables/viaje-checklist.table';
 import type { ViajeChecklistTipo } from '@db/tables/viaje-checklist.table';
-import { ChecklistItemResultDto } from '../checklist-item/checklist-item-result.dto';
 
-export class ViajeChecklistItemDetalleDto extends ChecklistItemResultDto {
-  @ApiProperty({ example: 1, description: 'ID del item en el checklist' })
-  viajeChecklistItemId: number;
+export class ViajeChecklistItemDetalleDto {
+  @ApiProperty({ example: 1, description: 'ID del item del catálogo' })
+  checklistItemId: number;
 
-  @ApiProperty({ example: true, description: 'Completado' })
-  completado: boolean;
+  @ApiProperty({ example: 10, description: 'ID del documento de configuración, null si no tiene' })
+  vehiculoChecklistDocumentId: number | null;
 
   @ApiPropertyOptional({ example: 'Sin novedad', description: 'Observación del item' })
   observacion?: string;
+
+  @ApiProperty({ description: 'Fecha creación' })
+  creadoEn: Date;
+
+  @ApiProperty({ description: 'Fecha actualización' })
+  actualizadoEn: Date;
+
+  @ApiProperty({ example: 'Llantas', description: 'Nombre del item (Catálogo)' })
+  nombre: string;
+
+  @ApiPropertyOptional({ example: 'Revisión estado', description: 'Descripción del item (Catálogo)' })
+  descripcion?: string;
+
+  @ApiProperty({ example: 1, description: 'Orden' })
+  orden: number;
 }
 
 export class ViajeChecklistResultDto {

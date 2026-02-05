@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ChecklistItemDTO } from '@db/tables/checklist-item.table';
 
@@ -12,4 +12,9 @@ export class ChecklistItemCreateDto implements Omit<ChecklistItemDTO, 'id' | 'cr
   @IsString()
   @IsOptional()
   descripcion?: string;
+
+  @ApiPropertyOptional({ example: 1, description: 'Orden de visualización' })
+  @IsInt()
+  @IsOptional()
+  orden?: number;
 }

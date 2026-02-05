@@ -30,20 +30,20 @@ export class ViajeChecklistRepository {
 
     const items = await database
       .select({
-        id: viajeChecklistItems.id,
         viajeChecklistId: viajeChecklistItems.viajeChecklistId,
         checklistItemId: viajeChecklistItems.checklistItemId, // ID del Tipo (Catálogo)
         vehiculoChecklistDocumentId: viajeChecklistItems.vehiculoChecklistDocumentId, // Versión usada (Documento)
         observacion: viajeChecklistItems.observacion,
         creadoEn: viajeChecklistItems.creadoEn,
         actualizadoEn: viajeChecklistItems.actualizadoEn,
-        eliminadoEn: viajeChecklistItems.eliminadoEn,
         nombre: checklistItems.nombre,
         descripcion: checklistItems.descripcion,
+        orden: checklistItems.orden,
       })
       .from(viajeChecklistItems)
       .innerJoin(checklistItems, eq(viajeChecklistItems.checklistItemId, checklistItems.id))
-      .where(eq(viajeChecklistItems.viajeChecklistId, id));
+      .where(eq(viajeChecklistItems.viajeChecklistId, id))
+      .orderBy(checklistItems.orden);
 
     return { ...checklist, items };
   }
@@ -84,12 +84,12 @@ export class ViajeChecklistRepository {
    * Cada item aquí es un LINK a la configuración usada + observación.
    */
   async upsertItems(
-    checklistId: number, 
+    checklistId: number,
     items: {
       checklistItemId: number;
       vehiculoChecklistDocumentId: number;
       observacion?: string | null;
-    }[]
+    }[],
   ) {
     if (items.length === 0) return [];
 

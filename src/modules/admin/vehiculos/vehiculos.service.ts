@@ -370,87 +370,34 @@ export class VehiculosService {
   // ========== CHECKLIST CONFIGURACION (VERSIONADO) ==========
 
   async createChecklistVersion(vehiculoId: number, data: VehiculoChecklistDocumentCreateDto, viajeId?: number) {
-    // 1. Validar Catalogo
     const catalogo = await this.checklistItemRepository.findOne(data.checklistItemId);
     if (!catalogo) throw new NotFoundException('El tipo de checklist no existe');
 
-    // 2. Generar Codigo "vXXXXX_YYY_ZZZZZZZZZZ"
     const vehiculoPart = String(vehiculoId).padStart(5, '0');
     const itemPart = String(data.checklistItemId).padStart(3, '0');
     const viajePart = viajeId ? String(viajeId).padStart(10, '0') : '0000000000';
     const codigoVersion = `v${vehiculoPart}_${itemPart}_${viajePart}`;
 
-    // 3. Buscar si ya existe documento con esta versión (Upsert logic)
-    // Usamos el repositorio para buscar por version. (Asumimos que el metodo existe o lo implementaremos)
-    // findByVersion requiere implementar. O usar findOne con query.
-    // Usaremos create directamente si no hay manera, perooo el UNIQUE Index fallará.
-    // Necesitamos verificar existencia.
-
-    // REVISAR repo existente: findActive, findLastVersion... necesito findByContext(vehiculo, item, version)
-    // Como no tengo ese metodo especifico, usare logica de "FindActive" y verificare si la version coincide? No.
-    // Lo ideal seria que el repo exponga un metodo findByVersionString(vehiculo, item, version).
-
-    // Asumiremos que crearemos un nuevo documento SIEMPRE Y CUANDO no exista.
-    // Si existe, deberíamos actualizarlo (Delete items + Re-create items).
-    // Para simplificar y no complicar el repo ahora mismo, intentaremos "Desactivar" lo anterior y "Crear" lo nuevo?
-    // No, el Unique Index es sobre (Vehiculo, Item, Version). Si la Version es la MISMA, fallará.
-
-    // Me arriesgaré a llamar un metodo 'deactivateByVersion' o similar?
-    // Mejor: Obtener ID si existe.
-    // En VehiculoChecklistDocumentRepository.ts (que no he editado), seguro usa drizzle.
-    // Como soy el Service, no tengo acceso directo a Drizzle query builder (idealmente).
-    // PERO, puedo usar `vehiculoChecklistDocumentRepository` methods.
-
-    // Voy a implementar un "workaround" simple:
-    // Capturar error de duplicidad? No, sucio.
-    // Necesito modificar el REPOSITORIO para soportar 'findByVersion'.
-    // Pero primero terminemos el Service asumiendo que el UPDATE reemplaza.
-
-    // Como el usuario quiere "recuperar el ultimo", y la version es fija por viaje...
-    // Significa que si edito el checklist del viaje, reemplazo el anterior.
-
-    // Pseudo-logic:
-    // const existing = await repo.findByVersion(vehiculoId, checklistItemId, codigoVersion);
-    // if (existing) {
-    //    repo.deleteItems(existing.id);
-    //    repo.createItems(itemsWithDocId);
-    //    return existing;
-    // } else {
-    //    create...
-    // }
-
-    // Necesito modificar el REPOSITORIO para añadir 'findByVersion' y 'deleteItems'.
-
-    // For now, I will modify the SERVICE to use the new `version` string column logic.
-    // And assume I will create the repository helper next.
-
-    // NOTE: Replacing `createChecklistVersion` with this new logic.
-
-    // Paso 2 (Real): Buscar existente
     const existingDoc = await this.vehiculoChecklistDocumentRepository.findByVersion(vehiculoId, data.checklistItemId, codigoVersion);
 
     let docId;
     if (existingDoc) {
       docId = existingDoc.id;
-      // Actualizar items (Borrar y crear)
       await this.vehiculoChecklistDocumentRepository.deleteItems(docId);
-      // Re-activar si estaba inactivo?
       if (!existingDoc.activo) {
         await this.vehiculoChecklistDocumentRepository.activate(docId);
       }
     } else {
-      // Crear nuevo
       const newDoc = await this.vehiculoChecklistDocumentRepository.create({
         vehiculoId,
         checklistItemId: data.checklistItemId,
-        version: codigoVersion, // STRING
+        version: codigoVersion,
         activo: true,
         viajeId: viajeId || null,
       });
       docId = newDoc.id;
     }
 
-    // Insertar items
     const itemsWithDocId = data.items.map((item) => ({
       ...item,
       vehiculoChecklistDocumentId: docId,
@@ -458,15 +405,10 @@ export class VehiculosService {
 
     const savedItems = await this.vehiculoChecklistDocumentRepository.createItems(itemsWithDocId);
 
-    // Gestionar ACTIVOS globales (solo si queremos mantener uno 'principal')
-    // Si estamos editando un viaje especifico, ese se vuelve el activo?
-    // Si, "ultimo recuperado".
     const activeDoc = await this.vehiculoChecklistDocumentRepository.findActive(vehiculoId, data.checklistItemId);
     if (activeDoc && activeDoc.id !== docId) {
       await this.vehiculoChecklistDocumentRepository.deactivate(activeDoc.id);
     }
-    // Asegurar que el actual sea activo (ya lo hicimos arriba o en create)
-    // Excepto si create no lo hizo activo explicitamente en DB? Default es true.
 
     return {
       id: docId,

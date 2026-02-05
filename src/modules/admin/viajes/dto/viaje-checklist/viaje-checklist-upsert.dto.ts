@@ -31,18 +31,10 @@ export class ChecklistItemUpsertDto {
   @IsInt()
   id: number;
 
-  @ApiProperty({ example: 100, description: 'ID de la versión de configuración (vehiculo_checklist_documents)' })
+  @ApiProperty({ example: 100, description: 'ID de la versión de configuración (vehiculo_checklist_documents)', required: false })
   @IsInt()
-  vehiculoChecklistDocumentId: number;
-
-  @ApiProperty({ type: ChecklistRespuestaJsonDto, description: 'Respuestas del formulario en formato JSON estructurado' })
-  @ValidateNested()
-  @Type(() => ChecklistRespuestaJsonDto)
-  respuestaJson: ChecklistRespuestaJsonDto;
-
-  @ApiProperty({ example: false, description: 'Si se detectaron hallazgos en este checklist' })
-  @IsBoolean()
-  tieneHallazgos: boolean;
+  @IsOptional()
+  vehiculoChecklistDocumentId?: number;
 
   @ApiPropertyOptional({ example: true, description: 'DEPRECATED: Si el item está completado/marcado' })
   @IsBoolean()
@@ -53,6 +45,11 @@ export class ChecklistItemUpsertDto {
   @IsOptional()
   @IsString()
   observacion?: string;
+
+  @ApiPropertyOptional({ example: '2023-10-25T12:00:00Z', description: 'Fecha de eliminación (para soft delete)' })
+  @IsOptional()
+  @IsString() // Se envía como string fecha
+  eliminadoEn?: string;
 }
 
 // Query param para el tipo de checklist

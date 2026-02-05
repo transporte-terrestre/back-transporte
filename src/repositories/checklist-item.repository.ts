@@ -6,7 +6,7 @@ import { checklistItems, ChecklistItemDTO } from '@db/tables/checklist-item.tabl
 @Injectable()
 export class ChecklistItemRepository {
   async findAll() {
-    return await database.select().from(checklistItems).where(isNull(checklistItems.eliminadoEn)).orderBy(asc(checklistItems.nombre));
+    return await database.select().from(checklistItems).where(isNull(checklistItems.eliminadoEn)).orderBy(asc(checklistItems.orden));
   }
 
   async findOne(id: number) {

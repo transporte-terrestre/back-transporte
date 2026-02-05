@@ -10,6 +10,9 @@ export class ChecklistItemResultDto {
   @ApiPropertyOptional({ example: 'Bitácora actualizada', description: 'Descripción' })
   descripcion?: string;
 
+  @ApiProperty({ example: 1, description: 'Orden de visualización' })
+  orden: number;
+
   @ApiProperty({ description: 'Fecha creación' })
   creadoEn: Date;
 

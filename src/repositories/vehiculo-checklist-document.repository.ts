@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql, getTableColumns, asc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { vehiculoChecklistDocuments, VehiculoChecklistDocumentDTO } from '@db/tables/vehiculo-checklist-document.table';
 import { vehiculoChecklistDocumentItems, VehiculoChecklistDocumentItemDTO } from '@db/tables/vehiculo-checklist-document-item.table';
+import { checklistItems } from '@db/tables/checklist-item.table';
 
 @Injectable()
 export class VehiculoChecklistDocumentRepository {
@@ -25,15 +26,17 @@ export class VehiculoChecklistDocumentRepository {
   // Encontrar TODOS los documentos activos de un vehículo (para construir template)
   async findAllActiveByVehiculoId(vehiculoId: number) {
     return await database
-      .select()
+      .select(getTableColumns(vehiculoChecklistDocuments))
       .from(vehiculoChecklistDocuments)
+      .innerJoin(checklistItems, eq(vehiculoChecklistDocuments.checklistItemId, checklistItems.id))
       .where(
         and(
           eq(vehiculoChecklistDocuments.vehiculoId, vehiculoId),
           eq(vehiculoChecklistDocuments.activo, true),
           sql`${vehiculoChecklistDocuments.eliminadoEn} IS NULL`,
         ),
-      );
+      )
+      .orderBy(asc(checklistItems.orden));
   }
 
   // Encontrar una versión específica por su código/versión

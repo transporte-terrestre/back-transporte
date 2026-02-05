@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS "checklist_items" (
   "id" SERIAL PRIMARY KEY,
   "nombre" VARCHAR(100) NOT NULL,
   "descripcion" TEXT,
+  "orden" INTEGER DEFAULT 0 NOT NULL,
   "creado_en" TIMESTAMP DEFAULT NOW() NOT NULL,
   "actualizado_en" TIMESTAMP DEFAULT NOW() NOT NULL,
   "eliminado_en" TIMESTAMP
@@ -86,14 +87,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS "viaje_checklists_viaje_tipo_unique_idx" ON "v
 -- Esta tabla permite 'instanciar' un documento de checklist (definición) dentro de un evento de Entrada/Salida
 -- Modificado: Eliminado respuesta_json y tiene_hallazgos
 CREATE TABLE IF NOT EXISTS "viaje_checklist_items" (
-  "id" SERIAL PRIMARY KEY,
   "viaje_checklist_id" INTEGER NOT NULL REFERENCES "viaje_checklists"("id") ON DELETE CASCADE,
   "checklist_item_id" INTEGER NOT NULL REFERENCES "checklist_items"("id"),
   "vehiculo_checklist_document_id" INTEGER NOT NULL REFERENCES "vehiculo_checklist_documents"("id"),
   "observacion" TEXT,
   "creado_en" TIMESTAMP DEFAULT NOW() NOT NULL,
-  "actualizado_en" TIMESTAMP DEFAULT NOW() NOT NULL
+  "actualizado_en" TIMESTAMP DEFAULT NOW() NOT NULL,
+  PRIMARY KEY ("viaje_checklist_id", "checklist_item_id")
 );
 
 CREATE INDEX IF NOT EXISTS "viaje_checklist_items_checklist_id_idx" ON "viaje_checklist_items" ("viaje_checklist_id");
-CREATE UNIQUE INDEX IF NOT EXISTS "viaje_checklist_items_unique_idx" ON "viaje_checklist_items" ("viaje_checklist_id", "checklist_item_id");
+-- Unique index no longer needed as PK is unique
+-- CREATE UNIQUE INDEX IF NOT EXISTS "viaje_checklist_items_unique_idx" ON "viaje_checklist_items" ("viaje_checklist_id", "checklist_item_id");
