@@ -27,7 +27,7 @@ import { InspeccionBotiquinesDto } from './dto/checklist-document/types/payload-
 import { KitAntiderramesDto } from './dto/checklist-document/types/payload-kit-antiderrames.dto';
 import { RevisionVehiculosDto } from './dto/checklist-document/types/payload-revision-vehiculos.dto';
 
-import { ResultIpercContinuoDto } from './dto/checklist-document/types/result-iperc-continuo.dto';
+import { ResultIpercContinuoDto, ResultIpercDocumentDto } from './dto/checklist-document/types/result-iperc-continuo.dto';
 import {
   ResultLucesEmergenciaAlarmasDto,
   ResultLucesEmergenciaAlarmasDocumentDto,
@@ -47,13 +47,13 @@ import {
   ResultInspeccionBotiquinesDocumentDto,
 } from './dto/checklist-document/types/result-inspeccion-botiquines.dto';
 import { ResultKitAntiderramesDto, ResultKitDocumentDto } from './dto/checklist-document/types/result-kit-antiderrames.dto';
-import { ResultRevisionVehiculosDto } from './dto/checklist-document/types/result-revision-vehiculos.dto';
+import { ResultRevisionVehiculosDto, ResultRevisionDocumentDto } from './dto/checklist-document/types/result-revision-vehiculos.dto';
 import { VehiculoChecklistDocument } from 'src/db/tables/vehiculo-checklist-document.table';
 import { VehiculoChecklistDocumentItem } from 'src/db/tables/vehiculo-checklist-document-item.table';
 
 type ChecklistWithItems = VehiculoChecklistDocument & { items: VehiculoChecklistDocumentItem[] };
 
-import { IpercContinuoModel } from './dto/checklist-document/models/iperc-continuo.model';
+import { IpercContinuoModel, IpercContinuoMap } from './dto/checklist-document/models/iperc-continuo.model';
 import { LucesEmergenciaAlarmasModel, LucesEmergenciaAlarmasMap } from './dto/checklist-document/models/luces-emergencia-alarmas.model';
 import { HojaInspeccionModel, HojaInspeccionMap, HojaSecciones } from './dto/checklist-document/models/hoja-inspeccion.model';
 import { InspeccionDocumentosModel, InspeccionDocumentosMap, DocumentosSecciones } from './dto/checklist-document/models/inspeccion-documentos.model';
@@ -62,10 +62,11 @@ import {
   InspeccionHerramientasModel,
   InspeccionHerramientasMap,
   HerramientasInfo,
+  HerramientasSecciones,
 } from './dto/checklist-document/models/inspeccion-herramientas.model';
 import { InspeccionBotiquinesModel, InspeccionBotiquinesMap } from './dto/checklist-document/models/inspeccion-botiquines.model';
 import { KitAntiderramesModel, KitAntiderramesMap } from './dto/checklist-document/models/kit-antiderrames.model';
-import { RevisionVehiculosModel } from './dto/checklist-document/models/revision-vehiculos.model';
+import { RevisionVehiculosModel, RevisionVehiculosMap } from './dto/checklist-document/models/revision-vehiculos.model';
 
 @Injectable()
 export class VehiculosService {
@@ -232,33 +233,58 @@ export class VehiculosService {
 
   // 1. IPERC continuo
   async findIpercContinuo(vehiculoId: number, documentId?: number): Promise<ResultIpercContinuoDto> {
+    const doc = await this.findChecklistVersion(vehiculoId, 'IPERC continuo', documentId);
     const result = new ResultIpercContinuoDto();
-    result.mensaje = 'En proceso de construccion...';
+    result.viajeId = doc?.viajeId || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
+
+    const items = doc?.items || [];
+    const document = new ResultIpercDocumentDto();
+
+    const label = 'Foto IPERC';
+    const item = items.find((i) => i.label === label);
+
+    document.photo = {
+      url: item?.valorEsperado || '',
+    };
+    result.document = document;
     return result;
   }
 
-  async upsertIpercContinuo(vehiculoId: number, viajeId: number, data: IpercContinuoDto) {
+  async upsertIpercContinuo(vehiculoId: number, viajeId: number, data: IpercContinuoDto): Promise<ResultIpercContinuoDto> {
     const nombreChecklist = 'IPERC continuo';
     let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
     if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
 
-    const items = IpercContinuoModel;
-    return await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    const items = IpercContinuoModel.map((modelItem) => {
+      if (modelItem.label === 'Foto IPERC') {
+        return {
+          ...modelItem,
+          valorEsperado: data.photo.url,
+          metadatos: {},
+        };
+      }
+      return modelItem;
+    });
+
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    return this.findIpercContinuo(vehiculoId, savedDoc.id);
   }
 
   // 2. Hoja de inspeccion
   async findHojaInspeccion(vehiculoId: number, documentId?: number): Promise<ResultHojaInspeccionDto> {
     const doc = await this.findChecklistVersion(vehiculoId, 'Hoja de inspeccion', documentId);
     const result = new ResultHojaInspeccionDto();
-    result.viajeId = doc.viajeId;
-    result.vehiculoId = doc.vehiculoId;
-    result.version = doc.version;
+    result.viajeId = doc?.viajeId || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
 
     const items = doc?.items || [];
     const keys = Object.keys(HojaInspeccionMap) as (keyof typeof HojaInspeccionMap)[];
 
     // Inicializar documento y secciones
-    const document: any = new ResultHojaDocumentDto();
+    const document = new ResultHojaDocumentDto();
     for (const secKey of Object.keys(HojaSecciones)) {
       document[secKey] = {
         label: HojaSecciones[secKey as keyof typeof HojaSecciones],
@@ -313,14 +339,14 @@ export class VehiculosService {
   async findInspeccionDocumentos(vehiculoId: number, documentId?: number): Promise<ResultInspeccionDocumentosDto> {
     const doc = await this.findChecklistVersion(vehiculoId, 'Inspeccion de documentos', documentId);
     const result = new ResultInspeccionDocumentosDto();
-    result.viajeId = doc.viajeId;
-    result.vehiculoId = doc.vehiculoId;
-    result.version = doc.version;
+    result.viajeId = doc?.viajeId || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
 
     const items = doc?.items || [];
     const keys = Object.keys(InspeccionDocumentosMap) as (keyof typeof InspeccionDocumentosMap)[];
 
-    const document: any = new ResultInspeccionDocumentosDocumentDto();
+    const document = new ResultInspeccionDocumentosDocumentDto();
     for (const secKey of Object.keys(DocumentosSecciones)) {
       document[secKey] = {
         label: DocumentosSecciones[secKey as keyof typeof DocumentosSecciones],
@@ -339,8 +365,8 @@ export class VehiculosService {
           document[sectionKey].items[key] = {
             label,
             habilitado: item?.valorEsperado === 'true',
-            fechaVencimiento: item?.metadatos?.fechaVencimiento,
-            observacion: item?.metadatos?.observacion,
+            fechaVencimiento: item?.metadatos?.fechaVencimiento || null,
+            observacion: item?.metadatos?.observacion || '',
           };
         }
       }
@@ -379,14 +405,14 @@ export class VehiculosService {
   async findLucesChecklist(vehiculoId: number, documentId?: number): Promise<ResultLucesEmergenciaAlarmasDto> {
     const doc = await this.findChecklistVersion(vehiculoId, 'Luces de emergencia y alarmas', documentId);
     const result = new ResultLucesEmergenciaAlarmasDto();
-    result.viajeId = doc.viajeId;
-    result.vehiculoId = doc.vehiculoId;
-    result.version = doc.version;
+    result.viajeId = doc?.viajeId || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
 
     const items = doc?.items || [];
     const keys = Object.keys(LucesEmergenciaAlarmasMap) as (keyof typeof LucesEmergenciaAlarmasMap)[];
 
-    const document: any = new ResultLucesEmergenciaAlarmasDocumentDto();
+    const document = new ResultLucesEmergenciaAlarmasDocumentDto();
 
     for (const label of keys) {
       const key = LucesEmergenciaAlarmasMap[label];
@@ -398,7 +424,7 @@ export class VehiculosService {
           observacion: item.metadatos?.observacion || '',
         };
       } else {
-        document[key] = { label, estado: false };
+        document[key] = { label, estado: false, observacion: '' };
       }
     }
     result.document = document;
@@ -433,21 +459,21 @@ export class VehiculosService {
   async findCinturones(vehiculoId: number, documentId?: number): Promise<ResultCinturonesSeguridadDto> {
     const doc = await this.findChecklistVersion(vehiculoId, 'Cinturones de seguridad', documentId);
     const result = new ResultCinturonesSeguridadDto();
-    result.viajeId = doc.viajeId;
-    result.vehiculoId = doc.vehiculoId;
-    result.version = doc.version;
+    result.viajeId = doc?.viajeId || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
 
     const items = doc?.items || [];
     const keys = Object.keys(CinturonesSeguridadMap) as (keyof typeof CinturonesSeguridadMap)[];
 
-    const document: any = new ResultCinturonesDocumentDto();
+    const document = new ResultCinturonesDocumentDto();
     for (const label of keys) {
       const key = CinturonesSeguridadMap[label];
       const item = items.find((i) => i.label === label);
       if (item) {
         document[key] = { label, habilitado: item.valorEsperado === 'true', ...item.metadatos };
       } else {
-        document[key] = { label, habilitado: false };
+        document[key] = { label, habilitado: false, observacion: '' };
       }
     }
     result.document = document;
@@ -483,36 +509,54 @@ export class VehiculosService {
   async findHerramientas(vehiculoId: number, documentId?: number): Promise<ResultInspeccionHerramientasDto> {
     const doc = await this.findChecklistVersion(vehiculoId, 'Inspeccion de herramientas', documentId);
     const result = new ResultInspeccionHerramientasDto();
-    result.viajeId = doc.viajeId;
-    result.vehiculoId = doc.vehiculoId;
-    result.version = doc.version;
+    result.viajeId = doc?.viajeId || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
 
     const items = doc?.items || [];
     const keys = Object.keys(InspeccionHerramientasMap) as (keyof typeof InspeccionHerramientasMap)[];
 
-    const document: any = new ResultInspeccionHerramientasDocumentDto();
-    document.info = HerramientasInfo;
-    document.herramientas = {};
+    const document = new ResultInspeccionHerramientasDocumentDto();
+    
+    for (const secKey of Object.keys(HerramientasSecciones)) {
+      if (secKey === 'info') {
+        document[secKey] = HerramientasInfo;
+        continue;
+      }
+      document[secKey] = {};
 
-    for (const label of keys) {
-      const key = InspeccionHerramientasMap[label];
-      const item = items.find((i) => i.label === label);
-      if (item) {
-        document.herramientas[key] = {
-          label,
-          estado: item.metadatos?.estado ?? false,
-          stock: item.metadatos?.stock,
-          criterioA: item.metadatos?.criterioA,
-          criterioB: item.metadatos?.criterioB,
-          criterioC: item.metadatos?.criterioC,
-          criterioD: item.metadatos?.criterioD,
-          criterioE: item.metadatos?.criterioE,
-          criterioF: item.metadatos?.criterioF,
-          accionCorrectiva: item.metadatos?.accionCorrectiva,
-          observacion: item.metadatos?.observacion,
-        };
-      } else {
-        document.herramientas[key] = { label, estado: false };
+      for (const label of keys) {
+        const key = InspeccionHerramientasMap[label];
+        const item = items.find((i) => i.label === label);
+        if (item) {
+          document[secKey][key] = {
+            label,
+            estado: item.metadatos?.estado ?? false,
+            stock: item.metadatos?.stock,
+            criterioA: item.metadatos?.criterioA,
+            criterioB: item.metadatos?.criterioB,
+            criterioC: item.metadatos?.criterioC,
+            criterioD: item.metadatos?.criterioD,
+            criterioE: item.metadatos?.criterioE,
+            criterioF: item.metadatos?.criterioF,
+            accionCorrectiva: item.metadatos?.accionCorrectiva,
+            observacion: item.metadatos?.observacion,
+          };
+        } else {
+          document[secKey][key] = {
+            label,
+            estado: false,
+            stock: '',
+            criterioA: false,
+            criterioB: false,
+            criterioC: false,
+            criterioD: false,
+            criterioE: false,
+            criterioF: false,
+            accionCorrectiva: '',
+            observacion: '',
+          };
+        }
       }
     }
     result.document = document;
@@ -556,14 +600,14 @@ export class VehiculosService {
   async findBotiquines(vehiculoId: number, documentId?: number): Promise<ResultInspeccionBotiquinesDto> {
     const doc = await this.findChecklistVersion(vehiculoId, 'Inspeccion de botiquines', documentId);
     const result = new ResultInspeccionBotiquinesDto();
-    result.viajeId = doc.viajeId;
-    result.vehiculoId = doc.vehiculoId;
-    result.version = doc.version;
+    result.viajeId = doc?.viajeId || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
 
     const items = doc?.items || [];
     const keys = Object.keys(InspeccionBotiquinesMap) as (keyof typeof InspeccionBotiquinesMap)[];
 
-    const document: any = new ResultInspeccionBotiquinesDocumentDto();
+    const document = new ResultInspeccionBotiquinesDocumentDto();
     document.ubicacionBotiquin = '';
 
     for (const label of keys) {
@@ -584,7 +628,7 @@ export class VehiculosService {
           };
         }
       } else if (key !== 'ubicacionBotiquin') {
-        document[key] = { label, habilitado: false };
+        document[key] = { label, habilitado: false, fechaVencimiento: null, fechaSalida: null, fechaReposicion: null };
       }
     }
     result.document = document;
@@ -627,14 +671,14 @@ export class VehiculosService {
   async findKitAntiderrames(vehiculoId: number, documentId?: number): Promise<ResultKitAntiderramesDto> {
     const doc = await this.findChecklistVersion(vehiculoId, 'Kit anti derrames', documentId);
     const result = new ResultKitAntiderramesDto();
-    result.viajeId = doc.viajeId;
-    result.vehiculoId = doc.vehiculoId;
-    result.version = doc.version;
+    result.viajeId = doc?.viajeId || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
 
     const items = doc?.items || [];
     const keys = Object.keys(KitAntiderramesMap) as (keyof typeof KitAntiderramesMap)[];
 
-    const document: any = new ResultKitDocumentDto();
+    const document = new ResultKitDocumentDto();
     document.ubicacion = '';
 
     for (const label of keys) {
@@ -696,23 +740,48 @@ export class VehiculosService {
 
   // 9. Revision de vehiculos
   async findRevisionVehiculos(vehiculoId: number, documentId?: number): Promise<ResultRevisionVehiculosDto> {
+    const doc = await this.findChecklistVersion(vehiculoId, 'Revision de vehiculos', documentId);
     const result = new ResultRevisionVehiculosDto();
-    result.mensaje = 'En proceso de construccion...';
+    result.viajeId = doc?.viajeId || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
+
+    const items = doc?.items || [];
+    const document = new ResultRevisionDocumentDto();
+
+    const label = 'Foto Revision';
+    const item = items.find((i) => i.label === label);
+
+    document.photo = {
+      url: item?.valorEsperado || '',
+    };
+    result.document = document;
     return result;
   }
 
-  async upsertRevisionVehiculos(vehiculoId: number, viajeId: number, data: RevisionVehiculosDto) {
+  async upsertRevisionVehiculos(vehiculoId: number, viajeId: number, data: RevisionVehiculosDto): Promise<ResultRevisionVehiculosDto> {
     const nombreChecklist = 'Revision de vehiculos';
     let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
     if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
 
-    const items = RevisionVehiculosModel;
-    return await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    const items = RevisionVehiculosModel.map((modelItem) => {
+      if (modelItem.label === 'Foto Revision') {
+        return {
+          ...modelItem,
+          valorEsperado: data.photo.url,
+          metadatos: {},
+        };
+      }
+      return modelItem;
+    });
+
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    return this.findRevisionVehiculos(vehiculoId, savedDoc.id);
   }
 
   // ========== CHECKLIST CONFIGURACION (VERSIONADO) ==========
 
-  private async findChecklistVersion(vehiculoId: number, name: string, documentId?: number): Promise<ChecklistWithItems> {
+  private async findChecklistVersion(vehiculoId: number, name: string, documentId?: number): Promise<ChecklistWithItems | undefined> {
     const catalogo = await this.checklistItemRepository.findByNombre(name);
     if (!catalogo) throw new NotFoundException(`El checklist '${name}' no existe`);
 
@@ -721,13 +790,12 @@ export class VehiculosService {
       doc = await this.vehiculoChecklistDocumentRepository.findByIdWithItems(documentId);
       if (!doc) throw new NotFoundException('Documento no encontrado');
       if (doc.checklistItemId !== catalogo.id) throw new ConflictException('El documento no corresponde al tipo de checklist solicitado');
-      if (doc.vehiculoId !== vehiculoId) throw new ConflictException('El documento no pertenece al vehi­culo solicitado');
+      if (doc.vehiculoId !== vehiculoId) throw new ConflictException('El documento no pertenece al vehículo solicitado');
     } else {
       doc = await this.vehiculoChecklistDocumentRepository.findActiveOrLatestWithItems(vehiculoId, catalogo.id);
-      if (!doc) throw new NotFoundException('No hay configuracion de checklist para este vehi­culo');
     }
 
-    return doc!;
+    return doc;
   }
 
   async createChecklistVersion(vehiculoId: number, data: VehiculoChecklistDocumentCreateDto, viajeId?: number) {

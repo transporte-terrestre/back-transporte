@@ -290,6 +290,7 @@ export class VehiculosController {
   @ApiOperation({ summary: 'Configurar Checklist: IPERC continuo' })
   @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
   @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
+  @ApiResponse({ status: 201, type: ResultIpercContinuoDto })
   async upsertIpercContinuo(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: IpercContinuoDto) {
     return this.vehiculosService.upsertIpercContinuo(+id, +viajeId, data);
   }
@@ -369,6 +370,7 @@ export class VehiculosController {
   @ApiOperation({ summary: 'Configurar Checklist: Revisión de Vehículos' })
   @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
   @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
+  @ApiResponse({ status: 201, type: ResultRevisionVehiculosDto })
   async upsertRevisionVehiculos(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: RevisionVehiculosDto) {
     return this.vehiculosService.upsertRevisionVehiculos(+id, +viajeId, data);
   }

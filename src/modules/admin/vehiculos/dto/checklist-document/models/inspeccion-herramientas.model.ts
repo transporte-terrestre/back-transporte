@@ -14,6 +14,11 @@ export const HerramientasInfo = {
   criterioF: 'OTRO',
 };
 
+export const HerramientasSecciones = {
+  info: 'Informacion',
+  herramientas: 'Herramientas',
+};
+
 const items = [
   defineItem('Llaves Mixtas', 1, { cantidad: '14', medida: 'Unidad', camposExtras: extraFields }),
   defineItem('Destornillador Estrella', 2, { cantidad: '1', medida: 'Unidad', camposExtras: extraFields }),
