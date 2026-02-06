@@ -7,19 +7,19 @@ export class BotiquinItemDto {
   @IsBoolean()
   habilitado: boolean;
 
-  @ApiPropertyOptional({ description: 'Fecha de Vencimiento actual' })
+  @ApiPropertyOptional({ description: 'Fecha de Vencimiento actual', example: new Date().toISOString() })
   @IsOptional()
-  @IsString()
+  @IsDateString()
   fechaVencimiento?: string;
 
-  @ApiPropertyOptional({ description: 'Fecha de Salida' })
+  @ApiPropertyOptional({ description: 'Fecha de Salida', example: new Date().toISOString() })
   @IsOptional()
-  @IsString()
+  @IsDateString()
   fechaSalida?: string;
 
-  @ApiPropertyOptional({ description: 'Fecha de Reposición' })
+  @ApiPropertyOptional({ description: 'Fecha de Reposición', example: new Date().toISOString() })
   @IsOptional()
-  @IsString()
+  @IsDateString()
   fechaReposicion?: string;
 }
 

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsOptional, ValidateNested, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, ValidateNested, IsString, IsDateString } from 'class-validator';
 
 export class DocumentoItemDto {
   @ApiProperty({ description: 'Si el documento es requerido/habilitado', default: true })
@@ -12,9 +12,9 @@ export class DocumentoItemDto {
   @IsString()
   observacion?: string;
 
-  @ApiPropertyOptional({ description: 'Fecha de Vencimiento Inicial/Por defecto' })
+  @ApiPropertyOptional({ description: 'Fecha de Vencimiento Inicial/Por defecto', example: new Date().toISOString() })
   @IsOptional()
-  @IsString()
+  @IsDateString()
   fechaVencimiento?: string;
 }
 
