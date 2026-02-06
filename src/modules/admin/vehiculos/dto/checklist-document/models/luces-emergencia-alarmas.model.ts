@@ -1,5 +1,5 @@
 import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
-import { LucesEmergenciaAlarmasDto } from '../types/luces-emergencia-alarmas.dto';
+import { LucesEmergenciaAlarmasDto } from '../types/payload-luces-emergencia-alarmas.dto';
 import { defineItem } from '../checklist.helper';
 
 const items = [

@@ -1,5 +1,5 @@
 import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
-import { CinturonesSeguridadDto } from '../types/cinturones-seguridad.dto';
+import { CinturonesSeguridadDto } from '../types/payload-cinturones-seguridad.dto';
 import { defineItem } from '../checklist.helper';
 
 const items = [

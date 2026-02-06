@@ -39,6 +39,19 @@ export class VehiculoChecklistDocumentRepository {
       .orderBy(asc(checklistItems.orden));
   }
 
+  // Optimizado: Trae solo 1 documento por item (Prioridad: Activo > Último)
+  async findAllByVehiculoId(vehiculoId: number) {
+    return await database
+      .selectDistinctOn([vehiculoChecklistDocuments.checklistItemId], { ...getTableColumns(vehiculoChecklistDocuments) })
+      .from(vehiculoChecklistDocuments)
+      .where(and(eq(vehiculoChecklistDocuments.vehiculoId, vehiculoId), sql`${vehiculoChecklistDocuments.eliminadoEn} IS NULL`))
+      .orderBy(
+        vehiculoChecklistDocuments.checklistItemId,
+        sql`${vehiculoChecklistDocuments.viajeId} DESC NULLS LAST`,
+        desc(vehiculoChecklistDocuments.activo),
+      );
+  }
+
   // Encontrar una versión específica por su código/versión
   async findByVersion(vehiculoId: number, checklistItemId: number, version: string) {
     const result = await database
@@ -85,5 +98,47 @@ export class VehiculoChecklistDocumentRepository {
       .from(vehiculoChecklistDocumentItems)
       .where(eq(vehiculoChecklistDocumentItems.vehiculoChecklistDocumentId, documentId))
       .orderBy(vehiculoChecklistDocumentItems.orden);
+  }
+  // Buscar documento por ID con sus items
+  async findByIdWithItems(id: number) {
+    const doc = await database
+      .select({ ...getTableColumns(vehiculoChecklistDocuments) })
+      .from(vehiculoChecklistDocuments)
+      .where(eq(vehiculoChecklistDocuments.id, id))
+      .limit(1)
+      .then((rows) => rows[0]);
+
+    if (!doc) return null;
+
+    const items = await this.findItemsByDocumentId(id);
+
+    return { ...doc, items };
+  }
+
+  // Buscar mejor documento (Activo o Reciente) por Vehiculo y ItemID, con items
+  async findActiveOrLatestWithItems(vehiculoId: number, checklistItemId: number) {
+    const doc = await database
+      .select({ ...getTableColumns(vehiculoChecklistDocuments) })
+      .from(vehiculoChecklistDocuments)
+      .where(
+        and(
+          eq(vehiculoChecklistDocuments.vehiculoId, vehiculoId),
+          eq(vehiculoChecklistDocuments.checklistItemId, checklistItemId),
+          sql`${vehiculoChecklistDocuments.eliminadoEn} IS NULL`,
+        ),
+      )
+      .orderBy(
+        sql`${vehiculoChecklistDocuments.viajeId} DESC NULLS LAST`,
+        desc(vehiculoChecklistDocuments.activo),
+        desc(vehiculoChecklistDocuments.creadoEn),
+      )
+      .limit(1)
+      .then((rows) => rows[0]);
+
+    if (!doc) return null;
+
+    const items = await this.findItemsByDocumentId(doc.id);
+
+    return { ...doc, items };
   }
 }

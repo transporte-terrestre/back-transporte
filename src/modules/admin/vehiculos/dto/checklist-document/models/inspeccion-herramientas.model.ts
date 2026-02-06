@@ -1,15 +1,18 @@
 import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
-import { InspeccionHerramientasDto } from '../types/inspeccion-herramientas.dto';
+import { InspeccionHerramientasDto } from '../types/payload-inspeccion-herramientas.dto';
 import { defineItem } from '../checklist.helper';
 
 // Criterios A-F + Stock + Obs + ACCION
-// A: Herramienta sin grasa impregnada
-// B: Empalme y conexiones
-// C: Almacenamiento adecuado
-// D: Golpes y abolladuras
-// E: Limpia y ordenada
-// F: Otro
 const extraFields = ['stock', 'criterioA', 'criterioB', 'criterioC', 'criterioD', 'criterioE', 'criterioF', 'accionCorrectiva', 'observacion'];
+
+export const HerramientasInfo = {
+  criterioA: 'HERRAMIENTA SIN GRASA IMPREGNADA',
+  criterioB: 'EMPALME Y CONECCIONES',
+  criterioC: 'ALMACENAMIENTO ADECUADO',
+  criterioD: 'GOLPES Y ABOLLADURAS',
+  criterioE: 'LIMPIA Y ORDENADA',
+  criterioF: 'OTRO',
+};
 
 const items = [
   defineItem('Llaves Mixtas', 1, { cantidad: '14', medida: 'Unidad', camposExtras: extraFields }),

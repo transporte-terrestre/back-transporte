@@ -13,7 +13,7 @@ export const vehiculoChecklistDocumentItems = pgTable('vehiculo_checklist_docume
   tipoInput: checklistInputEnum('tipo_input').notNull(),
   valorEsperado: varchar('valor_esperado', { length: 255 }), // Ej: "Vigente", "true"
   orden: integer('orden').default(0).notNull(),
-  metadatos: jsonb('metadatos'), // { fecha_vencimiento: true, url_foto_referencia: '...' }
+  metadatos: jsonb('metadatos').$type<Record<string, any>>(), // { fecha_vencimiento: true, url_foto_referencia: '...' }
 });
 
 export type ChecklistInputTipo = (typeof checklistInputEnum.enumValues)[number];

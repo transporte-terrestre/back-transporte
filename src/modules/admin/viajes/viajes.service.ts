@@ -365,60 +365,25 @@ export class ViajesService {
 
       if (!principal) return null; // Sin vehículo, no hay checklist posible
 
-      const activeDocs = await this.vehiculoChecklistDocumentRepository.findAllActiveByVehiculoId(principal.vehiculoId);
+      const allDocs = await this.vehiculoChecklistDocumentRepository.findAllByVehiculoId(principal.vehiculoId);
 
       const allChecklistItems = await this.checklistItemRepository.findAll();
 
-      let itemsResult: ViajeChecklistItemDetalleDto[] = [];
+      const itemsResult = allChecklistItems.map((catalogItem) => {
+        const matchingDocs = allDocs.filter((d) => d.checklistItemId === catalogItem.id);
+        const doc = matchingDocs.find((d) => d.activo) || matchingDocs[0];
 
-      if (activeDocs && activeDocs.length > 0) {
-        itemsResult = allChecklistItems
-          .map((catalogItem) => {
-            const doc = activeDocs.find((d) => d.checklistItemId === catalogItem.id);
-
-            if (doc) {
-              return {
-                checklistItemId: catalogItem.id,
-                vehiculoChecklistDocumentId: doc.id,
-                nombre: catalogItem.nombre,
-                descripcion: catalogItem.descripcion,
-                orden: catalogItem.orden,
-                observacion: null,
-                creadoEn: catalogItem.creadoEn,
-                actualizadoEn: catalogItem.actualizadoEn,
-              };
-            }
-            return null;
-          })
-          .filter((item) => item !== null) as ViajeChecklistItemDetalleDto[];
-
-        if (itemsResult.length === 0 && activeDocs.length > 0) {
-          itemsResult = activeDocs.map((doc) => {
-            const catalogItem = allChecklistItems.find((c) => c.id === doc.checklistItemId);
-            return {
-              checklistItemId: catalogItem?.id,
-              vehiculoChecklistDocumentId: doc.id,
-              nombre: catalogItem?.nombre,
-              descripcion: catalogItem?.descripcion,
-              orden: catalogItem?.orden,
-              observacion: null,
-              creadoEn: catalogItem?.creadoEn,
-              actualizadoEn: catalogItem?.actualizadoEn,
-            };
-          });
-        }
-      } else {
-        itemsResult = allChecklistItems.map((catalogItem) => ({
+        return {
           checklistItemId: catalogItem.id,
-          vehiculoChecklistDocumentId: null,
+          vehiculoChecklistDocumentId: doc ? doc.id : null,
           nombre: catalogItem.nombre,
           descripcion: catalogItem.descripcion,
           orden: catalogItem.orden,
           observacion: null,
-          creadoEn: catalogItem.creadoEn,
-          actualizadoEn: catalogItem.actualizadoEn,
-        }));
-      }
+          creadoEn: null,
+          actualizadoEn: null,
+        };
+      }) as ViajeChecklistItemDetalleDto[];
 
       // Mapear a estructura virtual similar a ViajeChecklist
       return {

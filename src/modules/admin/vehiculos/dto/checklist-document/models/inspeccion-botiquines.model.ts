@@ -1,5 +1,5 @@
 import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
-import { InspeccionBotiquinesDto } from '../types/inspeccion-botiquines.dto';
+import { InspeccionBotiquinesDto } from '../types/payload-inspeccion-botiquines.dto';
 import { defineItem } from '../checklist.helper';
 
 const extraFields = ['fechaVencimiento', 'fechaSalida', 'fechaReposicion'];
@@ -35,6 +35,6 @@ export const InspeccionBotiquinesMap: Record<InspeccionBotiquinesLabel, keyof In
   'Tijera punta roma 3"': 'tijeraPuntaRoma',
   'Guantes quirúrgicos esterilizados 7 ½': 'guantesQuirurgicos',
   'Algodón 50 gr': 'algodon',
-  'Maletín': 'maletin',
+  Maletín: 'maletin',
   'Ubicación del Botiquín': 'ubicacionBotiquin',
 };

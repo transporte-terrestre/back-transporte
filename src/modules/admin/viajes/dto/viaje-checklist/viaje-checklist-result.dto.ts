@@ -12,11 +12,11 @@ export class ViajeChecklistItemDetalleDto {
   @ApiPropertyOptional({ example: 'Sin novedad', description: 'Observación del item' })
   observacion?: string;
 
-  @ApiProperty({ description: 'Fecha creación' })
-  creadoEn: Date;
+  @ApiProperty({ description: 'Fecha creación', nullable: true })
+  creadoEn: Date | null;
 
-  @ApiProperty({ description: 'Fecha actualización' })
-  actualizadoEn: Date;
+  @ApiProperty({ description: 'Fecha actualización', nullable: true })
+  actualizadoEn: Date | null;
 
   @ApiProperty({ example: 'Llantas', description: 'Nombre del item (Catálogo)' })
   nombre: string;
