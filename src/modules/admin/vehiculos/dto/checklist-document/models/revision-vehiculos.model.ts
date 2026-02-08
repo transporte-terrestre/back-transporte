@@ -1,6 +1,6 @@
-import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
+import { VehiculoChecklistDocumentItemUpsertDto } from '../upsert-checklist-document.dto';
 
-export const RevisionVehiculosModel: VehiculoChecklistDocumentItemCreateDto[] = [
+export const RevisionVehiculosModel: VehiculoChecklistDocumentItemUpsertDto[] = [
   {
     label: 'Foto Revision',
     valorEsperado: 'true',

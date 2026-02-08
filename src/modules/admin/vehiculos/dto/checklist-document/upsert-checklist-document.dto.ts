@@ -3,8 +3,34 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { checklistInputEnum } from '@db/tables/vehiculo-checklist-document-item.table';
 import type { ChecklistInputTipo } from '@db/tables/vehiculo-checklist-document-item.table';
+import { vehiculoChecklistDocumentViajeTipoEnum } from '@db/tables/vehiculo-checklist-document.table';
+import type { VehiculoChecklistDocumentViajeTipo } from '@db/tables/vehiculo-checklist-document.table';
 
-export class VehiculoChecklistDocumentItemCreateDto {
+// Standard Params for Checklists
+export class UpsertChecklistParamsDto {
+  @ApiProperty({ description: 'ID del Vehículo', type: Number })
+  @IsInt()
+  @Type(() => Number)
+  id: number;
+
+  @ApiProperty({ description: 'ID del Viaje', type: Number })
+  @IsInt()
+  @Type(() => Number)
+  viajeId: number;
+}
+
+export class UpsertChecklistQueryDto {
+  @ApiPropertyOptional({
+    enum: vehiculoChecklistDocumentViajeTipoEnum.enumValues,
+    description: 'Tipo de viaje (salida/llegada)',
+    default: vehiculoChecklistDocumentViajeTipoEnum.enumValues[0],
+  })
+  @IsOptional()
+  @IsEnum(vehiculoChecklistDocumentViajeTipoEnum.enumValues)
+  tipo?: VehiculoChecklistDocumentViajeTipo = vehiculoChecklistDocumentViajeTipoEnum.enumValues[0];
+}
+
+export class VehiculoChecklistDocumentItemUpsertDto {
   @ApiProperty({ example: 'Luces altas (lado derecho)', description: 'Pregunta o Label del ítem' })
   @IsString()
   @IsNotEmpty()
@@ -29,14 +55,14 @@ export class VehiculoChecklistDocumentItemCreateDto {
   metadatos?: Record<string, any>;
 }
 
-export class VehiculoChecklistDocumentCreateDto {
+export class VehiculoChecklistDocumentUpsertDto {
   @ApiProperty({ example: 1, description: 'ID del Tipo de Checklist (Catálogo)' })
   @IsInt()
   checklistItemId: number;
 
-  @ApiProperty({ type: [VehiculoChecklistDocumentItemCreateDto], description: 'Lista de ítems de la versión' })
+  @ApiProperty({ type: [VehiculoChecklistDocumentItemUpsertDto], description: 'Lista de ítems de la versión' })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => VehiculoChecklistDocumentItemCreateDto)
-  items: VehiculoChecklistDocumentItemCreateDto[];
+  @Type(() => VehiculoChecklistDocumentItemUpsertDto)
+  items: VehiculoChecklistDocumentItemUpsertDto[];
 }

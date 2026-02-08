@@ -1,4 +1,4 @@
-import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
+import { VehiculoChecklistDocumentItemUpsertDto } from '../upsert-checklist-document.dto';
 import { InspeccionDocumentosDto } from '../types/payload-inspeccion-documentos.dto';
 import { defineItem } from '../checklist.helper';
 
@@ -48,7 +48,7 @@ const items = [
 
 export type InspeccionDocumentosLabel = (typeof items)[number]['label'];
 
-export const InspeccionDocumentosModel: VehiculoChecklistDocumentItemCreateDto[] = items;
+export const InspeccionDocumentosModel: VehiculoChecklistDocumentItemUpsertDto[] = items;
 
 export const InspeccionDocumentosMap: Record<InspeccionDocumentosLabel, keyof InspeccionDocumentosDto> = {
   'El SOAT se encuentra en la unidad y se encuentra vigente': 'soatVigente',

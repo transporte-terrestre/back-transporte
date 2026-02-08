@@ -1,4 +1,4 @@
-import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
+import { VehiculoChecklistDocumentItemUpsertDto } from '../upsert-checklist-document.dto';
 import { CinturonesSeguridadDto } from '../types/payload-cinturones-seguridad.dto';
 import { defineItem } from '../checklist.helper';
 
@@ -61,7 +61,7 @@ const items = [
 
 export type CinturonesSeguridadLabel = (typeof items)[number]['label'];
 
-export const CinturonesSeguridadModel: VehiculoChecklistDocumentItemCreateDto[] = items;
+export const CinturonesSeguridadModel: VehiculoChecklistDocumentItemUpsertDto[] = items;
 
 export const CinturonesSeguridadMap: Record<CinturonesSeguridadLabel, keyof CinturonesSeguridadDto> = {
   'Asiento Piloto': 'asientoPiloto',

@@ -1,4 +1,4 @@
-import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
+import { VehiculoChecklistDocumentItemUpsertDto } from '../upsert-checklist-document.dto';
 import { LucesEmergenciaAlarmasDto } from '../types/payload-luces-emergencia-alarmas.dto';
 import { defineItem } from '../checklist.helper';
 
@@ -27,7 +27,7 @@ const items = [
 
 export type LucesEmergenciaAlarmasLabel = (typeof items)[number]['label'];
 
-export const LucesEmergenciaAlarmasModel: VehiculoChecklistDocumentItemCreateDto[] = items;
+export const LucesEmergenciaAlarmasModel: VehiculoChecklistDocumentItemUpsertDto[] = items;
 
 export const LucesEmergenciaAlarmasMap: Record<LucesEmergenciaAlarmasLabel, keyof LucesEmergenciaAlarmasDto> = {
   'Alarma de Retroceso': 'alarmaRetroceso',

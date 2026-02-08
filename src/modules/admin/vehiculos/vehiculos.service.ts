@@ -15,7 +15,7 @@ import { ModeloUpdateDto } from './dto/modelo/modelo-update.dto';
 
 import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository';
 import { ChecklistItemRepository } from '@repository/checklist-item.repository';
-import { VehiculoChecklistDocumentCreateDto } from './dto/checklist-document/create-checklist-document.dto';
+import { VehiculoChecklistDocumentUpsertDto } from './dto/checklist-document/upsert-checklist-document.dto';
 
 import { IpercContinuoDto } from './dto/checklist-document/types/payload-iperc-continuo.dto';
 import { LucesEmergenciaAlarmasDto } from './dto/checklist-document/types/payload-luces-emergencia-alarmas.dto';
@@ -58,6 +58,7 @@ import { LucesEmergenciaAlarmasModel, LucesEmergenciaAlarmasMap } from './dto/ch
 import { HojaInspeccionModel, HojaInspeccionMap, HojaSecciones } from './dto/checklist-document/models/hoja-inspeccion.model';
 import { InspeccionDocumentosModel, InspeccionDocumentosMap, DocumentosSecciones } from './dto/checklist-document/models/inspeccion-documentos.model';
 import { CinturonesSeguridadModel, CinturonesSeguridadMap } from './dto/checklist-document/models/cinturones-seguridad.model';
+import { VehiculoChecklistDocumentViajeTipo } from '@db/tables/vehiculo-checklist-document.table';
 import {
   InspeccionHerramientasModel,
   InspeccionHerramientasMap,
@@ -236,6 +237,7 @@ export class VehiculosService {
     const doc = await this.findChecklistVersion(vehiculoId, 'IPERC continuo', documentId);
     const result = new ResultIpercContinuoDto();
     result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
     result.vehiculoId = doc?.vehiculoId || vehiculoId;
     result.version = doc?.version || null;
 
@@ -252,7 +254,12 @@ export class VehiculosService {
     return result;
   }
 
-  async upsertIpercContinuo(vehiculoId: number, viajeId: number, data: IpercContinuoDto): Promise<ResultIpercContinuoDto> {
+  async upsertIpercContinuo(
+    vehiculoId: number,
+    viajeId: number,
+    data: IpercContinuoDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultIpercContinuoDto> {
     const nombreChecklist = 'IPERC continuo';
     let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
     if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
@@ -268,7 +275,7 @@ export class VehiculosService {
       return modelItem;
     });
 
-    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
     return this.findIpercContinuo(vehiculoId, savedDoc.id);
   }
 
@@ -277,6 +284,7 @@ export class VehiculosService {
     const doc = await this.findChecklistVersion(vehiculoId, 'Hoja de inspeccion', documentId);
     const result = new ResultHojaInspeccionDto();
     result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
     result.vehiculoId = doc?.vehiculoId || vehiculoId;
     result.version = doc?.version || null;
 
@@ -312,7 +320,12 @@ export class VehiculosService {
     return result;
   }
 
-  async upsertHojaInspeccion(vehiculoId: number, viajeId: number, data: HojaInspeccionDto): Promise<ResultHojaInspeccionDto> {
+  async upsertHojaInspeccion(
+    vehiculoId: number,
+    viajeId: number,
+    data: HojaInspeccionDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultHojaInspeccionDto> {
     const nombreChecklist = 'Hoja de inspeccion';
     let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
     if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
@@ -331,7 +344,7 @@ export class VehiculosService {
       return modelItem;
     });
 
-    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
     return this.findHojaInspeccion(vehiculoId, savedDoc.id);
   }
 
@@ -340,6 +353,7 @@ export class VehiculosService {
     const doc = await this.findChecklistVersion(vehiculoId, 'Inspeccion de documentos', documentId);
     const result = new ResultInspeccionDocumentosDto();
     result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
     result.vehiculoId = doc?.vehiculoId || vehiculoId;
     result.version = doc?.version || null;
 
@@ -375,7 +389,12 @@ export class VehiculosService {
     return result;
   }
 
-  async upsertInspeccionDocumentos(vehiculoId: number, viajeId: number, data: InspeccionDocumentosDto): Promise<ResultInspeccionDocumentosDto> {
+  async upsertInspeccionDocumentos(
+    vehiculoId: number,
+    viajeId: number,
+    data: InspeccionDocumentosDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultInspeccionDocumentosDto> {
     const nombreChecklist = 'Inspeccion de documentos';
     let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
     if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
@@ -397,7 +416,7 @@ export class VehiculosService {
       return modelItem;
     });
 
-    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
     return this.findInspeccionDocumentos(vehiculoId, savedDoc.id);
   }
 
@@ -406,6 +425,7 @@ export class VehiculosService {
     const doc = await this.findChecklistVersion(vehiculoId, 'Luces de emergencia y alarmas', documentId);
     const result = new ResultLucesEmergenciaAlarmasDto();
     result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
     result.vehiculoId = doc?.vehiculoId || vehiculoId;
     result.version = doc?.version || null;
 
@@ -431,7 +451,12 @@ export class VehiculosService {
     return result;
   }
 
-  async upsertLucesChecklist(vehiculoId: number, viajeId: number, data: LucesEmergenciaAlarmasDto): Promise<ResultLucesEmergenciaAlarmasDto> {
+  async upsertLucesChecklist(
+    vehiculoId: number,
+    viajeId: number,
+    data: LucesEmergenciaAlarmasDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultLucesEmergenciaAlarmasDto> {
     const nombreChecklist = 'Luces de emergencia y alarmas';
     let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
     if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
@@ -451,7 +476,7 @@ export class VehiculosService {
       return modelItem;
     });
 
-    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
     return this.findLucesChecklist(vehiculoId, savedDoc.id);
   }
 
@@ -460,6 +485,7 @@ export class VehiculosService {
     const doc = await this.findChecklistVersion(vehiculoId, 'Cinturones de seguridad', documentId);
     const result = new ResultCinturonesSeguridadDto();
     result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
     result.vehiculoId = doc?.vehiculoId || vehiculoId;
     result.version = doc?.version || null;
 
@@ -480,7 +506,12 @@ export class VehiculosService {
     return result;
   }
 
-  async upsertCinturones(vehiculoId: number, viajeId: number, data: CinturonesSeguridadDto): Promise<ResultCinturonesSeguridadDto> {
+  async upsertCinturones(
+    vehiculoId: number,
+    viajeId: number,
+    data: CinturonesSeguridadDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultCinturonesSeguridadDto> {
     const nombreChecklist = 'Cinturones de seguridad';
     let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
     if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
@@ -501,7 +532,7 @@ export class VehiculosService {
       return modelItem;
     });
 
-    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
     return this.findCinturones(vehiculoId, savedDoc.id);
   }
 
@@ -510,6 +541,7 @@ export class VehiculosService {
     const doc = await this.findChecklistVersion(vehiculoId, 'Inspeccion de herramientas', documentId);
     const result = new ResultInspeccionHerramientasDto();
     result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
     result.vehiculoId = doc?.vehiculoId || vehiculoId;
     result.version = doc?.version || null;
 
@@ -517,7 +549,7 @@ export class VehiculosService {
     const keys = Object.keys(InspeccionHerramientasMap) as (keyof typeof InspeccionHerramientasMap)[];
 
     const document = new ResultInspeccionHerramientasDocumentDto();
-    
+
     for (const secKey of Object.keys(HerramientasSecciones)) {
       if (secKey === 'info') {
         document[secKey] = HerramientasInfo;
@@ -563,7 +595,12 @@ export class VehiculosService {
     return result;
   }
 
-  async upsertHerramientas(vehiculoId: number, viajeId: number, data: InspeccionHerramientasDto): Promise<ResultInspeccionHerramientasDto> {
+  async upsertHerramientas(
+    vehiculoId: number,
+    viajeId: number,
+    data: InspeccionHerramientasDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultInspeccionHerramientasDto> {
     const nombreChecklist = 'Inspeccion de herramientas';
     let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
     if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
@@ -592,7 +629,7 @@ export class VehiculosService {
       return modelItem;
     });
 
-    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
     return this.findHerramientas(vehiculoId, savedDoc.id);
   }
 
@@ -601,6 +638,7 @@ export class VehiculosService {
     const doc = await this.findChecklistVersion(vehiculoId, 'Inspeccion de botiquines', documentId);
     const result = new ResultInspeccionBotiquinesDto();
     result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
     result.vehiculoId = doc?.vehiculoId || vehiculoId;
     result.version = doc?.version || null;
 
@@ -635,7 +673,12 @@ export class VehiculosService {
     return result;
   }
 
-  async upsertBotiquines(vehiculoId: number, viajeId: number, data: InspeccionBotiquinesDto): Promise<ResultInspeccionBotiquinesDto> {
+  async upsertBotiquines(
+    vehiculoId: number,
+    viajeId: number,
+    data: InspeccionBotiquinesDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultInspeccionBotiquinesDto> {
     const nombreChecklist = 'Inspeccion de botiquines';
     let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
     if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
@@ -663,7 +706,7 @@ export class VehiculosService {
       return modelItem;
     });
 
-    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
     return this.findBotiquines(vehiculoId, savedDoc.id);
   }
 
@@ -672,6 +715,7 @@ export class VehiculosService {
     const doc = await this.findChecklistVersion(vehiculoId, 'Kit anti derrames', documentId);
     const result = new ResultKitAntiderramesDto();
     result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
     result.vehiculoId = doc?.vehiculoId || vehiculoId;
     result.version = doc?.version || null;
 
@@ -702,7 +746,12 @@ export class VehiculosService {
     return result;
   }
 
-  async upsertKitAntiderrames(vehiculoId: number, viajeId: number, data: KitAntiderramesDto): Promise<ResultKitAntiderramesDto> {
+  async upsertKitAntiderrames(
+    vehiculoId: number,
+    viajeId: number,
+    data: KitAntiderramesDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultKitAntiderramesDto> {
     const nombreChecklist = 'Kit anti derrames';
     let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
     if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
@@ -734,7 +783,7 @@ export class VehiculosService {
       return modelItem;
     });
 
-    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
     return this.findKitAntiderrames(vehiculoId, savedDoc.id);
   }
 
@@ -743,6 +792,7 @@ export class VehiculosService {
     const doc = await this.findChecklistVersion(vehiculoId, 'Revision de vehiculos', documentId);
     const result = new ResultRevisionVehiculosDto();
     result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
     result.vehiculoId = doc?.vehiculoId || vehiculoId;
     result.version = doc?.version || null;
 
@@ -759,7 +809,12 @@ export class VehiculosService {
     return result;
   }
 
-  async upsertRevisionVehiculos(vehiculoId: number, viajeId: number, data: RevisionVehiculosDto): Promise<ResultRevisionVehiculosDto> {
+  async upsertRevisionVehiculos(
+    vehiculoId: number,
+    viajeId: number,
+    data: RevisionVehiculosDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultRevisionVehiculosDto> {
     const nombreChecklist = 'Revision de vehiculos';
     let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
     if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
@@ -775,7 +830,7 @@ export class VehiculosService {
       return modelItem;
     });
 
-    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId);
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
     return this.findRevisionVehiculos(vehiculoId, savedDoc.id);
   }
 
@@ -792,28 +847,74 @@ export class VehiculosService {
       if (doc.checklistItemId !== catalogo.id) throw new ConflictException('El documento no corresponde al tipo de checklist solicitado');
       if (doc.vehiculoId !== vehiculoId) throw new ConflictException('El documento no pertenece al vehículo solicitado');
     } else {
-      doc = await this.vehiculoChecklistDocumentRepository.findActiveOrLatestWithItems(vehiculoId, catalogo.id);
+      // Lógica de prioridad: Salida > Llegada para el último contexto (Viaje)
+      const latest = await this.vehiculoChecklistDocumentRepository.findActiveOrLatestWithItems(vehiculoId, catalogo.id);
+
+      if (latest && latest.viajeId) {
+        // Buscamos si existe 'salida' para este viaje
+        const salida = await this.vehiculoChecklistDocumentRepository.findByViajeAndTipo(vehiculoId, catalogo.id, latest.viajeId, 'salida');
+        if (salida) {
+          doc = await this.vehiculoChecklistDocumentRepository.findByIdWithItems(salida.id);
+        } else {
+          // Si no hay salida, buscamos llegada (aunque latest sea llegada)
+          const llegada = await this.vehiculoChecklistDocumentRepository.findByViajeAndTipo(vehiculoId, catalogo.id, latest.viajeId, 'llegada');
+          if (llegada) {
+            doc = await this.vehiculoChecklistDocumentRepository.findByIdWithItems(llegada.id);
+          } else {
+            doc = latest;
+          }
+        }
+      } else {
+        doc = latest;
+      }
     }
 
     return doc;
   }
 
-  async createChecklistVersion(vehiculoId: number, data: VehiculoChecklistDocumentCreateDto, viajeId?: number) {
+  async createChecklistVersion(
+    vehiculoId: number,
+    data: VehiculoChecklistDocumentUpsertDto,
+    viajeId?: number,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ) {
     const catalogo = await this.checklistItemRepository.findOne(data.checklistItemId);
     if (!catalogo) throw new NotFoundException('El tipo de checklist no existe');
 
     const vehiculoPart = String(vehiculoId).padStart(5, '0');
     const itemPart = String(data.checklistItemId).padStart(3, '0');
     const viajePart = viajeId ? String(viajeId).padStart(10, '0') : '0000000000';
-    const codigoVersion = `v${vehiculoPart}_${itemPart}_${viajePart}`;
+    const tipoPart = viajeTipo ? `_${viajeTipo}` : '';
+    const codigoVersion = `v${vehiculoPart}_${itemPart}_${viajePart}${tipoPart}`;
 
     const existingDoc = await this.vehiculoChecklistDocumentRepository.findByVersion(vehiculoId, data.checklistItemId, codigoVersion);
+    const activeDoc = await this.vehiculoChecklistDocumentRepository.findActive(vehiculoId, data.checklistItemId);
+
+    let canActivate = true;
+    if (activeDoc && activeDoc.viajeId && viajeId) {
+      if (activeDoc.viajeId === viajeId) {
+        if (viajeTipo === 'salida' && activeDoc.viajeTipo === 'llegada') {
+          canActivate = false;
+        }
+      } else {
+        const activeDate = await this.vehiculoChecklistDocumentRepository.getViajeDate(activeDoc.viajeId);
+        const currentDate = await this.vehiculoChecklistDocumentRepository.getViajeDate(viajeId);
+
+        if (activeDate && currentDate && activeDate > currentDate) {
+          canActivate = false;
+        }
+      }
+    }
+
+    if (canActivate && activeDoc && (!existingDoc || existingDoc.id !== activeDoc.id)) {
+      await this.vehiculoChecklistDocumentRepository.deactivate(activeDoc.id);
+    }
 
     let docId;
     if (existingDoc) {
       docId = existingDoc.id;
       await this.vehiculoChecklistDocumentRepository.deleteItems(docId);
-      if (!existingDoc.activo) {
+      if (!existingDoc.activo && canActivate) {
         await this.vehiculoChecklistDocumentRepository.activate(docId);
       }
     } else {
@@ -821,8 +922,9 @@ export class VehiculosService {
         vehiculoId,
         checklistItemId: data.checklistItemId,
         version: codigoVersion,
-        activo: true,
+        activo: canActivate,
         viajeId: viajeId || null,
+        viajeTipo: viajeTipo || 'salida',
       });
       docId = newDoc.id;
     }
@@ -834,10 +936,7 @@ export class VehiculosService {
 
     const savedItems = await this.vehiculoChecklistDocumentRepository.createItems(itemsWithDocId);
 
-    const activeDoc = await this.vehiculoChecklistDocumentRepository.findActive(vehiculoId, data.checklistItemId);
-    if (activeDoc && activeDoc.id !== docId) {
-      await this.vehiculoChecklistDocumentRepository.deactivate(activeDoc.id);
-    }
+    return this.vehiculoChecklistDocumentRepository.findByIdWithItems(docId);
 
     return {
       id: docId,

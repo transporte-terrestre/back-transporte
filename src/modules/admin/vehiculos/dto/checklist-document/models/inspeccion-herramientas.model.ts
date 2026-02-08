@@ -1,4 +1,4 @@
-import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
+import { VehiculoChecklistDocumentItemUpsertDto } from '../upsert-checklist-document.dto';
 import { InspeccionHerramientasDto } from '../types/payload-inspeccion-herramientas.dto';
 import { defineItem } from '../checklist.helper';
 
@@ -46,7 +46,7 @@ const items = [
 
 export type InspeccionHerramientasLabel = (typeof items)[number]['label'];
 
-export const InspeccionHerramientasModel: VehiculoChecklistDocumentItemCreateDto[] = items;
+export const InspeccionHerramientasModel: VehiculoChecklistDocumentItemUpsertDto[] = items;
 
 export const InspeccionHerramientasMap: Record<InspeccionHerramientasLabel, keyof InspeccionHerramientasDto> = {
   'Llaves Mixtas': 'llavesMixtas',

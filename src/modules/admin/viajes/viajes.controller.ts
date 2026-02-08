@@ -309,17 +309,12 @@ export class ViajesController {
     return this.viajesService.findChecklistByViajeIdAndTipo(+viajeId, query.tipo);
   }
 
-  @Post(':viajeId/checklist/upsert')
-  @ApiOperation({ summary: 'Crear o actualizar un checklist de viaje (salida/llegada)' })
+  @Post(':viajeId/checklist/verify')
+  @ApiOperation({ summary: 'Verificar y generar un checklist de viaje (salida/llegada) basado en la configuración actual' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
   @ApiResponse({ status: 200, type: ViajeChecklistResultDto })
-  upsertChecklist(
-    @Param('viajeId') viajeId: string,
-    @Query() query: ViajeChecklistUpsertQueryDto,
-    @Body() body: ViajeChecklistUpsertBodyDto,
-    @Request() req: { user: { sub: number } },
-  ) {
-    return this.viajesService.upsertChecklist(+viajeId, query.tipo, body, req.user.sub);
+  verifyChecklist(@Param('viajeId') viajeId: string, @Query() query: ViajeChecklistQueryDto, @Request() req: { user: { sub: number } }) {
+    return this.viajesService.verifyChecklist(+viajeId, query.tipo, req.user.sub);
   }
 
   @Delete('checklist/delete/:id')

@@ -1,4 +1,4 @@
-import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
+import { VehiculoChecklistDocumentItemUpsertDto } from '../upsert-checklist-document.dto';
 import { KitAntiderramesDto } from '../types/payload-kit-antiderrames.dto';
 import { defineItem } from '../checklist.helper';
 
@@ -28,7 +28,7 @@ const items = [
 
 export type KitAntiderramesLabel = (typeof items)[number]['label'];
 
-export const KitAntiderramesModel: VehiculoChecklistDocumentItemCreateDto[] = items;
+export const KitAntiderramesModel: VehiculoChecklistDocumentItemUpsertDto[] = items;
 
 export const KitAntiderramesMap: Record<KitAntiderramesLabel, keyof KitAntiderramesDto> = {
   'Mazo de goma': 'mazoGoma',

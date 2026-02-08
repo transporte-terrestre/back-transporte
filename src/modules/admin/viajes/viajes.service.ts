@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { VehiculoChecklistDocumentViajeTipo } from '@db/tables/vehiculo-checklist-document.table';
 import { ViajeRepository } from '@repository/viaje.repository';
 import { ViajeConductorRepository } from '@repository/viaje-conductor.repository';
 import { ViajeVehiculoRepository } from '@repository/viaje-vehiculo.repository';
@@ -294,108 +295,104 @@ export class ViajesService {
     return await this.viajeChecklistRepository.delete(checklistId);
   }
 
-  async upsertChecklist(viajeId: number, tipo: 'salida' | 'llegada', data: ViajeChecklistUpsertBodyDto, validadoPor: number) {
-    let checklist = await this.viajeChecklistRepository.findByViajeIdAndTipo(viajeId, tipo);
+  async verifyChecklist(viajeId: number, tipo: VehiculoChecklistDocumentViajeTipo, validadoPor: number) {
+    const current = await this.getChecklistTemplate(viajeId, tipo);
 
-    if (!checklist) {
-      // Crear el checklist con validación automática
-      checklist = await this.viajeChecklistRepository.create({
+    let checklistId = current.id;
+
+    if (!checklistId) {
+      const checklist = await this.viajeChecklistRepository.create({
         viajeId,
         tipo,
-        observaciones: data.observaciones,
         validadoPor,
         validadoEn: new Date(),
+        observaciones: current.observaciones || null,
       });
-    } else {
-      // Actualizar checklist existente con validación
-      checklist = await this.viajeChecklistRepository.update(checklist.id, {
-        observaciones: data.observaciones,
-        validadoPor,
-        validadoEn: new Date(),
-      });
+      checklistId = checklist.id;
     }
 
-    // Obtener vehículo principal
-    const vehiculos = await this.viajeVehiculoRepository.findByViajeId(viajeId);
-    const principal = vehiculos.find((v) => v.rol === 'principal') || vehiculos[0];
-    if (!principal) throw new Error('No hay vehículo asignado al viaje');
+    if (current.items && current.items.length > 0) {
+      const itemsToSave = current.items.map((i) => ({
+        checklistItemId: i.checklistItemId,
+        vehiculoChecklistDocumentId: i.vehiculoChecklistDocumentId,
+        observacion: i.observacion || null,
+      }));
 
-    // Preparar items
-    const itemsToUpsert = [];
-    for (const item of data.items) {
-      let docId = item.vehiculoChecklistDocumentId;
-
-      if (!docId) {
-        const existingDocs = await this.vehiculoChecklistDocumentRepository.findAllActiveByVehiculoId(principal.vehiculoId);
-        const match = existingDocs.find((d) => d.checklistItemId === item.id);
-
-        if (match) {
-          docId = match.id;
-        } else {
-          const newDoc = await this.vehiculoChecklistDocumentRepository.create({
-            vehiculoId: principal.vehiculoId,
-            checklistItemId: item.id,
-            version: `v${principal.vehiculoId}_${item.id}_AUTO`,
-            activo: true,
-          });
-          docId = newDoc.id;
-        }
+      if (itemsToSave.length > 0) {
+        await this.viajeChecklistRepository.upsertItems(checklistId, itemsToSave);
       }
-
-      itemsToUpsert.push({
-        checklistItemId: item.id,
-        vehiculoChecklistDocumentId: docId,
-        observacion: item.observacion,
-        eliminadoEn: item.eliminadoEn ? new Date(item.eliminadoEn) : null,
-      });
     }
 
-    await this.viajeChecklistRepository.upsertItems(checklist.id, itemsToUpsert);
-
-    return await this.viajeChecklistRepository.findOneWithItems(checklist.id);
+    return await this.findChecklistByViajeIdAndTipo(viajeId, tipo);
   }
 
-  async findChecklistByViajeIdAndTipo(viajeId: number, tipo: 'salida' | 'llegada'): Promise<ViajeChecklistResultDto | null> {
-    const checklist: ViajeChecklistResultDto = await this.viajeChecklistRepository.findOneWithItemsByViajeIdAndTipo(viajeId, tipo);
+  async findChecklistByViajeIdAndTipo(viajeId: number, tipo: VehiculoChecklistDocumentViajeTipo): Promise<ViajeChecklistResultDto | null> {
+    const existing = await this.viajeChecklistRepository.findOneWithItemsByViajeIdAndTipo(viajeId, tipo);
+    const template = await this.getChecklistTemplate(viajeId, tipo);
 
-    if (!checklist) {
-      // Si no existe, Construir template basado en Vehículo Principal
-      const vehiculos = await this.viajeVehiculoRepository.findByViajeId(viajeId);
-      const principal = vehiculos.find((v) => v.rol === 'principal') || vehiculos[0];
-
-      if (!principal) return null; // Sin vehículo, no hay checklist posible
-
-      const allDocs = await this.vehiculoChecklistDocumentRepository.findAllByVehiculoId(principal.vehiculoId);
-
-      const allChecklistItems = await this.checklistItemRepository.findAll();
-
-      const itemsResult = allChecklistItems.map((catalogItem) => {
-        const matchingDocs = allDocs.filter((d) => d.checklistItemId === catalogItem.id);
-        const doc = matchingDocs.find((d) => d.activo) || matchingDocs[0];
-
-        return {
-          checklistItemId: catalogItem.id,
-          vehiculoChecklistDocumentId: doc ? doc.id : null,
-          nombre: catalogItem.nombre,
-          descripcion: catalogItem.descripcion,
-          orden: catalogItem.orden,
-          observacion: null,
-          creadoEn: null,
-          actualizadoEn: null,
-        };
-      }) as ViajeChecklistItemDetalleDto[];
-
-      // Mapear a estructura virtual similar a ViajeChecklist
-      return {
-        id: null, // ID virtual
-        viajeId,
-        tipo,
-        items: itemsResult,
-        creadoEn: new Date(),
-        actualizadoEn: new Date(),
-      };
+    if (!template) {
+      return existing || null;
     }
 
-    return checklist;
+    return this.mergeChecklists(existing, template);
+  }
+
+  private mergeChecklists(existing: ViajeChecklistResultDto | null, template: ViajeChecklistResultDto): ViajeChecklistResultDto {
+    if (!existing) return template;
+
+    const mergedItems = template.items.map((tItem) => {
+      const existingItem = existing.items.find((e) => e.checklistItemId === tItem.checklistItemId);
+      return {
+        ...tItem,
+        observacion: existingItem ? existingItem.observacion : null,
+        creadoEn: existingItem ? existingItem.creadoEn : null,
+        actualizadoEn: existingItem ? existingItem.actualizadoEn : null,
+      };
+    });
+
+    return {
+      ...existing,
+      items: mergedItems,
+    };
+  }
+
+  private async getChecklistTemplate(viajeId: number, tipo: VehiculoChecklistDocumentViajeTipo): Promise<ViajeChecklistResultDto | null> {
+    const vehiculos = await this.viajeVehiculoRepository.findByViajeId(viajeId);
+    const principal = vehiculos.find((v) => v.rol === 'principal') || vehiculos[0];
+
+    if (!principal) return null;
+
+    const allDocs = await this.vehiculoChecklistDocumentRepository.findAllByVehiculoId(principal.vehiculoId, { viajeId, tipo });
+    const allChecklistItems = await this.checklistItemRepository.findAll();
+
+    const itemsResult: ViajeChecklistItemDetalleDto[] = allChecklistItems.map((catalogItem) => {
+      const matchingDocs = allDocs.filter((d) => d.checklistItemId === catalogItem.id);
+      const doc = matchingDocs.find((d) => d.activo) || matchingDocs[0];
+      const isUpdate = doc && doc.viajeId === viajeId && doc.viajeTipo === tipo;
+
+      return {
+        checklistItemId: catalogItem.id,
+        vehiculoChecklistDocumentId: doc ? doc.id : null,
+        nombre: catalogItem.nombre,
+        descripcion: catalogItem.descripcion,
+        orden: catalogItem.orden,
+        observacion: null,
+        creadoEn: null,
+        actualizadoEn: null,
+        isUpdate: !!isUpdate,
+      };
+    });
+
+    return {
+      id: null,
+      viajeId,
+      tipo,
+      items: itemsResult,
+      creadoEn: null,
+      actualizadoEn: null,
+      validadoPor: null,
+      validadoEn: null,
+      observaciones: null,
+    };
   }
 }

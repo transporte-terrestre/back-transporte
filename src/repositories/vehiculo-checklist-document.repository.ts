@@ -4,9 +4,16 @@ import { database } from '@db/connection.db';
 import { vehiculoChecklistDocuments, VehiculoChecklistDocumentDTO } from '@db/tables/vehiculo-checklist-document.table';
 import { vehiculoChecklistDocumentItems, VehiculoChecklistDocumentItemDTO } from '@db/tables/vehiculo-checklist-document-item.table';
 import { checklistItems } from '@db/tables/checklist-item.table';
+import { viajes } from '@db/tables/viaje.table';
+import { VehiculoChecklistDocumentViajeTipo } from '@db/tables/vehiculo-checklist-document.table';
 
 @Injectable()
 export class VehiculoChecklistDocumentRepository {
+  async getViajeDate(viajeId: number): Promise<Date | null> {
+    const result = await database.select({ fechaSalida: viajes.fechaSalida }).from(viajes).where(eq(viajes.id, viajeId)).limit(1);
+    return result[0]?.fechaSalida || null;
+  }
+
   // Encontrar la versión ACTIVA de un documento para un vehículo y tipo específico
   async findActive(vehiculoId: number, checklistItemId: number) {
     const result = await database
@@ -23,32 +30,19 @@ export class VehiculoChecklistDocumentRepository {
     return result[0];
   }
 
-  // Encontrar TODOS los documentos activos de un vehículo (para construir template)
-  async findAllActiveByVehiculoId(vehiculoId: number) {
-    return await database
-      .select(getTableColumns(vehiculoChecklistDocuments))
-      .from(vehiculoChecklistDocuments)
-      .innerJoin(checklistItems, eq(vehiculoChecklistDocuments.checklistItemId, checklistItems.id))
-      .where(
-        and(
-          eq(vehiculoChecklistDocuments.vehiculoId, vehiculoId),
-          eq(vehiculoChecklistDocuments.activo, true),
-          sql`${vehiculoChecklistDocuments.eliminadoEn} IS NULL`,
-        ),
-      )
-      .orderBy(asc(checklistItems.orden));
-  }
-
-  // Optimizado: Trae solo 1 documento por item (Prioridad: Activo > Último)
-  async findAllByVehiculoId(vehiculoId: number) {
+  // Optimizado: Trae solo 1 documento por item (Prioridad: ViajeActual > Activo > Último)
+  async findAllByVehiculoId(vehiculoId: number, context?: { viajeId: number; tipo: VehiculoChecklistDocumentViajeTipo }) {
     return await database
       .selectDistinctOn([vehiculoChecklistDocuments.checklistItemId], { ...getTableColumns(vehiculoChecklistDocuments) })
       .from(vehiculoChecklistDocuments)
       .where(and(eq(vehiculoChecklistDocuments.vehiculoId, vehiculoId), sql`${vehiculoChecklistDocuments.eliminadoEn} IS NULL`))
       .orderBy(
         vehiculoChecklistDocuments.checklistItemId,
-        sql`${vehiculoChecklistDocuments.viajeId} DESC NULLS LAST`,
+        context
+          ? sql`CASE WHEN ${vehiculoChecklistDocuments.viajeId} = ${context.viajeId} AND ${vehiculoChecklistDocuments.viajeTipo} = ${context.tipo} THEN 0 ELSE 1 END`
+          : sql`1`,
         desc(vehiculoChecklistDocuments.activo),
+        sql`${vehiculoChecklistDocuments.viajeId} DESC NULLS LAST`,
       );
   }
 
@@ -79,6 +73,19 @@ export class VehiculoChecklistDocumentRepository {
 
   async activate(id: number) {
     await database.update(vehiculoChecklistDocuments).set({ activo: true }).where(eq(vehiculoChecklistDocuments.id, id));
+  }
+
+  async deactivateActive(vehiculoId: number, checklistItemId: number) {
+    await database
+      .update(vehiculoChecklistDocuments)
+      .set({ activo: false })
+      .where(
+        and(
+          eq(vehiculoChecklistDocuments.vehiculoId, vehiculoId),
+          eq(vehiculoChecklistDocuments.checklistItemId, checklistItemId),
+          eq(vehiculoChecklistDocuments.activo, true),
+        ),
+      );
   }
 
   // ========== ITEMS ==========
@@ -140,5 +147,24 @@ export class VehiculoChecklistDocumentRepository {
     const items = await this.findItemsByDocumentId(doc.id);
 
     return { ...doc, items };
+  }
+
+  async findByViajeAndTipo(vehiculoId: number, checklistItemId: number, viajeId: number, tipo: 'salida' | 'llegada') {
+    const result = await database
+      .select()
+      .from(vehiculoChecklistDocuments)
+      .where(
+        and(
+          eq(vehiculoChecklistDocuments.vehiculoId, vehiculoId),
+          eq(vehiculoChecklistDocuments.checklistItemId, checklistItemId),
+          eq(vehiculoChecklistDocuments.viajeId, viajeId),
+          eq(vehiculoChecklistDocuments.viajeTipo, tipo),
+          sql`${vehiculoChecklistDocuments.eliminadoEn} IS NULL`,
+        ),
+      )
+      .orderBy(desc(vehiculoChecklistDocuments.creadoEn))
+      .limit(1);
+
+    return result[0];
   }
 }

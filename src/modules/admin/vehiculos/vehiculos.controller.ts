@@ -17,6 +17,11 @@ import { ModeloCreateDto } from './dto/modelo/modelo-create.dto';
 import { ModeloUpdateDto } from './dto/modelo/modelo-update.dto';
 import { ModeloResultDto } from './dto/modelo/modelo-result.dto';
 import { ModeloPaginationQueryDto, PaginatedModeloResultDto } from './dto/modelo/modelo-paginated.dto';
+import {
+  VehiculoChecklistDocumentUpsertDto,
+  UpsertChecklistParamsDto,
+  UpsertChecklistQueryDto,
+} from './dto/checklist-document/upsert-checklist-document.dto';
 import { IpercContinuoDto } from './dto/checklist-document/types/payload-iperc-continuo.dto';
 import { LucesEmergenciaAlarmasDto } from './dto/checklist-document/types/payload-luces-emergencia-alarmas.dto';
 import { HojaInspeccionDto } from './dto/checklist-document/types/payload-hoja-inspeccion.dto';
@@ -287,91 +292,76 @@ export class VehiculosController {
 
   // 1. IPERC continuo
   @Post(':id/viaje/:viajeId/checklist-document/iperc-continuo/upsert')
-  @ApiOperation({ summary: 'Configurar Checklist: IPERC continuo' })
-  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
-  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
   @ApiResponse({ status: 201, type: ResultIpercContinuoDto })
-  async upsertIpercContinuo(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: IpercContinuoDto) {
-    return this.vehiculosService.upsertIpercContinuo(+id, +viajeId, data);
+  async upsertIpercContinuo(@Param() params: UpsertChecklistParamsDto, @Body() data: IpercContinuoDto, @Query() query: UpsertChecklistQueryDto) {
+    return this.vehiculosService.upsertIpercContinuo(params.id, params.viajeId, data, query.tipo);
   }
 
   // 2. Hoja de Inspección
   @Post(':id/viaje/:viajeId/checklist-document/hoja-inspeccion/upsert')
-  @ApiOperation({ summary: 'Configurar Checklist: Hoja de Inspección' })
-  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
-  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
   @ApiResponse({ status: 201, type: ResultHojaInspeccionDto })
-  async upsertHojaInspeccion(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: HojaInspeccionDto) {
-    return this.vehiculosService.upsertHojaInspeccion(+id, +viajeId, data);
+  async upsertHojaInspeccion(@Param() params: UpsertChecklistParamsDto, @Body() data: HojaInspeccionDto, @Query() query: UpsertChecklistQueryDto) {
+    return this.vehiculosService.upsertHojaInspeccion(params.id, params.viajeId, data, query.tipo);
   }
 
   // 3. Inspección de Documentos
   @Post(':id/viaje/:viajeId/checklist-document/inspeccion-documentos/upsert')
-  @ApiOperation({ summary: 'Configurar Checklist: Inspección de Documentos' })
-  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
-  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
   @ApiResponse({ status: 201, type: ResultInspeccionDocumentosDto })
-  async upsertInspeccionDocumentos(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: InspeccionDocumentosDto) {
-    return this.vehiculosService.upsertInspeccionDocumentos(+id, +viajeId, data);
+  async upsertInspeccionDocumentos(
+    @Param() params: UpsertChecklistParamsDto,
+    @Body() data: InspeccionDocumentosDto,
+    @Query() query: UpsertChecklistQueryDto,
+  ) {
+    return this.vehiculosService.upsertInspeccionDocumentos(params.id, params.viajeId, data, query.tipo);
   }
 
   // 4. Luces de Emergencia y Alarmas
   @Post(':id/viaje/:viajeId/checklist-document/luces-emergencia-alarmas/upsert')
-  @ApiOperation({ summary: 'Configurar Checklist: Luces de Emergencia y Alarmas' })
-  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
-  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
   @ApiResponse({ status: 201, type: ResultLucesEmergenciaAlarmasDto })
-  async upsertLuces(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: LucesEmergenciaAlarmasDto) {
-    return this.vehiculosService.upsertLucesChecklist(+id, +viajeId, data);
+  async upsertLuces(@Param() params: UpsertChecklistParamsDto, @Body() data: LucesEmergenciaAlarmasDto, @Query() query: UpsertChecklistQueryDto) {
+    return this.vehiculosService.upsertLucesChecklist(params.id, params.viajeId, data, query.tipo);
   }
 
   // 5. Cinturones de Seguridad
   @Post(':id/viaje/:viajeId/checklist-document/cinturones-seguridad/upsert')
-  @ApiOperation({ summary: 'Configurar Checklist: Cinturones de Seguridad' })
-  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
-  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
   @ApiResponse({ status: 201, type: ResultCinturonesSeguridadDto })
-  async upsertCinturones(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: CinturonesSeguridadDto) {
-    return this.vehiculosService.upsertCinturones(+id, +viajeId, data);
+  async upsertCinturones(@Param() params: UpsertChecklistParamsDto, @Body() data: CinturonesSeguridadDto, @Query() query: UpsertChecklistQueryDto) {
+    return this.vehiculosService.upsertCinturones(params.id, params.viajeId, data, query.tipo);
   }
 
   // 6. Inspección de Herramientas
   @Post(':id/viaje/:viajeId/checklist-document/inspeccion-herramientas/upsert')
-  @ApiOperation({ summary: 'Configurar Checklist: Inspección de Herramientas' })
-  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
-  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
   @ApiResponse({ status: 201, type: ResultInspeccionHerramientasDto })
-  async upsertHerramientas(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: InspeccionHerramientasDto) {
-    return this.vehiculosService.upsertHerramientas(+id, +viajeId, data);
+  async upsertHerramientas(
+    @Param() params: UpsertChecklistParamsDto,
+    @Body() data: InspeccionHerramientasDto,
+    @Query() query: UpsertChecklistQueryDto,
+  ) {
+    return this.vehiculosService.upsertHerramientas(params.id, params.viajeId, data, query.tipo);
   }
 
   // 7. Inspección de Botiquines
   @Post(':id/viaje/:viajeId/checklist-document/inspeccion-botiquines/upsert')
-  @ApiOperation({ summary: 'Configurar Checklist: Inspección de Botiquines' })
-  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
-  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
   @ApiResponse({ status: 201, type: ResultInspeccionBotiquinesDto })
-  async upsertBotiquines(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: InspeccionBotiquinesDto) {
-    return this.vehiculosService.upsertBotiquines(+id, +viajeId, data);
+  async upsertBotiquines(@Param() params: UpsertChecklistParamsDto, @Body() data: InspeccionBotiquinesDto, @Query() query: UpsertChecklistQueryDto) {
+    return this.vehiculosService.upsertBotiquines(params.id, params.viajeId, data, query.tipo);
   }
 
   // 8. Kit Antiderrames
   @Post(':id/viaje/:viajeId/checklist-document/kit-antiderrames/upsert')
-  @ApiOperation({ summary: 'Configurar Checklist: Kit Antiderrames' })
-  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
-  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
   @ApiResponse({ status: 201, type: ResultKitAntiderramesDto })
-  async upsertKitAntiderrames(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: KitAntiderramesDto) {
-    return this.vehiculosService.upsertKitAntiderrames(+id, +viajeId, data);
+  async upsertKitAntiderrames(@Param() params: UpsertChecklistParamsDto, @Body() data: KitAntiderramesDto, @Query() query: UpsertChecklistQueryDto) {
+    return this.vehiculosService.upsertKitAntiderrames(params.id, params.viajeId, data, query.tipo);
   }
 
   // 9. Revisión de Vehículos
   @Post(':id/viaje/:viajeId/checklist-document/revision-vehiculos/upsert')
-  @ApiOperation({ summary: 'Configurar Checklist: Revisión de Vehículos' })
-  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
-  @ApiParam({ name: 'viajeId', description: 'ID del Viaje', type: Number })
   @ApiResponse({ status: 201, type: ResultRevisionVehiculosDto })
-  async upsertRevisionVehiculos(@Param('id') id: string, @Param('viajeId') viajeId: string, @Body() data: RevisionVehiculosDto) {
-    return this.vehiculosService.upsertRevisionVehiculos(+id, +viajeId, data);
+  async upsertRevisionVehiculos(
+    @Param() params: UpsertChecklistParamsDto,
+    @Body() data: RevisionVehiculosDto,
+    @Query() query: UpsertChecklistQueryDto,
+  ) {
+    return this.vehiculosService.upsertRevisionVehiculos(params.id, params.viajeId, data, query.tipo);
   }
 }

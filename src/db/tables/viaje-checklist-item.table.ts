@@ -12,9 +12,7 @@ export const viajeChecklistItems = pgTable(
     checklistItemId: integer('checklist_item_id')
       .references(() => checklistItems.id)
       .notNull(),
-    vehiculoChecklistDocumentId: integer('vehiculo_checklist_document_id')
-      .references(() => vehiculoChecklistDocuments.id)
-      .notNull(),
+    vehiculoChecklistDocumentId: integer('vehiculo_checklist_document_id').references(() => vehiculoChecklistDocuments.id),
     observacion: text('observacion'),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),

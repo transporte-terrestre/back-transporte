@@ -1,8 +1,10 @@
-import { pgTable, serial, integer, boolean, timestamp, uniqueIndex, text, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, boolean, timestamp, uniqueIndex, text, index, pgEnum } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { vehiculos } from './vehiculo.table';
 import { checklistItems } from './checklist-item.table';
 import { viajes } from './viaje.table';
+
+export const vehiculoChecklistDocumentViajeTipoEnum = pgEnum('vehiculo_checklist_document_viaje_tipo', ['salida', 'llegada']);
 
 export const vehiculoChecklistDocuments = pgTable(
   'vehiculo_checklist_documents',
@@ -23,6 +25,7 @@ export const vehiculoChecklistDocuments = pgTable(
     eliminadoEn: timestamp('eliminado_en'),
 
     viajeId: integer('viaje_id').references(() => viajes.id),
+    viajeTipo: vehiculoChecklistDocumentViajeTipoEnum('viaje_tipo').notNull(),
   },
   (t) => [
     // Unique Index por Version (String)
@@ -40,5 +43,6 @@ export const vehiculoChecklistDocuments = pgTable(
   ],
 );
 
+export type VehiculoChecklistDocumentViajeTipo = (typeof vehiculoChecklistDocumentViajeTipoEnum.enumValues)[number];
 export type VehiculoChecklistDocument = typeof vehiculoChecklistDocuments.$inferSelect;
 export type VehiculoChecklistDocumentDTO = typeof vehiculoChecklistDocuments.$inferInsert;

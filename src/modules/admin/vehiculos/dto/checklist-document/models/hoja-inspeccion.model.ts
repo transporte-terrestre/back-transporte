@@ -1,4 +1,4 @@
-import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
+import { VehiculoChecklistDocumentItemUpsertDto } from '../upsert-checklist-document.dto';
 import { HojaInspeccionDto } from '../types/payload-hoja-inspeccion.dto';
 import { defineItem } from '../checklist.helper';
 
@@ -94,7 +94,7 @@ const items = [
 
 export type HojaInspeccionLabel = (typeof items)[number]['label'];
 
-export const HojaInspeccionModel: VehiculoChecklistDocumentItemCreateDto[] = items;
+export const HojaInspeccionModel: VehiculoChecklistDocumentItemUpsertDto[] = items;
 
 export const HojaInspeccionMap: Record<HojaInspeccionLabel, keyof HojaInspeccionDto> = {
   'He descansado lo suficiente y me encuentro en condiciones de conducir.': 'descansoSuficiente',

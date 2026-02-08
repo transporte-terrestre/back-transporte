@@ -1,4 +1,4 @@
-import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
+import { VehiculoChecklistDocumentItemUpsertDto } from '../upsert-checklist-document.dto';
 import { InspeccionBotiquinesDto } from '../types/payload-inspeccion-botiquines.dto';
 import { defineItem } from '../checklist.helper';
 
@@ -22,7 +22,7 @@ const items = [
 
 export type InspeccionBotiquinesLabel = (typeof items)[number]['label'];
 
-export const InspeccionBotiquinesModel: VehiculoChecklistDocumentItemCreateDto[] = items;
+export const InspeccionBotiquinesModel: VehiculoChecklistDocumentItemUpsertDto[] = items;
 
 export const InspeccionBotiquinesMap: Record<InspeccionBotiquinesLabel, keyof InspeccionBotiquinesDto> = {
   'Alcohol de 70º 500ml': 'alcohol',

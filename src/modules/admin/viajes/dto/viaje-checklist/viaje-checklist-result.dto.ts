@@ -26,11 +26,19 @@ export class ViajeChecklistItemDetalleDto {
 
   @ApiProperty({ example: 1, description: 'Orden' })
   orden: number;
+
+  @ApiProperty({
+    example: true,
+    description: 'Indica si es una actualización de un documento existente para este viaje',
+    default: false,
+    required: false,
+  })
+  isUpdate?: boolean;
 }
 
 export class ViajeChecklistResultDto {
-  @ApiProperty({ example: 1, description: 'ID del checklist' })
-  id: number;
+  @ApiProperty({ example: 1, description: 'ID del checklist', nullable: true })
+  id: number | null;
 
   @ApiProperty({ example: 1, description: 'ID del viaje' })
   viajeId: number;
@@ -47,11 +55,11 @@ export class ViajeChecklistResultDto {
   @ApiPropertyOptional({ example: 'Sin observaciones', description: 'Observaciones' })
   observaciones?: string;
 
-  @ApiProperty({ description: 'Fecha creación' })
-  creadoEn: Date;
+  @ApiProperty({ description: 'Fecha creación', nullable: true })
+  creadoEn: Date | null;
 
-  @ApiProperty({ description: 'Fecha actualización' })
-  actualizadoEn: Date;
+  @ApiProperty({ description: 'Fecha actualización', nullable: true })
+  actualizadoEn: Date | null;
 
   @ApiPropertyOptional({ type: [ViajeChecklistItemDetalleDto], description: 'Items del checklist' })
   items?: ViajeChecklistItemDetalleDto[];

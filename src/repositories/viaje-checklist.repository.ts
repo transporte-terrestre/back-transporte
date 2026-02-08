@@ -4,6 +4,8 @@ import { database } from '@db/connection.db';
 import { viajeChecklists, ViajeChecklistDTO } from '@db/tables/viaje-checklist.table';
 import { viajeChecklistItems, ViajeChecklistItemDTO } from '@db/tables/viaje-checklist-item.table';
 import { checklistItems } from '@db/tables/checklist-item.table';
+import { ViajeChecklistItem } from '@db/tables/viaje-checklist-item.table';
+import { vehiculoChecklistDocuments } from '@db/tables/vehiculo-checklist-document.table';
 
 @Injectable()
 export class ViajeChecklistRepository {
@@ -28,11 +30,24 @@ export class ViajeChecklistRepository {
     const checklist = await this.findOne(id);
     if (!checklist) return null;
 
-    const items = await database
+    const items = await this.fetchItems(id);
+    return { ...checklist, items };
+  }
+
+  async findOneWithItemsByViajeIdAndTipo(viajeId: number, tipo: 'salida' | 'llegada') {
+    const checklist = await this.findByViajeIdAndTipo(viajeId, tipo);
+    if (!checklist) return null;
+
+    const items = await this.fetchItems(checklist.id);
+    return { ...checklist, items };
+  }
+
+  private async fetchItems(checklistId: number) {
+    return await database
       .select({
         viajeChecklistId: viajeChecklistItems.viajeChecklistId,
-        checklistItemId: viajeChecklistItems.checklistItemId, // ID del Tipo (Catálogo)
-        vehiculoChecklistDocumentId: viajeChecklistItems.vehiculoChecklistDocumentId, // Versión usada (Documento)
+        checklistItemId: viajeChecklistItems.checklistItemId,
+        vehiculoChecklistDocumentId: viajeChecklistItems.vehiculoChecklistDocumentId,
         observacion: viajeChecklistItems.observacion,
         creadoEn: viajeChecklistItems.creadoEn,
         actualizadoEn: viajeChecklistItems.actualizadoEn,
@@ -42,16 +57,8 @@ export class ViajeChecklistRepository {
       })
       .from(viajeChecklistItems)
       .innerJoin(checklistItems, eq(viajeChecklistItems.checklistItemId, checklistItems.id))
-      .where(eq(viajeChecklistItems.viajeChecklistId, id))
+      .where(eq(viajeChecklistItems.viajeChecklistId, checklistId))
       .orderBy(checklistItems.orden);
-
-    return { ...checklist, items };
-  }
-
-  async findOneWithItemsByViajeIdAndTipo(viajeId: number, tipo: 'salida' | 'llegada') {
-    const checklist = await this.findByViajeIdAndTipo(viajeId, tipo);
-    if (!checklist) return null;
-    return this.findOneWithItems(checklist.id);
   }
 
   async create(data: ViajeChecklistDTO) {
@@ -79,21 +86,17 @@ export class ViajeChecklistRepository {
     await database.delete(viajeChecklistItems).where(eq(viajeChecklistItems.viajeChecklistId, checklistId));
   }
 
-  /**
-   * Upsert de ejecuciones de checklist.
-   * Cada item aquí es un LINK a la configuración usada + observación.
-   */
   async upsertItems(
     checklistId: number,
     items: {
       checklistItemId: number;
-      vehiculoChecklistDocumentId: number;
+      vehiculoChecklistDocumentId: number | null;
       observacion?: string | null;
     }[],
-  ) {
+  ): Promise<ViajeChecklistItem[]> {
     if (items.length === 0) return [];
 
-    const results = [];
+    const results: ViajeChecklistItem[] = [];
 
     for (const item of items) {
       const result = await database

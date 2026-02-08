@@ -1,6 +1,6 @@
--- Migración: Sistema de Checklist Versionado (Consolidada)
+-- Migración: Sistema de Checklist Versionado (Consolidada v006 + v007 + v008)
 -- Fecha: 2026-02-05
--- Descripción: Implementación de versionado completo para checklists + Soporte de Viajes
+-- Descripción: Implementación de versionado completo para checklists + Soporte de Viajes + Contexto de Tipo + Nullables
 
 -- 1. ENUMS
 -- Enum para tipo de checklist (Existente)
@@ -13,6 +13,13 @@ END $$;
 -- Enum para tipos de input (Nuevo)
 DO $$ BEGIN
     CREATE TYPE "checklist_input_tipo" AS ENUM('check', 'texto', 'fecha', 'cantidad', 'foto', 'opciones');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Enum para tipo de viaje en documento (Nuevo v007)
+DO $$ BEGIN
+    CREATE TYPE "vehiculo_checklist_document_viaje_tipo" AS ENUM('salida', 'llegada');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -36,6 +43,7 @@ CREATE TABLE IF NOT EXISTS "vehiculo_checklist_documents" (
   "version" TEXT NOT NULL,
   "activo" BOOLEAN DEFAULT TRUE NOT NULL,
   "viaje_id" INTEGER REFERENCES "viajes"("id"),
+  "viaje_tipo" "vehiculo_checklist_document_viaje_tipo" NOT NULL, -- Agregado v007
   "creado_en" TIMESTAMP DEFAULT NOW() NOT NULL,
   "eliminado_en" TIMESTAMP
 );
@@ -45,10 +53,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "vehiculo_checklist_document_version_unique_id
 ON "vehiculo_checklist_documents" ("vehiculo_id", "checklist_item_id", "version")
 WHERE "eliminado_en" IS NULL;
 
--- Indice para asegurar solo una configuración activa por tipo (Considerar: Si es por viaje, esto aplica?)
--- Si activo=TRUE solo debe haber uno por vehiculo+tipo. 
--- Si queremos históricos por viaje, al crear uno nuevo desactivamos el anterior global, 
--- pero mantenemos la referencia 'viaje_id' para búsqueda histórica.
+-- Indice para asegurar solo una configuración activa por tipo
 CREATE UNIQUE INDEX IF NOT EXISTS "vehiculo_checklist_document_active_unique_idx"
 ON "vehiculo_checklist_documents" ("vehiculo_id", "checklist_item_id")
 WHERE "activo" IS TRUE AND "eliminado_en" IS NULL;
@@ -85,11 +90,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS "viaje_checklists_viaje_tipo_unique_idx" ON "v
 
 -- 6. TABLA: EJECUCION DE CHECKLIST (Link a Versión + Respuestas)
 -- Esta tabla permite 'instanciar' un documento de checklist (definición) dentro de un evento de Entrada/Salida
--- Modificado: Eliminado respuesta_json y tiene_hallazgos
 CREATE TABLE IF NOT EXISTS "viaje_checklist_items" (
   "viaje_checklist_id" INTEGER NOT NULL REFERENCES "viaje_checklists"("id") ON DELETE CASCADE,
   "checklist_item_id" INTEGER NOT NULL REFERENCES "checklist_items"("id"),
-  "vehiculo_checklist_document_id" INTEGER NOT NULL REFERENCES "vehiculo_checklist_documents"("id"),
+  "vehiculo_checklist_document_id" INTEGER REFERENCES "vehiculo_checklist_documents"("id"), -- Modificado v008 (Nullable)
   "observacion" TEXT,
   "creado_en" TIMESTAMP DEFAULT NOW() NOT NULL,
   "actualizado_en" TIMESTAMP DEFAULT NOW() NOT NULL,
@@ -97,5 +101,3 @@ CREATE TABLE IF NOT EXISTS "viaje_checklist_items" (
 );
 
 CREATE INDEX IF NOT EXISTS "viaje_checklist_items_checklist_id_idx" ON "viaje_checklist_items" ("viaje_checklist_id");
--- Unique index no longer needed as PK is unique
--- CREATE UNIQUE INDEX IF NOT EXISTS "viaje_checklist_items_unique_idx" ON "viaje_checklist_items" ("viaje_checklist_id", "checklist_item_id");

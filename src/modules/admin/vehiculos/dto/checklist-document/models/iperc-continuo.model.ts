@@ -1,6 +1,6 @@
-import { VehiculoChecklistDocumentItemCreateDto } from '../create-checklist-document.dto';
+import { VehiculoChecklistDocumentItemUpsertDto } from '../upsert-checklist-document.dto';
 
-export const IpercContinuoModel: VehiculoChecklistDocumentItemCreateDto[] = [
+export const IpercContinuoModel: VehiculoChecklistDocumentItemUpsertDto[] = [
   {
     label: 'Foto IPERC',
     valorEsperado: 'true',
