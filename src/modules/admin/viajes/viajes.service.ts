@@ -406,13 +406,9 @@ export class ViajesService {
   }
 
   async upsertPasajeros(viajeId: number, data: ViajePasajeroFillDto) {
-    if (!data.pasajeros || data.pasajeros.length === 0) {
-      return this.viajePasajeroRepository.findByViajeId(viajeId);
-    }
-
     // Deduplicate input by pasajeroId (last one wins)
     const uniqueMap = new Map<number, boolean>();
-    data.pasajeros.forEach((p) => uniqueMap.set(p.pasajeroId, p.asistencia));
+    (data.pasajeros || []).forEach((p) => uniqueMap.set(p.pasajeroId, p.asistencia));
 
     const dtos = Array.from(uniqueMap.entries()).map(([pasajeroId, asistencia]) => ({
       viajeId,
@@ -420,7 +416,22 @@ export class ViajesService {
       asistencia,
     }));
 
-    await this.viajePasajeroRepository.addPasajeros(dtos);
+    // Sync logic: delete passengers NOT in the incoming list
+    const current = await this.viajePasajeroRepository.findByViajeId(viajeId);
+    const splitCurrentIds = new Set(current.map((c) => c.pasajeroId));
+    const incomingIds = new Set(dtos.map((d) => d.pasajeroId));
+
+    // IDs to delete: those in the DB but not in our incoming list
+    const toDelete = Array.from(splitCurrentIds).filter((id) => !incomingIds.has(id));
+
+    if (toDelete.length > 0) {
+      await this.viajePasajeroRepository.removePasajeros(viajeId, toDelete);
+    }
+
+    // Upsert the remaining/new ones
+    if (dtos.length > 0) {
+      await this.viajePasajeroRepository.addPasajeros(dtos);
+    }
 
     return await this.viajePasajeroRepository.findByViajeId(viajeId);
   }
