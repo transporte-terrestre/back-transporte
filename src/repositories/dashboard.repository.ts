@@ -49,7 +49,6 @@ export class DashboardRepository {
         rutaOcasional: viajes.rutaOcasional,
         tipoRuta: viajes.tipoRuta,
         clienteId: viajes.clienteId,
-        tripulantes: viajes.tripulantes,
         fechaSalida: viajes.fechaSalida,
         estado: viajes.estado,
       })

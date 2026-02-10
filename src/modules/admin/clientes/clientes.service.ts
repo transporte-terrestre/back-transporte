@@ -7,6 +7,10 @@ import { PaginatedClienteResultDto } from './dto/cliente/cliente-paginated.dto';
 import { ClienteDocumentoDTO, clienteDocumentosTipo } from '@db/tables/cliente-documento.table';
 import { DocumentosAgrupadosClienteDto } from './dto/cliente/cliente-result.dto';
 import { ClienteDTO } from '@db/tables/cliente.table';
+import { PasajeroRepository } from '@repository/pasajero.repository';
+import { PasajeroCreateDto } from './dto/pasajero/pasajero-create.dto';
+import { PasajeroUpdateDto } from './dto/pasajero/pasajero-update.dto';
+import { PaginatedPasajeroResultDto } from './dto/pasajero/pasajero-paginated.dto';
 
 interface DatabaseError {
   code?: string;
@@ -19,6 +23,7 @@ export class ClientesService {
   constructor(
     private readonly clienteRepository: ClienteRepository,
     private readonly clienteDocumentoRepository: ClienteDocumentoRepository,
+    private readonly pasajeroRepository: PasajeroRepository,
   ) {}
 
   async findAllPaginated(
@@ -139,5 +144,70 @@ export class ClientesService {
 
   async deleteDocumento(id: number) {
     return await this.clienteDocumentoRepository.delete(id);
+  }
+
+  // ========== PASAJEROS ==========
+
+  async findAllPasajerosPaginated(page: number = 1, limit: number = 10, search?: string, clienteId?: number): Promise<PaginatedPasajeroResultDto> {
+    const { data, total } = await this.pasajeroRepository.findAllPaginated(page, limit, {
+      search,
+      clienteId,
+    });
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data: data as any[],
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
+  async findPasajero(id: number) {
+    return await this.pasajeroRepository.findOne(id);
+  }
+
+  async createPasajero(createPasajeroDto: PasajeroCreateDto) {
+    try {
+      return await this.pasajeroRepository.create(createPasajeroDto);
+    } catch (error: unknown) {
+      const dbError = error as DatabaseError;
+      const constraint = dbError.cause?.constraint || dbError.constraint;
+      if (dbError.code === '23505' || dbError.cause?.code === '23505') {
+        if (constraint?.includes('cliente_dni')) {
+          throw new BadRequestException(['El pasajero con este DNI ya existe para este cliente']);
+        }
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
+      }
+      throw error;
+    }
+  }
+
+  async updatePasajero(id: number, updatePasajeroDto: PasajeroUpdateDto) {
+    try {
+      return await this.pasajeroRepository.update(id, updatePasajeroDto);
+    } catch (error: unknown) {
+      const dbError = error as DatabaseError;
+      const constraint = dbError.cause?.constraint || dbError.constraint;
+      if (dbError.code === '23505' || dbError.cause?.code === '23505') {
+        if (constraint?.includes('cliente_dni')) {
+          throw new BadRequestException(['El pasajero con este DNI ya existe para este cliente']);
+        }
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
+      }
+      throw error;
+    }
+  }
+
+  async deletePasajero(id: number) {
+    return await this.pasajeroRepository.delete(id);
   }
 }

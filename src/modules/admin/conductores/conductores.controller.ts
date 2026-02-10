@@ -6,6 +6,7 @@ import { ConductorUpdateDto } from './dto/conductor/conductor-update.dto';
 import { ConductorResultDto } from './dto/conductor/conductor-result.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ConductorPaginationQueryDto, PaginatedConductorResultDto } from './dto/conductor/conductor-paginated.dto';
+import { ConductorDocumentosEstadoQueryDto, PaginatedConductorEstadoDocumentosResultDto } from './dto/conductor/conductor-documentos-estado.dto';
 import { ConductorDocumentoCreateDto } from './dto/conductor-documento/conductor-documento-create.dto';
 import { ConductorDocumentoUpdateDto } from './dto/conductor-documento/conductor-documento-update.dto';
 import { ConductorDocumentoResultDto } from './dto/conductor-documento/conductor-documento-result.dto';
@@ -33,6 +34,13 @@ export class ConductoresController {
       query.claseLicencia,
       query.categoriaLicencia,
     );
+  }
+
+  @Get('estado-documentos')
+  @ApiOperation({ summary: 'Obtener estado de documentos de conductores (activo/caducado/nulo)' })
+  @ApiResponse({ status: 200, type: PaginatedConductorEstadoDocumentosResultDto })
+  findAllEstadoDocumentos(@Query() query: ConductorDocumentosEstadoQueryDto) {
+    return this.conductoresService.findAllEstadoDocumentos(query.page, query.limit, query.filtro);
   }
 
   @Get('find-one/:id')

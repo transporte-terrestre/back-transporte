@@ -22,7 +22,6 @@ export const viajes = pgTable('viajes', {
   clienteId: integer('cliente_id')
     .references(() => clientes.id)
     .notNull(),
-  tripulantes: text('tripulantes').array(),
   modalidadServicio: modalidadServicio('modalidad_servicio').default('regular').notNull(),
   horasContrato: decimal('horas_contrato', { precision: 10, scale: 2 }).default('0.00').notNull(),
   estado: viajesEstado('estado').default('programado').notNull(),

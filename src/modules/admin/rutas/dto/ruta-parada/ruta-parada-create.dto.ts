@@ -3,6 +3,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RutaParadaDTO } from '@db/tables/ruta-parada.table';
 
 export class RutaParadaCreateDto implements Omit<RutaParadaDTO, 'id' | 'rutaId' | 'orden' | 'creadoEn' | 'actualizadoEn'> {
+  @ApiPropertyOptional({ example: 1, description: 'ID de la parada (opcional para updates)' })
+  @IsNumber()
+  @IsOptional()
+  id?: number;
+
   @ApiProperty({ example: 'PEIP - Educans', description: 'Nombre de la parada' })
   @IsString()
   @IsNotEmpty()
@@ -23,4 +28,9 @@ export class RutaParadaCreateDto implements Omit<RutaParadaDTO, 'id' | 'rutaId' 
   @IsNumber()
   @IsOptional()
   orden?: number;
+
+  @ApiPropertyOptional({ example: '10.5', description: 'Distancia desde la parada anterior' })
+  @IsString()
+  @IsOptional()
+  distanciaPreviaParada?: string;
 }

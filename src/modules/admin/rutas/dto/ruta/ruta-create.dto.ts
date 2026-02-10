@@ -1,6 +1,8 @@
-import { IsString, IsNotEmpty, IsLatitude, IsLongitude } from 'class-validator';
+import { IsString, IsNotEmpty, IsLatitude, IsLongitude, IsArray, IsOptional, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { RutaDTO } from '@db/tables/ruta.table';
+import { RutaParadaCreateDto } from '../ruta-parada/ruta-parada-create.dto';
 
 export class RutaCreateDto implements Omit<RutaDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
   @ApiProperty({ example: 'Lima', description: 'Origin city' })
@@ -46,4 +48,11 @@ export class RutaCreateDto implements Omit<RutaDTO, 'id' | 'creadoEn' | 'actuali
   @IsString()
   @IsNotEmpty()
   costoBase: string;
+
+  @ApiProperty({ type: [RutaParadaCreateDto], description: 'List of stops', required: false })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RutaParadaCreateDto)
+  paradas?: RutaParadaCreateDto[];
 }

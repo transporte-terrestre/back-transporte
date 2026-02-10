@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, or, like, and, gte, lte, count, sql, ilike, desc, isNull, getTableColumns, inArray } from 'drizzle-orm';
+import { eq, or, like, and, gte, lte, count, sql, ilike, desc, isNull, getTableColumns, inArray, asc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { vehiculos, VehiculoDTO } from '@db/tables/vehiculo.table';
 import { modelos } from '@db/tables/modelo.table';
@@ -8,6 +8,8 @@ import { propietarios } from '@db/tables/propietario.table';
 import { vehiculoPropietarios } from '@db/tables/vehiculo-propietario.table';
 import { proveedores } from '@db/tables/proveedor.table';
 import { vehiculoProveedores } from '@db/tables/vehiculo-proveedor.table';
+import { vehiculoDocumentos, VehiculoDocumento } from '@db/tables/vehiculo-documento.table';
+import { FiltroDocumentoEstado } from '../modules/admin/vehiculos/dto/vehiculo/vehiculo-documentos-estado.dto';
 
 interface PaginationFilters {
   search?: string;
@@ -149,10 +151,13 @@ export class VehiculoRepository {
       .innerJoin(proveedores, eq(vehiculoProveedores.proveedorId, proveedores.id))
       .where(eq(vehiculoProveedores.vehiculoId, id));
 
+    const documents = await database.select().from(vehiculoDocumentos).where(eq(vehiculoDocumentos.vehiculoId, id));
+
     return {
       ...vehiculo,
       propietarios: owners,
       proveedores: suppliers,
+      documentos: documents,
     };
   }
 
@@ -248,5 +253,86 @@ export class VehiculoRepository {
   async delete(id: number) {
     const result = await database.update(vehiculos).set({ eliminadoEn: new Date() }).where(eq(vehiculos.id, id)).returning();
     return result[0];
+  }
+
+  async findAllWithDocumentos(
+    page: number = 1,
+    limit: number = 10,
+    filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO,
+  ) {
+    const offset = (page - 1) * limit;
+
+    const whereClause = isNull(vehiculos.eliminadoEn);
+
+    const [{ total }] = await database
+      .select({ total: count() })
+      .from(vehiculos)
+      .where(whereClause);
+
+    const vehiculosConConteo = await database
+      .select({
+        id: vehiculos.id,
+        cantidadDocumentos: count(vehiculoDocumentos.id),
+      })
+      .from(vehiculos)
+      .leftJoin(vehiculoDocumentos, eq(vehiculos.id, vehiculoDocumentos.vehiculoId))
+      .where(whereClause)
+      .groupBy(vehiculos.id);
+
+    const tiposDocumentosEsperados = 17;
+
+    const vehiculosOrdenados = vehiculosConConteo.map((v) => ({
+      id: v.id,
+      documentosNulos: tiposDocumentosEsperados - Number(v.cantidadDocumentos),
+    }));
+
+    if (filtro === "completo") {
+      vehiculosOrdenados.sort((a, b) => a.documentosNulos - b.documentosNulos);
+    } else if (filtro === "incompleto") {
+      vehiculosOrdenados.sort((a, b) => b.documentosNulos - a.documentosNulos);
+    }
+
+    const vehiculosPaginados = vehiculosOrdenados.slice(offset, offset + limit);
+    const ids = vehiculosPaginados.map((v) => v.id);
+
+    if (ids.length === 0) {
+      return {
+        vehiculos: [],
+        documentosPorVehiculo: {},
+        total: Number(total),
+      };
+    }
+
+    const vehiculosData = await database
+      .select({
+        id: vehiculos.id,
+        placa: vehiculos.placa,
+        imagenes: vehiculos.imagenes,
+      })
+      .from(vehiculos)
+      .where(inArray(vehiculos.id, ids));
+
+    const vehiculosOrdenadosConDatos = ids.map((id) => {
+      return vehiculosData.find((v) => v.id === id)!;
+    });
+
+    const documentos = await database
+      .select()
+      .from(vehiculoDocumentos)
+      .where(inArray(vehiculoDocumentos.vehiculoId, ids));
+
+    const documentosPorVehiculo: Record<number, VehiculoDocumento[]> = {};
+    for (const doc of documentos) {
+      if (!documentosPorVehiculo[doc.vehiculoId]) {
+        documentosPorVehiculo[doc.vehiculoId] = [];
+      }
+      documentosPorVehiculo[doc.vehiculoId].push(doc);
+    }
+
+    return {
+      vehiculos: vehiculosOrdenadosConDatos,
+      documentosPorVehiculo,
+      total: Number(total),
+    };
   }
 }

@@ -6,6 +6,7 @@ import { VehiculoUpdateDto } from './dto/vehiculo/vehiculo-update.dto';
 import { VehiculoResultDto } from './dto/vehiculo/vehiculo-result.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { VehiculoPaginationQueryDto, PaginatedVehiculoResultDto } from './dto/vehiculo/vehiculo-paginated.dto';
+import { VehiculoDocumentosEstadoQueryDto, PaginatedVehiculoEstadoDocumentosResultDto } from './dto/vehiculo/vehiculo-documentos-estado.dto';
 import { VehiculoDocumentoCreateDto } from './dto/vehiculo-documento/vehiculo-documento-create.dto';
 import { VehiculoDocumentoUpdateDto } from './dto/vehiculo-documento/vehiculo-documento-update.dto';
 import { VehiculoDocumentoResultDto } from './dto/vehiculo-documento/vehiculo-documento-result.dto';
@@ -53,6 +54,13 @@ export class VehiculosController {
   @ApiResponse({ status: 200, type: PaginatedVehiculoResultDto })
   findAll(@Query() query: VehiculoPaginationQueryDto) {
     return this.vehiculosService.findAllPaginated(query.page, query.limit, query.search, query.fechaInicio, query.fechaFin, query.estado);
+  }
+
+  @Get('estado-documentos')
+  @ApiOperation({ summary: 'Obtener estado de documentos de vehículos (activo/caducado/nulo)' })
+  @ApiResponse({ status: 200, type: PaginatedVehiculoEstadoDocumentosResultDto })
+  findAllEstadoDocumentos(@Query() query: VehiculoDocumentosEstadoQueryDto) {
+    return this.vehiculosService.findAllEstadoDocumentos(query.page, query.limit, query.filtro);
   }
 
   @Get('find-one/:id')

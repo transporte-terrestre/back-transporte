@@ -24,7 +24,11 @@ import { ChecklistItemUpdateDto } from './dto/checklist-item/checklist-item-upda
 import { ChecklistItemResultDto } from './dto/checklist-item/checklist-item-result.dto';
 import { ViajeChecklistResultDto } from './dto/viaje-checklist/viaje-checklist-result.dto';
 import { ViajeChecklistUpsertBodyDto, ViajeChecklistUpsertQueryDto } from './dto/viaje-checklist/viaje-checklist-upsert.dto';
+
 import { ViajeChecklistQueryDto } from './dto/viaje-checklist/viaje-checklist-query.dto';
+import { ViajePasajeroResultDto } from './dto/viaje-pasajero/viaje-pasajero-result.dto';
+import { ViajePasajeroFillDto } from './dto/viaje-pasajero/viaje-pasajero-fill.dto';
+import { ViajePasajeroUpdateDto } from './dto/viaje-pasajero/viaje-pasajero-update.dto';
 
 @ApiTags('viajes')
 @ApiBearerAuth()
@@ -259,6 +263,23 @@ export class ViajesController {
   @ApiResponse({ status: 200, type: [ViajeServicioResultDto] })
   reordenarServicios(@Param('viajeId') viajeId: string, @Body() reordenarDto: ViajeServicioReordenarDto) {
     return this.viajesService.reordenarServicios(+viajeId, reordenarDto.servicios);
+  }
+
+  // ========== PASAJEROS ==========
+  @Get(':viajeId/pasajeros')
+  @ApiOperation({ summary: 'Obtener todos los pasajeros de un viaje' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 200, type: [ViajePasajeroResultDto] })
+  findPasajeros(@Param('viajeId') viajeId: string) {
+    return this.viajesService.findPasajeros(+viajeId);
+  }
+
+  @Post(':viajeId/pasajeros/upsert')
+  @ApiOperation({ summary: 'Agregar o actualizar pasajeros en un viaje' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 201, type: [ViajePasajeroResultDto] })
+  upsertPasajeros(@Param('viajeId') viajeId: string, @Body() upsertDto: ViajePasajeroFillDto) {
+    return this.viajesService.upsertPasajeros(+viajeId, upsertDto);
   }
 
   // ========== CHECKLIST ITEMS (Catálogo) ==========

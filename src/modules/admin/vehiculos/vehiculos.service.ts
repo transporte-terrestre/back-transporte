@@ -8,6 +8,7 @@ import { VehiculoUpdateDto } from './dto/vehiculo/vehiculo-update.dto';
 import { PaginatedVehiculoResultDto } from './dto/vehiculo/vehiculo-paginated.dto';
 import { VehiculoDocumentoDTO, vehiculoDocumentosTipo } from '@db/tables/vehiculo-documento.table';
 import { DocumentosAgrupadosVehiculoDto } from './dto/vehiculo/vehiculo-result.dto';
+import { PaginatedVehiculoEstadoDocumentosResultDto, VehiculoEstadoDocumentosDto, FiltroDocumentoEstado } from './dto/vehiculo/vehiculo-documentos-estado.dto';
 import { MarcaCreateDto } from './dto/marca/marca-create.dto';
 import { MarcaUpdateDto } from './dto/marca/marca-update.dto';
 import { ModeloCreateDto } from './dto/modelo/modelo-create.dto';
@@ -118,6 +119,70 @@ export class VehiculosService {
     return {
       ...vehiculo,
       documentos: documentosAgrupados,
+    };
+  }
+
+  async findAllEstadoDocumentos(
+    page: number = 1,
+    limit: number = 10,
+    filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO,
+  ): Promise<PaginatedVehiculoEstadoDocumentosResultDto> {
+    const { vehiculos, documentosPorVehiculo, total } = await this.vehiculoRepository.findAllWithDocumentos(page, limit, filtro);
+    const hoy = new Date();
+
+    const data: VehiculoEstadoDocumentosDto[] = vehiculos.map((vehiculo) => {
+      const documentos = documentosPorVehiculo[vehiculo.id] || [];
+      
+      const calcularEstado = (tipoDocumento: string): string => {
+        const documento = documentos.find((doc) => doc.tipo === tipoDocumento);
+        if (!documento) {
+          return 'nulo';
+        } else if (documento.fechaExpiracion) {
+          const fechaExp = new Date(documento.fechaExpiracion);
+          return fechaExp <= hoy ? 'caducado' : 'activo';
+        } else {
+          return 'activo';
+        }
+      };
+
+      return {
+        id: vehiculo.id,
+        placa: vehiculo.placa,
+        imagenes: vehiculo.imagenes || [],
+        tarjeta_propiedad: calcularEstado('tarjeta_propiedad'),
+        tarjeta_unica_circulacion: calcularEstado('tarjeta_unica_circulacion'),
+        citv: calcularEstado('citv'),
+        soat: calcularEstado('soat'),
+        poliza: calcularEstado('poliza'),
+        certificado_operatividad_factura: calcularEstado('certificado_operatividad_factura'),
+        plan_mantenimiento_historico: calcularEstado('plan_mantenimiento_historico'),
+        certificado_instalacion_gps: calcularEstado('certificado_instalacion_gps'),
+        certificado_valor_anadido: calcularEstado('certificado_valor_anadido'),
+        constancia_gps: calcularEstado('constancia_gps'),
+        certificado_tacos: calcularEstado('certificado_tacos'),
+        certificado_extintores_hidrostatica: calcularEstado('certificado_extintores_hidrostatica'),
+        certificado_norma_r66: calcularEstado('certificado_norma_r66'),
+        certificado_laminados_lunas: calcularEstado('certificado_laminados_lunas'),
+        certificado_carroceria: calcularEstado('certificado_carroceria'),
+        certificado_caracteristicas_tecnicas: calcularEstado('certificado_caracteristicas_tecnicas'),
+        certificado_adas: calcularEstado('certificado_adas'),
+      };
+    });
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
     };
   }
 

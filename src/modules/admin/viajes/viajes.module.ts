@@ -10,6 +10,7 @@ import { ChecklistItemRepository } from '@repository/checklist-item.repository';
 import { ViajeChecklistRepository } from '@repository/viaje-checklist.repository';
 import { RutaRepository } from '@repository/ruta.repository';
 import { ClienteRepository } from '@repository/cliente.repository';
+import { ViajePasajeroRepository } from '@repository/viaje-pasajero.repository';
 import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository';
 import { NotificacionesModule } from '../notificaciones/notificaciones.module';
 
@@ -20,6 +21,7 @@ import { NotificacionesModule } from '../notificaciones/notificaciones.module';
     ViajeRepository,
     ViajeConductorRepository,
     ViajeVehiculoRepository,
+    ViajePasajeroRepository,
     ViajeComentarioRepository,
     ViajeServicioRepository,
     ChecklistItemRepository,

@@ -4,6 +4,7 @@ import { ConductorDocumentoRepository } from '@repository/conductor-documento.re
 import { ConductorCreateDto } from './dto/conductor/conductor-create.dto';
 import { ConductorUpdateDto } from './dto/conductor/conductor-update.dto';
 import { PaginatedConductorResultDto } from './dto/conductor/conductor-paginated.dto';
+import { PaginatedConductorEstadoDocumentosResultDto, ConductorEstadoDocumentosDto, FiltroDocumentoEstado } from './dto/conductor/conductor-documentos-estado.dto';
 import { ConductorDocumentoDTO, conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
 import { DocumentosAgrupadosConductorDto } from './dto/conductor/conductor-result.dto';
 import { ConductorDTO } from '@db/tables/conductor.table';
@@ -37,6 +38,72 @@ export class ConductoresService {
       fechaFin,
       claseLicencia,
       categoriaLicencia,
+    });
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
+  async findAllEstadoDocumentos(
+    page: number = 1,
+    limit: number = 10,
+    filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO,
+  ): Promise<PaginatedConductorEstadoDocumentosResultDto> {
+    const { conductores, documentosPorConductor, total } = await this.conductorRepository.findAllWithDocumentos(page, limit, filtro);
+    const hoy = new Date();
+
+    const data: ConductorEstadoDocumentosDto[] = conductores.map((conductor) => {
+      const documentos = documentosPorConductor[conductor.id] || [];
+      
+      const calcularEstado = (tipoDocumento: string): string => {
+        const documento = documentos.find((doc) => doc.tipo === tipoDocumento);
+        if (!documento) {
+          return 'nulo';
+        } else if (documento.fechaExpiracion) {
+          const fechaExp = new Date(documento.fechaExpiracion);
+          return fechaExp <= hoy ? 'caducado' : 'activo';
+        } else {
+          return 'activo';
+        }
+      };
+
+      return {
+        id: conductor.id,
+        nombres: conductor.nombres,
+        apellidos: conductor.apellidos,
+        fotocheck: conductor.fotocheck ?? [],
+        dni: calcularEstado('dni'),
+        licencia_mtc: calcularEstado('licencia_mtc'),
+        seguro_vida_ley: calcularEstado('seguro_vida_ley'),
+        sctr: calcularEstado('sctr'),
+        examen_medico: calcularEstado('examen_medico'),
+        psicosensometrico: calcularEstado('psicosensometrico'),
+        induccion_general: calcularEstado('induccion_general'),
+        manejo_defensivo: calcularEstado('manejo_defensivo'),
+        licencia_interna: calcularEstado('licencia_interna'),
+        autoriza_ssgg: calcularEstado('autoriza_ssgg'),
+        curso_seguridad_portuaria: calcularEstado('curso_seguridad_portuaria'),
+        curso_mercancias_peligrosas: calcularEstado('curso_mercancias_peligrosas'),
+        curso_basico_pbip: calcularEstado('curso_basico_pbip'),
+        examen_medico_temporal: calcularEstado('examen_medico_temporal'),
+        induccion_visita: calcularEstado('induccion_visita'),
+        em_visita: calcularEstado('em_visita'),
+        pase_conduc: calcularEstado('pase_conduc'),
+        foto_funcionario: calcularEstado('foto_funcionario'),
+      };
     });
 
     const totalPages = Math.ceil(total / limit);

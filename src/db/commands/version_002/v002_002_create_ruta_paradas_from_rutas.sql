@@ -1,8 +1,8 @@
 -- Crear ruta_paradas desde rutas (origen=1, destino=2)
 
 -- Paradas ORIGEN
-INSERT INTO ruta_paradas (ruta_id, orden, nombre, ubicacion_lat, ubicacion_lng, creado_en, actualizado_en)
-SELECT r.id, 1, r.origen, r.origen_lat, r.origen_lng, NOW(), NOW()
+INSERT INTO ruta_paradas (ruta_id, orden, nombre, ubicacion_lat, ubicacion_lng, distancia_previa_parada, creado_en, actualizado_en)
+SELECT r.id, 1, r.origen, r.origen_lat, r.origen_lng, NULL, NOW(), NOW()
 FROM rutas r
 WHERE r.eliminado_en IS NULL
   AND NOT EXISTS (
@@ -11,8 +11,8 @@ WHERE r.eliminado_en IS NULL
   );
 
 -- Paradas DESTINO
-INSERT INTO ruta_paradas (ruta_id, orden, nombre, ubicacion_lat, ubicacion_lng, creado_en, actualizado_en)
-SELECT r.id, 2, r.destino, r.destino_lat, r.destino_lng, NOW(), NOW()
+INSERT INTO ruta_paradas (ruta_id, orden, nombre, ubicacion_lat, ubicacion_lng, distancia_previa_parada, creado_en, actualizado_en)
+SELECT r.id, 2, r.destino, r.destino_lat, r.destino_lng, r.distancia, NOW(), NOW()
 FROM rutas r
 WHERE r.eliminado_en IS NULL
   AND NOT EXISTS (

@@ -11,7 +11,9 @@ export const rutaParadas = pgTable(
     orden: integer('orden').notNull(),
     nombre: varchar('nombre', { length: 200 }).notNull(),
     ubicacionLat: decimal('ubicacion_lat', { precision: 10, scale: 7 }),
+
     ubicacionLng: decimal('ubicacion_lng', { precision: 10, scale: 7 }),
+    distanciaPreviaParada: decimal('distancia_previa_parada', { precision: 10, scale: 2 }),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
     eliminadoEn: timestamp('eliminado_en'),

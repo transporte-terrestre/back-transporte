@@ -24,6 +24,9 @@ import { ViajeChecklistUpsertBodyDto } from './dto/viaje-checklist/viaje-checkli
 import { ChecklistItemCreateDto } from './dto/checklist-item/checklist-item-create.dto';
 import { ChecklistItemUpdateDto } from './dto/checklist-item/checklist-item-update.dto';
 import { ViajeChecklistResultDto, ViajeChecklistItemDetalleDto } from './dto/viaje-checklist/viaje-checklist-result.dto';
+import { ViajePasajeroRepository } from '@repository/viaje-pasajero.repository';
+import { ViajePasajeroFillDto } from './dto/viaje-pasajero/viaje-pasajero-fill.dto';
+import { ViajePasajeroUpdateDto } from './dto/viaje-pasajero/viaje-pasajero-update.dto';
 import { NotificacionesService } from '../notificaciones/notificaciones.service';
 
 interface UsuarioAutenticado {
@@ -41,6 +44,7 @@ export class ViajesService {
     private readonly viajeServicioRepository: ViajeServicioRepository,
     private readonly checklistItemRepository: ChecklistItemRepository,
     private readonly viajeChecklistRepository: ViajeChecklistRepository,
+    private readonly viajePasajeroRepository: ViajePasajeroRepository,
     private readonly vehiculoChecklistDocumentRepository: VehiculoChecklistDocumentRepository, // Inyectado
     private readonly rutaRepository: RutaRepository,
     private readonly clienteRepository: ClienteRepository,
@@ -394,5 +398,30 @@ export class ViajesService {
       validadoEn: null,
       observaciones: null,
     };
+  }
+
+  // ========== PASAJEROS ==========
+  async findPasajeros(viajeId: number) {
+    return await this.viajePasajeroRepository.findByViajeId(viajeId);
+  }
+
+  async upsertPasajeros(viajeId: number, data: ViajePasajeroFillDto) {
+    if (!data.pasajeros || data.pasajeros.length === 0) {
+      return this.viajePasajeroRepository.findByViajeId(viajeId);
+    }
+
+    // Deduplicate input by pasajeroId (last one wins)
+    const uniqueMap = new Map<number, boolean>();
+    data.pasajeros.forEach((p) => uniqueMap.set(p.pasajeroId, p.asistencia));
+
+    const dtos = Array.from(uniqueMap.entries()).map(([pasajeroId, asistencia]) => ({
+      viajeId,
+      pasajeroId,
+      asistencia,
+    }));
+
+    await this.viajePasajeroRepository.addPasajeros(dtos);
+
+    return await this.viajePasajeroRepository.findByViajeId(viajeId);
   }
 }

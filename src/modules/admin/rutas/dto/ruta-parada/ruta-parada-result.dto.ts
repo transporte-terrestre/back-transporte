@@ -19,6 +19,9 @@ export class RutaParadaResultDto {
   @ApiPropertyOptional({ example: '-77.0428', description: 'Longitud de la ubicación' })
   ubicacionLng?: string;
 
+  @ApiPropertyOptional({ example: '10.5', description: 'Distancia desde la parada anterior' })
+  distanciaPreviaParada?: string;
+
   @ApiProperty({ description: 'Fecha de creación' })
   creadoEn: Date;
 

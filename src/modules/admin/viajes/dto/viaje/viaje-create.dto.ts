@@ -49,15 +49,6 @@ export class ViajeCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' | 'actua
   clienteId: number;
 
   @ApiPropertyOptional({
-    example: ['Juan Pérez', 'María García'],
-    description: 'Lista de tripulantes',
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tripulantes?: string[];
-
-  @ApiPropertyOptional({
     enum: modalidadServicio.enumValues,
     description: 'Modalidad de servicio',
     default: modalidadServicio.enumValues[0],

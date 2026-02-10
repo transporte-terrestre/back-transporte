@@ -9,6 +9,7 @@ CREATE TABLE "ruta_paradas" (
   "nombre" VARCHAR(200) NOT NULL,
   "ubicacion_lat" DECIMAL(10, 7),
   "ubicacion_lng" DECIMAL(10, 7),
+  "distancia_previa_parada" DECIMAL(10, 2),
   "creado_en" TIMESTAMP DEFAULT NOW() NOT NULL,
   "actualizado_en" TIMESTAMP DEFAULT NOW() NOT NULL,
   "eliminado_en" TIMESTAMP

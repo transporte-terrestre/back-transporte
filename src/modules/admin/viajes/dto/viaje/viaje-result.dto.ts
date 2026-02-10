@@ -75,12 +75,6 @@ export class ViajeResultDto {
   @ApiProperty({ example: 1, description: 'ID del cliente' })
   clienteId: number;
 
-  @ApiPropertyOptional({
-    example: ['Juan Pérez', 'María García'],
-    description: 'Lista de tripulantes',
-  })
-  tripulantes: string[];
-
   @ApiProperty({
     enum: modalidadServicio.enumValues,
     example: modalidadServicio.enumValues[0],
