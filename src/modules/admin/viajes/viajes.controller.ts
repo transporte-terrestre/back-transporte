@@ -18,7 +18,7 @@ import { ViajeComentarioResultDto } from './dto/viaje-comentario/viaje-comentari
 import { ViajeServicioCreateDto } from './dto/viaje-servicio/viaje-servicio-create.dto';
 import { ViajeServicioUpdateDto } from './dto/viaje-servicio/viaje-servicio-update.dto';
 import { ViajeServicioResultDto } from './dto/viaje-servicio/viaje-servicio-result.dto';
-import { ViajeServicioReordenarDto } from './dto/viaje-servicio/viaje-servicio-reordenar.dto';
+import { ViajeServicioNextStepResultDto } from './dto/viaje-servicio/viaje-servicio-next-step.dto';
 import { ChecklistItemCreateDto } from './dto/checklist-item/checklist-item-create.dto';
 import { ChecklistItemUpdateDto } from './dto/checklist-item/checklist-item-update.dto';
 import { ChecklistItemResultDto } from './dto/checklist-item/checklist-item-result.dto';
@@ -225,12 +225,12 @@ export class ViajesController {
     return this.viajesService.findServicios(+viajeId);
   }
 
-  @Get('servicio/:id')
-  @ApiOperation({ summary: 'Obtener un servicio/tramo por ID' })
-  @ApiParam({ name: 'id', description: 'ID del servicio', type: Number })
-  @ApiResponse({ status: 200, type: ViajeServicioResultDto })
-  findServicio(@Param('id') id: string) {
-    return this.viajesService.findServicio(+id);
+  @Get(':viajeId/servicio/next-step')
+  @ApiOperation({ summary: 'Obtener sugerencia para el siguiente tramo del viaje' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 200, type: ViajeServicioNextStepResultDto })
+  getNextStep(@Param('viajeId') viajeId: string) {
+    return this.viajesService.getNextStep(+viajeId);
   }
 
   @Post(':viajeId/servicio/create')
@@ -255,14 +255,6 @@ export class ViajesController {
   @ApiResponse({ status: 200, type: ViajeServicioResultDto })
   deleteServicio(@Param('id') id: string) {
     return this.viajesService.deleteServicio(+id);
-  }
-
-  @Put(':viajeId/servicios/reordenar')
-  @ApiOperation({ summary: 'Reordenar los servicios/tramos de un viaje' })
-  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
-  @ApiResponse({ status: 200, type: [ViajeServicioResultDto] })
-  reordenarServicios(@Param('viajeId') viajeId: string, @Body() reordenarDto: ViajeServicioReordenarDto) {
-    return this.viajesService.reordenarServicios(+viajeId, reordenarDto.servicios);
   }
 
   // ========== PASAJEROS ==========

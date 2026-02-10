@@ -13,9 +13,9 @@ export class ViajeServicioRepository {
         viajeId: viajeServicios.viajeId,
         orden: viajeServicios.orden,
         paradaPartidaId: viajeServicios.paradaPartidaId,
-        paradaPartidaOcasional: viajeServicios.paradaPartidaOcasional,
+        paradaPartidaNombre: viajeServicios.paradaPartidaNombre,
         paradaLlegadaId: viajeServicios.paradaLlegadaId,
-        paradaLlegadaOcasional: viajeServicios.paradaLlegadaOcasional,
+        paradaLlegadaNombre: viajeServicios.paradaLlegadaNombre,
         horaSalida: viajeServicios.horaSalida,
         horaTermino: viajeServicios.horaTermino,
         kmInicial: viajeServicios.kmInicial,
@@ -31,38 +31,34 @@ export class ViajeServicioRepository {
   }
 
   async findByViajeIdWithParadas(viajeId: number) {
-    // Obtener servicios con nombres de paradas resueltos
+    // Obtener servicios
     const servicios = await this.findByViajeId(viajeId);
 
-    // Para cada servicio, resolver los nombres de las paradas
-    const serviciosConNombres = await Promise.all(
-      servicios.map(async (servicio) => {
-        let paradaPartidaNombre = servicio.paradaPartidaOcasional;
-        let paradaLlegadaNombre = servicio.paradaLlegadaOcasional;
+    // Para cada servicio, calcular campos virtuales si aplica
+    return servicios.map((servicio) => {
+      let kmServicio = undefined;
+      let tiempoServicioMinutos = undefined;
 
-        if (servicio.paradaPartidaId) {
-          const parada = await database.select({ nombre: rutaParadas.nombre }).from(rutaParadas).where(eq(rutaParadas.id, servicio.paradaPartidaId));
-          if (parada[0]) {
-            paradaPartidaNombre = parada[0].nombre;
-          }
-        }
+      if (servicio.kmFinal && servicio.kmInicial) {
+        kmServicio = servicio.kmFinal - servicio.kmInicial;
+      }
 
-        if (servicio.paradaLlegadaId) {
-          const parada = await database.select({ nombre: rutaParadas.nombre }).from(rutaParadas).where(eq(rutaParadas.id, servicio.paradaLlegadaId));
-          if (parada[0]) {
-            paradaLlegadaNombre = parada[0].nombre;
-          }
-        }
+      if (servicio.horaSalida && servicio.horaTermino) {
+        // Simple calculation for HH:mm format
+        const [hS, mS] = servicio.horaSalida.split(':').map(Number);
+        const [hT, mT] = servicio.horaTermino.split(':').map(Number);
+        const start = hS * 60 + mS;
+        let end = hT * 60 + mT;
+        if (end < start) end += 24 * 60; // Crosses midnight
+        tiempoServicioMinutos = end - start;
+      }
 
-        return {
-          ...servicio,
-          paradaPartidaNombre,
-          paradaLlegadaNombre,
-        };
-      }),
-    );
-
-    return serviciosConNombres;
+      return {
+        ...servicio,
+        kmServicio,
+        tiempoServicioMinutos,
+      };
+    });
   }
 
   async findOne(id: number) {

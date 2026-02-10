@@ -13,11 +13,11 @@ export const viajeServicios = pgTable(
 
     // Punto de partida: referencia a parada fija O texto libre
     paradaPartidaId: integer('parada_partida_id').references(() => rutaParadas.id),
-    paradaPartidaOcasional: varchar('parada_partida_ocasional', { length: 200 }),
+    paradaPartidaNombre: varchar('parada_partida_nombre', { length: 200 }),
 
     // Punto de llegada: referencia a parada fija O texto libre
     paradaLlegadaId: integer('parada_llegada_id').references(() => rutaParadas.id),
-    paradaLlegadaOcasional: varchar('parada_llegada_ocasional', { length: 200 }),
+    paradaLlegadaNombre: varchar('parada_llegada_nombre', { length: 200 }),
 
     // Datos del servicio
     horaSalida: time('hora_salida').notNull(),

@@ -10,33 +10,21 @@ export class ViajeServicioResultDto {
   @ApiProperty({ example: 1, description: 'Orden del servicio en el día' })
   orden: number;
 
-  @ApiPropertyOptional({ example: 1, description: 'ID de la parada de partida (si es fija)' })
+  @ApiPropertyOptional({ example: 1, description: 'ID de la parada de partida' })
   paradaPartidaId?: number;
 
   @ApiPropertyOptional({
     example: 'Cochera Chorrillos',
-    description: 'Nombre de la parada de partida ocasional',
-  })
-  paradaPartidaOcasional?: string;
-
-  @ApiPropertyOptional({
-    example: 'Cochera Chorrillos',
-    description: 'Nombre resuelto de la parada de partida',
+    description: 'Nombre de la parada de partida',
   })
   paradaPartidaNombre?: string;
 
-  @ApiPropertyOptional({ example: 2, description: 'ID de la parada de llegada (si es fija)' })
+  @ApiPropertyOptional({ example: 2, description: 'ID de la parada de llegada' })
   paradaLlegadaId?: number;
 
   @ApiPropertyOptional({
     example: 'PEIP - Educans',
-    description: 'Nombre de la parada de llegada ocasional',
-  })
-  paradaLlegadaOcasional?: string;
-
-  @ApiPropertyOptional({
-    example: 'PEIP - Educans',
-    description: 'Nombre resuelto de la parada de llegada',
+    description: 'Nombre de la parada de llegada',
   })
   paradaLlegadaNombre?: string;
 

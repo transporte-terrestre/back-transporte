@@ -3,33 +3,15 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ViajeServicioDTO } from '@db/tables/viaje-servicio.table';
 
 export class ViajeServicioCreateDto implements Omit<ViajeServicioDTO, 'id' | 'viajeId' | 'orden' | 'creadoEn' | 'actualizadoEn'> {
-  @ApiPropertyOptional({ example: 1, description: 'ID de la parada de partida (si es fija)' })
-  @IsOptional()
+  @ApiProperty({ example: 1, description: 'ID de la parada de partida' })
+  @IsNotEmpty()
   @IsInt()
-  paradaPartidaId?: number;
+  paradaPartidaId: number;
 
-  @ApiPropertyOptional({
-    example: 'Cochera Chorrillos',
-    description: 'Nombre de la parada de partida ocasional',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(200)
-  paradaPartidaOcasional?: string;
-
-  @ApiPropertyOptional({ example: 2, description: 'ID de la parada de llegada (si es fija)' })
-  @IsOptional()
+  @ApiProperty({ example: 2, description: 'ID de la parada de llegada' })
+  @IsNotEmpty()
   @IsInt()
-  paradaLlegadaId?: number;
-
-  @ApiPropertyOptional({
-    example: 'PEIP - Educans',
-    description: 'Nombre de la parada de llegada ocasional',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(200)
-  paradaLlegadaOcasional?: string;
+  paradaLlegadaId: number;
 
   @ApiProperty({ example: '06:45', description: 'Hora de salida (formato HH:mm)' })
   @IsNotEmpty()

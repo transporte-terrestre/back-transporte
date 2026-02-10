@@ -8,7 +8,11 @@ import { VehiculoUpdateDto } from './dto/vehiculo/vehiculo-update.dto';
 import { PaginatedVehiculoResultDto } from './dto/vehiculo/vehiculo-paginated.dto';
 import { VehiculoDocumentoDTO, vehiculoDocumentosTipo } from '@db/tables/vehiculo-documento.table';
 import { DocumentosAgrupadosVehiculoDto } from './dto/vehiculo/vehiculo-result.dto';
-import { PaginatedVehiculoEstadoDocumentosResultDto, VehiculoEstadoDocumentosDto, FiltroDocumentoEstado } from './dto/vehiculo/vehiculo-documentos-estado.dto';
+import {
+  PaginatedVehiculoEstadoDocumentosResultDto,
+  VehiculoEstadoDocumentosDto,
+  FiltroDocumentoEstado,
+} from './dto/vehiculo/vehiculo-documentos-estado.dto';
 import { MarcaCreateDto } from './dto/marca/marca-create.dto';
 import { MarcaUpdateDto } from './dto/marca/marca-update.dto';
 import { ModeloCreateDto } from './dto/modelo/modelo-create.dto';
@@ -132,7 +136,7 @@ export class VehiculosService {
 
     const data: VehiculoEstadoDocumentosDto[] = vehiculos.map((vehiculo) => {
       const documentos = documentosPorVehiculo[vehiculo.id] || [];
-      
+
       const calcularEstado = (tipoDocumento: string): string => {
         const documento = documentos.find((doc) => doc.tipo === tipoDocumento);
         if (!documento) {
@@ -628,7 +632,7 @@ export class VehiculosService {
         if (item) {
           document[secKey][key] = {
             label,
-            estado: item.metadatos?.estado ?? false,
+            estado: item.valorEsperado === 'true',
             stock: item.metadatos?.stock,
             criterioA: item.metadatos?.criterioA,
             criterioB: item.metadatos?.criterioB,
