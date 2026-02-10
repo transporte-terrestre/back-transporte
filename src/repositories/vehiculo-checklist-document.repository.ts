@@ -46,6 +46,36 @@ export class VehiculoChecklistDocumentRepository {
       );
   }
 
+  // Historial paginado de documentos por vehículo y tipo de checklist
+  async findAllHistoryPaginated(vehiculoId: number, checklistItemId: number, page: number, limit: number) {
+    const offset = (page - 1) * limit;
+
+    const whereClause = and(
+      eq(vehiculoChecklistDocuments.vehiculoId, vehiculoId),
+      eq(vehiculoChecklistDocuments.checklistItemId, checklistItemId),
+      sql`${vehiculoChecklistDocuments.eliminadoEn} IS NULL`,
+    );
+
+    const [data, totalResult] = await Promise.all([
+      database
+        .select({ ...getTableColumns(vehiculoChecklistDocuments) })
+        .from(vehiculoChecklistDocuments)
+        .where(whereClause)
+        .orderBy(desc(vehiculoChecklistDocuments.creadoEn))
+        .limit(limit)
+        .offset(offset),
+      database
+        .select({ count: sql<number>`count(*)` })
+        .from(vehiculoChecklistDocuments)
+        .where(whereClause),
+    ]);
+
+    return {
+      data,
+      total: Number(totalResult[0]?.count || 0),
+    };
+  }
+
   // Encontrar una versión específica por su código/versión
   async findByVersion(vehiculoId: number, checklistItemId: number, version: string) {
     const result = await database

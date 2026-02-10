@@ -5,66 +5,119 @@ import * as fs from 'fs';
 
 dotenv.config();
 
-const dbVersion = process.env.DB_VERSION || 'version_001';
+// Configuración básica
+const dbVersion = process.env.DB_VERSION || 'backup_default';
 const backupDir = path.join(process.cwd(), 'src', 'db', 'backups');
 
-const getPreviousVersion = (current: string): string => {
-  const match = current.match(/version_(\d+)/);
-  if (!match) return 'version_000';
-  const num = parseInt(match[1], 10);
-  const prevNum = num > 0 ? num - 1 : 0;
-  return `version_${String(prevNum).padStart(3, '0')}`;
-};
-
 const runBackup = () => {
+  // 1. Asegurar que existe el directorio de backups
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
   }
 
-  const prevVersion = getPreviousVersion(dbVersion);
-  const fileName = `${prevVersion}.sql`;
+  // 2. Nombre del archivo LIMPIO (Solo la versión)
+  // Si tu .env dice DB_VERSION=version_002, el archivo será version_002.sql
+  const fileName = `${dbVersion}.sql`;
   const filePath = path.join(backupDir, fileName);
 
-  const { DB_USER, DB_NAME, DB_CONTAINER_NAME } = process.env;
+  const { DB_HOST, DB_USER, DB_NAME, DB_CONTAINER_NAME, DB_PASSWORD, DB_PORT } = process.env;
 
-  if (!DB_CONTAINER_NAME) {
-    console.error('❌ Error: Falta DB_CONTAINER_NAME en el archivo .env');
-    console.error('💡 Agrega: DB_CONTAINER_NAME=nombre_de_tu_contenedor');
-    process.exit(1);
+  // 3. Detección de entorno
+  const isLocalhost = !DB_HOST || DB_HOST === 'localhost' || DB_HOST === '127.0.0.1' || DB_HOST === '::1';
+  const port = DB_PORT || '5432';
+
+  let args: string[] = [];
+
+  console.log(`📦 Iniciando Backup...`);
+  console.log(`📂 Archivo destino: ${fileName}`);
+
+  if (isLocalhost) {
+    // === MODO LOCAL (Docker Exec) ===
+    if (!DB_CONTAINER_NAME) {
+        console.error('❌ Error: DB_CONTAINER_NAME es requerido en local.');
+        process.exit(1);
+    }
+
+    console.log(`🖥️  Modo Local: Extrayendo desde contenedor '${DB_CONTAINER_NAME}'`);
+    
+    args = [
+        'exec', 
+        '-i', 
+        DB_CONTAINER_NAME, 
+        'pg_dump', 
+        '-U', DB_USER!, 
+        '--clean', 
+        '--if-exists',
+        '--no-owner', 
+        '--no-acl',   
+        DB_NAME!
+    ];
+
+    if (DB_PASSWORD) {
+        args.splice(2, 0, '-e', `PGPASSWORD=${DB_PASSWORD}`);
+    }
+
+  } else {
+    // === MODO NUBE (Docker Run Efímero) ===
+    console.log(`☁️  Modo Nube: Conectando a servidor ${DB_HOST}:${port}`);
+
+    args = [
+        'run',
+        '--rm',
+        '-i',
+        '-e', `PGPASSWORD=${DB_PASSWORD}`,
+        'postgres',
+        'pg_dump',
+        '-h', DB_HOST!,
+        '-p', port,
+        '-U', DB_USER!,
+        '--clean',
+        '--if-exists',
+        '--no-owner', 
+        '--no-acl',
+        DB_NAME!
+    ];
   }
 
-  console.log(`📦 Generando backup Docker (${DB_CONTAINER_NAME}): ${fileName}`);
+  console.log(`⏳ Ejecutando comando Docker...`);
 
-  // docker exec -i [container] pg_dump -U [user] --clean --if-exists [db]
-  const args = ['exec', '-i', DB_CONTAINER_NAME, 'pg_dump', '-U', DB_USER!, '--clean', '--if-exists', DB_NAME!];
-
-  const dbPassword = process.env.DB_PASSWORD;
-  if (dbPassword) {
-    args.splice(1, 0, '-e', `PGPASSWORD=${dbPassword}`);
-  }
-
-  console.log(`⏳ Ejecutando: docker ${args.join(' ')} > ${fileName}`);
-
+  // 4. Ejecutar el proceso
   const child = spawn('docker', args);
   const fileStream = fs.createWriteStream(filePath);
 
+  // Redirigir la salida al archivo (sobrescribe si existe)
   child.stdout.pipe(fileStream);
 
   child.stderr.on('data', (data) => {
-    // pg_dump warnings
+    const msg = data.toString();
+    // Ignorar mensajes informativos
+    if (!msg.startsWith('NOTICE') && !msg.includes('extension "plpgsql" already exists')) {
+         // console.log(`pg_dump log: ${msg}`); 
+    }
   });
 
   child.on('close', (code) => {
     if (code === 0) {
-      console.log(`✅ Backup generado exitosamente en: ${filePath}`);
+      console.log(`✅ Backup generado exitosamente: ${filePath}`);
+      
+      // Mostrar tamaño
+      try {
+          const stats = fs.statSync(filePath);
+          const sizeInMB = stats.size / (1024 * 1024);
+          console.log(`📊 Tamaño: ${sizeInMB.toFixed(2)} MB`);
+      } catch (e) {}
+      
     } else {
-      console.error(`❌ Falló con código ${code}. Verifica que Docker esté corriendo y el nombre del contenedor sea correcto.`);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath); // Borrar archivo incompleto
+      console.error(`❌ Error (Código ${code}).`);
+      // Borrar si quedó vacío
+      if (fs.existsSync(filePath) && fs.statSync(filePath).size === 0) {
+          fs.unlinkSync(filePath);
+      }
     }
   });
 
   child.on('error', (err) => {
-    console.error('❌ Error al ejecutar docker:', err.message);
+    console.error('❌ Error crítico:', err.message);
   });
 };
 

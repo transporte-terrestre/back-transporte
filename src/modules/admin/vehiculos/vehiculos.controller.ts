@@ -41,6 +41,7 @@ import { ResultInspeccionHerramientasDto } from './dto/checklist-document/types/
 import { ResultInspeccionBotiquinesDto } from './dto/checklist-document/types/result-inspeccion-botiquines.dto';
 import { ResultKitAntiderramesDto } from './dto/checklist-document/types/result-kit-antiderrames.dto';
 import { ResultRevisionVehiculosDto } from './dto/checklist-document/types/result-revision-vehiculos.dto';
+import { VehiculoChecklistHistoryQueryDto, PaginatedVehiculoChecklistHistoryResultDto } from './dto/checklist-document/checklist-history.dto';
 
 @ApiTags('vehiculos')
 @ApiBearerAuth()
@@ -205,6 +206,13 @@ export class VehiculosController {
   }
 
   // ========== CHECKLIST CONFIGURATION (FIND - GET) ==========
+  @Get(':id/checklist-document/history')
+  @ApiOperation({ summary: 'Obtener historial de documentos de checklist' })
+  @ApiResponse({ status: 200, type: PaginatedVehiculoChecklistHistoryResultDto })
+  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
+  async findChecklistHistory(@Param('id') id: string, @Query() query: VehiculoChecklistHistoryQueryDto) {
+    return this.vehiculosService.findChecklistHistory(+id, query.checklistItemId, query.page, query.limit);
+  }
 
   // 1. IPERC continuo
   @Get(':id/checklist-document/iperc-continuo/find')

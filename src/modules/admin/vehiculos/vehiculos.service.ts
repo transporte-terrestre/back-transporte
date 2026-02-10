@@ -21,6 +21,7 @@ import { ModeloUpdateDto } from './dto/modelo/modelo-update.dto';
 import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository';
 import { ChecklistItemRepository } from '@repository/checklist-item.repository';
 import { VehiculoChecklistDocumentUpsertDto } from './dto/checklist-document/upsert-checklist-document.dto';
+import { PaginatedVehiculoChecklistHistoryResultDto } from './dto/checklist-document/checklist-history.dto';
 
 import { IpercContinuoDto } from './dto/checklist-document/types/payload-iperc-continuo.dto';
 import { LucesEmergenciaAlarmasDto } from './dto/checklist-document/types/payload-luces-emergencia-alarmas.dto';
@@ -901,6 +902,40 @@ export class VehiculosService {
 
     const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
     return this.findRevisionVehiculos(vehiculoId, savedDoc.id);
+  }
+
+  async findChecklistHistory(
+    vehiculoId: number,
+    checklistItemId: number,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedVehiculoChecklistHistoryResultDto> {
+    const { data, total } = await this.vehiculoChecklistDocumentRepository.findAllHistoryPaginated(vehiculoId, checklistItemId, page, limit);
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data: data.map((doc) => ({
+        id: doc.id,
+        vehiculoId: doc.vehiculoId,
+        checklistItemId: doc.checklistItemId,
+        version: doc.version,
+        activo: doc.activo,
+        creadoEn: doc.creadoEn,
+        viajeId: doc.viajeId,
+        viajeTipo: doc.viajeTipo,
+      })),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
   }
 
   // ========== CHECKLIST CONFIGURACION (VERSIONADO) ==========
