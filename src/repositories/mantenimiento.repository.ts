@@ -208,4 +208,23 @@ export class MantenimientoRepository {
     const result = await database.delete(mantenimientoDocumentos).where(eq(mantenimientoDocumentos.id, id)).returning();
     return result[0];
   }
+
+  async getReporteEstadoVehiculos() {
+    const query = sql`
+      SELECT DISTINCT ON (${vehiculos.id})
+        ${vehiculos.id} as id,
+        ${vehiculos.placa} as placa,
+        ${vehiculos.kilometraje} as kilometraje_actual,
+        ${mantenimientos.fechaIngreso} as ultimo_mantenimiento_fecha,
+        ${mantenimientos.kilometraje} as ultimo_mantenimiento_km,
+        ${mantenimientos.kilometrajeProximoMantenimiento} as prox_mantenimiento_km
+      FROM ${vehiculos}
+      LEFT JOIN ${mantenimientos} ON ${vehiculos.id} = ${mantenimientos.vehiculoId} AND ${mantenimientos.eliminadoEn} IS NULL
+      WHERE ${vehiculos.eliminadoEn} IS NULL
+      ORDER BY ${vehiculos.id}, ${mantenimientos.fechaIngreso} DESC
+    `;
+
+    const result = await database.execute(query);
+    return result.rows;
+  }
 }

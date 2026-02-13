@@ -62,7 +62,19 @@ export class ViajeChecklistRepository {
   }
 
   async create(data: ViajeChecklistDTO) {
-    const result = await database.insert(viajeChecklists).values(data).returning();
+    const result = await database
+      .insert(viajeChecklists)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [viajeChecklists.viajeId, viajeChecklists.tipo],
+        set: {
+          ...(data.validadoPor ? { validadoPor: data.validadoPor } : {}),
+          ...(data.validadoEn ? { validadoEn: data.validadoEn } : {}),
+          ...(data.observaciones ? { observaciones: data.observaciones } : {}),
+          actualizadoEn: new Date(),
+        },
+      })
+      .returning();
     return result[0];
   }
 

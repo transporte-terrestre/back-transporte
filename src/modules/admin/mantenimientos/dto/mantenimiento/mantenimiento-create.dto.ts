@@ -51,6 +51,11 @@ export class MantenimientoCreateDto implements Omit<MantenimientoDTO, 'id' | 'cr
   @IsInt()
   kilometraje: number;
 
+  @ApiProperty({ example: 60000, description: 'Next maintenance mileage' })
+  @IsOptional()
+  @IsInt()
+  kilometrajeProximoMantenimiento?: number;
+
   @ApiProperty({
     enum: mantenimientosEstado.enumValues,
     default: mantenimientosEstado.enumValues[0],

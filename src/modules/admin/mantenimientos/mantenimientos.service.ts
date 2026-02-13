@@ -11,6 +11,7 @@ import { MantenimientoTareaCreateDto } from './dto/mantenimiento-tarea/mantenimi
 import { MantenimientoTareaUpdateDto } from './dto/mantenimiento-tarea/mantenimiento-tarea-update.dto';
 import { MantenimientoDocumentoCreateDto } from './dto/mantenimiento-documento/mantenimiento-documento-create.dto';
 import { MantenimientoDocumentoUpdateDto } from './dto/mantenimiento-documento/mantenimiento-documento-update.dto';
+import { MantenimientoReporteEstadoDto } from './dto/mantenimiento/mantenimiento-reporte-estado.dto';
 
 import { MantenimientoDocumentoDTO, mantenimientoDocumentosTipo } from '@db/tables/mantenimiento-documento.table';
 import { DocumentosAgrupadosMantenimientoDto } from './dto/mantenimiento/mantenimiento-result.dto';
@@ -48,6 +49,41 @@ export class MantenimientosService {
         hasPreviousPage,
       },
     };
+  }
+
+  async getReporteEstadoVehiculos(): Promise<MantenimientoReporteEstadoDto[]> {
+    const rawData = await this.mantenimientoRepository.getReporteEstadoVehiculos();
+
+    return rawData.map((row: any) => {
+      const actual = Number(row.kilometraje_actual || 0);
+      const prox = row.prox_mantenimiento_km ? Number(row.prox_mantenimiento_km) : null;
+
+      let restante = null;
+      let estado = 'n/a';
+
+      if (prox !== null) {
+        restante = prox - actual;
+        if (restante > 1000) {
+          estado = 'verde';
+        } else if (restante > 0) {
+          estado = 'amarillo';
+        } else {
+          // restante <= 0
+          estado = 'rojo';
+        }
+      }
+
+      return {
+        vehiculoId: row.id,
+        placa: row.placa,
+        kilometrajeActual: actual,
+        ultimoMantenimientoFecha: row.ultimo_mantenimiento_fecha ? new Date(row.ultimo_mantenimiento_fecha) : null,
+        ultimoMantenimientoKm: row.ultimo_mantenimiento_km ? Number(row.ultimo_mantenimiento_km) : null,
+        proxMantenimientoKm: prox,
+        restante: restante,
+        estado: estado,
+      };
+    });
   }
 
   async findOne(id: number) {

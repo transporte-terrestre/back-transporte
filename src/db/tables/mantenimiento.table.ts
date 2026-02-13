@@ -25,6 +25,7 @@ export const mantenimientos = pgTable(
     fechaIngreso: timestamp('fecha_ingreso').notNull(),
     fechaSalida: timestamp('fecha_salida'),
     kilometraje: integer('kilometraje').notNull(),
+    kilometrajeProximoMantenimiento: integer('kilometraje_proximo_mantenimiento'),
     estado: mantenimientosEstado('estado').default('pendiente').notNull(),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),

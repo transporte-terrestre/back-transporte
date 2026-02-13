@@ -78,6 +78,9 @@ export class MantenimientoResultDto {
   @ApiProperty({ example: 55000, description: 'Mileage at maintenance' })
   kilometraje: number;
 
+  @ApiProperty({ example: 60000, description: 'Next Maintenance Mileage', nullable: true })
+  kilometrajeProximoMantenimiento: number | null;
+
   @ApiProperty({
     enum: mantenimientosEstado.enumValues,
     example: mantenimientosEstado.enumValues[0],
