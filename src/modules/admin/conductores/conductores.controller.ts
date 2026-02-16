@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Res, StreamableFile } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ConductoresService } from './conductores.service';
 import { ConductorCreateDto } from './dto/conductor/conductor-create.dto';
@@ -104,5 +104,18 @@ export class ConductoresController {
   @ApiResponse({ status: 200, type: ConductorDocumentoResultDto })
   deleteDocumento(@Param('id') id: string) {
     return this.conductoresService.deleteDocumento(+id);
+  }
+  @Get('download/:id')
+  @ApiOperation({ summary: 'Descargar documentos del conductor en ZIP' })
+  @ApiParam({ name: 'id', description: 'ID del conductor', type: Number })
+  async download(@Param('id') id: string, @Res({ passthrough: true }) res: any) {
+    const { stream, filename } = await this.conductoresService.downloadConductorFiles(+id);
+
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    });
+
+    return new StreamableFile(stream);
   }
 }

@@ -16,7 +16,11 @@ import { TareaCreateDto } from './dto/tarea/tarea-create.dto';
 import { TareaUpdateDto } from './dto/tarea/tarea-update.dto';
 import { TareaResultDto } from './dto/tarea/tarea-result.dto';
 import { TareaPaginationQueryDto, PaginatedTareaResultDto } from './dto/tarea/tarea-paginated.dto';
-import { MantenimientoReporteEstadoDto } from './dto/mantenimiento/mantenimiento-reporte-estado.dto';
+import {
+  MantenimientoReporteEstadoDto,
+  PaginatedReporteEstadoResultDto,
+  ReporteEstadoPaginationQueryDto,
+} from './dto/mantenimiento/mantenimiento-reporte-estado.dto';
 
 @ApiTags('mantenimientos')
 @ApiBearerAuth()
@@ -182,8 +186,8 @@ export class MantenimientosController {
   // ========== REPORTE DE ESTADO ==========
   @Get('reporte-estado-vehiculos')
   @ApiOperation({ summary: 'Obtener reporte de estado de mantenimiento de vehículos' })
-  @ApiResponse({ status: 200, type: [MantenimientoReporteEstadoDto] })
-  getReporteEstadoVehiculos() {
-    return this.mantenimientosService.getReporteEstadoVehiculos();
+  @ApiResponse({ status: 200, type: PaginatedReporteEstadoResultDto })
+  getReporteEstadoVehiculos(@Query() query: ReporteEstadoPaginationQueryDto) {
+    return this.mantenimientosService.getReporteEstadoVehiculos(query.page, query.limit, query.sort);
   }
 }

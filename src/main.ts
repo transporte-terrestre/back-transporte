@@ -1,14 +1,18 @@
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
-import { config } from "dotenv";
-import { setupSwagger } from "@core/swagger.core";
-import { setupTransform } from "@core/transform.core";
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { config } from 'dotenv';
+import { setupSwagger } from '@core/swagger.core';
+import { setupTransform } from '@core/transform.core';
 
 config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
+  app.enableCors({
+    origin: '*',
+    allowedHeaders: '*',
+    exposedHeaders: ['Content-Disposition'],
+  });
 
   setupTransform(app);
   setupSwagger(app);

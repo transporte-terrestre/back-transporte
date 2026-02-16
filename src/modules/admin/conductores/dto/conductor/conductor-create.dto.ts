@@ -1,10 +1,24 @@
 import { IsString, IsNotEmpty, IsIn, IsArray, IsOptional, MinLength, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ConductorDTO, conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.table';
-import type { ConductorCategoriaLicencia, ConductorClaseLicencia } from '@db/tables/conductor.table';
+import { ConductorDTO, conductoresClaseLicencia, conductoresCategoriaLicencia, conductoresTipoDocumento } from '@db/tables/conductor.table';
+import type { ConductorCategoriaLicencia, ConductorClaseLicencia, ConductorTipoDocumento } from '@db/tables/conductor.table';
 
 export class ConductorCreateDto implements Omit<ConductorDTO, 'id' | 'nombreCompleto' | 'creadoEn' | 'actualizadoEn'> {
-  @ApiProperty({ example: '12345678', description: 'DNI del conductor' })
+  @ApiProperty({
+    enum: conductoresTipoDocumento.enumValues,
+    default: 'DNI',
+    description: 'Tipo de documento de identidad',
+  })
+  @IsIn(conductoresTipoDocumento.enumValues, { each: true })
+  @IsOptional()
+  tipoDocumento?: ConductorTipoDocumento;
+
+  @ApiPropertyOptional({ example: 'Peruana', description: 'Nacionalidad del conductor' })
+  @IsString()
+  @IsOptional()
+  nacionalidad?: string;
+
+  @ApiProperty({ example: '12345678', description: 'Número de documento del conductor' })
   @IsString()
   @IsNotEmpty()
   dni: string;

@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, StreamableFile, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { VehiculosService } from './vehiculos.service';
 import { VehiculoCreateDto } from './dto/vehiculo/vehiculo-create.dto';
 import { VehiculoUpdateDto } from './dto/vehiculo/vehiculo-update.dto';
@@ -7,6 +8,7 @@ import { VehiculoResultDto } from './dto/vehiculo/vehiculo-result.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { VehiculoPaginationQueryDto, PaginatedVehiculoResultDto } from './dto/vehiculo/vehiculo-paginated.dto';
 import { VehiculoDocumentosEstadoQueryDto, PaginatedVehiculoEstadoDocumentosResultDto } from './dto/vehiculo/vehiculo-documentos-estado.dto';
+
 import { VehiculoDocumentoCreateDto } from './dto/vehiculo-documento/vehiculo-documento-create.dto';
 import { VehiculoDocumentoUpdateDto } from './dto/vehiculo-documento/vehiculo-documento-update.dto';
 import { VehiculoDocumentoResultDto } from './dto/vehiculo-documento/vehiculo-documento-result.dto';
@@ -62,6 +64,20 @@ export class VehiculosController {
   @ApiResponse({ status: 200, type: PaginatedVehiculoEstadoDocumentosResultDto })
   findAllEstadoDocumentos(@Query() query: VehiculoDocumentosEstadoQueryDto) {
     return this.vehiculosService.findAllEstadoDocumentos(query.page, query.limit, query.filtro);
+  }
+
+  @Get('download/:id')
+  @ApiOperation({ summary: 'Descargar información y documentos del vehículo (ZIP)' })
+  @ApiParam({ name: 'id', description: 'ID del Vehículo', type: Number })
+  async download(@Param('id') id: string, @Res({ passthrough: true }) res: Response): Promise<StreamableFile> {
+    const { stream, filename } = await this.vehiculosService.downloadVehiculoFiles(+id);
+
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    });
+
+    return new StreamableFile(stream);
   }
 
   @Get('find-one/:id')

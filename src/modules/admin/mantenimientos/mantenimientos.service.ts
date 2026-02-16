@@ -11,7 +11,7 @@ import { MantenimientoTareaCreateDto } from './dto/mantenimiento-tarea/mantenimi
 import { MantenimientoTareaUpdateDto } from './dto/mantenimiento-tarea/mantenimiento-tarea-update.dto';
 import { MantenimientoDocumentoCreateDto } from './dto/mantenimiento-documento/mantenimiento-documento-create.dto';
 import { MantenimientoDocumentoUpdateDto } from './dto/mantenimiento-documento/mantenimiento-documento-update.dto';
-import { MantenimientoReporteEstadoDto } from './dto/mantenimiento/mantenimiento-reporte-estado.dto';
+import { MantenimientoReporteEstadoDto, PaginatedReporteEstadoResultDto } from './dto/mantenimiento/mantenimiento-reporte-estado.dto';
 
 import { MantenimientoDocumentoDTO, mantenimientoDocumentosTipo } from '@db/tables/mantenimiento-documento.table';
 import { DocumentosAgrupadosMantenimientoDto } from './dto/mantenimiento/mantenimiento-result.dto';
@@ -51,10 +51,14 @@ export class MantenimientosService {
     };
   }
 
-  async getReporteEstadoVehiculos(): Promise<MantenimientoReporteEstadoDto[]> {
-    const rawData = await this.mantenimientoRepository.getReporteEstadoVehiculos();
+  async getReporteEstadoVehiculos(
+    page: number = 1,
+    limit: number = 10,
+    sort: 'proximos' | 'ultimos' = 'proximos',
+  ): Promise<PaginatedReporteEstadoResultDto> {
+    const { data: rawData, total } = await this.mantenimientoRepository.getReporteEstadoVehiculos(page, limit, sort);
 
-    return rawData.map((row: any) => {
+    const data = rawData.map((row) => {
       const actual = Number(row.kilometraje_actual || 0);
       const prox = row.prox_mantenimiento_km ? Number(row.prox_mantenimiento_km) : null;
 
@@ -76,14 +80,33 @@ export class MantenimientosService {
       return {
         vehiculoId: row.id,
         placa: row.placa,
+        codigoInterno: row.codigo_interno || null,
+        imagenes: row.imagenes,
         kilometrajeActual: actual,
         ultimoMantenimientoFecha: row.ultimo_mantenimiento_fecha ? new Date(row.ultimo_mantenimiento_fecha) : null,
         ultimoMantenimientoKm: row.ultimo_mantenimiento_km ? Number(row.ultimo_mantenimiento_km) : null,
         proxMantenimientoKm: prox,
+        kilometrajeRestante: restante,
         restante: restante,
         estado: estado,
       };
     });
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
   }
 
   async findOne(id: number) {

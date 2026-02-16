@@ -14,7 +14,7 @@ export async function seedConductores() {
         nombreCompleto: 'Juan Perez Garcia',
         numeroLicencia: 'Q07864165',
         claseLicencia: 'A',
-        categoriaLicencia: 'Uno',
+        categoriaLicencia: 'I',
         email: 'xerickcua@gmail.com',
         fotocheck: ['https://iili.io/fub7gEl.webp'],
       },
@@ -25,7 +25,7 @@ export async function seedConductores() {
         nombreCompleto: 'Maria Gomez Torres',
         numeroLicencia: 'Q08912345',
         claseLicencia: 'B',
-        categoriaLicencia: 'Dos',
+        categoriaLicencia: 'II-a',
         fotocheck: ['https://iili.io/fub762S.webp'],
       },
       {
@@ -35,7 +35,7 @@ export async function seedConductores() {
         nombreCompleto: 'Carlos Ruiz Sanchez',
         numeroLicencia: 'Q09123456',
         claseLicencia: 'A',
-        categoriaLicencia: 'Tres',
+        categoriaLicencia: 'III-a',
         email: 'erixcel.evolution.api@gmail.com',
         fotocheck: ['https://iili.io/fub7spe.webp'],
       },
@@ -46,7 +46,7 @@ export async function seedConductores() {
         nombreCompleto: 'Luis Martinez Rojas',
         numeroLicencia: 'Q09234567',
         claseLicencia: 'B',
-        categoriaLicencia: 'Uno',
+        categoriaLicencia: 'I',
         email: 'erixcel.gemini.1@gmail.com',
         fotocheck: ['https://iili.io/fub7QTu.webp'],
       },
@@ -57,7 +57,7 @@ export async function seedConductores() {
         nombreCompleto: 'Rosa Fernandez Silva',
         numeroLicencia: 'Q09345678',
         claseLicencia: 'A',
-        categoriaLicencia: 'Dos',
+        categoriaLicencia: 'II-b',
         fotocheck: ['https://iili.io/fub7Zhb.webp'],
       },
       {
@@ -67,7 +67,7 @@ export async function seedConductores() {
         nombreCompleto: 'Miguel Torres Luna',
         numeroLicencia: 'Q09456789',
         claseLicencia: 'B',
-        categoriaLicencia: 'Tres',
+        categoriaLicencia: 'II-c',
         fotocheck: ['https://iili.io/fub7tQj.webp'],
       },
       {
@@ -77,7 +77,7 @@ export async function seedConductores() {
         nombreCompleto: 'Sandra Vargas Cruz',
         numeroLicencia: 'Q09567890',
         claseLicencia: 'A',
-        categoriaLicencia: 'Uno',
+        categoriaLicencia: 'I',
         fotocheck: ['https://iili.io/fub7p4V.webp'],
       },
       {
@@ -87,7 +87,7 @@ export async function seedConductores() {
         nombreCompleto: 'Roberto Castro Diaz',
         numeroLicencia: 'Q09678901',
         claseLicencia: 'B',
-        categoriaLicencia: 'Dos',
+        categoriaLicencia: 'II-a',
         fotocheck: ['https://iili.io/fubYHYP.webp'],
       },
       {
@@ -97,7 +97,7 @@ export async function seedConductores() {
         nombreCompleto: 'Patricia Morales Vega',
         numeroLicencia: 'Q09789012',
         claseLicencia: 'A',
-        categoriaLicencia: 'Tres',
+        categoriaLicencia: 'III-b',
         fotocheck: ['https://iili.io/fubYJv1.webp'],
       },
       {
@@ -107,7 +107,7 @@ export async function seedConductores() {
         nombreCompleto: 'Fernando Ramirez Soto',
         numeroLicencia: 'Q09890123',
         claseLicencia: 'B',
-        categoriaLicencia: 'Uno',
+        categoriaLicencia: 'I',
         fotocheck: ['https://iili.io/fubY3Tg.webp'],
       },
       {
@@ -117,7 +117,7 @@ export async function seedConductores() {
         nombreCompleto: 'Carmen Jimenez Flores',
         numeroLicencia: 'Q09901234',
         claseLicencia: 'A',
-        categoriaLicencia: 'Dos',
+        categoriaLicencia: 'II-a',
         fotocheck: ['https://iili.io/fubYFja.webp'],
       },
       {
@@ -127,7 +127,7 @@ export async function seedConductores() {
         nombreCompleto: 'Jorge Herrera Campos',
         numeroLicencia: 'Q10012345',
         claseLicencia: 'B',
-        categoriaLicencia: 'Tres',
+        categoriaLicencia: 'II-b',
         fotocheck: ['https://iili.io/fubYKZJ.webp'],
       },
       {
@@ -137,7 +137,7 @@ export async function seedConductores() {
         nombreCompleto: 'Elena Ponce Rojas',
         numeroLicencia: 'Q10123456',
         claseLicencia: 'A',
-        categoriaLicencia: 'Uno',
+        categoriaLicencia: 'I',
         fotocheck: ['https://iili.io/fubYBGR.webp'],
       },
       {
@@ -147,7 +147,7 @@ export async function seedConductores() {
         nombreCompleto: 'Andres Salazar Mora',
         numeroLicencia: 'Q10234567',
         claseLicencia: 'B',
-        categoriaLicencia: 'Dos',
+        categoriaLicencia: 'II-a',
         fotocheck: ['https://iili.io/fubYC4p.webp'],
       },
       {
@@ -157,7 +157,7 @@ export async function seedConductores() {
         nombreCompleto: 'Monica Rios Gutierrez',
         numeroLicencia: 'Q10345678',
         claseLicencia: 'A',
-        categoriaLicencia: 'Tres',
+        categoriaLicencia: 'III-c',
         fotocheck: ['https://iili.io/fubYxaI.webp'],
       },
       {
@@ -167,7 +167,7 @@ export async function seedConductores() {
         nombreCompleto: 'Gabriel Mendez Luna',
         numeroLicencia: 'Q10456789',
         claseLicencia: 'B',
-        categoriaLicencia: 'Uno',
+        categoriaLicencia: 'I',
         fotocheck: ['https://iili.io/fubYIyX.webp'],
       },
       {
@@ -177,7 +177,7 @@ export async function seedConductores() {
         nombreCompleto: 'Valeria Ochoa Suarez',
         numeroLicencia: 'Q10567890',
         claseLicencia: 'A',
-        categoriaLicencia: 'Dos',
+        categoriaLicencia: 'II-a',
         fotocheck: ['https://iili.io/fubYAjs.webp'],
       },
       {
@@ -187,7 +187,7 @@ export async function seedConductores() {
         nombreCompleto: 'Daniel Reyes Paz',
         numeroLicencia: 'Q10678901',
         claseLicencia: 'B',
-        categoriaLicencia: 'Tres',
+        categoriaLicencia: 'II-b',
         fotocheck: ['https://iili.io/fubYYG4.webp'],
       },
       {
@@ -197,7 +197,7 @@ export async function seedConductores() {
         nombreCompleto: 'Adriana Flores Vera',
         numeroLicencia: 'Q10789012',
         claseLicencia: 'A',
-        categoriaLicencia: 'Uno',
+        categoriaLicencia: 'I',
         fotocheck: ['https://iili.io/fubYa6l.webp'],
       },
       {
@@ -207,7 +207,7 @@ export async function seedConductores() {
         nombreCompleto: 'Javier Acosta Lozano',
         numeroLicencia: 'Q10890123',
         claseLicencia: 'B',
-        categoriaLicencia: 'Dos',
+        categoriaLicencia: 'II-a',
         fotocheck: ['https://iili.io/fubY0aS.webp'],
       },
       {
@@ -217,7 +217,7 @@ export async function seedConductores() {
         nombreCompleto: 'Claudia Miranda Valle',
         numeroLicencia: 'Q10901234',
         claseLicencia: 'A',
-        categoriaLicencia: 'Tres',
+        categoriaLicencia: 'III-a',
         fotocheck: ['https://iili.io/fubYG99.webp'],
       },
       {
@@ -227,7 +227,7 @@ export async function seedConductores() {
         nombreCompleto: 'Ernesto Campos Arias',
         numeroLicencia: 'Q11012345',
         claseLicencia: 'B',
-        categoriaLicencia: 'Uno',
+        categoriaLicencia: 'I',
         fotocheck: ['https://iili.io/fubYMue.webp'],
       },
       {
@@ -237,7 +237,7 @@ export async function seedConductores() {
         nombreCompleto: 'Beatriz Leon Santos',
         numeroLicencia: 'Q11123456',
         claseLicencia: 'A',
-        categoriaLicencia: 'Dos',
+        categoriaLicencia: 'II-a',
         fotocheck: ['https://iili.io/fubYWZb.webp'],
       },
       {
@@ -247,7 +247,7 @@ export async function seedConductores() {
         nombreCompleto: 'Marcos Parra Gamboa',
         numeroLicencia: 'Q11234567',
         claseLicencia: 'B',
-        categoriaLicencia: 'Tres',
+        categoriaLicencia: 'II-b',
         fotocheck: ['https://iili.io/fubYjMx.webp'],
       },
       {
@@ -257,7 +257,7 @@ export async function seedConductores() {
         nombreCompleto: 'Silvia Ortiz Cabrera',
         numeroLicencia: 'Q11345678',
         claseLicencia: 'A',
-        categoriaLicencia: 'Uno',
+        categoriaLicencia: 'I',
         fotocheck: ['https://iili.io/fubYw6Q.webp'],
       },
       {
@@ -267,7 +267,7 @@ export async function seedConductores() {
         nombreCompleto: 'Hector Velasquez Marin',
         numeroLicencia: 'Q11456789',
         claseLicencia: 'B',
-        categoriaLicencia: 'Dos',
+        categoriaLicencia: 'II-a',
         fotocheck: ['https://iili.io/fubYOFV.webp'],
       },
       {
@@ -277,7 +277,7 @@ export async function seedConductores() {
         nombreCompleto: 'Gloria Cardenas Torres',
         numeroLicencia: 'Q11567890',
         claseLicencia: 'A',
-        categoriaLicencia: 'Tres',
+        categoriaLicencia: 'III-a',
         fotocheck: ['https://iili.io/fubYecB.webp'],
       },
       {
@@ -287,7 +287,7 @@ export async function seedConductores() {
         nombreCompleto: 'Andres Romero Davila',
         numeroLicencia: 'Q11678901',
         claseLicencia: 'B',
-        categoriaLicencia: 'Uno',
+        categoriaLicencia: 'I',
         fotocheck: ['https://iili.io/fubYk8P.webp'],
       },
       {
@@ -297,7 +297,7 @@ export async function seedConductores() {
         nombreCompleto: 'Natalia Silva Campos',
         numeroLicencia: 'Q11789012',
         claseLicencia: 'A',
-        categoriaLicencia: 'Dos',
+        categoriaLicencia: 'II-a',
         fotocheck: ['https://iili.io/fubYSAF.webp'],
       },
       {
@@ -307,7 +307,7 @@ export async function seedConductores() {
         nombreCompleto: 'Rodrigo Vega Morales',
         numeroLicencia: 'Q11890123',
         claseLicencia: 'B',
-        categoriaLicencia: 'Tres',
+        categoriaLicencia: 'II-c',
         fotocheck: ['https://iili.io/fubYSAF.webp'],
       },
     ])

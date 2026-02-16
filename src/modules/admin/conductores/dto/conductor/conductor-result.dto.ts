@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.table';
+import { conductoresClaseLicencia, conductoresCategoriaLicencia, conductoresTipoDocumento } from '@db/tables/conductor.table';
 import { ConductorDocumentoResultDto } from '../conductor-documento/conductor-documento-result.dto';
-import type { ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.table';
+import type { ConductorClaseLicencia, ConductorCategoriaLicencia, ConductorTipoDocumento } from '@db/tables/conductor.table';
 import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 
 export class DocumentosAgrupadosConductorDto implements Record<ConductorDocumentoTipo, ConductorDocumentoResultDto[]> {
@@ -63,6 +63,16 @@ export class DocumentosAgrupadosConductorDto implements Record<ConductorDocument
 export class ConductorResultDto {
   @ApiProperty({ example: 1, description: 'Driver ID' })
   id: number;
+
+  @ApiProperty({
+    enum: conductoresTipoDocumento.enumValues,
+    example: 'DNI',
+    description: 'Tipo de documento de identidad',
+  })
+  tipoDocumento: ConductorTipoDocumento;
+
+  @ApiPropertyOptional({ example: 'Peruana', description: 'Nacionalidad del conductor' })
+  nacionalidad: string | null;
 
   @ApiProperty({ example: '12345678', description: 'Driver DNI' })
   dni: string;

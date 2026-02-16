@@ -7,6 +7,7 @@ import { MarcaRepository } from '@repository/marca.repository';
 import { ModeloRepository } from '@repository/modelo.repository';
 import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository';
 import { ChecklistItemRepository } from '@repository/checklist-item.repository';
+import { MantenimientoRepository } from '@repository/mantenimiento.repository';
 
 @Module({
   controllers: [VehiculosController],
@@ -18,6 +19,7 @@ import { ChecklistItemRepository } from '@repository/checklist-item.repository';
     ModeloRepository,
     VehiculoChecklistDocumentRepository,
     ChecklistItemRepository,
+    MantenimientoRepository,
   ],
 })
 export class VehiculosModule {}

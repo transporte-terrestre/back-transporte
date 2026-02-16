@@ -20,8 +20,13 @@ import { ModeloUpdateDto } from './dto/modelo/modelo-update.dto';
 
 import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository';
 import { ChecklistItemRepository } from '@repository/checklist-item.repository';
+
 import { VehiculoChecklistDocumentUpsertDto } from './dto/checklist-document/upsert-checklist-document.dto';
 import { PaginatedVehiculoChecklistHistoryResultDto } from './dto/checklist-document/checklist-history.dto';
+
+import archiver from 'archiver';
+import { Readable } from 'stream';
+import PDFDocument from 'pdfkit';
 
 import { IpercContinuoDto } from './dto/checklist-document/types/payload-iperc-continuo.dto';
 import { LucesEmergenciaAlarmasDto } from './dto/checklist-document/types/payload-luces-emergencia-alarmas.dto';
@@ -224,6 +229,221 @@ export class VehiculosService {
 
   async deleteDocumento(id: number) {
     return await this.vehiculoDocumentoRepository.delete(id);
+  }
+
+  // ========== MARCAS ==========
+
+  async downloadVehiculoFiles(id: number): Promise<{ stream: Readable; filename: string }> {
+    const vehiculo = await this.findOne(id);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    const filename = `${vehiculo.placa}_documentos.zip`.replace(/\s+/g, '_');
+
+    // PDF Generator
+    const doc = new PDFDocument({ margin: 50 });
+    archive.append(doc as any, { name: 'ficha_vehiculo.pdf' });
+
+    // --- STYLES ---
+    const primaryColor = '#1a1a1a';
+    const secondaryColor = '#4a4a4a';
+    const accentColor = '#3b82f6';
+    const boxBgColor = '#f3f4f6';
+
+    // --- HEADER ---
+    doc.fillColor(primaryColor).fontSize(20).font('Helvetica-Bold').text('FICHA TÉCNICA DE VEHÍCULO', { align: 'center' });
+    doc.moveDown(0.5);
+
+    // Line separator
+    doc.strokeColor(accentColor).lineWidth(2).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(1.5);
+
+    // --- DATOS DEL VEHICULO ---
+    const xLeft = 50;
+    const xRight = 300;
+
+    // Section Header
+    doc.rect(50, doc.y, 500, 25).fill(boxBgColor);
+    doc
+      .fillColor(primaryColor)
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .text('INFORMACIÓN GENERAL', 60, doc.y + 7);
+    doc.moveDown(2);
+
+    const addField = (label: string, value: any, x: number, y: number) => {
+      doc.fillColor(secondaryColor).fontSize(10).font('Helvetica-Bold').text(label, x, y);
+      doc
+        .fillColor(primaryColor)
+        .fontSize(10)
+        .font('Helvetica')
+        .text(String(value || '-'), x, y + 15);
+    };
+
+    let currentY = doc.y;
+
+    // Row 1
+    addField('PLACA', vehiculo.placa, xLeft, currentY);
+    addField('CÓDIGO INTERNO', vehiculo.codigoInterno, xRight, currentY);
+    currentY += 40;
+
+    // Row 2
+    const marcaModelo = (vehiculo as any).modelo ? `${(vehiculo as any).modelo.marca?.nombre || ''} ${(vehiculo as any).modelo.nombre}` : '-';
+    addField('MARCA / MODELO', marcaModelo, xLeft, currentY);
+    addField('AÑO DE FABRICACIÓN', vehiculo.anio, xRight, currentY);
+    currentY += 40;
+
+    // Row 3
+    addField('COLOR', vehiculo.color, xLeft, currentY);
+    addField('COMBUSTIBLE', vehiculo.combustible, xRight, currentY);
+    currentY += 40;
+
+    // Row 4
+    addField('CARROCERÍA', vehiculo.carroceria, xLeft, currentY);
+    addField('CATEGORÍA', vehiculo.categoria, xRight, currentY);
+    currentY += 40;
+
+    // --- ESPECIFICACIONES TÉCNICAS ---
+    doc.y = currentY + 10;
+    doc.rect(50, doc.y, 500, 25).fill(boxBgColor);
+    doc
+      .fillColor(primaryColor)
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .text('ESPECIFICACIONES TÉCNICAS', 60, doc.y + 7);
+    doc.moveDown(2);
+
+    currentY = doc.y;
+    addField('VIN', vehiculo.vin, xLeft, currentY);
+    addField('NÚMERO DE MOTOR', vehiculo.numeroMotor, xRight, currentY);
+    currentY += 40;
+
+    addField('SERIE', vehiculo.numeroSerie, xLeft, currentY);
+    addField('KILOMETRAJE', `${vehiculo.kilometraje} km`, xRight, currentY);
+    currentY += 40;
+
+    addField('EJES / RUEDAS', `${vehiculo.ejes} / ${vehiculo.ruedas}`, xLeft, currentY);
+    addField('ASIENTOS / PASAJEROS', `${vehiculo.asientos} / ${vehiculo.pasajeros}`, xRight, currentY);
+    currentY += 40;
+
+    addField('CARGA ÚTIL', `${vehiculo.cargaUtil || 0} kg`, xLeft, currentY);
+    addField('PESO BRUTO', `${vehiculo.pesoBruto || 0} kg`, xRight, currentY);
+    currentY += 40;
+
+    // --- DOCUMENTOS ---
+    doc.y = currentY + 10;
+    doc.rect(50, doc.y, 500, 25).fill(boxBgColor);
+    doc
+      .fillColor(primaryColor)
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .text('ESTADO DOCUMENTARIO', 60, doc.y + 7);
+    doc.moveDown(2);
+
+    // Table Header
+    const tableTop = doc.y;
+    const col1 = 50; // Documento
+    const col2 = 350; // Estado
+    const col3 = 450; // Vencimiento
+
+    doc.fillColor(secondaryColor).fontSize(10).font('Helvetica-Bold');
+    doc.text('DOCUMENTO', col1, tableTop);
+    doc.text('ESTADO', col2, tableTop);
+    doc.text('VENCIMIENTO', col3, tableTop);
+
+    doc
+      .strokeColor('#e5e7eb')
+      .lineWidth(1)
+      .moveTo(50, tableTop + 15)
+      .lineTo(550, tableTop + 15)
+      .stroke();
+
+    doc.moveDown(1.5);
+
+    // Flat list of documents
+    const documentos = await this.vehiculoDocumentoRepository.findByVehiculoId(id);
+
+    if (documentos.length === 0) {
+      doc.fillColor(secondaryColor).text('No se encontraron documentos registrados.', 50, doc.y + 10);
+    }
+
+    const mapDocLabel = (tipo: string) => {
+      return tipo.replace(/_/g, ' ').toUpperCase();
+    };
+
+    let docY = doc.y;
+    for (const docInfo of documentos) {
+      const status = docInfo.url ? 'ADJUNTADO' : 'PENDIENTE';
+      const vencimiento = docInfo.fechaExpiracion ? new Date(docInfo.fechaExpiracion).toLocaleDateString() : '-';
+
+      doc.fillColor(primaryColor);
+      doc.text(mapDocLabel(docInfo.tipo), col1, docY);
+
+      doc.fillColor(docInfo.url ? 'green' : 'red');
+      doc.text(status, col2, docY);
+
+      doc.fillColor(primaryColor);
+      doc.text(vencimiento, col3, docY);
+
+      docY += 20;
+
+      // Divider
+      doc
+        .strokeColor('#f3f4f6')
+        .lineWidth(0.5)
+        .moveTo(50, docY - 5)
+        .lineTo(550, docY - 5)
+        .stroke();
+    }
+
+    doc.text('', 50, docY);
+
+    // --- IMAGES DOWNLOAD LOOP (Hidden from PDF) ---
+    // Download vehicle photos
+    if (vehiculo.imagenes && vehiculo.imagenes.length > 0) {
+      for (let i = 0; i < vehiculo.imagenes.length; i++) {
+        let url = vehiculo.imagenes[i];
+        if (url) {
+          // Force JPG for consistency
+          if (url.includes('cloudinary.com') && !url.includes('/f_jpg') && !url.includes('/f_png')) {
+            url = url.replace('/upload/', '/upload/f_jpg/');
+          }
+          try {
+            const response = await fetch(url);
+            if (response.ok) {
+              const buffer = Buffer.from(await response.arrayBuffer());
+              const ext = url.split('.').pop()?.split('?')[0] || 'jpg';
+              archive.append(buffer, { name: `fotos/foto_vehiculo_${i + 1}.${ext}` });
+            }
+          } catch (console) {
+            // Ignore errors
+          }
+        }
+      }
+    }
+
+    // --- DOCUMENTOS DOWNLOAD LOOP ---
+    for (const docInfo of documentos) {
+      if (docInfo.url) {
+        try {
+          const response = await fetch(docInfo.url);
+          if (response.ok) {
+            const buffer = Buffer.from(await response.arrayBuffer());
+            const ext = docInfo.url.split('.').pop()?.split('?')[0] || 'pdf';
+            const docName = `${docInfo.tipo}_${docInfo.nombre || 'doc'}.${ext}`.replace(/[^a-zA-Z0-9._-]/g, '_');
+            archive.append(buffer, { name: `documentos/${docName}` });
+          }
+        } catch (error) {
+          console.error(`Error downloading document ${docInfo.url}`, error);
+        }
+      }
+    }
+
+    // Finalize PDF
+    doc.end();
+
+    // Finalize archive
+    void archive.finalize();
+
+    return { stream: archive, filename };
   }
 
   // ========== MARCAS ==========
@@ -723,9 +943,7 @@ export class VehiculosService {
       const item = items.find((i) => i.label === label);
       if (item) {
         if (key === 'ubicacionBotiquin') {
-          // Si es ubicacion, el valor esta en metadatos (posiblemente 'value' o directo si es string, pero metadatos es obj)
-          // Asumimos que se guardó como { value: '...' } o similar por el DTO
-          document[key] = item.metadatos?.value || item.metadatos?.ubicacionBotiquin || '';
+          document[key] = item.metadatos?.value || item.metadatos?.ubicacionBotiquin || item.valorEsperado || '';
         } else {
           document[key] = {
             label,
@@ -771,6 +989,7 @@ export class VehiculosService {
         return {
           ...modelItem,
           valorEsperado: dtoValue,
+          metadatos: {},
         };
       }
       return modelItem;
@@ -831,7 +1050,6 @@ export class VehiculosService {
       const dtoValue = data[dtoKey];
 
       if (dtoKey === 'ubicacion') {
-        // Ubicacion might be string or undefined
         if (typeof dtoValue === 'string') {
           return {
             ...modelItem,
@@ -839,7 +1057,6 @@ export class VehiculosService {
             metadatos: {},
           };
         }
-        // If undefined, keep model default
         return modelItem;
       }
 
@@ -1041,11 +1258,5 @@ export class VehiculosService {
     const savedItems = await this.vehiculoChecklistDocumentRepository.createItems(itemsWithDocId);
 
     return this.vehiculoChecklistDocumentRepository.findByIdWithItems(docId);
-
-    return {
-      id: docId,
-      version: codigoVersion,
-      items: savedItems,
-    };
   }
 }

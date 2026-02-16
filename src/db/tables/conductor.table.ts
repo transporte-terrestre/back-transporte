@@ -3,16 +3,20 @@ import { sql } from 'drizzle-orm';
 
 export const conductoresClaseLicencia = pgEnum('conductores_clase_licencia', ['A', 'B']);
 
-export const conductoresCategoriaLicencia = pgEnum('conductores_categoria_licencia', ['Uno', 'Dos', 'Tres']);
+export const conductoresCategoriaLicencia = pgEnum('conductores_categoria_licencia', ['I', 'II-a', 'II-b', 'II-c', 'III-a', 'III-b', 'III-c']);
+
+export const conductoresTipoDocumento = pgEnum('conductores_tipo_documento', ['DNI', 'CE', 'PTP', 'PASAPORTE', 'OTRO']);
 
 export const conductores = pgTable(
   'conductores',
   {
     id: serial('id').primaryKey(),
+    tipoDocumento: conductoresTipoDocumento('tipo_documento').default('DNI').notNull(),
     dni: varchar('dni', { length: 20 }).notNull(),
     nombres: varchar('nombres', { length: 100 }).notNull(),
     apellidos: varchar('apellidos', { length: 100 }).notNull(),
     nombreCompleto: varchar('nombre_completo', { length: 200 }).notNull(),
+    nacionalidad: varchar('nacionalidad', { length: 100 }),
     email: varchar('email', { length: 150 }), // Optional for now to avoid migration issues with existing data without defaults
     contrasenia: varchar('contrasenia', { length: 255 }), // Opcional para conductores existentes sin contraseña
     celular: varchar('celular', { length: 20 }),
@@ -47,5 +51,6 @@ export const conductores = pgTable(
 
 export type ConductorClaseLicencia = (typeof conductoresClaseLicencia.enumValues)[number];
 export type ConductorCategoriaLicencia = (typeof conductoresCategoriaLicencia.enumValues)[number];
+export type ConductorTipoDocumento = (typeof conductoresTipoDocumento.enumValues)[number];
 export type Conductor = typeof conductores.$inferSelect;
 export type ConductorDTO = typeof conductores.$inferInsert;

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, or, like, and, gte, lte, count, sql, isNull, getTableColumns } from 'drizzle-orm';
+import { eq, or, like, and, gte, lte, count, sql, isNull, getTableColumns, desc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { mantenimientos, MantenimientoDTO } from '@db/tables/mantenimiento.table';
 import { vehiculos } from '@db/tables/vehiculo.table';
@@ -209,22 +209,68 @@ export class MantenimientoRepository {
     return result[0];
   }
 
-  async getReporteEstadoVehiculos() {
-    const query = sql`
-      SELECT DISTINCT ON (${vehiculos.id})
-        ${vehiculos.id} as id,
-        ${vehiculos.placa} as placa,
-        ${vehiculos.kilometraje} as kilometraje_actual,
-        ${mantenimientos.fechaIngreso} as ultimo_mantenimiento_fecha,
-        ${mantenimientos.kilometraje} as ultimo_mantenimiento_km,
-        ${mantenimientos.kilometrajeProximoMantenimiento} as prox_mantenimiento_km
-      FROM ${vehiculos}
-      LEFT JOIN ${mantenimientos} ON ${vehiculos.id} = ${mantenimientos.vehiculoId} AND ${mantenimientos.eliminadoEn} IS NULL
-      WHERE ${vehiculos.eliminadoEn} IS NULL
-      ORDER BY ${vehiculos.id}, ${mantenimientos.fechaIngreso} DESC
-    `;
+  async getReporteEstadoVehiculos(page: number, limit: number, sort: 'proximos' | 'ultimos' = 'proximos') {
+    const offset = (page - 1) * limit;
 
-    const result = await database.execute(query);
-    return result.rows;
+    const [{ total }] = await database.select({ total: count() }).from(vehiculos).where(isNull(vehiculos.eliminadoEn));
+
+    // Consultar todos los datos necesarios para el reporte y ordenamiento
+    // Se trae todo en memoria porque el ordenamiento depende de campos calculados complejos
+    // y el conjunto de datos de vehículos (hundreds) es manejable en memoria.
+    const rawData = await database
+      .selectDistinctOn([vehiculos.id], {
+        id: vehiculos.id,
+        placa: vehiculos.placa,
+        codigo_interno: vehiculos.codigoInterno,
+        imagenes: vehiculos.imagenes,
+        kilometraje_actual: vehiculos.kilometraje,
+        ultimo_mantenimiento_fecha: mantenimientos.fechaIngreso,
+        ultimo_mantenimiento_km: mantenimientos.kilometraje,
+        prox_mantenimiento_km: mantenimientos.kilometrajeProximoMantenimiento,
+      })
+      .from(vehiculos)
+      .leftJoin(mantenimientos, and(eq(vehiculos.id, mantenimientos.vehiculoId), isNull(mantenimientos.eliminadoEn)))
+      .where(isNull(vehiculos.eliminadoEn))
+      .orderBy(vehiculos.id, desc(mantenimientos.fechaIngreso));
+
+    // Procesar para ordenamiento
+    const processed = rawData.map((row) => {
+      const actual = Number(row.kilometraje_actual || 0);
+      const prox = row.prox_mantenimiento_km ? Number(row.prox_mantenimiento_km) : null;
+      let restante: number | null = null;
+
+      if (prox !== null) {
+        restante = prox - actual;
+      }
+
+      return { ...row, restanteInternal: restante };
+    });
+
+    // Ordenar
+    if (sort === 'proximos') {
+      // Menor kilometraje restante primero (los más urgentes o vencidos)
+      processed.sort((a, b) => {
+        if (a.restanteInternal === null && b.restanteInternal === null) return 0;
+        if (a.restanteInternal === null) return 1; // Nulos al final
+        if (b.restanteInternal === null) return -1;
+        return a.restanteInternal - b.restanteInternal;
+      });
+    } else {
+      // Últimos mantenimientos: Fecha más reciente primero
+      processed.sort((a, b) => {
+        const dateA = a.ultimo_mantenimiento_fecha ? new Date(a.ultimo_mantenimiento_fecha).getTime() : 0;
+        const dateB = b.ultimo_mantenimiento_fecha ? new Date(b.ultimo_mantenimiento_fecha).getTime() : 0;
+        // DESC
+        return dateB - dateA;
+      });
+    }
+
+    // Paginar
+    const data = processed.slice(offset, offset + limit);
+
+    return {
+      data,
+      total: Number(total),
+    };
   }
 }
