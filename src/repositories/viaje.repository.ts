@@ -22,6 +22,11 @@ interface PaginationFilters {
   tipoRuta?: string;
   estado?: string;
   conductoresId?: number[];
+  clienteId?: number;
+  rutaId?: number;
+  vehiculosId?: number[];
+  sentido?: string;
+  turno?: string;
 }
 
 @Injectable()
@@ -60,15 +65,40 @@ export class ViajeRepository {
       conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
-    // Filtrar por conductores
+    if (filters?.clienteId) {
+      conditions.push(eq(viajes.clienteId, filters.clienteId));
+    }
+
+    if (filters?.rutaId) {
+      conditions.push(eq(viajes.rutaId, filters.rutaId));
+    }
+
+    if (filters?.sentido) {
+      conditions.push(eq(sql`${viajes.sentido}::text`, filters.sentido));
+    }
+
+    if (filters?.turno) {
+      conditions.push(eq(sql`${viajes.turno}::text`, filters.turno));
+    }
+
+    // Filtrar por conductores (lista)
     if (filters?.conductoresId && filters.conductoresId.length > 0) {
-      // Subconsulta para obtener los IDs de viajes que tienen estos conductores
       const viajesConConductores = database
         .select({ viajeId: viajeConductores.viajeId })
         .from(viajeConductores)
         .where(inArray(viajeConductores.conductorId, filters.conductoresId));
 
       conditions.push(inArray(viajes.id, viajesConConductores));
+    }
+
+    // Filtrar por vehículos (lista)
+    if (filters?.vehiculosId && filters.vehiculosId.length > 0) {
+      const viajesConVehiculo = database
+        .select({ viajeId: viajeVehiculos.viajeId })
+        .from(viajeVehiculos)
+        .where(inArray(viajeVehiculos.vehiculoId, filters.vehiculosId));
+
+      conditions.push(inArray(viajes.id, viajesConVehiculo));
     }
 
     // Excluir eliminados

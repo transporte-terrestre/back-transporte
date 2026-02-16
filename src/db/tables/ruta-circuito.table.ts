@@ -1,11 +1,4 @@
-import {
-  pgTable,
-  serial,
-  varchar,
-  integer,
-  timestamp,
-  index,
-} from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, integer, timestamp, index, boolean } from 'drizzle-orm/pg-core';
 import { rutas } from './ruta.table';
 
 export const rutaCircuitos = pgTable(
@@ -13,12 +6,9 @@ export const rutaCircuitos = pgTable(
   {
     id: serial('id').primaryKey(),
     nombre: varchar('nombre', { length: 200 }).notNull(),
-    rutaIdaId: integer('ruta_ida_id')
-      .references(() => rutas.id, { onDelete: 'restrict' })
-      .notNull(),
-    rutaVueltaId: integer('ruta_vuelta_id')
-      .references(() => rutas.id, { onDelete: 'restrict' })
-      .notNull(),
+    rutaIdaId: integer('ruta_ida_id').references(() => rutas.id, { onDelete: 'restrict' }),
+    rutaVueltaId: integer('ruta_vuelta_id').references(() => rutas.id, { onDelete: 'restrict' }),
+    esIgual: boolean('es_igual').default(false).notNull(),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
     eliminadoEn: timestamp('eliminado_en'),

@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type, Transform } from 'class-transformer';
-import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn, IsArray } from 'class-validator';
-import { modalidadServicio, viajesTipoRuta, viajesEstado } from '@db/tables/viaje.table';
-import type { ViajeModalidadServicio, ViajeTipoRuta, ViajeEstado } from '@db/tables/viaje.table';
+import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn, IsArray, IsEnum } from 'class-validator';
+import { modalidadServicio, viajesTipoRuta, viajesEstado, viajesSentido, viajesTurno } from '@db/tables/viaje.table';
+import type { ViajeModalidadServicio, ViajeTipoRuta, ViajeEstado, ViajeSentido, ViajeTurno } from '@db/tables/viaje.table';
 import { ViajeListDto } from './viaje-list.dto';
 import { PaginationMetaDto } from '../../../../../common/dto/pagination-meta.dto';
 
@@ -59,7 +59,6 @@ export class ViajePaginationQueryDto {
   @ApiProperty({
     description: 'Filtrar por modalidad de servicio',
     enum: modalidadServicio.enumValues,
-    example: modalidadServicio.enumValues[0],
     required: false,
   })
   @IsOptional()
@@ -69,7 +68,6 @@ export class ViajePaginationQueryDto {
   @ApiProperty({
     description: 'Filtrar por tipo de ruta (ocasional, fija)',
     enum: viajesTipoRuta.enumValues,
-    example: viajesTipoRuta.enumValues[0],
     required: false,
   })
   @IsOptional()
@@ -79,7 +77,6 @@ export class ViajePaginationQueryDto {
   @ApiProperty({
     description: 'Filtrar por estado del viaje',
     enum: viajesEstado.enumValues,
-    example: viajesEstado.enumValues[0],
     required: false,
   })
   @IsOptional()
@@ -96,6 +93,55 @@ export class ViajePaginationQueryDto {
   @IsArray()
   @IsInt({ each: true })
   conductoresId?: number[];
+
+  @ApiProperty({
+    description: 'Filtrar por ID de cliente',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  clienteId?: number;
+
+  @ApiProperty({
+    description: 'Filtrar por ID de ruta',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  rutaId?: number;
+
+  @ApiProperty({
+    description: 'Filtrar por IDs de vehículos (separados por coma)',
+    example: '1,2,3',
+    required: false,
+  })
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.split(',').map(Number) : value))
+  @IsArray()
+  @IsInt({ each: true })
+  vehiculosId?: number[];
+
+  @ApiProperty({
+    description: 'Filtrar por sentido del viaje',
+    enum: viajesSentido.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(viajesSentido.enumValues)
+  sentido?: ViajeSentido;
+
+  @ApiProperty({
+    description: 'Filtrar por turno del viaje',
+    enum: viajesTurno.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(viajesTurno.enumValues)
+  turno?: ViajeTurno;
 }
 
 export class PaginatedViajeResultDto {

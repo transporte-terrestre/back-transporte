@@ -65,6 +65,11 @@ export class ViajesService {
     tipoRuta?: string,
     estado?: string,
     conductoresId?: number[],
+    clienteId?: number,
+    rutaId?: number,
+    vehiculosId?: number[],
+    sentido?: string,
+    turno?: string,
     usuario?: UsuarioAutenticado,
   ): Promise<PaginatedViajeResultDto> {
     // Si el token es de un conductor, filtrar automáticamente solo sus viajes
@@ -78,6 +83,11 @@ export class ViajesService {
       tipoRuta,
       estado,
       conductoresId: conductoresFiltro,
+      clienteId,
+      rutaId,
+      vehiculosId,
+      sentido,
+      turno,
     });
 
     const totalPages = Math.ceil(total / limit);

@@ -55,6 +55,11 @@ export class ViajesController {
       query.tipoRuta,
       query.estado,
       query.conductoresId,
+      query.clienteId,
+      query.rutaId,
+      query.vehiculosId,
+      query.sentido,
+      query.turno,
       req.user,
     );
   }

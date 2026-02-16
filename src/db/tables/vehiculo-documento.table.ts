@@ -12,13 +12,13 @@ export const vehiculoDocumentosTipo = pgEnum('vehiculo_documentos_tipo', [
   'certificado_instalacion_gps',
   'certificado_valor_anadido',
   'constancia_gps',
-  'certificado_tacos',
   'certificado_extintores_hidrostatica',
   'certificado_norma_r66',
   'certificado_laminados_lunas',
   'certificado_carroceria',
   'certificado_caracteristicas_tecnicas',
   'certificado_adas',
+  'revision_gps',
   'otros',
 ]);
 

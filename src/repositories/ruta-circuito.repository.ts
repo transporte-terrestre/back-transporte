@@ -40,21 +40,28 @@ export class RutaCircuitoRepository {
     // Para cada circuito, buscar sus rutas
     const data = await Promise.all(
       rows.map(async (circuito) => {
-        const [rutaIda] = await database
-          .select()
-          .from(rutas)
-          .where(and(eq(rutas.id, circuito.rutaIdaId), isNull(rutas.eliminadoEn)));
+        let rutaIda = null;
+        if (circuito.rutaIdaId) {
+          [rutaIda] = await database
+            .select()
+            .from(rutas)
+            .where(and(eq(rutas.id, circuito.rutaIdaId), isNull(rutas.eliminadoEn)));
+        }
 
-        const [rutaVuelta] = await database
-          .select()
-          .from(rutas)
-          .where(and(eq(rutas.id, circuito.rutaVueltaId), isNull(rutas.eliminadoEn)));
+        let rutaVuelta = null;
+        if (circuito.rutaVueltaId) {
+          [rutaVuelta] = await database
+            .select()
+            .from(rutas)
+            .where(and(eq(rutas.id, circuito.rutaVueltaId), isNull(rutas.eliminadoEn)));
+        }
 
         return {
           id: circuito.id,
           nombre: circuito.nombre,
           rutaIda: rutaIda || null,
           rutaVuelta: rutaVuelta || null,
+          esIgual: circuito.esIgual,
           creadoEn: circuito.creadoEn,
           actualizadoEn: circuito.actualizadoEn,
         };
@@ -77,35 +84,58 @@ export class RutaCircuitoRepository {
 
     const circuito = result[0];
 
-    const [rutaIda] = await database
-      .select()
-      .from(rutas)
-      .where(and(eq(rutas.id, circuito.rutaIdaId), isNull(rutas.eliminadoEn)));
+    let rutaIda = null;
+    if (circuito.rutaIdaId) {
+      [rutaIda] = await database
+        .select()
+        .from(rutas)
+        .where(and(eq(rutas.id, circuito.rutaIdaId), isNull(rutas.eliminadoEn)));
+    }
 
-    const [rutaVuelta] = await database
-      .select()
-      .from(rutas)
-      .where(and(eq(rutas.id, circuito.rutaVueltaId), isNull(rutas.eliminadoEn)));
+    let rutaVuelta = null;
+    if (circuito.rutaVueltaId) {
+      [rutaVuelta] = await database
+        .select()
+        .from(rutas)
+        .where(and(eq(rutas.id, circuito.rutaVueltaId), isNull(rutas.eliminadoEn)));
+    }
 
     return {
       id: circuito.id,
       nombre: circuito.nombre,
       rutaIda: rutaIda || null,
       rutaVuelta: rutaVuelta || null,
+      esIgual: circuito.esIgual,
       creadoEn: circuito.creadoEn,
       actualizadoEn: circuito.actualizadoEn,
     };
   }
 
   async create(data: RutaCircuitoDTO) {
-    const result = await database.insert(rutaCircuitos).values(data).returning();
+    // Es igual solo si AMBAS rutas existen y son el mismo ID
+    const esIgual = data.rutaIdaId && data.rutaVueltaId ? data.rutaIdaId === data.rutaVueltaId : false;
+    const result = await database
+      .insert(rutaCircuitos)
+      .values({ ...data, esIgual })
+      .returning();
     return result[0];
   }
 
   async update(id: number, data: Partial<RutaCircuitoDTO>) {
+    let updateData: any = { ...data };
+
+    if (data.rutaIdaId !== undefined || data.rutaVueltaId !== undefined) {
+      const [current] = await database.select().from(rutaCircuitos).where(eq(rutaCircuitos.id, id));
+      if (current) {
+        const ida = data.rutaIdaId ?? current.rutaIdaId;
+        const vuelta = data.rutaVueltaId ?? current.rutaVueltaId;
+        updateData.esIgual = ida === vuelta;
+      }
+    }
+
     const result = await database
       .update(rutaCircuitos)
-      .set({ ...data, actualizadoEn: new Date() })
+      .set({ ...updateData, actualizadoEn: new Date() })
       .where(eq(rutaCircuitos.id, id))
       .returning();
     return result[0];

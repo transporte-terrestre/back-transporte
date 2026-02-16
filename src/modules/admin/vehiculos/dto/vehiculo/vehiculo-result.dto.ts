@@ -36,7 +36,7 @@ export class DocumentosAgrupadosVehiculoDto implements Record<VehiculoDocumentoT
   constancia_gps: VehiculoDocumentoResultDto[];
 
   @ApiProperty({ type: [VehiculoDocumentoResultDto] })
-  certificado_tacos: VehiculoDocumentoResultDto[];
+  revision_gps: VehiculoDocumentoResultDto[];
 
   @ApiProperty({ type: [VehiculoDocumentoResultDto] })
   certificado_extintores_hidrostatica: VehiculoDocumentoResultDto[];

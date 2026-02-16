@@ -29,13 +29,13 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
       | 'certificado_instalacion_gps'
       | 'certificado_valor_anadido'
       | 'constancia_gps'
-      | 'certificado_tacos'
       | 'certificado_extintores_hidrostatica'
       | 'certificado_norma_r66'
       | 'certificado_laminados_lunas'
       | 'certificado_carroceria'
       | 'certificado_caracteristicas_tecnicas'
       | 'certificado_adas'
+      | 'revision_gps'
       | 'otros';
     nombre: string;
     url: string;
@@ -139,12 +139,12 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
       });
     }
 
-    // Certificado Tacos
+    // Revisión GPS (Antes Certificado Tacos)
     if (i < 8) {
       documentosData.push({
         vehiculoId: vehiculo.id,
-        tipo: 'certificado_tacos',
-        nombre: `Cert_Tacos_${vehiculo.placa}`,
+        tipo: 'revision_gps',
+        nombre: `Revision_GPS_${vehiculo.placa}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-300)),
         fechaExpiracion: formatDate(getDate(150 + i * 20)),

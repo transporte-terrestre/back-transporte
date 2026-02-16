@@ -62,11 +62,11 @@ export class RutaCircuitoCreateDto {
   @IsNotEmpty()
   nombre: string;
 
-  @ApiProperty({ type: RutaCircuitoDetalleDto, description: 'Detalle de la ruta de ida' })
+  @ApiPropertyOptional({ type: RutaCircuitoDetalleDto, description: 'Detalle de la ruta de ida' })
   @ValidateNested()
   @Type(() => RutaCircuitoDetalleDto)
-  @IsNotEmpty()
-  ida: RutaCircuitoDetalleDto;
+  @IsOptional()
+  ida?: RutaCircuitoDetalleDto;
 
   @ApiPropertyOptional({ type: RutaCircuitoDetalleDto, description: 'Detalle de la ruta de vuelta (opcional)' })
   @ValidateNested()
