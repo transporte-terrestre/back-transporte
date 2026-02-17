@@ -1,8 +1,12 @@
-import { Controller, Get, Post, Query, Param, UseGuards, ParseIntPipe, Body } from '@nestjs/common';
+import { Controller, Get, Post, Query, Param, UseGuards, ParseIntPipe, Body, DefaultValuePipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { NotificacionesService } from './notificaciones.service';
 import { NotificacionCreateDto } from './dto/notificacion/notificacion-create.dto';
-import { PaginatedNotificacionResultDto, NotificacionPaginationQueryDto } from './dto/notificacion/notificacion-paginated.dto';
+import {
+  PaginatedNotificacionResultDto,
+  NotificacionPaginationQueryDto,
+  ConductorNotificationQueryDto,
+} from './dto/notificacion/notificacion-paginated.dto';
 import { NotificacionResultDto } from './dto/notificacion/notificacion-result.dto';
 import {
   PreviewVencimientosResultDto,
@@ -35,6 +39,37 @@ export class NotificacionesController {
   @ApiResponse({ status: 200, type: NotificacionResultDto })
   async markAsRead(@Param('id', ParseIntPipe) id: number, @Query('userId', ParseIntPipe) userId: number): Promise<NotificacionResultDto> {
     return await this.notificacionesService.markAsRead(userId, id);
+  }
+
+  // ===================================
+  // ENDPOINTS DE CONDUCTORES
+  // ===================================
+
+  @Post('create-conductor/:conductorId')
+  @ApiOperation({ summary: 'Crear una nueva notificación para un conductor' })
+  @ApiResponse({ status: 201, type: NotificacionResultDto })
+  async createForConductor(
+    @Param('conductorId', ParseIntPipe) conductorId: number,
+    @Body() createDto: NotificacionCreateDto,
+  ): Promise<NotificacionResultDto> {
+    return await this.notificacionesService.createForConductor(conductorId, createDto);
+  }
+
+  @Get('conductor/:conductorId')
+  @ApiOperation({ summary: 'Obtener notificaciones de un conductor' })
+  @ApiResponse({ status: 200, type: PaginatedNotificacionResultDto })
+  async findAllByConductor(@Param('conductorId', ParseIntPipe) conductorId: number, @Query() query: ConductorNotificationQueryDto) {
+    return await this.notificacionesService.findAllByConductor(conductorId, query.page, query.limit);
+  }
+
+  @Post('leido-conductor/:id')
+  @ApiOperation({ summary: 'Marcar notificación como leída para un conductor' })
+  @ApiResponse({ status: 200, type: NotificacionResultDto })
+  async markAsReadByConductor(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('conductorId', ParseIntPipe) conductorId: number,
+  ): Promise<NotificacionResultDto> {
+    return await this.notificacionesService.markAsReadByConductor(conductorId, id);
   }
 
   @Get('vencimientos/test')
@@ -76,6 +111,4 @@ export class NotificacionesController {
   async notifyEachConductor(@Query('diasAnticipacion') diasAnticipacion?: number) {
     return await this.notificacionesService.notifyEachConductor(diasAnticipacion ? Number(diasAnticipacion) : 7);
   }
-
-
 }

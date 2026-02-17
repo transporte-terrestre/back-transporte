@@ -74,6 +74,46 @@ export class NotificacionesService {
     } as NotificacionResultDto;
   }
 
+  async createForConductor(conductorId: number, data: NotificacionCreateDto): Promise<NotificacionResultDto> {
+    const result = await this.notificacionRepository.createForConductor(conductorId, data);
+    return {
+      ...result,
+      leido: false,
+    } as NotificacionResultDto;
+  }
+
+  async findAllByConductor(conductorId: number, page: number = 1, limit: number = 10): Promise<PaginatedNotificacionResultDto> {
+    const { data, total } = await this.notificacionRepository.findAllPaginatedByConductor(conductorId, page, limit);
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
+  async markAsReadByConductor(conductorId: number, notificacionId: number): Promise<NotificacionResultDto> {
+    const result = await this.notificacionRepository.markAsReadByConductor(conductorId, notificacionId);
+    if (!result) {
+      throw new Error('Notificación no encontrada o no asignada al conductor');
+    }
+    const notif = await this.notificacionRepository.findOne(notificacionId);
+    return {
+      ...notif,
+      leido: true,
+    } as NotificacionResultDto;
+  }
+
   async notifyEachAdmin(diasAnticipacion: number = 7): Promise<{ message: string; count: number }> {
     const today = new Date().toISOString().split('T')[0];
     const fechaReferencia = new Date(today);

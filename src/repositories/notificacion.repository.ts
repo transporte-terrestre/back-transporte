@@ -2,18 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
 import { notificaciones } from '@db/tables/notificacion.table';
 import { notificacionesLeidas } from '@db/tables/notificacion-leida.table';
-import { clienteDocumentos } from '@db/tables/cliente-documento.table';
+import { notificacionesConductorLeidas } from '@db/tables/notificacion-conductor-leida.table';
 import { conductorDocumentos } from '@db/tables/conductor-documento.table';
 import { vehiculoDocumentos } from '@db/tables/vehiculo-documento.table';
-import { usuarioDocumentos } from '@db/tables/usuario-documento.table';
-import { clientes } from '@db/tables/cliente.table';
 import { conductores } from '@db/tables/conductor.table';
 import { vehiculos } from '@db/tables/vehiculo.table';
 import { modelos } from '@db/tables/modelo.table';
 import { marcas } from '@db/tables/marca.table';
 import { usuarios } from '@db/tables/usuario.table';
-import { propietarioDocumentos } from '@db/tables/propietario-documento.table';
-import { propietarios } from '@db/tables/propietario.table';
 import { eq, and, desc, isNull, count, sql, lte, isNotNull } from 'drizzle-orm';
 
 // Types for document expiration results
@@ -23,12 +19,6 @@ export interface DocumentoVencimientoBase {
   nombreDocumento: string;
   fechaExpiracion: string;
   diasRestantes: number; // negative = expired, positive = days until expiration
-}
-
-export interface ClienteDocumentoVencimiento extends DocumentoVencimientoBase {
-  entidad: 'cliente';
-  entidadId: number;
-  entidadNombre: string;
 }
 
 export interface ConductorDocumentoVencimiento extends DocumentoVencimientoBase {
@@ -44,24 +34,7 @@ export interface VehiculoDocumentoVencimiento extends DocumentoVencimientoBase {
   entidadNombre: string; // placa - marca modelo
 }
 
-export interface UsuarioDocumentoVencimiento extends DocumentoVencimientoBase {
-  entidad: 'usuario';
-  entidadId: number;
-  entidadNombre: string;
-}
-
-export interface PropietarioDocumentoVencimiento extends DocumentoVencimientoBase {
-  entidad: 'propietario';
-  entidadId: number;
-  entidadNombre: string;
-}
-
-export type DocumentoVencimiento =
-  | ClienteDocumentoVencimiento
-  | ConductorDocumentoVencimiento
-  | VehiculoDocumentoVencimiento
-  | UsuarioDocumentoVencimiento
-  | PropietarioDocumentoVencimiento;
+export type DocumentoVencimiento = ConductorDocumentoVencimiento | VehiculoDocumentoVencimiento;
 
 @Injectable()
 export class NotificacionRepository {
@@ -138,6 +111,75 @@ export class NotificacionRepository {
     return result[0];
   }
 
+  // =============================================
+  // CONDUCTOR METHODS
+  // =============================================
+
+  async createForConductor(conductorId: number, data: any) {
+    return await database.transaction(async (tx) => {
+      // 1. Create the notification itself
+      const [notif] = await tx.insert(notificaciones).values(data).returning();
+
+      // 2. Link it to the conductor
+      await tx.insert(notificacionesConductorLeidas).values({
+        conductorId,
+        notificacionId: notif.id,
+      });
+
+      return notif;
+    });
+  }
+
+  async findAllPaginatedByConductor(conductorId: number, page: number = 1, limit: number = 10) {
+    const offset = (page - 1) * limit;
+
+    const query = database
+      .select({
+        id: notificaciones.id,
+        titulo: notificaciones.titulo,
+        mensaje: notificaciones.mensaje,
+        tipo: notificaciones.tipo,
+        creadoEn: notificaciones.creadoEn,
+        leido: sql<boolean>`CASE WHEN ${notificacionesConductorLeidas.leidoEn} IS NOT NULL THEN true ELSE false END`.as('leido'),
+        leidoEn: notificacionesConductorLeidas.leidoEn,
+      })
+      .from(notificaciones)
+      .innerJoin(notificacionesConductorLeidas, eq(notificaciones.id, notificacionesConductorLeidas.notificacionId))
+      .where(and(eq(notificacionesConductorLeidas.conductorId, conductorId), isNull(notificaciones.eliminadoEn)))
+      .orderBy(desc(notificaciones.creadoEn))
+      .limit(limit)
+      .offset(offset);
+
+    const data = await query;
+
+    const [totalResult] = await database
+      .select({ count: count() })
+      .from(notificacionesConductorLeidas)
+      .innerJoin(notificaciones, eq(notificaciones.id, notificacionesConductorLeidas.notificacionId))
+      .where(and(eq(notificacionesConductorLeidas.conductorId, conductorId), isNull(notificaciones.eliminadoEn)));
+
+    return { data, total: Number(totalResult?.count || 0) };
+  }
+
+  async markAsReadByConductor(conductorId: number, notificacionId: number) {
+    // Check if notification relation exists
+    const [relation] = await database
+      .select()
+      .from(notificacionesConductorLeidas)
+      .where(and(eq(notificacionesConductorLeidas.conductorId, conductorId), eq(notificacionesConductorLeidas.notificacionId, notificacionId)));
+
+    if (!relation) return null;
+    if (relation.leidoEn) return relation; // Already read
+
+    const [updated] = await database
+      .update(notificacionesConductorLeidas)
+      .set({ leidoEn: new Date() })
+      .where(eq(notificacionesConductorLeidas.id, relation.id))
+      .returning();
+
+    return updated;
+  }
+
   async getDocumentosVencimientosPorFecha(fechaReferencia: Date, diasAnticipacion: number = 7): Promise<DocumentoVencimiento[]> {
     // Calculate the limit date (fecha + diasAnticipacion)
     const fechaLimite = new Date(fechaReferencia);
@@ -145,81 +187,15 @@ export class NotificacionRepository {
 
     const results: DocumentoVencimiento[] = [];
 
-    // 1. CLIENTE DOCUMENTS
-    const clienteResults = await this.getClienteDocumentosVencidos(fechaLimite);
-    results.push(...clienteResults);
-
-    // 2. CONDUCTOR DOCUMENTS
+    // 1. CONDUCTOR DOCUMENTS
     const conductorResults = await this.getConductorDocumentosVencidos(fechaLimite);
     results.push(...conductorResults);
 
-    // 3. VEHICULO DOCUMENTS
+    // 2. VEHICULO DOCUMENTS
     const vehiculoResults = await this.getVehiculoDocumentosVencidos(fechaLimite);
     results.push(...vehiculoResults);
 
-    // 4. USUARIO DOCUMENTS
-    const usuarioResults = await this.getUsuarioDocumentosVencidos(fechaLimite);
-    results.push(...usuarioResults);
-
-    // 5. PROPIETARIO DOCUMENTS
-    const propietarioResults = await this.getPropietarioDocumentosVencidos(fechaLimite);
-    results.push(...propietarioResults);
-
     return results;
-  }
-
-  private async getClienteDocumentosVencidos(fechaLimite: Date): Promise<ClienteDocumentoVencimiento[]> {
-    // Subquery: Get max fecha_expiracion per (cliente_id, tipo)
-    const latestDocs = database
-      .select({
-        clienteId: clienteDocumentos.clienteId,
-        tipo: clienteDocumentos.tipo,
-        maxFechaExp: sql<string>`MAX(${clienteDocumentos.fechaExpiracion})`.as('max_fecha_exp'),
-      })
-      .from(clienteDocumentos)
-      .where(isNotNull(clienteDocumentos.fechaExpiracion))
-      .groupBy(clienteDocumentos.clienteId, clienteDocumentos.tipo)
-      .as('latest_docs');
-
-    // Main query: Join to get document details + client info, filter by fecha <= fechaLimite
-    const results = await database
-      .select({
-        documentoId: clienteDocumentos.id,
-        tipoDocumento: clienteDocumentos.tipo,
-        nombreDocumento: clienteDocumentos.nombre,
-        fechaExpiracion: clienteDocumentos.fechaExpiracion,
-        entidadId: clientes.id,
-        entidadNombre: clientes.nombreCompleto,
-      })
-      .from(clienteDocumentos)
-      .innerJoin(clientes, eq(clienteDocumentos.clienteId, clientes.id))
-      .innerJoin(
-        latestDocs,
-        and(
-          eq(clienteDocumentos.clienteId, latestDocs.clienteId),
-          eq(clienteDocumentos.tipo, latestDocs.tipo),
-          eq(clienteDocumentos.fechaExpiracion, latestDocs.maxFechaExp),
-        ),
-      )
-      .where(
-        and(
-          isNull(clientes.eliminadoEn),
-          isNotNull(clienteDocumentos.fechaExpiracion),
-          lte(clienteDocumentos.fechaExpiracion, fechaLimite.toISOString().split('T')[0]),
-        ),
-      )
-      .orderBy(clienteDocumentos.fechaExpiracion);
-
-    return results.map((r) => ({
-      entidad: 'cliente',
-      documentoId: r.documentoId,
-      tipoDocumento: r.tipoDocumento,
-      nombreDocumento: r.nombreDocumento,
-      fechaExpiracion: r.fechaExpiracion!,
-      entidadId: r.entidadId,
-      entidadNombre: r.entidadNombre,
-      diasRestantes: this.calcularDiasRestantes(r.fechaExpiracion!),
-    }));
   }
 
   private async getConductorDocumentosVencidos(fechaLimite: Date): Promise<ConductorDocumentoVencimiento[]> {
@@ -328,110 +304,6 @@ export class NotificacionRepository {
       fechaExpiracion: r.fechaExpiracion!,
       entidadId: r.entidadId,
       entidadNombre: `${r.placa} - ${r.marca} ${r.modelo}`,
-      diasRestantes: this.calcularDiasRestantes(r.fechaExpiracion!),
-    }));
-  }
-
-  private async getUsuarioDocumentosVencidos(fechaLimite: Date): Promise<UsuarioDocumentoVencimiento[]> {
-    const latestDocs = database
-      .select({
-        usuarioId: usuarioDocumentos.usuarioId,
-        tipo: usuarioDocumentos.tipo,
-        maxFechaExp: sql<string>`MAX(${usuarioDocumentos.fechaExpiracion})`.as('max_fecha_exp'),
-      })
-      .from(usuarioDocumentos)
-      .where(isNotNull(usuarioDocumentos.fechaExpiracion))
-      .groupBy(usuarioDocumentos.usuarioId, usuarioDocumentos.tipo)
-      .as('latest_docs');
-
-    const results = await database
-      .select({
-        documentoId: usuarioDocumentos.id,
-        tipoDocumento: usuarioDocumentos.tipo,
-        nombreDocumento: usuarioDocumentos.nombre,
-        fechaExpiracion: usuarioDocumentos.fechaExpiracion,
-        entidadId: usuarios.id,
-        entidadNombre: usuarios.nombreCompleto,
-      })
-      .from(usuarioDocumentos)
-      .innerJoin(usuarios, eq(usuarioDocumentos.usuarioId, usuarios.id))
-      .innerJoin(
-        latestDocs,
-        and(
-          eq(usuarioDocumentos.usuarioId, latestDocs.usuarioId),
-          eq(usuarioDocumentos.tipo, latestDocs.tipo),
-          eq(usuarioDocumentos.fechaExpiracion, latestDocs.maxFechaExp),
-        ),
-      )
-      .where(
-        and(
-          isNull(usuarios.eliminadoEn),
-          isNotNull(usuarioDocumentos.fechaExpiracion),
-          lte(usuarioDocumentos.fechaExpiracion, fechaLimite.toISOString().split('T')[0]),
-        ),
-      )
-      .orderBy(usuarioDocumentos.fechaExpiracion);
-
-    return results.map((r) => ({
-      entidad: 'usuario',
-      documentoId: r.documentoId,
-      tipoDocumento: r.tipoDocumento,
-      nombreDocumento: r.nombreDocumento,
-      fechaExpiracion: r.fechaExpiracion!,
-      entidadId: r.entidadId,
-      entidadNombre: r.entidadNombre,
-      diasRestantes: this.calcularDiasRestantes(r.fechaExpiracion!),
-    }));
-  }
-
-  private async getPropietarioDocumentosVencidos(fechaLimite: Date): Promise<PropietarioDocumentoVencimiento[]> {
-    const latestDocs = database
-      .select({
-        propietarioId: propietarioDocumentos.propietarioId,
-        tipo: propietarioDocumentos.tipo,
-        maxFechaExp: sql<string>`MAX(${propietarioDocumentos.fechaExpiracion})`.as('max_fecha_exp'),
-      })
-      .from(propietarioDocumentos)
-      .where(isNotNull(propietarioDocumentos.fechaExpiracion))
-      .groupBy(propietarioDocumentos.propietarioId, propietarioDocumentos.tipo)
-      .as('latest_docs');
-
-    const results = await database
-      .select({
-        documentoId: propietarioDocumentos.id,
-        tipoDocumento: propietarioDocumentos.tipo,
-        nombreDocumento: propietarioDocumentos.nombre,
-        fechaExpiracion: propietarioDocumentos.fechaExpiracion,
-        entidadId: propietarios.id,
-        entidadNombre: propietarios.nombreCompleto,
-      })
-      .from(propietarioDocumentos)
-      .innerJoin(propietarios, eq(propietarioDocumentos.propietarioId, propietarios.id))
-      .innerJoin(
-        latestDocs,
-        and(
-          eq(propietarioDocumentos.propietarioId, latestDocs.propietarioId),
-          eq(propietarioDocumentos.tipo, latestDocs.tipo),
-          eq(propietarioDocumentos.fechaExpiracion, latestDocs.maxFechaExp),
-        ),
-      )
-      .where(
-        and(
-          isNull(propietarios.eliminadoEn),
-          isNotNull(propietarioDocumentos.fechaExpiracion),
-          lte(propietarioDocumentos.fechaExpiracion, fechaLimite.toISOString().split('T')[0]),
-        ),
-      )
-      .orderBy(propietarioDocumentos.fechaExpiracion);
-
-    return results.map((r) => ({
-      entidad: 'propietario',
-      documentoId: r.documentoId,
-      tipoDocumento: r.tipoDocumento,
-      nombreDocumento: r.nombreDocumento,
-      fechaExpiracion: r.fechaExpiracion!,
-      entidadId: r.entidadId,
-      entidadNombre: r.entidadNombre,
       diasRestantes: this.calcularDiasRestantes(r.fechaExpiracion!),
     }));
   }
