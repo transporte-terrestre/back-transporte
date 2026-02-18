@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { database } from "@db/connection.db";
-import { marcas, MarcaDTO } from "@model/tables/marca.model";
-import { modelos } from "@model/tables/modelo.model";
-import { eq, count, and, gte, lte, ilike, desc, isNull } from "drizzle-orm";
+import { Injectable } from '@nestjs/common';
+import { database } from '@db/connection.db';
+import { marcas, MarcaDTO } from '@db/tables/marca.table';
+import { modelos } from '@db/tables/modelo.table';
+import { eq, count, and, gte, lte, ilike, desc, isNull } from 'drizzle-orm';
 
 interface PaginationFilters {
   search?: string;
@@ -12,11 +12,7 @@ interface PaginationFilters {
 
 @Injectable()
 export class MarcaRepository {
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-    filters?: PaginationFilters
-  ) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
@@ -27,32 +23,19 @@ export class MarcaRepository {
 
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(gte(marcas.creadoEn, new Date(filters.fechaInicio)));
-      conditions.push(
-        lte(marcas.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(marcas.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     } else if (filters?.fechaInicio) {
       conditions.push(gte(marcas.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(
-        lte(marcas.creadoEn, new Date(filters.fechaFin + "T23:59:59"))
-      );
+      conditions.push(lte(marcas.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
     conditions.push(isNull(marcas.eliminadoEn));
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(marcas)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(marcas).where(whereClause);
 
-    const marcasData = await database
-      .select()
-      .from(marcas)
-      .where(whereClause)
-      .orderBy(desc(marcas.creadoEn))
-      .limit(limit)
-      .offset(offset);
+    const marcasData = await database.select().from(marcas).where(whereClause).orderBy(desc(marcas.creadoEn)).limit(limit).offset(offset);
 
     // Fetch modelos for each marca
     const data = await Promise.all(
@@ -60,15 +43,13 @@ export class MarcaRepository {
         const modelosData = await database
           .select({ nombre: modelos.nombre })
           .from(modelos)
-          .where(
-            and(eq(modelos.marcaId, marca.id), isNull(modelos.eliminadoEn))
-          );
+          .where(and(eq(modelos.marcaId, marca.id), isNull(modelos.eliminadoEn)));
 
         return {
           ...marca,
           modelos: modelosData.map((m) => m.nombre),
         };
-      })
+      }),
     );
 
     return {
@@ -100,11 +81,7 @@ export class MarcaRepository {
   }
 
   async delete(id: number) {
-    const result = await database
-      .update(marcas)
-      .set({ eliminadoEn: new Date() })
-      .where(eq(marcas.id, id))
-      .returning();
+    const result = await database.update(marcas).set({ eliminadoEn: new Date() }).where(eq(marcas.id, id)).returning();
     return result[0];
   }
 }

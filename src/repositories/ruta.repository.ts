@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, or, like, and, gte, lte, count, ilike, desc, isNull } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { rutas, RutaDTO } from '@model/tables/ruta.model';
+import { rutas, RutaDTO } from '@db/tables/ruta.table';
 
 interface PaginationFilters {
   search?: string;

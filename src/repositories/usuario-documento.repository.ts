@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { eq, and, gte, lte, count } from "drizzle-orm";
-import { database } from "@db/connection.db";
-import { usuarioDocumentos, UsuarioDocumentoDTO } from "@model/tables/usuario-documento.model";
+import { Injectable } from '@nestjs/common';
+import { eq, and, gte, lte, count } from 'drizzle-orm';
+import { database } from '@db/connection.db';
+import { usuarioDocumentos, UsuarioDocumentoDTO } from '@db/tables/usuario-documento.table';
 
 interface PaginationFilters {
   usuarioId?: number;
@@ -16,11 +16,7 @@ export class UsuarioDocumentoRepository {
     return await database.select().from(usuarioDocumentos);
   }
 
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-    filters?: PaginationFilters,
-  ) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
@@ -33,31 +29,19 @@ export class UsuarioDocumentoRepository {
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
-      conditions.push(
-        gte(usuarioDocumentos.creadoEn, new Date(filters.fechaInicio)),
-      );
-      conditions.push(
-        lte(usuarioDocumentos.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
-      );
+      conditions.push(gte(usuarioDocumentos.creadoEn, new Date(filters.fechaInicio)));
+      conditions.push(lte(usuarioDocumentos.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     } else if (filters?.fechaInicio) {
       conditions.push(gte(usuarioDocumentos.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(lte(usuarioDocumentos.creadoEn, new Date(filters.fechaFin + "T23:59:59")));
+      conditions.push(lte(usuarioDocumentos.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(usuarioDocumentos)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(usuarioDocumentos).where(whereClause);
 
-    const data = await database
-      .select()
-      .from(usuarioDocumentos)
-      .where(whereClause)
-      .limit(limit)
-      .offset(offset);
+    const data = await database.select().from(usuarioDocumentos).where(whereClause).limit(limit).offset(offset);
 
     return {
       data,
@@ -66,18 +50,12 @@ export class UsuarioDocumentoRepository {
   }
 
   async findOne(id: number) {
-    const result = await database
-      .select()
-      .from(usuarioDocumentos)
-      .where(eq(usuarioDocumentos.id, id));
+    const result = await database.select().from(usuarioDocumentos).where(eq(usuarioDocumentos.id, id));
     return result[0];
   }
 
   async findByUsuarioId(usuarioId: number) {
-    return await database
-      .select()
-      .from(usuarioDocumentos)
-      .where(eq(usuarioDocumentos.usuarioId, usuarioId));
+    return await database.select().from(usuarioDocumentos).where(eq(usuarioDocumentos.usuarioId, usuarioId));
   }
 
   async create(data: UsuarioDocumentoDTO) {
@@ -95,10 +73,7 @@ export class UsuarioDocumentoRepository {
   }
 
   async delete(id: number) {
-    const result = await database
-      .delete(usuarioDocumentos)
-      .where(eq(usuarioDocumentos.id, id))
-      .returning();
+    const result = await database.delete(usuarioDocumentos).where(eq(usuarioDocumentos.id, id)).returning();
     return result[0];
   }
 }

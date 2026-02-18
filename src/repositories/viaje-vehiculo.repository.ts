@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { eq, and, count } from "drizzle-orm";
-import { database } from "@db/connection.db";
-import { viajeVehiculos, ViajeVehiculoDTO } from "@model/tables/viaje-vehiculo.model";
+import { Injectable } from '@nestjs/common';
+import { eq, and, count } from 'drizzle-orm';
+import { database } from '@db/connection.db';
+import { viajeVehiculos, ViajeVehiculoDTO } from '@db/tables/viaje-vehiculo.table';
 
 @Injectable()
 export class ViajeVehiculoRepository {
@@ -23,17 +23,9 @@ export class ViajeVehiculoRepository {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(viajeVehiculos)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(viajeVehiculos).where(whereClause);
 
-    const data = await database
-      .select()
-      .from(viajeVehiculos)
-      .where(whereClause)
-      .limit(limit)
-      .offset(offset);
+    const data = await database.select().from(viajeVehiculos).where(whereClause).limit(limit).offset(offset);
 
     return { data, total: Number(total) };
   }

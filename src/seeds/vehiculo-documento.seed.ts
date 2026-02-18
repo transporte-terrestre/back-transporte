@@ -1,43 +1,42 @@
-import { database } from "@db/connection.db";
-import { vehiculoDocumentos } from "@model/tables/vehiculo-documento.model";
-import { Vehiculo } from "@model/tables/vehiculo.model";
-import { getDate } from "@function/date.function";
+import { database } from '@db/connection.db';
+import { vehiculoDocumentos } from '@db/tables/vehiculo-documento.table';
+import { Vehiculo } from '@db/tables/vehiculo.table';
+import { getDate } from '@function/date.function';
 
-const DEFAULT_PDF_URL =
-  "https://res.cloudinary.com/dm0qhq2rk/image/upload/v1766044501/mantenimientos/Ejemplo%20de%20certificado_1766044500270.pdf";
+const DEFAULT_PDF_URL = 'https://res.cloudinary.com/dm0qhq2rk/image/upload/v1766044501/mantenimientos/Ejemplo%20de%20certificado_1766044500270.pdf';
 
 // Helper to format Date to YYYY-MM-DD string
-const formatDate = (date: Date): string => date.toISOString().split("T")[0];
+const formatDate = (date: Date): string => date.toISOString().split('T')[0];
 
 export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
-  console.log("🌱 Seeding vehicle documents...");
+  console.log('🌱 Seeding vehicle documents...');
 
   if (vehiculosData.length === 0) {
-    console.log("⚠️ Skipping vehicle documents (no vehicles)");
+    console.log('⚠️ Skipping vehicle documents (no vehicles)');
     return;
   }
 
   const documentosData: Array<{
     vehiculoId: number;
     tipo:
-      | "tarjeta_propiedad"
-      | "tarjeta_unica_circulacion"
-      | "citv"
-      | "soat"
-      | "poliza"
-      | "certificado_operatividad_factura"
-      | "plan_mantenimiento_historico"
-      | "certificado_instalacion_gps"
-      | "certificado_valor_anadido"
-      | "constancia_gps"
-      | "certificado_tacos"
-      | "certificado_extintores_hidrostatica"
-      | "certificado_norma_r66"
-      | "certificado_laminados_lunas"
-      | "certificado_carroceria"
-      | "certificado_caracteristicas_tecnicas"
-      | "certificado_adas"
-      | "otros";
+      | 'tarjeta_propiedad'
+      | 'tarjeta_unica_circulacion'
+      | 'citv'
+      | 'soat'
+      | 'poliza'
+      | 'certificado_operatividad_factura'
+      | 'plan_mantenimiento_historico'
+      | 'certificado_instalacion_gps'
+      | 'certificado_valor_anadido'
+      | 'constancia_gps'
+      | 'certificado_extintores_hidrostatica'
+      | 'certificado_norma_r66'
+      | 'certificado_laminados_lunas'
+      | 'certificado_carroceria'
+      | 'certificado_caracteristicas_tecnicas'
+      | 'certificado_adas'
+      | 'revision_gps'
+      | 'otros';
     nombre: string;
     url: string;
     fechaExpiracion?: string;
@@ -54,7 +53,7 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
     // Tarjeta de Propiedad - No expiration
     documentosData.push({
       vehiculoId: vehiculo.id,
-      tipo: "tarjeta_propiedad",
+      tipo: 'tarjeta_propiedad',
       nombre: `Tarjeta_Propiedad_${vehiculo.placa}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-1000)),
@@ -63,7 +62,7 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
     // TUC - all valid
     documentosData.push({
       vehiculoId: vehiculo.id,
-      tipo: "tarjeta_unica_circulacion",
+      tipo: 'tarjeta_unica_circulacion',
       nombre: `TUC_${vehiculo.placa}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-350)),
@@ -80,7 +79,7 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
     }
     documentosData.push({
       vehiculoId: vehiculo.id,
-      tipo: "citv",
+      tipo: 'citv',
       nombre: `CITV_${vehiculo.placa}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-180)),
@@ -90,7 +89,7 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
     // SOAT - all valid
     documentosData.push({
       vehiculoId: vehiculo.id,
-      tipo: "soat",
+      tipo: 'soat',
       nombre: `SOAT_${vehiculo.placa}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-300)),
@@ -100,7 +99,7 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
     // Póliza - all valid
     documentosData.push({
       vehiculoId: vehiculo.id,
-      tipo: "poliza",
+      tipo: 'poliza',
       nombre: `Poliza_Seguro_${vehiculo.placa}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-350)),
@@ -111,7 +110,7 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
     if (i < 12) {
       documentosData.push({
         vehiculoId: vehiculo.id,
-        tipo: "certificado_instalacion_gps",
+        tipo: 'certificado_instalacion_gps',
         nombre: `Cert_GPS_${vehiculo.placa}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-400)),
@@ -120,7 +119,7 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
 
       documentosData.push({
         vehiculoId: vehiculo.id,
-        tipo: "constancia_gps",
+        tipo: 'constancia_gps',
         nombre: `Constancia_GPS_${vehiculo.placa}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-200)),
@@ -132,7 +131,7 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
     if (i < 10) {
       documentosData.push({
         vehiculoId: vehiculo.id,
-        tipo: "certificado_extintores_hidrostatica",
+        tipo: 'certificado_extintores_hidrostatica',
         nombre: `Cert_Extintores_${vehiculo.placa}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-365)),
@@ -140,12 +139,12 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
       });
     }
 
-    // Certificado Tacos
+    // Revisión GPS (Antes Certificado Tacos)
     if (i < 8) {
       documentosData.push({
         vehiculoId: vehiculo.id,
-        tipo: "certificado_tacos",
-        nombre: `Cert_Tacos_${vehiculo.placa}`,
+        tipo: 'revision_gps',
+        nombre: `Revision_GPS_${vehiculo.placa}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-300)),
         fechaExpiracion: formatDate(getDate(150 + i * 20)),
@@ -156,7 +155,7 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
     if (i < 6) {
       documentosData.push({
         vehiculoId: vehiculo.id,
-        tipo: "certificado_carroceria",
+        tipo: 'certificado_carroceria',
         nombre: `Cert_Carroceria_${vehiculo.placa}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-500)),
@@ -168,7 +167,7 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
     if (i < 4 && vehiculo.anio >= 2020) {
       documentosData.push({
         vehiculoId: vehiculo.id,
-        tipo: "certificado_adas",
+        tipo: 'certificado_adas',
         nombre: `Cert_ADAS_${vehiculo.placa}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-200)),
@@ -180,7 +179,7 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
     if (i < 10) {
       documentosData.push({
         vehiculoId: vehiculo.id,
-        tipo: "certificado_operatividad_factura",
+        tipo: 'certificado_operatividad_factura',
         nombre: `Cert_Operatividad_${vehiculo.placa}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-180)),
@@ -190,7 +189,5 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
   }
 
   await database.insert(vehiculoDocumentos).values(documentosData);
-  console.log(
-    `✅ ${documentosData.length} vehicle documents inserted (${expiringCount} expiring soon)`
-  );
+  console.log(`✅ ${documentosData.length} vehicle documents inserted (${expiringCount} expiring soon)`);
 }

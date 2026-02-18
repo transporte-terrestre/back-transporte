@@ -1,6 +1,6 @@
 import { database } from '@db/connection.db';
-import { Vehiculo, vehiculos } from '@model/tables/vehiculo.model';
-import { Modelo } from '@model/tables/modelo.model';
+import { Vehiculo, vehiculos } from '@db/tables/vehiculo.table';
+import { Modelo } from '@db/tables/modelo.table';
 import { eq } from 'drizzle-orm';
 
 function randomElement<T>(arr: readonly T[]): T {
@@ -110,10 +110,7 @@ export async function seedVehiculos(modelosData: Modelo[]): Promise<Vehiculo[]> 
     };
   });
 
-  const insertedVehicles = await database
-    .insert(vehiculos)
-    .values(vehiculosValues)
-    .returning();
+  const insertedVehicles = await database.insert(vehiculos).values(vehiculosValues).returning();
 
   // Actualizar con codigoInterno basado en el ID (formato: 00001)
   const updatedVehicles: Vehiculo[] = [];

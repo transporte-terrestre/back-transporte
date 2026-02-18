@@ -1,20 +1,84 @@
-import { Injectable } from "@nestjs/common";
-import { VehiculoRepository } from "@repository/vehiculo.repository";
-import { VehiculoDocumentoRepository } from "@repository/vehiculo-documento.repository";
-import { MarcaRepository } from "@repository/marca.repository";
-import { ModeloRepository } from "@repository/modelo.repository";
-import { VehiculoCreateDto } from "./dto/vehiculo-create.dto";
-import { VehiculoUpdateDto } from "./dto/vehiculo-update.dto";
-import { PaginatedVehiculoResultDto } from "./dto/vehiculo-paginated.dto";
+﻿import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { VehiculoRepository } from '@repository/vehiculo.repository';
+import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repository';
+import { MarcaRepository } from '@repository/marca.repository';
+import { ModeloRepository } from '@repository/modelo.repository';
+import { VehiculoCreateDto } from './dto/vehiculo/vehiculo-create.dto';
+import { VehiculoUpdateDto } from './dto/vehiculo/vehiculo-update.dto';
+import { PaginatedVehiculoResultDto } from './dto/vehiculo/vehiculo-paginated.dto';
+import { VehiculoDocumentoDTO, vehiculoDocumentosTipo } from '@db/tables/vehiculo-documento.table';
+import { DocumentosAgrupadosVehiculoDto } from './dto/vehiculo/vehiculo-result.dto';
 import {
-  VehiculoDocumentoDTO,
-  vehiculoDocumentosTipo,
-} from "@model/tables/vehiculo-documento.model";
-import { DocumentosAgrupadosVehiculoDto } from "./dto/vehiculo-result.dto";
-import { MarcaCreateDto } from "./dto/marca-create.dto";
-import { MarcaUpdateDto } from "./dto/marca-update.dto";
-import { ModeloCreateDto } from "./dto/modelo-create.dto";
-import { ModeloUpdateDto } from "./dto/modelo-update.dto";
+  PaginatedVehiculoEstadoDocumentosResultDto,
+  VehiculoEstadoDocumentosDto,
+  FiltroDocumentoEstado,
+} from './dto/vehiculo/vehiculo-documentos-estado.dto';
+import { MarcaCreateDto } from './dto/marca/marca-create.dto';
+import { MarcaUpdateDto } from './dto/marca/marca-update.dto';
+import { ModeloCreateDto } from './dto/modelo/modelo-create.dto';
+import { ModeloUpdateDto } from './dto/modelo/modelo-update.dto';
+
+import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository';
+import { ChecklistItemRepository } from '@repository/checklist-item.repository';
+
+import { VehiculoChecklistDocumentUpsertDto } from './dto/checklist-document/upsert-checklist-document.dto';
+import { PaginatedVehiculoChecklistHistoryResultDto } from './dto/checklist-document/checklist-history.dto';
+
+import archiver from 'archiver';
+import { Readable } from 'stream';
+import PDFDocument from 'pdfkit';
+
+import { IpercContinuoDto } from './dto/checklist-document/types/payload-iperc-continuo.dto';
+import { LucesEmergenciaAlarmasDto } from './dto/checklist-document/types/payload-luces-emergencia-alarmas.dto';
+import { HojaInspeccionDto } from './dto/checklist-document/types/payload-hoja-inspeccion.dto';
+import { InspeccionDocumentosDto } from './dto/checklist-document/types/payload-inspeccion-documentos.dto';
+import { CinturonesSeguridadDto } from './dto/checklist-document/types/payload-cinturones-seguridad.dto';
+import { InspeccionHerramientasDto } from './dto/checklist-document/types/payload-inspeccion-herramientas.dto';
+import { InspeccionBotiquinesDto } from './dto/checklist-document/types/payload-inspeccion-botiquines.dto';
+import { KitAntiderramesDto } from './dto/checklist-document/types/payload-kit-antiderrames.dto';
+import { RevisionVehiculosDto } from './dto/checklist-document/types/payload-revision-vehiculos.dto';
+
+import { ResultIpercContinuoDto, ResultIpercDocumentDto } from './dto/checklist-document/types/result-iperc-continuo.dto';
+import {
+  ResultLucesEmergenciaAlarmasDto,
+  ResultLucesEmergenciaAlarmasDocumentDto,
+} from './dto/checklist-document/types/result-luces-emergencia-alarmas.dto';
+import { ResultHojaInspeccionDto, ResultHojaDocumentDto } from './dto/checklist-document/types/result-hoja-inspeccion.dto';
+import {
+  ResultInspeccionDocumentosDto,
+  ResultInspeccionDocumentosDocumentDto,
+} from './dto/checklist-document/types/result-inspeccion-documentos.dto';
+import { ResultCinturonesSeguridadDto, ResultCinturonesDocumentDto } from './dto/checklist-document/types/result-cinturones-seguridad.dto';
+import {
+  ResultInspeccionHerramientasDto,
+  ResultInspeccionHerramientasDocumentDto,
+} from './dto/checklist-document/types/result-inspeccion-herramientas.dto';
+import {
+  ResultInspeccionBotiquinesDto,
+  ResultInspeccionBotiquinesDocumentDto,
+} from './dto/checklist-document/types/result-inspeccion-botiquines.dto';
+import { ResultKitAntiderramesDto, ResultKitDocumentDto } from './dto/checklist-document/types/result-kit-antiderrames.dto';
+import { ResultRevisionVehiculosDto, ResultRevisionDocumentDto } from './dto/checklist-document/types/result-revision-vehiculos.dto';
+import { VehiculoChecklistDocument } from 'src/db/tables/vehiculo-checklist-document.table';
+import { VehiculoChecklistDocumentItem } from 'src/db/tables/vehiculo-checklist-document-item.table';
+
+type ChecklistWithItems = VehiculoChecklistDocument & { items: VehiculoChecklistDocumentItem[] };
+
+import { IpercContinuoModel, IpercContinuoMap } from './dto/checklist-document/models/iperc-continuo.model';
+import { LucesEmergenciaAlarmasModel, LucesEmergenciaAlarmasMap } from './dto/checklist-document/models/luces-emergencia-alarmas.model';
+import { HojaInspeccionModel, HojaInspeccionMap, HojaSecciones } from './dto/checklist-document/models/hoja-inspeccion.model';
+import { InspeccionDocumentosModel, InspeccionDocumentosMap, DocumentosSecciones } from './dto/checklist-document/models/inspeccion-documentos.model';
+import { CinturonesSeguridadModel, CinturonesSeguridadMap } from './dto/checklist-document/models/cinturones-seguridad.model';
+import { VehiculoChecklistDocumentViajeTipo } from '@db/tables/vehiculo-checklist-document.table';
+import {
+  InspeccionHerramientasModel,
+  InspeccionHerramientasMap,
+  HerramientasInfo,
+  HerramientasSecciones,
+} from './dto/checklist-document/models/inspeccion-herramientas.model';
+import { InspeccionBotiquinesModel, InspeccionBotiquinesMap } from './dto/checklist-document/models/inspeccion-botiquines.model';
+import { KitAntiderramesModel, KitAntiderramesMap } from './dto/checklist-document/models/kit-antiderrames.model';
+import { RevisionVehiculosModel, RevisionVehiculosMap } from './dto/checklist-document/models/revision-vehiculos.model';
 
 @Injectable()
 export class VehiculosService {
@@ -22,7 +86,9 @@ export class VehiculosService {
     private readonly vehiculoRepository: VehiculoRepository,
     private readonly vehiculoDocumentoRepository: VehiculoDocumentoRepository,
     private readonly marcaRepository: MarcaRepository,
-    private readonly modeloRepository: ModeloRepository
+    private readonly modeloRepository: ModeloRepository,
+    private readonly vehiculoChecklistDocumentRepository: VehiculoChecklistDocumentRepository,
+    private readonly checklistItemRepository: ChecklistItemRepository,
   ) {}
 
   async findAllPaginated(
@@ -31,14 +97,9 @@ export class VehiculosService {
     search?: string,
     fechaInicio?: string,
     fechaFin?: string,
-    estado?: string
+    estado?: string,
   ): Promise<PaginatedVehiculoResultDto> {
-    const { data, total } = await this.vehiculoRepository.findAllPaginated(
-      page,
-      limit,
-      { search, fechaInicio, fechaFin, estado }
-    );
-
+    const { data, total } = await this.vehiculoRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin, estado });
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
@@ -58,20 +119,80 @@ export class VehiculosService {
 
   async findOne(id: number) {
     const vehiculo = await this.vehiculoRepository.findOne(id);
-    const documentos =
-      await this.vehiculoDocumentoRepository.findByVehiculoId(id);
+    const documentos = await this.vehiculoDocumentoRepository.findByVehiculoId(id);
 
-    const documentosAgrupados = vehiculoDocumentosTipo.enumValues.reduce(
-      (acc, tipo) => {
-        acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
-        return acc;
-      },
-      {} as DocumentosAgrupadosVehiculoDto
-    );
+    const documentosAgrupados = vehiculoDocumentosTipo.enumValues.reduce((acc, tipo) => {
+      acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
+      return acc;
+    }, {} as DocumentosAgrupadosVehiculoDto);
 
     return {
       ...vehiculo,
       documentos: documentosAgrupados,
+    };
+  }
+
+  async findAllEstadoDocumentos(
+    page: number = 1,
+    limit: number = 10,
+    filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO,
+  ): Promise<PaginatedVehiculoEstadoDocumentosResultDto> {
+    const { vehiculos, documentosPorVehiculo, total } = await this.vehiculoRepository.findAllWithDocumentos(page, limit, filtro);
+    const hoy = new Date();
+
+    const data: VehiculoEstadoDocumentosDto[] = vehiculos.map((vehiculo) => {
+      const documentos = documentosPorVehiculo[vehiculo.id] || [];
+
+      const calcularEstado = (tipoDocumento: string): string => {
+        const documento = documentos.find((doc) => doc.tipo === tipoDocumento);
+        if (!documento) {
+          return 'nulo';
+        } else if (documento.fechaExpiracion) {
+          const fechaExp = new Date(documento.fechaExpiracion);
+          return fechaExp <= hoy ? 'caducado' : 'activo';
+        } else {
+          return 'activo';
+        }
+      };
+
+      return {
+        id: vehiculo.id,
+        placa: vehiculo.placa,
+        imagenes: vehiculo.imagenes || [],
+        tarjeta_propiedad: calcularEstado('tarjeta_propiedad'),
+        tarjeta_unica_circulacion: calcularEstado('tarjeta_unica_circulacion'),
+        citv: calcularEstado('citv'),
+        soat: calcularEstado('soat'),
+        poliza: calcularEstado('poliza'),
+        certificado_operatividad_factura: calcularEstado('certificado_operatividad_factura'),
+        plan_mantenimiento_historico: calcularEstado('plan_mantenimiento_historico'),
+        certificado_instalacion_gps: calcularEstado('certificado_instalacion_gps'),
+        certificado_valor_anadido: calcularEstado('certificado_valor_anadido'),
+        constancia_gps: calcularEstado('constancia_gps'),
+        certificado_tacos: calcularEstado('certificado_tacos'),
+        certificado_extintores_hidrostatica: calcularEstado('certificado_extintores_hidrostatica'),
+        certificado_norma_r66: calcularEstado('certificado_norma_r66'),
+        certificado_laminados_lunas: calcularEstado('certificado_laminados_lunas'),
+        certificado_carroceria: calcularEstado('certificado_carroceria'),
+        certificado_caracteristicas_tecnicas: calcularEstado('certificado_caracteristicas_tecnicas'),
+        certificado_adas: calcularEstado('certificado_adas'),
+      };
+    });
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
     };
   }
 
@@ -82,7 +203,7 @@ export class VehiculosService {
   }
 
   private generarCodigoInterno(id: number): string {
-    return String(id).padStart(5, "0");
+    return String(id).padStart(5, '0');
   }
 
   update(id: number, data: VehiculoUpdateDto) {
@@ -99,9 +220,7 @@ export class VehiculosService {
   }
 
   async createDocumento(data: Partial<VehiculoDocumentoDTO>) {
-    return await this.vehiculoDocumentoRepository.create(
-      data as VehiculoDocumentoDTO
-    );
+    return await this.vehiculoDocumentoRepository.create(data as VehiculoDocumentoDTO);
   }
 
   async updateDocumento(id: number, data: Partial<VehiculoDocumentoDTO>) {
@@ -114,19 +233,223 @@ export class VehiculosService {
 
   // ========== MARCAS ==========
 
-  async findAllMarcasPaginated(
-    page: number = 1,
-    limit: number = 10,
-    search?: string,
-    fechaInicio?: string,
-    fechaFin?: string
-  ) {
-    const { data, total } = await this.marcaRepository.findAllPaginated(
-      page,
-      limit,
-      { search, fechaInicio, fechaFin }
-    );
+  async downloadVehiculoFiles(id: number): Promise<{ stream: Readable; filename: string }> {
+    const vehiculo = await this.findOne(id);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    const filename = `${vehiculo.placa}_documentos.zip`.replace(/\s+/g, '_');
 
+    // PDF Generator
+    const doc = new PDFDocument({ margin: 50 });
+    archive.append(doc as any, { name: 'ficha_vehiculo.pdf' });
+
+    // --- STYLES ---
+    const primaryColor = '#1a1a1a';
+    const secondaryColor = '#4a4a4a';
+    const accentColor = '#3b82f6';
+    const boxBgColor = '#f3f4f6';
+
+    // --- HEADER ---
+    doc.fillColor(primaryColor).fontSize(20).font('Helvetica-Bold').text('FICHA TÉCNICA DE VEHÍCULO', { align: 'center' });
+    doc.moveDown(0.5);
+
+    // Line separator
+    doc.strokeColor(accentColor).lineWidth(2).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(1.5);
+
+    // --- DATOS DEL VEHICULO ---
+    const xLeft = 50;
+    const xRight = 300;
+
+    // Section Header
+    doc.rect(50, doc.y, 500, 25).fill(boxBgColor);
+    doc
+      .fillColor(primaryColor)
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .text('INFORMACIÓN GENERAL', 60, doc.y + 7);
+    doc.moveDown(2);
+
+    const addField = (label: string, value: any, x: number, y: number) => {
+      doc.fillColor(secondaryColor).fontSize(10).font('Helvetica-Bold').text(label, x, y);
+      doc
+        .fillColor(primaryColor)
+        .fontSize(10)
+        .font('Helvetica')
+        .text(String(value || '-'), x, y + 15);
+    };
+
+    let currentY = doc.y;
+
+    // Row 1
+    addField('PLACA', vehiculo.placa, xLeft, currentY);
+    addField('CÓDIGO INTERNO', vehiculo.codigoInterno, xRight, currentY);
+    currentY += 40;
+
+    // Row 2
+    const marcaModelo = (vehiculo as any).modelo ? `${(vehiculo as any).modelo.marca?.nombre || ''} ${(vehiculo as any).modelo.nombre}` : '-';
+    addField('MARCA / MODELO', marcaModelo, xLeft, currentY);
+    addField('AÑO DE FABRICACIÓN', vehiculo.anio, xRight, currentY);
+    currentY += 40;
+
+    // Row 3
+    addField('COLOR', vehiculo.color, xLeft, currentY);
+    addField('COMBUSTIBLE', vehiculo.combustible, xRight, currentY);
+    currentY += 40;
+
+    // Row 4
+    addField('CARROCERÍA', vehiculo.carroceria, xLeft, currentY);
+    addField('CATEGORÍA', vehiculo.categoria, xRight, currentY);
+    currentY += 40;
+
+    // --- ESPECIFICACIONES TÉCNICAS ---
+    doc.y = currentY + 10;
+    doc.rect(50, doc.y, 500, 25).fill(boxBgColor);
+    doc
+      .fillColor(primaryColor)
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .text('ESPECIFICACIONES TÉCNICAS', 60, doc.y + 7);
+    doc.moveDown(2);
+
+    currentY = doc.y;
+    addField('VIN', vehiculo.vin, xLeft, currentY);
+    addField('NÚMERO DE MOTOR', vehiculo.numeroMotor, xRight, currentY);
+    currentY += 40;
+
+    addField('SERIE', vehiculo.numeroSerie, xLeft, currentY);
+    addField('KILOMETRAJE', `${vehiculo.kilometraje} km`, xRight, currentY);
+    currentY += 40;
+
+    addField('EJES / RUEDAS', `${vehiculo.ejes} / ${vehiculo.ruedas}`, xLeft, currentY);
+    addField('ASIENTOS / PASAJEROS', `${vehiculo.asientos} / ${vehiculo.pasajeros}`, xRight, currentY);
+    currentY += 40;
+
+    addField('CARGA ÚTIL', `${vehiculo.cargaUtil || 0} kg`, xLeft, currentY);
+    addField('PESO BRUTO', `${vehiculo.pesoBruto || 0} kg`, xRight, currentY);
+    currentY += 40;
+
+    // --- DOCUMENTOS ---
+    doc.y = currentY + 10;
+    doc.rect(50, doc.y, 500, 25).fill(boxBgColor);
+    doc
+      .fillColor(primaryColor)
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .text('ESTADO DOCUMENTARIO', 60, doc.y + 7);
+    doc.moveDown(2);
+
+    // Table Header
+    const tableTop = doc.y;
+    const col1 = 50; // Documento
+    const col2 = 350; // Estado
+    const col3 = 450; // Vencimiento
+
+    doc.fillColor(secondaryColor).fontSize(10).font('Helvetica-Bold');
+    doc.text('DOCUMENTO', col1, tableTop);
+    doc.text('ESTADO', col2, tableTop);
+    doc.text('VENCIMIENTO', col3, tableTop);
+
+    doc
+      .strokeColor('#e5e7eb')
+      .lineWidth(1)
+      .moveTo(50, tableTop + 15)
+      .lineTo(550, tableTop + 15)
+      .stroke();
+
+    doc.moveDown(1.5);
+
+    // Flat list of documents
+    const documentos = await this.vehiculoDocumentoRepository.findByVehiculoId(id);
+
+    if (documentos.length === 0) {
+      doc.fillColor(secondaryColor).text('No se encontraron documentos registrados.', 50, doc.y + 10);
+    }
+
+    const mapDocLabel = (tipo: string) => {
+      return tipo.replace(/_/g, ' ').toUpperCase();
+    };
+
+    let docY = doc.y;
+    for (const docInfo of documentos) {
+      const status = docInfo.url ? 'ADJUNTADO' : 'PENDIENTE';
+      const vencimiento = docInfo.fechaExpiracion ? new Date(docInfo.fechaExpiracion).toLocaleDateString() : '-';
+
+      doc.fillColor(primaryColor);
+      doc.text(mapDocLabel(docInfo.tipo), col1, docY);
+
+      doc.fillColor(docInfo.url ? 'green' : 'red');
+      doc.text(status, col2, docY);
+
+      doc.fillColor(primaryColor);
+      doc.text(vencimiento, col3, docY);
+
+      docY += 20;
+
+      // Divider
+      doc
+        .strokeColor('#f3f4f6')
+        .lineWidth(0.5)
+        .moveTo(50, docY - 5)
+        .lineTo(550, docY - 5)
+        .stroke();
+    }
+
+    doc.text('', 50, docY);
+
+    // --- IMAGES DOWNLOAD LOOP (Hidden from PDF) ---
+    // Download vehicle photos
+    if (vehiculo.imagenes && vehiculo.imagenes.length > 0) {
+      for (let i = 0; i < vehiculo.imagenes.length; i++) {
+        let url = vehiculo.imagenes[i];
+        if (url) {
+          // Force JPG for consistency
+          if (url.includes('cloudinary.com') && !url.includes('/f_jpg') && !url.includes('/f_png')) {
+            url = url.replace('/upload/', '/upload/f_jpg/');
+          }
+          try {
+            const response = await fetch(url);
+            if (response.ok) {
+              const buffer = Buffer.from(await response.arrayBuffer());
+              const ext = url.split('.').pop()?.split('?')[0] || 'jpg';
+              archive.append(buffer, { name: `fotos/foto_vehiculo_${i + 1}.${ext}` });
+            }
+          } catch (console) {
+            // Ignore errors
+          }
+        }
+      }
+    }
+
+    // --- DOCUMENTOS DOWNLOAD LOOP ---
+    for (const docInfo of documentos) {
+      if (docInfo.url) {
+        try {
+          const response = await fetch(docInfo.url);
+          if (response.ok) {
+            const buffer = Buffer.from(await response.arrayBuffer());
+            const ext = docInfo.url.split('.').pop()?.split('?')[0] || 'pdf';
+            const docName = `${docInfo.tipo}_${docInfo.nombre || 'doc'}.${ext}`.replace(/[^a-zA-Z0-9._-]/g, '_');
+            archive.append(buffer, { name: `documentos/${docName}` });
+          }
+        } catch (error) {
+          console.error(`Error downloading document ${docInfo.url}`, error);
+        }
+      }
+    }
+
+    // Finalize PDF
+    doc.end();
+
+    // Finalize archive
+    void archive.finalize();
+
+    return { stream: archive, filename };
+  }
+
+  // ========== MARCAS ==========
+
+  async findAllMarcasPaginated(page: number = 1, limit: number = 10, search?: string, fechaInicio?: string, fechaFin?: string) {
+    const { data, total } = await this.marcaRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin });
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
@@ -162,20 +485,8 @@ export class VehiculosService {
 
   // ========== MODELOS ==========
 
-  async findAllModelosPaginated(
-    page: number = 1,
-    limit: number = 10,
-    search?: string,
-    marcaId?: number,
-    fechaInicio?: string,
-    fechaFin?: string
-  ) {
-    const { data, total } = await this.modeloRepository.findAllPaginated(
-      page,
-      limit,
-      { search, marcaId, fechaInicio, fechaFin }
-    );
-
+  async findAllModelosPaginated(page: number = 1, limit: number = 10, search?: string, marcaId?: number, fechaInicio?: string, fechaFin?: string) {
+    const { data, total } = await this.modeloRepository.findAllPaginated(page, limit, { search, marcaId, fechaInicio, fechaFin });
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
@@ -207,5 +518,745 @@ export class VehiculosService {
 
   async deleteModelo(id: number) {
     return await this.modeloRepository.delete(id);
+  }
+
+  // ========== MAPPERS EXPLICITOS (Endpoints Personalizados) ==========
+
+  // 1. IPERC continuo
+  async findIpercContinuo(vehiculoId: number, documentId?: number): Promise<ResultIpercContinuoDto> {
+    const doc = await this.findChecklistVersion(vehiculoId, 'IPERC continuo', documentId);
+    const result = new ResultIpercContinuoDto();
+    result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
+
+    const items = doc?.items || [];
+    const document = new ResultIpercDocumentDto();
+
+    const label = 'Foto IPERC';
+    const item = items.find((i) => i.label === label);
+
+    document.photo = {
+      url: item?.valorEsperado || '',
+    };
+    result.document = document;
+    return result;
+  }
+
+  async upsertIpercContinuo(
+    vehiculoId: number,
+    viajeId: number,
+    data: IpercContinuoDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultIpercContinuoDto> {
+    const nombreChecklist = 'IPERC continuo';
+    let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
+    if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
+
+    const items = IpercContinuoModel.map((modelItem) => {
+      if (modelItem.label === 'Foto IPERC') {
+        return {
+          ...modelItem,
+          valorEsperado: data.photo.url,
+          metadatos: {},
+        };
+      }
+      return modelItem;
+    });
+
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
+    return this.findIpercContinuo(vehiculoId, savedDoc.id);
+  }
+
+  // 2. Hoja de inspeccion
+  async findHojaInspeccion(vehiculoId: number, documentId?: number): Promise<ResultHojaInspeccionDto> {
+    const doc = await this.findChecklistVersion(vehiculoId, 'Hoja de inspeccion', documentId);
+    const result = new ResultHojaInspeccionDto();
+    result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
+
+    const items = doc?.items || [];
+    const keys = Object.keys(HojaInspeccionMap) as (keyof typeof HojaInspeccionMap)[];
+
+    // Inicializar documento y secciones
+    const document = new ResultHojaDocumentDto();
+    for (const secKey of Object.keys(HojaSecciones)) {
+      document[secKey] = {
+        label: HojaSecciones[secKey as keyof typeof HojaSecciones],
+        items: {},
+      };
+    }
+
+    for (const label of keys) {
+      const key = HojaInspeccionMap[label];
+      const item = items.find((i) => i.label === label);
+      const modelItem = HojaInspeccionModel.find((m) => m.label === label); // Obtener metadata fresca del modelo
+
+      if (modelItem) {
+        const sectionKey = modelItem.metadatos?.seccion;
+        if (sectionKey && document[sectionKey]) {
+          document[sectionKey].items[key] = {
+            label,
+            color: modelItem.metadatos?.color,
+            value: item?.valorEsperado === 'true',
+          };
+        }
+      }
+    }
+    result.document = document;
+    return result;
+  }
+
+  async upsertHojaInspeccion(
+    vehiculoId: number,
+    viajeId: number,
+    data: HojaInspeccionDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultHojaInspeccionDto> {
+    const nombreChecklist = 'Hoja de inspeccion';
+    let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
+    if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
+
+    const items = HojaInspeccionModel.map((modelItem) => {
+      const dtoKey = HojaInspeccionMap[modelItem.label];
+      const dtoValue = data[dtoKey];
+
+      if (dtoValue !== undefined) {
+        return {
+          ...modelItem,
+          valorEsperado: String(dtoValue),
+          metadatos: {},
+        };
+      }
+      return modelItem;
+    });
+
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
+    return this.findHojaInspeccion(vehiculoId, savedDoc.id);
+  }
+
+  // 3. Inspeccion de documentos
+  async findInspeccionDocumentos(vehiculoId: number, documentId?: number): Promise<ResultInspeccionDocumentosDto> {
+    const doc = await this.findChecklistVersion(vehiculoId, 'Inspeccion de documentos', documentId);
+    const result = new ResultInspeccionDocumentosDto();
+    result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
+
+    const items = doc?.items || [];
+    const keys = Object.keys(InspeccionDocumentosMap) as (keyof typeof InspeccionDocumentosMap)[];
+
+    const document = new ResultInspeccionDocumentosDocumentDto();
+    for (const secKey of Object.keys(DocumentosSecciones)) {
+      document[secKey] = {
+        label: DocumentosSecciones[secKey as keyof typeof DocumentosSecciones],
+        items: {},
+      };
+    }
+
+    for (const label of keys) {
+      const key = InspeccionDocumentosMap[label];
+      const item = items.find((i) => i.label === label);
+      const modelItem = InspeccionDocumentosModel.find((m) => m.label === label);
+
+      if (modelItem) {
+        const sectionKey = modelItem.metadatos?.seccion;
+        if (sectionKey && document[sectionKey]) {
+          document[sectionKey].items[key] = {
+            label,
+            habilitado: item?.valorEsperado === 'true',
+            fechaVencimiento: item?.metadatos?.fechaVencimiento || null,
+            observacion: item?.metadatos?.observacion || '',
+          };
+        }
+      }
+    }
+    result.document = document;
+    return result;
+  }
+
+  async upsertInspeccionDocumentos(
+    vehiculoId: number,
+    viajeId: number,
+    data: InspeccionDocumentosDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultInspeccionDocumentosDto> {
+    const nombreChecklist = 'Inspeccion de documentos';
+    let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
+    if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
+
+    const items = InspeccionDocumentosModel.map((modelItem) => {
+      const dtoKey = InspeccionDocumentosMap[modelItem.label] as keyof InspeccionDocumentosDto;
+      const dtoValue = data[dtoKey];
+
+      if (dtoKey && dtoValue && typeof dtoValue === 'object' && 'habilitado' in dtoValue) {
+        return {
+          ...modelItem,
+          valorEsperado: String(dtoValue.habilitado),
+          metadatos: {
+            fechaVencimiento: dtoValue.fechaVencimiento,
+            observacion: dtoValue.observacion,
+          },
+        };
+      }
+      return modelItem;
+    });
+
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
+    return this.findInspeccionDocumentos(vehiculoId, savedDoc.id);
+  }
+
+  // 4. Luces de emergencia y alarmas
+  async findLucesChecklist(vehiculoId: number, documentId?: number): Promise<ResultLucesEmergenciaAlarmasDto> {
+    const doc = await this.findChecklistVersion(vehiculoId, 'Luces de emergencia y alarmas', documentId);
+    const result = new ResultLucesEmergenciaAlarmasDto();
+    result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
+
+    const items = doc?.items || [];
+    const keys = Object.keys(LucesEmergenciaAlarmasMap) as (keyof typeof LucesEmergenciaAlarmasMap)[];
+
+    const document = new ResultLucesEmergenciaAlarmasDocumentDto();
+
+    for (const label of keys) {
+      const key = LucesEmergenciaAlarmasMap[label];
+      const item = items.find((i) => i.label === label);
+      if (item) {
+        document[key] = {
+          label,
+          estado: item.valorEsperado === 'true',
+          observacion: item.metadatos?.observacion || '',
+        };
+      } else {
+        document[key] = { label, estado: false, observacion: '' };
+      }
+    }
+    result.document = document;
+    return result;
+  }
+
+  async upsertLucesChecklist(
+    vehiculoId: number,
+    viajeId: number,
+    data: LucesEmergenciaAlarmasDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultLucesEmergenciaAlarmasDto> {
+    const nombreChecklist = 'Luces de emergencia y alarmas';
+    let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
+    if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
+
+    const items = LucesEmergenciaAlarmasModel.map((modelItem) => {
+      const dtoKey = LucesEmergenciaAlarmasMap[modelItem.label] as keyof LucesEmergenciaAlarmasDto;
+      const dtoValue = data[dtoKey];
+      if (dtoValue && typeof dtoValue === 'object') {
+        return {
+          ...modelItem,
+          valorEsperado: String(dtoValue.estado),
+          metadatos: {
+            observacion: dtoValue.observacion,
+          },
+        };
+      }
+      return modelItem;
+    });
+
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
+    return this.findLucesChecklist(vehiculoId, savedDoc.id);
+  }
+
+  // 5. Cinturones de seguridad
+  async findCinturones(vehiculoId: number, documentId?: number): Promise<ResultCinturonesSeguridadDto> {
+    const doc = await this.findChecklistVersion(vehiculoId, 'Cinturones de seguridad', documentId);
+    const result = new ResultCinturonesSeguridadDto();
+    result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
+
+    const items = doc?.items || [];
+    const keys = Object.keys(CinturonesSeguridadMap) as (keyof typeof CinturonesSeguridadMap)[];
+
+    const document = new ResultCinturonesDocumentDto();
+    for (const label of keys) {
+      const key = CinturonesSeguridadMap[label];
+      const item = items.find((i) => i.label === label);
+      if (item) {
+        document[key] = { label, habilitado: item.valorEsperado === 'true', ...item.metadatos };
+      } else {
+        document[key] = { label, habilitado: false, observacion: '' };
+      }
+    }
+    result.document = document;
+    return result;
+  }
+
+  async upsertCinturones(
+    vehiculoId: number,
+    viajeId: number,
+    data: CinturonesSeguridadDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultCinturonesSeguridadDto> {
+    const nombreChecklist = 'Cinturones de seguridad';
+    let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
+    if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
+
+    const items = CinturonesSeguridadModel.map((modelItem) => {
+      const dtoKey = CinturonesSeguridadMap[modelItem.label] as keyof CinturonesSeguridadDto;
+      const dtoValue = data[dtoKey];
+
+      if (dtoKey && dtoValue && typeof dtoValue === 'object' && 'habilitado' in dtoValue) {
+        return {
+          ...modelItem,
+          valorEsperado: String(dtoValue.habilitado),
+          metadatos: {
+            observacion: dtoValue.observacion,
+          },
+        };
+      }
+      return modelItem;
+    });
+
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
+    return this.findCinturones(vehiculoId, savedDoc.id);
+  }
+
+  // 6. Inspeccion de herramientas
+  async findHerramientas(vehiculoId: number, documentId?: number): Promise<ResultInspeccionHerramientasDto> {
+    const doc = await this.findChecklistVersion(vehiculoId, 'Inspeccion de herramientas', documentId);
+    const result = new ResultInspeccionHerramientasDto();
+    result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
+
+    const items = doc?.items || [];
+    const keys = Object.keys(InspeccionHerramientasMap) as (keyof typeof InspeccionHerramientasMap)[];
+
+    const document = new ResultInspeccionHerramientasDocumentDto();
+
+    for (const secKey of Object.keys(HerramientasSecciones)) {
+      if (secKey === 'info') {
+        document[secKey] = HerramientasInfo;
+        continue;
+      }
+      document[secKey] = {};
+
+      for (const label of keys) {
+        const key = InspeccionHerramientasMap[label];
+        const item = items.find((i) => i.label === label);
+        if (item) {
+          document[secKey][key] = {
+            label,
+            estado: item.valorEsperado === 'true',
+            stock: item.metadatos?.stock,
+            criterioA: item.metadatos?.criterioA,
+            criterioB: item.metadatos?.criterioB,
+            criterioC: item.metadatos?.criterioC,
+            criterioD: item.metadatos?.criterioD,
+            criterioE: item.metadatos?.criterioE,
+            criterioF: item.metadatos?.criterioF,
+            accionCorrectiva: item.metadatos?.accionCorrectiva,
+            observacion: item.metadatos?.observacion,
+          };
+        } else {
+          document[secKey][key] = {
+            label,
+            estado: false,
+            stock: '',
+            criterioA: false,
+            criterioB: false,
+            criterioC: false,
+            criterioD: false,
+            criterioE: false,
+            criterioF: false,
+            accionCorrectiva: '',
+            observacion: '',
+          };
+        }
+      }
+    }
+    result.document = document;
+    return result;
+  }
+
+  async upsertHerramientas(
+    vehiculoId: number,
+    viajeId: number,
+    data: InspeccionHerramientasDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultInspeccionHerramientasDto> {
+    const nombreChecklist = 'Inspeccion de herramientas';
+    let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
+    if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
+
+    const items = InspeccionHerramientasModel.map((modelItem) => {
+      const dtoKey = InspeccionHerramientasMap[modelItem.label] as keyof InspeccionHerramientasDto;
+      const dtoValue = data[dtoKey];
+
+      if (dtoValue && typeof dtoValue === 'object') {
+        return {
+          ...modelItem,
+          valorEsperado: String(dtoValue.estado),
+          metadatos: {
+            stock: dtoValue.stock,
+            criterioA: dtoValue.criterioA,
+            criterioB: dtoValue.criterioB,
+            criterioC: dtoValue.criterioC,
+            criterioD: dtoValue.criterioD,
+            criterioE: dtoValue.criterioE,
+            criterioF: dtoValue.criterioF,
+            observacion: dtoValue.observacion,
+            accionCorrectiva: dtoValue.accionCorrectiva,
+          },
+        };
+      }
+      return modelItem;
+    });
+
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
+    return this.findHerramientas(vehiculoId, savedDoc.id);
+  }
+
+  // 7. Inspeccion de botiquines
+  async findBotiquines(vehiculoId: number, documentId?: number): Promise<ResultInspeccionBotiquinesDto> {
+    const doc = await this.findChecklistVersion(vehiculoId, 'Inspeccion de botiquines', documentId);
+    const result = new ResultInspeccionBotiquinesDto();
+    result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
+
+    const items = doc?.items || [];
+    const keys = Object.keys(InspeccionBotiquinesMap) as (keyof typeof InspeccionBotiquinesMap)[];
+
+    const document = new ResultInspeccionBotiquinesDocumentDto();
+    document.ubicacionBotiquin = '';
+
+    for (const label of keys) {
+      const key = InspeccionBotiquinesMap[label];
+      const item = items.find((i) => i.label === label);
+      if (item) {
+        if (key === 'ubicacionBotiquin') {
+          document[key] = item.metadatos?.value || item.metadatos?.ubicacionBotiquin || item.valorEsperado || '';
+        } else {
+          document[key] = {
+            label,
+            habilitado: item.valorEsperado === 'true',
+            fechaVencimiento: item.metadatos?.fechaVencimiento,
+            fechaSalida: item.metadatos?.fechaSalida,
+            fechaReposicion: item.metadatos?.fechaReposicion,
+          };
+        }
+      } else if (key !== 'ubicacionBotiquin') {
+        document[key] = { label, habilitado: false, fechaVencimiento: null, fechaSalida: null, fechaReposicion: null };
+      }
+    }
+    result.document = document;
+    return result;
+  }
+
+  async upsertBotiquines(
+    vehiculoId: number,
+    viajeId: number,
+    data: InspeccionBotiquinesDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultInspeccionBotiquinesDto> {
+    const nombreChecklist = 'Inspeccion de botiquines';
+    let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
+    if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
+
+    const items = InspeccionBotiquinesModel.map((modelItem) => {
+      const dtoKey = InspeccionBotiquinesMap[modelItem.label] as keyof InspeccionBotiquinesDto;
+      const dtoValue = data[dtoKey];
+
+      if (dtoKey && dtoValue && typeof dtoValue === 'object' && 'habilitado' in dtoValue) {
+        return {
+          ...modelItem,
+          valorEsperado: String(dtoValue.habilitado),
+          metadatos: {
+            fechaVencimiento: dtoValue.fechaVencimiento,
+            fechaSalida: dtoValue.fechaSalida,
+            fechaReposicion: dtoValue.fechaReposicion,
+          },
+        };
+      } else if (dtoKey === 'ubicacionBotiquin' && typeof dtoValue === 'string') {
+        return {
+          ...modelItem,
+          valorEsperado: dtoValue,
+          metadatos: {},
+        };
+      }
+      return modelItem;
+    });
+
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
+    return this.findBotiquines(vehiculoId, savedDoc.id);
+  }
+
+  // 8. Kit anti derrames
+  async findKitAntiderrames(vehiculoId: number, documentId?: number): Promise<ResultKitAntiderramesDto> {
+    const doc = await this.findChecklistVersion(vehiculoId, 'Kit anti derrames', documentId);
+    const result = new ResultKitAntiderramesDto();
+    result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
+
+    const items = doc?.items || [];
+    const keys = Object.keys(KitAntiderramesMap) as (keyof typeof KitAntiderramesMap)[];
+
+    const document = new ResultKitDocumentDto();
+    document.ubicacion = '';
+
+    for (const label of keys) {
+      const key = KitAntiderramesMap[label];
+      const item = items.find((i) => i.label === label);
+
+      if (key === 'ubicacion') {
+        document[key] = item?.metadatos?.value || item?.metadatos?.ubicacion || item?.valorEsperado || '';
+      } else {
+        if (item) {
+          document[key] = {
+            label,
+            estado: item.valorEsperado === 'true',
+          };
+        } else {
+          document[key] = { label, estado: false };
+        }
+      }
+    }
+    result.document = document;
+    return result;
+  }
+
+  async upsertKitAntiderrames(
+    vehiculoId: number,
+    viajeId: number,
+    data: KitAntiderramesDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultKitAntiderramesDto> {
+    const nombreChecklist = 'Kit anti derrames';
+    let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
+    if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
+
+    const items = KitAntiderramesModel.map((modelItem) => {
+      const dtoKey = KitAntiderramesMap[modelItem.label] as keyof KitAntiderramesDto;
+      const dtoValue = data[dtoKey];
+
+      if (dtoKey === 'ubicacion') {
+        if (typeof dtoValue === 'string') {
+          return {
+            ...modelItem,
+            valorEsperado: dtoValue,
+            metadatos: {},
+          };
+        }
+        return modelItem;
+      }
+
+      if (dtoValue !== undefined && typeof dtoValue === 'boolean') {
+        return {
+          ...modelItem,
+          valorEsperado: String(dtoValue),
+          metadatos: {},
+        };
+      }
+      return modelItem;
+    });
+
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
+    return this.findKitAntiderrames(vehiculoId, savedDoc.id);
+  }
+
+  // 9. Revision de vehiculos
+  async findRevisionVehiculos(vehiculoId: number, documentId?: number): Promise<ResultRevisionVehiculosDto> {
+    const doc = await this.findChecklistVersion(vehiculoId, 'Revision de vehiculos', documentId);
+    const result = new ResultRevisionVehiculosDto();
+    result.viajeId = doc?.viajeId || null;
+    result.viajeTipo = doc?.viajeTipo || null;
+    result.vehiculoId = doc?.vehiculoId || vehiculoId;
+    result.version = doc?.version || null;
+
+    const items = doc?.items || [];
+    const document = new ResultRevisionDocumentDto();
+
+    const label = 'Foto Revision';
+    const item = items.find((i) => i.label === label);
+
+    document.photo = {
+      url: item?.valorEsperado || '',
+    };
+    result.document = document;
+    return result;
+  }
+
+  async upsertRevisionVehiculos(
+    vehiculoId: number,
+    viajeId: number,
+    data: RevisionVehiculosDto,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ): Promise<ResultRevisionVehiculosDto> {
+    const nombreChecklist = 'Revision de vehiculos';
+    let catalogo = await this.checklistItemRepository.findByNombre(nombreChecklist);
+    if (!catalogo) catalogo = await this.checklistItemRepository.create({ nombre: nombreChecklist, descripcion: 'Generado automaticamente' });
+
+    const items = RevisionVehiculosModel.map((modelItem) => {
+      if (modelItem.label === 'Foto Revision') {
+        return {
+          ...modelItem,
+          valorEsperado: data.photo.url,
+          metadatos: {},
+        };
+      }
+      return modelItem;
+    });
+
+    const savedDoc = await this.createChecklistVersion(vehiculoId, { checklistItemId: catalogo.id, items }, viajeId, viajeTipo);
+    return this.findRevisionVehiculos(vehiculoId, savedDoc.id);
+  }
+
+  async findChecklistHistory(
+    vehiculoId: number,
+    checklistItemId: number,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedVehiculoChecklistHistoryResultDto> {
+    const { data, total } = await this.vehiculoChecklistDocumentRepository.findAllHistoryPaginated(vehiculoId, checklistItemId, page, limit);
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data: data.map((doc) => ({
+        id: doc.id,
+        vehiculoId: doc.vehiculoId,
+        checklistItemId: doc.checklistItemId,
+        version: doc.version,
+        activo: doc.activo,
+        creadoEn: doc.creadoEn,
+        viajeId: doc.viajeId,
+        viajeTipo: doc.viajeTipo,
+      })),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
+  // ========== CHECKLIST CONFIGURACION (VERSIONADO) ==========
+
+  private async findChecklistVersion(vehiculoId: number, name: string, documentId?: number): Promise<ChecklistWithItems | undefined> {
+    const catalogo = await this.checklistItemRepository.findByNombre(name);
+    if (!catalogo) throw new NotFoundException(`El checklist '${name}' no existe`);
+
+    let doc: ChecklistWithItems | undefined;
+    if (documentId) {
+      doc = await this.vehiculoChecklistDocumentRepository.findByIdWithItems(documentId);
+      if (!doc) throw new NotFoundException('Documento no encontrado');
+      if (doc.checklistItemId !== catalogo.id) throw new ConflictException('El documento no corresponde al tipo de checklist solicitado');
+      if (doc.vehiculoId !== vehiculoId) throw new ConflictException('El documento no pertenece al vehículo solicitado');
+    } else {
+      // Lógica de prioridad: Salida > Llegada para el último contexto (Viaje)
+      const latest = await this.vehiculoChecklistDocumentRepository.findActiveOrLatestWithItems(vehiculoId, catalogo.id);
+
+      if (latest && latest.viajeId) {
+        // Buscamos si existe 'salida' para este viaje
+        const salida = await this.vehiculoChecklistDocumentRepository.findByViajeAndTipo(vehiculoId, catalogo.id, latest.viajeId, 'salida');
+        if (salida) {
+          doc = await this.vehiculoChecklistDocumentRepository.findByIdWithItems(salida.id);
+        } else {
+          // Si no hay salida, buscamos llegada (aunque latest sea llegada)
+          const llegada = await this.vehiculoChecklistDocumentRepository.findByViajeAndTipo(vehiculoId, catalogo.id, latest.viajeId, 'llegada');
+          if (llegada) {
+            doc = await this.vehiculoChecklistDocumentRepository.findByIdWithItems(llegada.id);
+          } else {
+            doc = latest;
+          }
+        }
+      } else {
+        doc = latest;
+      }
+    }
+
+    return doc;
+  }
+
+  async createChecklistVersion(
+    vehiculoId: number,
+    data: VehiculoChecklistDocumentUpsertDto,
+    viajeId?: number,
+    viajeTipo?: VehiculoChecklistDocumentViajeTipo,
+  ) {
+    const catalogo = await this.checklistItemRepository.findOne(data.checklistItemId);
+    if (!catalogo) throw new NotFoundException('El tipo de checklist no existe');
+
+    const vehiculoPart = String(vehiculoId).padStart(5, '0');
+    const itemPart = String(data.checklistItemId).padStart(3, '0');
+    const viajePart = viajeId ? String(viajeId).padStart(10, '0') : '0000000000';
+    const tipoPart = viajeTipo ? `_${viajeTipo}` : '';
+    const codigoVersion = `v${vehiculoPart}_${itemPart}_${viajePart}${tipoPart}`;
+
+    const existingDoc = await this.vehiculoChecklistDocumentRepository.findByVersion(vehiculoId, data.checklistItemId, codigoVersion);
+    const activeDoc = await this.vehiculoChecklistDocumentRepository.findActive(vehiculoId, data.checklistItemId);
+
+    let canActivate = true;
+    if (activeDoc && activeDoc.viajeId && viajeId) {
+      if (activeDoc.viajeId === viajeId) {
+        if (viajeTipo === 'salida' && activeDoc.viajeTipo === 'llegada') {
+          canActivate = false;
+        }
+      } else {
+        const activeDate = await this.vehiculoChecklistDocumentRepository.getViajeDate(activeDoc.viajeId);
+        const currentDate = await this.vehiculoChecklistDocumentRepository.getViajeDate(viajeId);
+
+        if (activeDate && currentDate && activeDate > currentDate) {
+          canActivate = false;
+        }
+      }
+    }
+
+    if (canActivate && activeDoc && (!existingDoc || existingDoc.id !== activeDoc.id)) {
+      await this.vehiculoChecklistDocumentRepository.deactivate(activeDoc.id);
+    }
+
+    let docId;
+    if (existingDoc) {
+      docId = existingDoc.id;
+      await this.vehiculoChecklistDocumentRepository.deleteItems(docId);
+      if (!existingDoc.activo && canActivate) {
+        await this.vehiculoChecklistDocumentRepository.activate(docId);
+      }
+    } else {
+      const newDoc = await this.vehiculoChecklistDocumentRepository.create({
+        vehiculoId,
+        checklistItemId: data.checklistItemId,
+        version: codigoVersion,
+        activo: canActivate,
+        viajeId: viajeId || null,
+        viajeTipo: viajeTipo || 'salida',
+      });
+      docId = newDoc.id;
+    }
+
+    const itemsWithDocId = data.items.map((item) => ({
+      ...item,
+      vehiculoChecklistDocumentId: docId,
+    }));
+
+    const savedItems = await this.vehiculoChecklistDocumentRepository.createItems(itemsWithDocId);
+
+    return this.vehiculoChecklistDocumentRepository.findByIdWithItems(docId);
   }
 }

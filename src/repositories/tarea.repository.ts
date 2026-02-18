@@ -1,16 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import {
-  eq,
-  ilike,
-  or,
-  count,
-  getTableColumns,
-  isNull,
-  and,
-  like,
-} from "drizzle-orm";
-import { database } from "@db/connection.db";
-import { tareas, TareaDTO } from "@model/tables/tarea.model";
+import { Injectable } from '@nestjs/common';
+import { eq, ilike, or, count, getTableColumns, isNull, and, like } from 'drizzle-orm';
+import { database } from '@db/connection.db';
+import { tareas, TareaDTO } from '@db/tables/tarea.table';
 
 interface PaginationFilters {
   search?: string;
@@ -19,44 +10,23 @@ interface PaginationFilters {
 @Injectable()
 export class TareaRepository {
   async findAll() {
-    return await database
-      .select()
-      .from(tareas)
-      .where(isNull(tareas.eliminadoEn));
+    return await database.select().from(tareas).where(isNull(tareas.eliminadoEn));
   }
 
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-    filters?: PaginationFilters
-  ) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
     const offset = (page - 1) * limit;
     const conditions = [isNull(tareas.eliminadoEn)];
 
     if (filters?.search) {
       const searchTerm = `%${filters.search}%`;
-      conditions.push(
-        or(
-          like(tareas.codigo, searchTerm),
-          ilike(tareas.nombreTrabajo, searchTerm),
-          ilike(tareas.grupo, searchTerm)
-        )!
-      );
+      conditions.push(or(like(tareas.codigo, searchTerm), ilike(tareas.nombreTrabajo, searchTerm), ilike(tareas.grupo, searchTerm))!);
     }
 
     const whereClause = and(...conditions);
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(tareas)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(tareas).where(whereClause);
 
-    const data = await database
-      .select(getTableColumns(tareas))
-      .from(tareas)
-      .where(whereClause)
-      .limit(limit)
-      .offset(offset);
+    const data = await database.select(getTableColumns(tareas)).from(tareas).where(whereClause).limit(limit).offset(offset);
 
     return {
       data,
@@ -89,11 +59,7 @@ export class TareaRepository {
 
   async delete(id: number) {
     // Eliminación lógica
-    const result = await database
-      .update(tareas)
-      .set({ eliminadoEn: new Date() })
-      .where(eq(tareas.id, id))
-      .returning();
+    const result = await database.update(tareas).set({ eliminadoEn: new Date() }).where(eq(tareas.id, id)).returning();
     return result[0];
   }
 }

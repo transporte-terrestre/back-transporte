@@ -1,21 +1,26 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { MantenimientosService } from './mantenimientos.service';
-import { MantenimientoCreateDto } from './dto/mantenimiento-create.dto';
-import { MantenimientoUpdateDto } from './dto/mantenimiento-update.dto';
-import { MantenimientoResultDto } from './dto/mantenimiento-result.dto';
+import { MantenimientoCreateDto } from './dto/mantenimiento/mantenimiento-create.dto';
+import { MantenimientoUpdateDto } from './dto/mantenimiento/mantenimiento-update.dto';
+import { MantenimientoResultDto } from './dto/mantenimiento/mantenimiento-result.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { MantenimientoPaginationQueryDto, PaginatedMantenimientoResultDto } from './dto/mantenimiento-paginated.dto';
-import { MantenimientoTareaCreateDto } from './dto/mantenimiento-tarea-create.dto';
-import { MantenimientoTareaUpdateDto } from './dto/mantenimiento-tarea-update.dto';
-import { MantenimientoTareaResultDto } from './dto/mantenimiento-tarea-result.dto';
-import { MantenimientoDocumentoCreateDto } from './dto/mantenimiento-documento-create.dto';
-import { MantenimientoDocumentoUpdateDto } from './dto/mantenimiento-documento-update.dto';
-import { MantenimientoDocumentoResultDto } from './dto/mantenimiento-documento-result.dto';
-import { TareaCreateDto } from './dto/tarea-create.dto';
-import { TareaUpdateDto } from './dto/tarea-update.dto';
-import { TareaResultDto } from './dto/tarea-result.dto';
-import { TareaPaginationQueryDto, PaginatedTareaResultDto } from './dto/tarea-paginated.dto';
+import { MantenimientoPaginationQueryDto, PaginatedMantenimientoResultDto } from './dto/mantenimiento/mantenimiento-paginated.dto';
+import { MantenimientoTareaCreateDto } from './dto/mantenimiento-tarea/mantenimiento-tarea-create.dto';
+import { MantenimientoTareaUpdateDto } from './dto/mantenimiento-tarea/mantenimiento-tarea-update.dto';
+import { MantenimientoTareaResultDto } from './dto/mantenimiento-tarea/mantenimiento-tarea-result.dto';
+import { MantenimientoDocumentoCreateDto } from './dto/mantenimiento-documento/mantenimiento-documento-create.dto';
+import { MantenimientoDocumentoUpdateDto } from './dto/mantenimiento-documento/mantenimiento-documento-update.dto';
+import { MantenimientoDocumentoResultDto } from './dto/mantenimiento-documento/mantenimiento-documento-result.dto';
+import { TareaCreateDto } from './dto/tarea/tarea-create.dto';
+import { TareaUpdateDto } from './dto/tarea/tarea-update.dto';
+import { TareaResultDto } from './dto/tarea/tarea-result.dto';
+import { TareaPaginationQueryDto, PaginatedTareaResultDto } from './dto/tarea/tarea-paginated.dto';
+import {
+  MantenimientoReporteEstadoDto,
+  PaginatedReporteEstadoResultDto,
+  ReporteEstadoPaginationQueryDto,
+} from './dto/mantenimiento/mantenimiento-reporte-estado.dto';
 
 @ApiTags('mantenimientos')
 @ApiBearerAuth()
@@ -176,5 +181,13 @@ export class MantenimientosController {
   @ApiResponse({ status: 200, type: MantenimientoDocumentoResultDto })
   deleteDocumento(@Param('id') id: string) {
     return this.mantenimientosService.deleteDocumento(+id);
+  }
+
+  // ========== REPORTE DE ESTADO ==========
+  @Get('reporte-estado-vehiculos')
+  @ApiOperation({ summary: 'Obtener reporte de estado de mantenimiento de vehículos' })
+  @ApiResponse({ status: 200, type: PaginatedReporteEstadoResultDto })
+  getReporteEstadoVehiculos(@Query() query: ReporteEstadoPaginationQueryDto) {
+    return this.mantenimientosService.getReporteEstadoVehiculos(query.page, query.limit, query.sort);
   }
 }

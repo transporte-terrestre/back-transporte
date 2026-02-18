@@ -1,19 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { MantenimientoRepository } from '@repository/mantenimiento.repository';
 import { TareaRepository } from '@repository/tarea.repository';
-import { MantenimientoCreateDto } from './dto/mantenimiento-create.dto';
-import { MantenimientoUpdateDto } from './dto/mantenimiento-update.dto';
-import { PaginatedMantenimientoResultDto } from './dto/mantenimiento-paginated.dto';
-import { PaginatedTareaResultDto } from './dto/tarea-paginated.dto';
-import { TareaCreateDto } from './dto/tarea-create.dto';
-import { TareaUpdateDto } from './dto/tarea-update.dto';
-import { MantenimientoTareaCreateDto } from './dto/mantenimiento-tarea-create.dto';
-import { MantenimientoTareaUpdateDto } from './dto/mantenimiento-tarea-update.dto';
-import { MantenimientoDocumentoCreateDto } from './dto/mantenimiento-documento-create.dto';
-import { MantenimientoDocumentoUpdateDto } from './dto/mantenimiento-documento-update.dto';
+import { MantenimientoCreateDto } from './dto/mantenimiento/mantenimiento-create.dto';
+import { MantenimientoUpdateDto } from './dto/mantenimiento/mantenimiento-update.dto';
+import { PaginatedMantenimientoResultDto } from './dto/mantenimiento/mantenimiento-paginated.dto';
+import { PaginatedTareaResultDto } from './dto/tarea/tarea-paginated.dto';
+import { TareaCreateDto } from './dto/tarea/tarea-create.dto';
+import { TareaUpdateDto } from './dto/tarea/tarea-update.dto';
+import { MantenimientoTareaCreateDto } from './dto/mantenimiento-tarea/mantenimiento-tarea-create.dto';
+import { MantenimientoTareaUpdateDto } from './dto/mantenimiento-tarea/mantenimiento-tarea-update.dto';
+import { MantenimientoDocumentoCreateDto } from './dto/mantenimiento-documento/mantenimiento-documento-create.dto';
+import { MantenimientoDocumentoUpdateDto } from './dto/mantenimiento-documento/mantenimiento-documento-update.dto';
+import { MantenimientoReporteEstadoDto, PaginatedReporteEstadoResultDto } from './dto/mantenimiento/mantenimiento-reporte-estado.dto';
 
-import { MantenimientoDocumentoDTO, mantenimientoDocumentosTipo } from '@model/tables/mantenimiento-documento.model';
-import { DocumentosAgrupadosMantenimientoDto } from './dto/mantenimiento-result.dto';
+import { MantenimientoDocumentoDTO, mantenimientoDocumentosTipo } from '@db/tables/mantenimiento-documento.table';
+import { DocumentosAgrupadosMantenimientoDto } from './dto/mantenimiento/mantenimiento-result.dto';
 
 @Injectable()
 export class MantenimientosService {
@@ -32,6 +33,64 @@ export class MantenimientosService {
     estado?: string,
   ): Promise<PaginatedMantenimientoResultDto> {
     const { data, total } = await this.mantenimientoRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin, tipo, estado });
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
+  async getReporteEstadoVehiculos(
+    page: number = 1,
+    limit: number = 10,
+    sort: 'proximos' | 'ultimos' = 'proximos',
+  ): Promise<PaginatedReporteEstadoResultDto> {
+    const { data: rawData, total } = await this.mantenimientoRepository.getReporteEstadoVehiculos(page, limit, sort);
+
+    const data = rawData.map((row) => {
+      const actual = Number(row.kilometraje_actual || 0);
+      const prox = row.prox_mantenimiento_km ? Number(row.prox_mantenimiento_km) : null;
+
+      let restante = null;
+      let estado = 'n/a';
+
+      if (prox !== null) {
+        restante = prox - actual;
+        if (restante > 1000) {
+          estado = 'verde';
+        } else if (restante > 0) {
+          estado = 'amarillo';
+        } else {
+          // restante <= 0
+          estado = 'rojo';
+        }
+      }
+
+      return {
+        vehiculoId: row.id,
+        placa: row.placa,
+        codigoInterno: row.codigo_interno || null,
+        imagenes: row.imagenes,
+        kilometrajeActual: actual,
+        ultimoMantenimientoFecha: row.ultimo_mantenimiento_fecha ? new Date(row.ultimo_mantenimiento_fecha) : null,
+        ultimoMantenimientoKm: row.ultimo_mantenimiento_km ? Number(row.ultimo_mantenimiento_km) : null,
+        proxMantenimientoKm: prox,
+        kilometrajeRestante: restante,
+        restante: restante,
+        estado: estado,
+      };
+    });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;

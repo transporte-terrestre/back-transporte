@@ -1,14 +1,14 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PropietariosService } from './propietarios.service';
-import { PropietarioCreateDto } from './dto/propietario-create.dto';
-import { PropietarioUpdateDto } from './dto/propietario-update.dto';
-import { PropietarioResultDto } from './dto/propietario-result.dto';
+import { PropietarioCreateDto } from './dto/propietario/propietario-create.dto';
+import { PropietarioUpdateDto } from './dto/propietario/propietario-update.dto';
+import { PropietarioResultDto } from './dto/propietario/propietario-result.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { PropietarioPaginationQueryDto, PaginatedPropietarioResultDto } from './dto/propietario-paginated.dto';
-import { PropietarioDocumentoCreateDto } from './dto/propietario-documento-create.dto';
-import { PropietarioDocumentoUpdateDto } from './dto/propietario-documento-update.dto';
-import { PropietarioDocumentoResultDto } from './dto/propietario-documento-result.dto';
+import { PropietarioPaginationQueryDto, PaginatedPropietarioResultDto } from './dto/propietario/propietario-paginated.dto';
+import { PropietarioDocumentoCreateDto } from './dto/propietario-documento/propietario-documento-create.dto';
+import { PropietarioDocumentoUpdateDto } from './dto/propietario-documento/propietario-documento-update.dto';
+import { PropietarioDocumentoResultDto } from './dto/propietario-documento/propietario-documento-result.dto';
 
 @ApiTags('propietarios')
 @ApiBearerAuth()

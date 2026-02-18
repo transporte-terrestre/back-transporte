@@ -1,31 +1,24 @@
-import { database } from "@db/connection.db";
-import { clienteDocumentos } from "@model/tables/cliente-documento.model";
-import { Cliente } from "@model/tables/cliente.model";
-import { getDate } from "@function/date.function";
+import { database } from '@db/connection.db';
+import { clienteDocumentos } from '@db/tables/cliente-documento.table';
+import { Cliente } from '@db/tables/cliente.table';
+import { getDate } from '@function/date.function';
 
-const DEFAULT_PDF_URL =
-  "https://res.cloudinary.com/dm0qhq2rk/image/upload/v1766044501/mantenimientos/Ejemplo%20de%20certificado_1766044500270.pdf";
+const DEFAULT_PDF_URL = 'https://res.cloudinary.com/dm0qhq2rk/image/upload/v1766044501/mantenimientos/Ejemplo%20de%20certificado_1766044500270.pdf';
 
 // Helper to format Date to YYYY-MM-DD string
-const formatDate = (date: Date): string => date.toISOString().split("T")[0];
+const formatDate = (date: Date): string => date.toISOString().split('T')[0];
 
 export async function seedClienteDocumentos(clientesData: Cliente[]) {
-  console.log("🌱 Seeding client documents...");
+  console.log('🌱 Seeding client documents...');
 
   if (clientesData.length === 0) {
-    console.log("⚠️ Skipping client documents (no clients)");
+    console.log('⚠️ Skipping client documents (no clients)');
     return;
   }
 
   const documentosData: Array<{
     clienteId: number;
-    tipo:
-      | "dni"
-      | "ruc"
-      | "contrato"
-      | "carta_compromiso"
-      | "ficha_ruc"
-      | "otros";
+    tipo: 'dni' | 'ruc' | 'contrato' | 'carta_compromiso' | 'ficha_ruc' | 'otros';
     nombre: string;
     url: string;
     fechaExpiracion?: string;
@@ -42,7 +35,7 @@ export async function seedClienteDocumentos(clientesData: Cliente[]) {
     // DNI - no expiration
     documentosData.push({
       clienteId: cliente.id,
-      tipo: "dni",
+      tipo: 'dni',
       nombre: `DNI_${cliente.nombreCompleto}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-365)),
@@ -58,7 +51,7 @@ export async function seedClienteDocumentos(clientesData: Cliente[]) {
     }
     documentosData.push({
       clienteId: cliente.id,
-      tipo: "contrato",
+      tipo: 'contrato',
       nombre: `Contrato_Servicio_${cliente.nombreCompleto}`,
       url: DEFAULT_PDF_URL,
       fechaEmision: formatDate(getDate(-180)),
@@ -69,7 +62,7 @@ export async function seedClienteDocumentos(clientesData: Cliente[]) {
     if (i < 6) {
       documentosData.push({
         clienteId: cliente.id,
-        tipo: "carta_compromiso",
+        tipo: 'carta_compromiso',
         nombre: `Carta_Compromiso_${cliente.nombreCompleto}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-90)),
@@ -81,7 +74,7 @@ export async function seedClienteDocumentos(clientesData: Cliente[]) {
     if (cliente.ruc) {
       documentosData.push({
         clienteId: cliente.id,
-        tipo: "ficha_ruc",
+        tipo: 'ficha_ruc',
         nombre: `Ficha_RUC_${cliente.ruc}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-60)),
@@ -91,7 +84,5 @@ export async function seedClienteDocumentos(clientesData: Cliente[]) {
   }
 
   await database.insert(clienteDocumentos).values(documentosData);
-  console.log(
-    `✅ ${documentosData.length} client documents inserted (${expiringCount} expiring soon)`
-  );
+  console.log(`✅ ${documentosData.length} client documents inserted (${expiringCount} expiring soon)`);
 }

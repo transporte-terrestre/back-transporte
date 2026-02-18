@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { eq, and, gte, lte, count } from "drizzle-orm";
-import { database } from "@db/connection.db";
-import { conductorDocumentos, ConductorDocumentoDTO } from "@model/tables/conductor-documento.model";
+import { Injectable } from '@nestjs/common';
+import { eq, and, gte, lte, count } from 'drizzle-orm';
+import { database } from '@db/connection.db';
+import { conductorDocumentos, ConductorDocumentoDTO } from '@db/tables/conductor-documento.table';
 
 interface PaginationFilters {
   conductorId?: number;
@@ -16,11 +16,7 @@ export class ConductorDocumentoRepository {
     return await database.select().from(conductorDocumentos);
   }
 
-  async findAllPaginated(
-    page: number = 1,
-    limit: number = 10,
-    filters?: PaginationFilters,
-  ) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
@@ -33,31 +29,19 @@ export class ConductorDocumentoRepository {
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
-      conditions.push(
-        gte(conductorDocumentos.creadoEn, new Date(filters.fechaInicio)),
-      );
-      conditions.push(
-        lte(conductorDocumentos.creadoEn, new Date(filters.fechaFin + "T23:59:59")),
-      );
+      conditions.push(gte(conductorDocumentos.creadoEn, new Date(filters.fechaInicio)));
+      conditions.push(lte(conductorDocumentos.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     } else if (filters?.fechaInicio) {
       conditions.push(gte(conductorDocumentos.creadoEn, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(lte(conductorDocumentos.creadoEn, new Date(filters.fechaFin + "T23:59:59")));
+      conditions.push(lte(conductorDocumentos.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(conductorDocumentos)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(conductorDocumentos).where(whereClause);
 
-    const data = await database
-      .select()
-      .from(conductorDocumentos)
-      .where(whereClause)
-      .limit(limit)
-      .offset(offset);
+    const data = await database.select().from(conductorDocumentos).where(whereClause).limit(limit).offset(offset);
 
     return {
       data,
@@ -66,18 +50,12 @@ export class ConductorDocumentoRepository {
   }
 
   async findOne(id: number) {
-    const result = await database
-      .select()
-      .from(conductorDocumentos)
-      .where(eq(conductorDocumentos.id, id));
+    const result = await database.select().from(conductorDocumentos).where(eq(conductorDocumentos.id, id));
     return result[0];
   }
 
   async findByConductorId(conductorId: number) {
-    return await database
-      .select()
-      .from(conductorDocumentos)
-      .where(eq(conductorDocumentos.conductorId, conductorId));
+    return await database.select().from(conductorDocumentos).where(eq(conductorDocumentos.conductorId, conductorId));
   }
 
   async create(data: ConductorDocumentoDTO) {
@@ -95,10 +73,7 @@ export class ConductorDocumentoRepository {
   }
 
   async delete(id: number) {
-    const result = await database
-      .delete(conductorDocumentos)
-      .where(eq(conductorDocumentos.id, id))
-      .returning();
+    const result = await database.delete(conductorDocumentos).where(eq(conductorDocumentos.id, id)).returning();
     return result[0];
   }
 }

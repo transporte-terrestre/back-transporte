@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { eq, like, and, gte, lte, count, sql, or, isNull, getTableColumns, desc } from 'drizzle-orm';
+import { eq, like, and, gte, lte, count, sql, isNull, getTableColumns, inArray, desc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { viajes, ViajeDTO } from '@model/tables/viaje.model';
-import { viajeConductores } from '@model/tables/viaje-conductor.model';
-import { conductores } from '@model/tables/conductor.model';
-import { viajeVehiculos } from '@model/tables/viaje-vehiculo.model';
-import { vehiculos } from '@model/tables/vehiculo.model';
-import { modelos } from '@model/tables/modelo.model';
-import { marcas } from '@model/tables/marca.model';
-import { rutas } from '@model/tables/ruta.model';
-import { clientes } from '@model/tables/cliente.model';
-import { viajeComentarios } from '@model/tables/viaje-comentario.model';
-import { usuarios } from '@model/tables/usuario.model';
+import { viajes, ViajeDTO } from '@db/tables/viaje.table';
+import { viajeConductores } from '@db/tables/viaje-conductor.table';
+import { conductores } from '@db/tables/conductor.table';
+import { viajeVehiculos } from '@db/tables/viaje-vehiculo.table';
+import { vehiculos } from '@db/tables/vehiculo.table';
+import { modelos } from '@db/tables/modelo.table';
+import { marcas } from '@db/tables/marca.table';
+import { rutas } from '@db/tables/ruta.table';
+import { clientes } from '@db/tables/cliente.table';
+import { viajeComentarios } from '@db/tables/viaje-comentario.table';
+import { usuarios } from '@db/tables/usuario.table';
+import { viajeChecklists } from '@db/tables/viaje-checklist.table';
 
 interface PaginationFilters {
   search?: string;
@@ -20,6 +21,12 @@ interface PaginationFilters {
   modalidadServicio?: string;
   tipoRuta?: string;
   estado?: string;
+  conductoresId?: number[];
+  clienteId?: number;
+  rutaId?: number;
+  vehiculosId?: number[];
+  sentido?: string;
+  turno?: string;
 }
 
 @Injectable()
@@ -56,6 +63,42 @@ export class ViajeRepository {
       conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
       conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + 'T23:59:59')));
+    }
+
+    if (filters?.clienteId) {
+      conditions.push(eq(viajes.clienteId, filters.clienteId));
+    }
+
+    if (filters?.rutaId) {
+      conditions.push(eq(viajes.rutaId, filters.rutaId));
+    }
+
+    if (filters?.sentido) {
+      conditions.push(eq(sql`${viajes.sentido}::text`, filters.sentido));
+    }
+
+    if (filters?.turno) {
+      conditions.push(eq(sql`${viajes.turno}::text`, filters.turno));
+    }
+
+    // Filtrar por conductores (lista)
+    if (filters?.conductoresId && filters.conductoresId.length > 0) {
+      const viajesConConductores = database
+        .select({ viajeId: viajeConductores.viajeId })
+        .from(viajeConductores)
+        .where(inArray(viajeConductores.conductorId, filters.conductoresId));
+
+      conditions.push(inArray(viajes.id, viajesConConductores));
+    }
+
+    // Filtrar por vehículos (lista)
+    if (filters?.vehiculosId && filters.vehiculosId.length > 0) {
+      const viajesConVehiculo = database
+        .select({ viajeId: viajeVehiculos.viajeId })
+        .from(viajeVehiculos)
+        .where(inArray(viajeVehiculos.vehiculoId, filters.vehiculosId));
+
+      conditions.push(inArray(viajes.id, viajesConVehiculo));
     }
 
     // Excluir eliminados
@@ -154,7 +197,29 @@ export class ViajeRepository {
       .leftJoin(usuarios, eq(usuarios.id, viajeComentarios.usuarioId))
       .where(eq(viajeComentarios.viajeId, id));
 
-    const [conductoresList, vehiculosList, comentariosList] = await Promise.all([conductorsQuery, vehiculosQuery, comentariosQuery]);
+    // Consulta optimizada para checklists - solo tipo y validadoEn
+    const checklistsQuery = database
+      .select({
+        tipo: viajeChecklists.tipo,
+        validadoEn: viajeChecklists.validadoEn,
+      })
+      .from(viajeChecklists)
+      .where(eq(viajeChecklists.viajeId, id));
+
+    const [conductoresList, vehiculosList, comentariosList, checklistsList] = await Promise.all([
+      conductorsQuery,
+      vehiculosQuery,
+      comentariosQuery,
+      checklistsQuery,
+    ]);
+
+    // Determinar estados de validación
+    let checkInSalida = false;
+    let checkInLlegada = false;
+    for (const checklist of checklistsList) {
+      if (checklist.tipo === 'salida' && checklist.validadoEn !== null) checkInSalida = true;
+      if (checklist.tipo === 'llegada' && checklist.validadoEn !== null) checkInLlegada = true;
+    }
 
     return {
       ...viaje,
@@ -163,6 +228,8 @@ export class ViajeRepository {
       conductores: conductoresList,
       vehiculos: vehiculosList,
       comentarios: comentariosList,
+      checkInSalida,
+      checkInLlegada,
     };
   }
 

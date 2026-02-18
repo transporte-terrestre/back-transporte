@@ -1,15 +1,16 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
-import { ClienteCreateDto } from "./dto/cliente-create.dto";
-import { ClienteUpdateDto } from "./dto/cliente-update.dto";
-import { ClienteRepository } from "@repository/cliente.repository";
-import { ClienteDocumentoRepository } from "@repository/cliente-documento.repository";
-import { PaginatedClienteResultDto } from "./dto/cliente-paginated.dto";
-import {
-  ClienteDocumentoDTO,
-  clienteDocumentosTipo,
-} from "@model/tables/cliente-documento.model";
-import { DocumentosAgrupadosClienteDto } from "./dto/cliente-result.dto";
-import { ClienteDTO } from "@model/tables/cliente.model";
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { ClienteCreateDto } from './dto/cliente/cliente-create.dto';
+import { ClienteUpdateDto } from './dto/cliente/cliente-update.dto';
+import { ClienteRepository } from '@repository/cliente.repository';
+import { ClienteDocumentoRepository } from '@repository/cliente-documento.repository';
+import { PaginatedClienteResultDto } from './dto/cliente/cliente-paginated.dto';
+import { ClienteDocumentoDTO, clienteDocumentosTipo } from '@db/tables/cliente-documento.table';
+import { DocumentosAgrupadosClienteDto } from './dto/cliente/cliente-result.dto';
+import { ClienteDTO } from '@db/tables/cliente.table';
+import { PasajeroRepository } from '@repository/pasajero.repository';
+import { PasajeroCreateDto } from './dto/pasajero/pasajero-create.dto';
+import { PasajeroUpdateDto } from './dto/pasajero/pasajero-update.dto';
+import { PaginatedPasajeroResultDto } from './dto/pasajero/pasajero-paginated.dto';
 
 interface DatabaseError {
   code?: string;
@@ -21,7 +22,8 @@ interface DatabaseError {
 export class ClientesService {
   constructor(
     private readonly clienteRepository: ClienteRepository,
-    private readonly clienteDocumentoRepository: ClienteDocumentoRepository
+    private readonly clienteDocumentoRepository: ClienteDocumentoRepository,
+    private readonly pasajeroRepository: PasajeroRepository,
   ) {}
 
   async findAllPaginated(
@@ -30,18 +32,14 @@ export class ClientesService {
     search?: string,
     fechaInicio?: string,
     fechaFin?: string,
-    tipoDocumento?: string
+    tipoDocumento?: string,
   ): Promise<PaginatedClienteResultDto> {
-    const { data, total } = await this.clienteRepository.findAllPaginated(
-      page,
-      limit,
-      {
-        search,
-        fechaInicio,
-        fechaFin,
-        tipoDocumento,
-      }
-    );
+    const { data, total } = await this.clienteRepository.findAllPaginated(page, limit, {
+      search,
+      fechaInicio,
+      fechaFin,
+      tipoDocumento,
+    });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -62,17 +60,13 @@ export class ClientesService {
 
   async findOne(id: number) {
     const cliente = await this.clienteRepository.findOne(id);
-    const documentos =
-      await this.clienteDocumentoRepository.findByClienteId(id);
+    const documentos = await this.clienteDocumentoRepository.findByClienteId(id);
 
     // Agrupar documentos por tipo de forma dinámica y tipada
-    const documentosAgrupados = clienteDocumentosTipo.enumValues.reduce(
-      (acc, tipo) => {
-        acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
-        return acc;
-      },
-      {} as DocumentosAgrupadosClienteDto
-    );
+    const documentosAgrupados = clienteDocumentosTipo.enumValues.reduce((acc, tipo) => {
+      acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
+      return acc;
+    }, {} as DocumentosAgrupadosClienteDto);
 
     return {
       ...cliente,
@@ -89,18 +83,14 @@ export class ClientesService {
       });
     } catch (error: unknown) {
       const dbError = error as DatabaseError;
-      if (dbError.cause.code === "23505") {
-        if (dbError.cause.constraint?.includes("email")) {
-          throw new BadRequestException([
-            "El correo electrónico ya está registrado",
-          ]);
+      if (dbError.cause.code === '23505') {
+        if (dbError.cause.constraint?.includes('email')) {
+          throw new BadRequestException(['El correo electrónico ya está registrado']);
         }
-        if (dbError.cause.constraint?.includes("dni")) {
-          throw new BadRequestException(["El DNI ya está registrado"]);
+        if (dbError.cause.constraint?.includes('dni')) {
+          throw new BadRequestException(['El DNI ya está registrado']);
         }
-        throw new BadRequestException([
-          "Ya existe un registro con estos datos",
-        ]);
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
       }
       throw error;
     }
@@ -122,18 +112,14 @@ export class ClientesService {
     } catch (error: unknown) {
       const dbError = error as DatabaseError;
       const pgError = dbError.cause || dbError;
-      if (pgError.code === "23505") {
-        if (pgError.constraint?.includes("email")) {
-          throw new BadRequestException([
-            "El correo electrónico ya está registrado",
-          ]);
+      if (pgError.code === '23505') {
+        if (pgError.constraint?.includes('email')) {
+          throw new BadRequestException(['El correo electrónico ya está registrado']);
         }
-        if (pgError.constraint?.includes("dni")) {
-          throw new BadRequestException(["El DNI ya está registrado"]);
+        if (pgError.constraint?.includes('dni')) {
+          throw new BadRequestException(['El DNI ya está registrado']);
         }
-        throw new BadRequestException([
-          "Ya existe un registro con estos datos",
-        ]);
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
       }
       throw error;
     }
@@ -149,9 +135,7 @@ export class ClientesService {
   }
 
   async createDocumento(data: Partial<ClienteDocumentoDTO>) {
-    return await this.clienteDocumentoRepository.create(
-      data as ClienteDocumentoDTO
-    );
+    return await this.clienteDocumentoRepository.create(data as ClienteDocumentoDTO);
   }
 
   async updateDocumento(id: number, data: Partial<ClienteDocumentoDTO>) {
@@ -160,5 +144,70 @@ export class ClientesService {
 
   async deleteDocumento(id: number) {
     return await this.clienteDocumentoRepository.delete(id);
+  }
+
+  // ========== PASAJEROS ==========
+
+  async findAllPasajerosPaginated(page: number = 1, limit: number = 10, search?: string, clienteId?: number): Promise<PaginatedPasajeroResultDto> {
+    const { data, total } = await this.pasajeroRepository.findAllPaginated(page, limit, {
+      search,
+      clienteId,
+    });
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data: data as any[],
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
+  async findPasajero(id: number) {
+    return await this.pasajeroRepository.findOne(id);
+  }
+
+  async createPasajero(createPasajeroDto: PasajeroCreateDto) {
+    try {
+      return await this.pasajeroRepository.create(createPasajeroDto);
+    } catch (error: unknown) {
+      const dbError = error as DatabaseError;
+      const constraint = dbError.cause?.constraint || dbError.constraint;
+      if (dbError.code === '23505' || dbError.cause?.code === '23505') {
+        if (constraint?.includes('cliente_dni')) {
+          throw new BadRequestException(['El pasajero con este DNI ya existe para este cliente']);
+        }
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
+      }
+      throw error;
+    }
+  }
+
+  async updatePasajero(id: number, updatePasajeroDto: PasajeroUpdateDto) {
+    try {
+      return await this.pasajeroRepository.update(id, updatePasajeroDto);
+    } catch (error: unknown) {
+      const dbError = error as DatabaseError;
+      const constraint = dbError.cause?.constraint || dbError.constraint;
+      if (dbError.code === '23505' || dbError.cause?.code === '23505') {
+        if (constraint?.includes('cliente_dni')) {
+          throw new BadRequestException(['El pasajero con este DNI ya existe para este cliente']);
+        }
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
+      }
+      throw error;
+    }
+  }
+
+  async deletePasajero(id: number) {
+    return await this.pasajeroRepository.delete(id);
   }
 }
