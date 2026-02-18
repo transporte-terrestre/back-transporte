@@ -137,6 +137,7 @@ export class RutasService {
 
     const circuito = await this.rutaCircuitoRepository.create({
       nombre: data.nombre,
+      esIgual: data.esIgual ?? false,
       rutaIdaId: rutaIda?.id || null,
       rutaVueltaId: rutaVuelta?.id || null,
     });
@@ -170,7 +171,7 @@ export class RutasService {
       };
     };
 
-    const normalizeDto = (dto: RutaCircuitoDetalleDto)  => {
+    const normalizeDto = (dto: RutaCircuitoDetalleDto) => {
       if (!dto) return null;
       return {
         origen: dto.origen,
@@ -203,6 +204,8 @@ export class RutasService {
     const isVueltaChanged = JSON.stringify(currentVueltaState) !== JSON.stringify(newVueltaState);
     const isNombreChanged = circuitoExistente.nombre !== data.nombre;
 
+    const isEsIgualChanged = data.esIgual !== undefined && circuitoExistente.esIgual !== data.esIgual;
+
     if (isIdaChanged || isVueltaChanged) {
       if (circuitoExistente.rutaIda) await this.rutaRepository.delete(circuitoExistente.rutaIda.id);
       if (circuitoExistente.rutaVuelta) await this.rutaRepository.delete(circuitoExistente.rutaVuelta.id);
@@ -214,12 +217,16 @@ export class RutasService {
       if (data.vuelta) newRutaVuelta = await this.crearRutaConParadas(data.vuelta);
 
       await this.rutaCircuitoRepository.update(id, {
-        nombre: data.nombre,
+        nombre: data.nombre ?? circuitoExistente.nombre,
+        esIgual: data.esIgual ?? circuitoExistente.esIgual,
         rutaIdaId: newRutaIda?.id || null,
         rutaVueltaId: newRutaVuelta?.id || null,
       });
-    } else if (isNombreChanged) {
-      await this.rutaCircuitoRepository.update(id, { nombre: data.nombre });
+    } else if (isNombreChanged || isEsIgualChanged) {
+      const updates: any = {};
+      if (isNombreChanged) updates.nombre = data.nombre;
+      if (isEsIgualChanged) updates.esIgual = data.esIgual;
+      await this.rutaCircuitoRepository.update(id, updates);
     }
 
     return this.findOneCircuito(id);

@@ -35,7 +35,7 @@ import { ProveedoresModule } from './modules/admin/proveedores/proveedores.modul
     PropietariosModule,
     ProveedoresModule,
     StorageModule,
-    // CronjobModule,
+    CronjobModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsLatitude, IsLongitude, IsArray, IsOptional, ValidateNested, IsNumberString } from 'class-validator';
+import { IsString, IsNotEmpty, IsLatitude, IsLongitude, IsArray, IsOptional, ValidateNested, IsNumberString, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RutaParadaCreateDto } from '../ruta-parada/ruta-parada-create.dto';
@@ -61,6 +61,11 @@ export class RutaCircuitoCreateDto {
   @IsString()
   @IsNotEmpty()
   nombre: string;
+
+  @ApiProperty({ example: false, description: 'Indica si la ruta de vuelta es espejo de la ida' })
+  @IsBoolean()
+  @IsOptional()
+  esIgual?: boolean;
 
   @ApiPropertyOptional({ type: RutaCircuitoDetalleDto, description: 'Detalle de la ruta de ida' })
   @ValidateNested()
