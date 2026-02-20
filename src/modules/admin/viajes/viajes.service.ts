@@ -436,7 +436,7 @@ export class ViajesService {
     return await this.viajeChecklistRepository.delete(checklistId);
   }
 
-  async verifyChecklist(viajeId: number, tipo: VehiculoChecklistDocumentViajeTipo, validadoPor: number) {
+  async verifyChecklist(viajeId: number, tipo: VehiculoChecklistDocumentViajeTipo, validadoPor: number | null) {
     const current = await this.getChecklistTemplate(viajeId, tipo);
 
     let checklistId = current.id;

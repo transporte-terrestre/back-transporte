@@ -347,8 +347,13 @@ export class ViajesController {
   @ApiOperation({ summary: 'Verificar y generar un checklist de viaje (salida/llegada) basado en la configuración actual' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
   @ApiResponse({ status: 200, type: ViajeChecklistResultDto })
-  verifyChecklist(@Param('viajeId') viajeId: string, @Query() query: ViajeChecklistQueryDto, @Request() req: { user: { sub: number } }) {
-    return this.viajesService.verifyChecklist(+viajeId, query.tipo, req.user.sub);
+  verifyChecklist(
+    @Param('viajeId') viajeId: string,
+    @Query() query: ViajeChecklistQueryDto,
+    @Request() req: { user: { sub: number; tipo: string } },
+  ) {
+    const validadoPor = req.user.tipo === 'conductor' ? req.user.sub : null;
+    return this.viajesService.verifyChecklist(+viajeId, query.tipo, validadoPor);
   }
 
   @Delete('checklist/delete/:id')

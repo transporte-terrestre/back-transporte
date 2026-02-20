@@ -68,9 +68,9 @@ export class ViajeChecklistRepository {
       .onConflictDoUpdate({
         target: [viajeChecklists.viajeId, viajeChecklists.tipo],
         set: {
-          ...(data.validadoPor ? { validadoPor: data.validadoPor } : {}),
-          ...(data.validadoEn ? { validadoEn: data.validadoEn } : {}),
-          ...(data.observaciones ? { observaciones: data.observaciones } : {}),
+          ...(data.validadoPor !== undefined ? { validadoPor: data.validadoPor } : {}),
+          ...(data.validadoEn !== undefined ? { validadoEn: data.validadoEn } : {}),
+          ...(data.observaciones !== undefined ? { observaciones: data.observaciones } : {}),
           actualizadoEn: new Date(),
         },
       })
