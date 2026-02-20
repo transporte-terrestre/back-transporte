@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { VehiculoChecklistDocumentViajeTipo } from '@db/tables/vehiculo-checklist-document.table';
 import { ViajeRepository } from '@repository/viaje.repository';
+import { ViajeCircuitoRepository } from '@repository/viaje-circuito.repository';
 import { ViajeConductorRepository } from '@repository/viaje-conductor.repository';
 import { ViajeVehiculoRepository } from '@repository/viaje-vehiculo.repository';
 import { ViajeComentarioRepository } from '@repository/viaje-comentario.repository';
@@ -8,11 +9,11 @@ import { ViajeServicioRepository } from '@repository/viaje-servicio.repository';
 import { ChecklistItemRepository } from '@repository/checklist-item.repository';
 import { ViajeChecklistRepository } from '@repository/viaje-checklist.repository';
 import { RutaRepository } from '@repository/ruta.repository';
-import { RutaParadaRepository } from '@repository/ruta-parada.repository';
+// import { RutaParadaRepository } from '@repository/ruta-parada.repository';
 import { VehiculoRepository } from '@repository/vehiculo.repository';
 import { ClienteRepository } from '@repository/cliente.repository';
 import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository'; // Inyectado
-import { ViajeCreateDto } from './dto/viaje/viaje-create.dto';
+import { ViajeCreateDto, ViajeDetalleCreateDto } from './dto/viaje/viaje-create.dto';
 import { ViajeUpdateDto } from './dto/viaje/viaje-update.dto';
 import { PaginatedViajeResultDto } from './dto/viaje/viaje-paginated.dto';
 import { ViajeConductorDTO } from '@db/tables/viaje-conductor.table';
@@ -49,9 +50,9 @@ export class ViajesService {
     private readonly viajePasajeroRepository: ViajePasajeroRepository,
     private readonly vehiculoChecklistDocumentRepository: VehiculoChecklistDocumentRepository, // Inyectado
     private readonly rutaRepository: RutaRepository,
-    private readonly rutaParadaRepository: RutaParadaRepository,
     private readonly vehiculoRepository: VehiculoRepository,
     private readonly clienteRepository: ClienteRepository,
+    private readonly viajeCircuitoRepository: ViajeCircuitoRepository,
     private readonly notificacionesService: NotificacionesService,
   ) {}
 
@@ -75,19 +76,31 @@ export class ViajesService {
     // Si el token es de un conductor, filtrar automáticamente solo sus viajes
     const conductoresFiltro = usuario?.tipo === 'conductor' ? [usuario.sub] : conductoresId;
 
-    const { data, total } = await this.viajeRepository.findAllPaginated(page, limit, {
+    const { data: circuitos, total } = await this.viajeCircuitoRepository.findAllPaginated(page, limit, {
       search,
       fechaInicio,
       fechaFin,
-      modalidadServicio,
-      tipoRuta,
-      estado,
-      conductoresId: conductoresFiltro,
-      clienteId,
-      rutaId,
-      vehiculosId,
-      sentido,
-      turno,
+    });
+
+    const idsSet = new Set<number>();
+    circuitos.forEach((c) => {
+      if (c.viajeIdaId) idsSet.add(c.viajeIdaId);
+      if (c.viajeVueltaId) idsSet.add(c.viajeVueltaId);
+    });
+
+    const allViajeIds = Array.from(idsSet);
+    const viajesMap = new Map();
+
+    if (allViajeIds.length > 0) {
+      const viajesArray = await this.viajeRepository.findManyListByIds(allViajeIds);
+      viajesArray.forEach((v) => viajesMap.set(v.id, v));
+    }
+
+    const data = circuitos.map((circuito) => {
+      const ida = circuito.viajeIdaId ? viajesMap.get(circuito.viajeIdaId) || null : null;
+      const vuelta = circuito.viajeVueltaId ? viajesMap.get(circuito.viajeVueltaId) || null : null;
+      const { viajeIda, viajeVuelta, viajeIdaId, viajeVueltaId, ...circuitoRest } = circuito as any;
+      return { ...circuitoRest, ida, vuelta };
     });
 
     const totalPages = Math.ceil(total / limit);
@@ -107,11 +120,76 @@ export class ViajesService {
     };
   }
 
+  async findAllLightPaginated(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    fechaInicio?: string,
+    fechaFin?: string,
+    modalidadServicio?: string,
+    tipoRuta?: string,
+    estado?: string,
+    conductoresId?: number[],
+    clienteId?: number,
+    rutaId?: number,
+    vehiculosId?: number[],
+    sentido?: string,
+    turno?: string,
+    usuario?: UsuarioAutenticado,
+  ) {
+    // Si el token es de un conductor, filtrar automáticamente solo sus viajes
+    const conductoresFiltro = usuario?.tipo === 'conductor' ? [usuario.sub] : conductoresId;
+
+    const { data: circuitos, total } = await this.viajeCircuitoRepository.findAllPaginated(page, limit, {
+      search,
+      fechaInicio,
+      fechaFin,
+    });
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    const idsSet = new Set<number>();
+    circuitos.forEach((c) => {
+      if (c.viajeIdaId) idsSet.add(c.viajeIdaId);
+      if (c.viajeVueltaId) idsSet.add(c.viajeVueltaId);
+    });
+
+    const allViajeIds = Array.from(idsSet);
+    const viajesMap = new Map();
+
+    if (allViajeIds.length > 0) {
+      const viajesArray = await this.viajeRepository.findManyLightByIds(allViajeIds);
+      viajesArray.forEach((v) => viajesMap.set(v.id, v));
+    }
+
+    const data = circuitos.map((c) => {
+      const ida = c.viajeIdaId ? viajesMap.get(c.viajeIdaId) || null : null;
+      const vuelta = c.viajeVueltaId ? viajesMap.get(c.viajeVueltaId) || null : null;
+
+      const { viajeIda, viajeVuelta, viajeIdaId, viajeVueltaId, ...cRest } = c as any;
+      return { ...cRest, ida, vuelta };
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
   async findOne(id: number) {
     return this.viajeRepository.findOne(id);
   }
 
-  async create(data: ViajeCreateDto) {
+  async createDetalle(data: ViajeDetalleCreateDto) {
     const { conductorId, vehiculoId, ...viajeData } = data;
 
     if (!viajeData.horasContrato) {
@@ -121,7 +199,7 @@ export class ViajesService {
       }
     }
 
-    const viaje = await this.viajeRepository.create(viajeData);
+    const viaje = await this.viajeRepository.create(viajeData as any);
 
     if (conductorId) {
       await this.assignConductor({
@@ -144,12 +222,31 @@ export class ViajesService {
     return viaje;
   }
 
+  async createCircuito(data: ViajeCreateDto) {
+    let viajeIdaId = null;
+    let viajeVueltaId = null;
+
+    if (data.ida) {
+      const ida = await this.createDetalle(data.ida);
+      viajeIdaId = ida.id;
+    }
+
+    if (data.vuelta) {
+      const vuelta = await this.createDetalle(data.vuelta);
+      viajeVueltaId = vuelta.id;
+    }
+
+    return await this.viajeCircuitoRepository.create({ viajeIdaId, viajeVueltaId });
+  }
+
   async update(id: number, data: ViajeUpdateDto) {
     return this.viajeRepository.update(id, data);
   }
 
-  delete(id: number) {
-    return this.viajeRepository.delete(id);
+  async delete(id: number) {
+    const result = await this.viajeRepository.delete(id);
+    await this.viajeCircuitoRepository.nullifyTripReference(id);
+    return result;
   }
 
   // ========== CONDUCTORES ==========
@@ -216,7 +313,6 @@ export class ViajesService {
   }
 
   // ========== SERVICIOS (Tramos del viaje) ==========
-  // ========== SERVICIOS (Tramos del viaje) ==========
   async findServicios(viajeId: number) {
     return await this.viajeServicioRepository.findByViajeIdWithParadas(viajeId);
   }
@@ -229,125 +325,25 @@ export class ViajesService {
     return servicio;
   }
 
-  async getNextStep(viajeId: number) {
-    const viaje = await this.viajeRepository.findOne(viajeId);
-    if (!viaje) throw new NotFoundException('Viaje no encontrado');
-
-    // Restricción: Solo válido para viajes con ruta fija
-    if (!viaje.rutaId) {
-      throw new ConflictException('Las paradas de servicio solo son válidas para viajes con ruta fija');
-    }
-
-    const servicios = await this.viajeServicioRepository.findByViajeId(viajeId);
-    const paradas = await this.rutaParadaRepository.findByRutaId(viaje.rutaId);
-
-    const nextOrden = servicios.length + 1;
-    const totalSegments = Math.max(0, paradas.length - 1);
-
-    let kmInicial = 0;
-    let horaSalida = '';
-    let paradaPartidaId: number | null = null;
-    let paradaLlegadaId: number | null = null;
-    let paradaPartidaNombre: string | null = null;
-    let paradaLlegadaNombre: string | null = null;
-
-    if (servicios.length === 0) {
-      // Primer tramo
-      const vehiculosAsignados = await this.viajeVehiculoRepository.findByViajeId(viajeId);
-      const principal = vehiculosAsignados.find((v) => v.esPrincipal) || vehiculosAsignados[0];
-      if (principal) {
-        const vInfo = await this.vehiculoRepository.findOne(principal.vehiculoId);
-        kmInicial = vInfo?.kilometraje || 0;
-      }
-
-      // Hora programada del viaje
-      const date = new Date(viaje.fechaSalida);
-      horaSalida = date.toTimeString().substring(0, 5);
-
-      if (paradas.length >= 2) {
-        paradaPartidaId = paradas[0].id;
-        paradaPartidaNombre = paradas[0].nombre;
-        paradaLlegadaId = paradas[1].id;
-        paradaLlegadaNombre = paradas[1].nombre;
-      }
-    } else {
-      // Siguientes tramos
-      const last = servicios[servicios.length - 1];
-      kmInicial = last.kmFinal || last.kmInicial;
-      horaSalida = last.horaTermino || last.horaSalida;
-
-      const nextParadaIndex = servicios.length; // Si hay 1 servicio (index 0), el siguiente usa parada index 1 y 2
-      if (paradas.length > nextParadaIndex + 1) {
-        paradaPartidaId = paradas[nextParadaIndex].id;
-        paradaPartidaNombre = paradas[nextParadaIndex].nombre;
-        paradaLlegadaId = paradas[nextParadaIndex + 1].id;
-        paradaLlegadaNombre = paradas[nextParadaIndex + 1].nombre;
-      } else if (paradas.length === nextParadaIndex + 1) {
-        // Caso borde: estamos en la última parada pero tal vez hay un tramo extra o finalización
-        paradaPartidaId = paradas[nextParadaIndex].id;
-        paradaPartidaNombre = paradas[nextParadaIndex].nombre;
-      }
-    }
-
-    return {
-      orden: nextOrden,
-      paradaPartidaId,
-      paradaPartidaNombre,
-      paradaLlegadaId,
-      paradaLlegadaNombre,
-      horaSalida,
-      kmInicial,
-      numeroPasajeros: null,
-      progreso: totalSegments > 0 ? `${nextOrden}/${totalSegments}` : '0/0',
-      isStart: nextOrden === 1,
-      isFinal: nextOrden === totalSegments,
-    };
-  }
-
   async createServicio(viajeId: number, data: ViajeServicioCreateDto) {
     const viaje = await this.viajeRepository.findOne(viajeId);
     if (!viaje) throw new NotFoundException('Viaje no encontrado');
 
-    // Restricción: Solo válido para viajes con ruta fija
-    if (!viaje.rutaId) {
-      throw new ConflictException('Las paradas de servicio solo son válidas para viajes con ruta fija');
-    }
-
     const maxOrden = await this.viajeServicioRepository.getMaxOrden(viajeId);
-
-    // Si no se manda hora de término, la ponemos automática (hora actual)
-    const horaTermino = data.horaTermino || new Date().toTimeString().substring(0, 5);
-
-    // Autollenado de nombres de paradas si se envió ID
-    let paradaPartidaNombre = null;
-    let paradaLlegadaNombre = null;
-
-    if (data.paradaPartidaId) {
-      const p = await this.rutaParadaRepository.findOne(data.paradaPartidaId);
-      if (p) paradaPartidaNombre = p.nombre;
-    }
-
-    if (data.paradaLlegadaId) {
-      const p = await this.rutaParadaRepository.findOne(data.paradaLlegadaId);
-      if (p) paradaLlegadaNombre = p.nombre;
-    }
 
     const result = await this.viajeServicioRepository.create({
       ...data,
-      paradaPartidaNombre,
-      paradaLlegadaNombre,
-      horaTermino,
       viajeId,
       orden: maxOrden + 1,
     } as any);
 
     // Actualizar kilometraje del vehículo si es el principal
-    if (result.kmFinal) {
+    if (result.kilometrajeFinal) {
       const vehiculosAsignados = await this.viajeVehiculoRepository.findByViajeId(viajeId);
       const principal = vehiculosAsignados.find((v) => v.esPrincipal) || vehiculosAsignados[0];
       if (principal) {
         await this.vehiculoRepository.update(principal.vehiculoId, {
-          kilometraje: result.kmFinal,
+          kilometraje: result.kilometrajeFinal,
         });
       }
     }
@@ -358,13 +354,13 @@ export class ViajesService {
   async updateServicio(servicioId: number, data: ViajeServicioUpdateDto) {
     const result = await this.viajeServicioRepository.update(servicioId, data);
 
-    // Si se actualizó el kmFinal, también actualizar el vehículo
-    if (result.kmFinal) {
+    // Si se actualizó el kilometrajeFinal, también actualizar el vehículo
+    if (result.kilometrajeFinal) {
       const vehiculosAsignados = await this.viajeVehiculoRepository.findByViajeId(result.viajeId);
       const principal = vehiculosAsignados.find((v) => v.esPrincipal) || vehiculosAsignados[0];
       if (principal) {
         await this.vehiculoRepository.update(principal.vehiculoId, {
-          kilometraje: result.kmFinal,
+          kilometraje: result.kilometrajeFinal,
         });
       }
     }

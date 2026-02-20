@@ -3,7 +3,8 @@ import { Type, Transform } from 'class-transformer';
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn, IsArray, IsEnum } from 'class-validator';
 import { modalidadServicio, viajesTipoRuta, viajesEstado, viajesSentido, viajesTurno } from '@db/tables/viaje.table';
 import type { ViajeModalidadServicio, ViajeTipoRuta, ViajeEstado, ViajeSentido, ViajeTurno } from '@db/tables/viaje.table';
-import { ViajeListDto } from './viaje-list.dto';
+import { ViajeCircuitoResultDto, ViajeCircuitoLightResultDto } from '../viaje-circuito/viaje-circuito-result.dto';
+import { ViajeLightResultDto } from './viaje-light-result.dto';
 import { PaginationMetaDto } from '../../../../../common/dto/pagination-meta.dto';
 
 export class ViajePaginationQueryDto {
@@ -146,10 +147,24 @@ export class ViajePaginationQueryDto {
 
 export class PaginatedViajeResultDto {
   @ApiProperty({
-    description: 'Lista de viajes en la página actual',
-    type: [ViajeListDto],
+    description: 'Lista de circuitos de viajes en la página actual',
+    type: [ViajeCircuitoResultDto],
   })
-  data: ViajeListDto[];
+  data: ViajeCircuitoResultDto[];
+
+  @ApiProperty({
+    description: 'Metadatos de la paginación',
+    type: PaginationMetaDto,
+  })
+  meta: PaginationMetaDto;
+}
+
+export class PaginatedViajeLightResultDto {
+  @ApiProperty({
+    description: 'Lista de circuitos de viajes (formato ligero)',
+    type: [ViajeCircuitoLightResultDto],
+  })
+  data: ViajeCircuitoLightResultDto[];
 
   @ApiProperty({
     description: 'Metadatos de la paginación',

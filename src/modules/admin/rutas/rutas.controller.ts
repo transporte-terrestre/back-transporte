@@ -1,12 +1,11 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { RutasService } from './rutas.service';
 // import { RutaCreateDto } from './dto/ruta/ruta-create.dto'; // Deprecated
 // import { RutaUpdateDto } from './dto/ruta/ruta-update.dto'; // Deprecated
 import { RutaResultDto } from './dto/ruta/ruta-result.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { RutaPaginationQueryDto, PaginatedRutaResultDto } from './dto/ruta/ruta-paginated.dto';
-import { RutaParadaResultDto } from './dto/ruta-parada/ruta-parada-result.dto';
 import { RutaCircuitoResultDto } from './dto/ruta-circuito/ruta-circuito-result.dto';
 import { RutaCircuitoPaginationQueryDto, PaginatedRutaCircuitoResultDto } from './dto/ruta-circuito/ruta-circuito-paginated.dto';
 import { RutaCircuitoCreateDto } from './dto/ruta-circuito/ruta-circuito-create.dto';
@@ -34,24 +33,11 @@ export class RutasController {
   }
 
   @Get('find-one/:id')
-  @ApiOperation({ summary: 'Obtener una ruta por ID con sus paradas' })
+  @ApiOperation({ summary: 'Obtener una ruta por ID' })
   @ApiParam({ name: 'id', type: 'number', description: 'ID de la ruta' })
   @ApiResponse({ status: 200, type: RutaResultDto })
   async findOne(@Param('id') id: string) {
     return await this.rutasService.findOne(+id);
-  }
-
-  // ==========================================
-  // ENDPOINTS DE PARADAS
-  // ==========================================
-
-  @Get(':rutaId/paradas')
-  @ApiOperation({ summary: 'Obtener todas las paradas de una ruta' })
-  @ApiParam({ name: 'rutaId', type: 'number', description: 'ID de la ruta' })
-  @ApiQuery({ name: 'search', required: false, description: 'Buscar por nombre de parada' })
-  @ApiResponse({ status: 200, type: [RutaParadaResultDto] })
-  async findParadas(@Param('rutaId') rutaId: string, @Query('search') search?: string): Promise<RutaParadaResultDto[]> {
-    return await this.rutasService.findParadas(+rutaId, search);
   }
 
   // ==========================================
@@ -66,7 +52,7 @@ export class RutasController {
   }
 
   @Get('circuito/find-one/:id')
-  @ApiOperation({ summary: 'Obtener un circuito por ID con sus rutas y paradas' })
+  @ApiOperation({ summary: 'Obtener un circuito por ID con sus rutas' })
   @ApiParam({ name: 'id', type: 'number', description: 'ID del circuito' })
   @ApiResponse({ status: 200, type: RutaCircuitoResultDto })
   async findOneCircuito(@Param('id') id: string) {
@@ -81,7 +67,7 @@ export class RutasController {
   }
 
   @Patch('circuito/update/:id')
-  @ApiOperation({ summary: 'Actualizar un circuito y sus rutas (reemplazo inteligente)' })
+  @ApiOperation({ summary: 'Actualizar un circuito y sus rutas' })
   @ApiParam({ name: 'id', type: 'number', description: 'ID del circuito' })
   @ApiResponse({ status: 200, type: RutaCircuitoResultDto })
   async updateCircuito(@Param('id') id: string, @Body() updateCircuitoDto: RutaCircuitoUpdateDto) {

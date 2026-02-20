@@ -146,6 +146,243 @@ export class ViajeRepository {
     };
   }
 
+  async findAllLightPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
+    const offset = (page - 1) * limit;
+    const conditions = [];
+
+    if (filters?.search) {
+      const searchTerm = `%${filters.search}%`;
+      conditions.push(like(viajes.rutaOcasional, searchTerm));
+    }
+
+    if (filters?.modalidadServicio) {
+      conditions.push(eq(sql`${viajes.modalidadServicio}::text`, filters.modalidadServicio));
+    }
+
+    if (filters?.tipoRuta) {
+      conditions.push(eq(sql`${viajes.tipoRuta}::text`, filters.tipoRuta));
+    }
+
+    if (filters?.estado) {
+      conditions.push(eq(sql`${viajes.estado}::text`, filters.estado));
+    }
+
+    if (filters?.fechaInicio && filters?.fechaFin) {
+      conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
+      conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + 'T23:59:59')));
+    } else if (filters?.fechaInicio) {
+      conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
+    } else if (filters?.fechaFin) {
+      conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + 'T23:59:59')));
+    }
+
+    if (filters?.clienteId) {
+      conditions.push(eq(viajes.clienteId, filters.clienteId));
+    }
+
+    if (filters?.rutaId) {
+      conditions.push(eq(viajes.rutaId, filters.rutaId));
+    }
+
+    if (filters?.sentido) {
+      conditions.push(eq(sql`${viajes.sentido}::text`, filters.sentido));
+    }
+
+    if (filters?.turno) {
+      conditions.push(eq(sql`${viajes.turno}::text`, filters.turno));
+    }
+
+    // Filtrar por conductores (lista)
+    if (filters?.conductoresId && filters.conductoresId.length > 0) {
+      const viajesConConductores = database
+        .select({ viajeId: viajeConductores.viajeId })
+        .from(viajeConductores)
+        .where(inArray(viajeConductores.conductorId, filters.conductoresId));
+
+      conditions.push(inArray(viajes.id, viajesConConductores));
+    }
+
+    // Filtrar por vehículos (lista)
+    if (filters?.vehiculosId && filters.vehiculosId.length > 0) {
+      const viajesConVehiculo = database
+        .select({ viajeId: viajeVehiculos.viajeId })
+        .from(viajeVehiculos)
+        .where(inArray(viajeVehiculos.vehiculoId, filters.vehiculosId));
+
+      conditions.push(inArray(viajes.id, viajesConVehiculo));
+    }
+
+    // Excluir eliminados
+    conditions.push(isNull(viajes.eliminadoEn));
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [{ total }] = await database.select({ total: count() }).from(viajes).where(whereClause);
+
+    const data = await database
+      .select({
+        id: viajes.id,
+        estado: viajes.estado,
+        fecha: viajes.fechaSalida,
+        tipoRuta: viajes.tipoRuta,
+        rutaOcasional: viajes.rutaOcasional,
+        rutaOrigen: rutas.origen,
+        rutaDestino: rutas.destino,
+      })
+      .from(viajes)
+      .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
+      .where(whereClause)
+      .orderBy(desc(viajes.fechaSalida))
+      .limit(limit)
+      .offset(offset);
+
+    if (data.length === 0) {
+      return { data: [], total: Number(total) };
+    }
+
+    const viajeIds = data.map((v) => v.id);
+
+    // Get checklists for these viajes (only those that are validated)
+    const checklists = await database
+      .select({
+        viajeId: viajeChecklists.viajeId,
+        tipo: viajeChecklists.tipo,
+      })
+      .from(viajeChecklists)
+      .where(and(inArray(viajeChecklists.viajeId, viajeIds), sql`${viajeChecklists.validadoEn} IS NOT NULL`));
+
+    const checklistMap = new Map<number, { salida: boolean; llegada: boolean }>();
+    for (const id of viajeIds) {
+      checklistMap.set(id, { salida: false, llegada: false });
+    }
+
+    for (const cl of checklists) {
+      const state = checklistMap.get(cl.viajeId);
+      if (state) {
+        if (cl.tipo === 'salida') state.salida = true;
+        if (cl.tipo === 'llegada') state.llegada = true;
+      }
+    }
+
+    const formattedData = data.map((v) => {
+      const rutaNombre = v.tipoRuta === 'ocasional' ? v.rutaOcasional || 'Ocasional' : `${v.rutaOrigen} - ${v.rutaDestino}`;
+
+      const checks = checklistMap.get(v.id)!;
+
+      return {
+        id: v.id,
+        rutaNombre,
+        estado: v.estado,
+        fecha: v.fecha,
+        checkInSalida: checks.salida,
+        checkInLlegada: checks.llegada,
+      };
+    });
+
+    return {
+      data: formattedData,
+      total: Number(total),
+    };
+  }
+
+  async findManyListByIds(ids: number[]) {
+    if (!ids || ids.length === 0) return [];
+
+    const data = await database
+      .select({
+        ...getTableColumns(viajes),
+        conductorPrincipal: {
+          ...getTableColumns(conductores),
+        },
+        vehiculoPrincipal: {
+          ...getTableColumns(vehiculos),
+          marca: marcas.nombre,
+          modelo: modelos.nombre,
+        },
+        ruta: {
+          ...getTableColumns(rutas),
+        },
+        cliente: {
+          ...getTableColumns(clientes),
+        },
+      })
+      .from(viajes)
+      .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
+      .leftJoin(clientes, eq(clientes.id, viajes.clienteId))
+      .leftJoin(viajeConductores, and(eq(viajeConductores.viajeId, viajes.id), eq(viajeConductores.esPrincipal, true)))
+      .leftJoin(conductores, eq(conductores.id, viajeConductores.conductorId))
+      .leftJoin(viajeVehiculos, and(eq(viajeVehiculos.viajeId, viajes.id), eq(viajeVehiculos.esPrincipal, true)))
+      .leftJoin(vehiculos, eq(vehiculos.id, viajeVehiculos.vehiculoId))
+      .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .where(and(inArray(viajes.id, ids), isNull(viajes.eliminadoEn)));
+
+    return data.map((item) => ({
+      ...item,
+      conductorPrincipal: item.conductorPrincipal?.id ? item.conductorPrincipal : null,
+      vehiculoPrincipal: item.vehiculoPrincipal?.id ? item.vehiculoPrincipal : null,
+      ruta: item.ruta?.id ? item.ruta : null,
+      cliente: item.cliente?.id ? item.cliente : null,
+    }));
+  }
+
+  async findManyLightByIds(ids: number[]) {
+    if (!ids || ids.length === 0) return [];
+
+    const data = await database
+      .select({
+        id: viajes.id,
+        estado: viajes.estado,
+        fecha: viajes.fechaSalida,
+        tipoRuta: viajes.tipoRuta,
+        rutaOcasional: viajes.rutaOcasional,
+        rutaOrigen: rutas.origen,
+        rutaDestino: rutas.destino,
+      })
+      .from(viajes)
+      .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
+      .where(and(inArray(viajes.id, ids), isNull(viajes.eliminadoEn)));
+
+    if (data.length === 0) return [];
+
+    const viajeIds = data.map((v) => v.id);
+
+    const checklists = await database
+      .select({
+        viajeId: viajeChecklists.viajeId,
+        tipo: viajeChecklists.tipo,
+      })
+      .from(viajeChecklists)
+      .where(and(inArray(viajeChecklists.viajeId, viajeIds), sql`${viajeChecklists.validadoEn} IS NOT NULL`));
+
+    const checklistMap = new Map<number, { salida: boolean; llegada: boolean }>();
+    for (const id of viajeIds) {
+      checklistMap.set(id, { salida: false, llegada: false });
+    }
+
+    for (const cl of checklists) {
+      const state = checklistMap.get(cl.viajeId);
+      if (state) {
+        if (cl.tipo === 'salida') state.salida = true;
+        if (cl.tipo === 'llegada') state.llegada = true;
+      }
+    }
+
+    return data.map((v) => {
+      const rutaNombre = v.tipoRuta === 'ocasional' ? v.rutaOcasional || 'Ocasional' : `${v.rutaOrigen} - ${v.rutaDestino}`;
+      const checks = checklistMap.get(v.id)!;
+
+      return {
+        id: v.id,
+        rutaNombre,
+        estado: v.estado,
+        fecha: v.fecha,
+        checkInSalida: checks.salida,
+        checkInLlegada: checks.llegada,
+      };
+    });
+  }
+
   async findOne(id: number) {
     const result = await database
       .select({

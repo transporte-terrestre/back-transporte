@@ -1,6 +1,7 @@
-import { pgTable, serial, integer, varchar, text, timestamp, time, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, text, timestamp, doublePrecision, pgEnum, index } from 'drizzle-orm/pg-core';
 import { viajes } from './viaje.table';
-import { rutaParadas } from './ruta-parada.table';
+
+export const tipoServicioEnum = pgEnum('tipo_servicio', ['trayecto', 'descanso']);
 
 export const viajeServicios = pgTable(
   'viaje_servicios',
@@ -9,34 +10,20 @@ export const viajeServicios = pgTable(
     viajeId: integer('viaje_id')
       .references(() => viajes.id, { onDelete: 'cascade' })
       .notNull(),
-    orden: integer('orden').notNull(), // Secuencia del servicio en el día (1, 2, 3...)
-
-    // Punto de partida: referencia a parada fija O texto libre
-    paradaPartidaId: integer('parada_partida_id').references(() => rutaParadas.id),
-    paradaPartidaNombre: varchar('parada_partida_nombre', { length: 200 }),
-
-    // Punto de llegada: referencia a parada fija O texto libre
-    paradaLlegadaId: integer('parada_llegada_id').references(() => rutaParadas.id),
-    paradaLlegadaNombre: varchar('parada_llegada_nombre', { length: 200 }),
-
-    // Datos del servicio
-    horaSalida: time('hora_salida').notNull(),
-    horaTermino: time('hora_termino'),
-    kmInicial: integer('km_inicial').notNull(),
-    kmFinal: integer('km_final'),
+    orden: integer('orden').notNull(),
+    tipo: tipoServicioEnum('tipo').notNull().default('trayecto'),
+    longitud: doublePrecision('longitud'),
+    latitud: doublePrecision('latitud'),
+    nombreLugar: text('nombre_lugar'),
+    horaFinal: timestamp('hora_final'),
+    kilometrajeFinal: doublePrecision('kilometraje_final'),
     numeroPasajeros: integer('numero_pasajeros').default(0),
-
-    // Observaciones
     observaciones: text('observaciones'),
-
-    // Timestamps
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
   },
   (t) => [
-    // Índice para filtrar servicios por viaje
     index('viaje_servicios_viaje_id_idx').on(t.viajeId),
-    // Índice para ordenar servicios dentro de un viaje
     index('viaje_servicios_viaje_orden_idx').on(t.viajeId, t.orden),
   ],
 );

@@ -1,10 +1,10 @@
-import { IsInt, IsIn, IsNotEmpty, IsDate, IsOptional, IsString, IsArray, MaxLength } from 'class-validator';
+import { IsInt, IsIn, IsNotEmpty, IsDate, IsOptional, IsString, IsArray, MaxLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ViajeDTO, viajesEstado, modalidadServicio, viajesTipoRuta, viajesTurno, viajesSentido } from '@db/tables/viaje.table';
 import type { ViajeEstado, ViajeModalidadServicio, ViajeTipoRuta, ViajeTurno } from '@db/tables/viaje.table';
 
-export class ViajeCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
+export class ViajeDetalleCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' | 'actualizadoEn' | 'eliminadoEn'> {
   @ApiPropertyOptional({ example: 1, description: 'ID de la ruta programada' })
   @IsOptional()
   @IsInt()
@@ -130,4 +130,18 @@ export class ViajeCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' | 'actua
   @IsOptional()
   @IsInt()
   vehiculoId?: number;
+}
+
+export class ViajeCreateDto {
+  @ApiPropertyOptional({ type: ViajeDetalleCreateDto, description: 'Viaje de ida' })
+  @ValidateNested()
+  @Type(() => ViajeDetalleCreateDto)
+  @IsOptional()
+  ida?: ViajeDetalleCreateDto;
+
+  @ApiPropertyOptional({ type: ViajeDetalleCreateDto, description: 'Viaje de vuelta' })
+  @ValidateNested()
+  @Type(() => ViajeDetalleCreateDto)
+  @IsOptional()
+  vuelta?: ViajeDetalleCreateDto;
 }

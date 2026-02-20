@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { eq, and, asc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { viajeServicios, ViajeServicioDTO } from '@db/tables/viaje-servicio.table';
-import { rutaParadas } from '@db/tables/ruta-parada.table';
 
 @Injectable()
 export class ViajeServicioRepository {
@@ -12,14 +11,12 @@ export class ViajeServicioRepository {
         id: viajeServicios.id,
         viajeId: viajeServicios.viajeId,
         orden: viajeServicios.orden,
-        paradaPartidaId: viajeServicios.paradaPartidaId,
-        paradaPartidaNombre: viajeServicios.paradaPartidaNombre,
-        paradaLlegadaId: viajeServicios.paradaLlegadaId,
-        paradaLlegadaNombre: viajeServicios.paradaLlegadaNombre,
-        horaSalida: viajeServicios.horaSalida,
-        horaTermino: viajeServicios.horaTermino,
-        kmInicial: viajeServicios.kmInicial,
-        kmFinal: viajeServicios.kmFinal,
+        tipo: viajeServicios.tipo,
+        longitud: viajeServicios.longitud,
+        latitud: viajeServicios.latitud,
+        nombreLugar: viajeServicios.nombreLugar,
+        horaFinal: viajeServicios.horaFinal,
+        kilometrajeFinal: viajeServicios.kilometrajeFinal,
         numeroPasajeros: viajeServicios.numeroPasajeros,
         observaciones: viajeServicios.observaciones,
         creadoEn: viajeServicios.creadoEn,
@@ -31,34 +28,9 @@ export class ViajeServicioRepository {
   }
 
   async findByViajeIdWithParadas(viajeId: number) {
-    // Obtener servicios
+    // Obtener servicios (ya no hay cálculos complejos)
     const servicios = await this.findByViajeId(viajeId);
-
-    // Para cada servicio, calcular campos virtuales si aplica
-    return servicios.map((servicio) => {
-      let kmServicio = undefined;
-      let tiempoServicioMinutos = undefined;
-
-      if (servicio.kmFinal && servicio.kmInicial) {
-        kmServicio = servicio.kmFinal - servicio.kmInicial;
-      }
-
-      if (servicio.horaSalida && servicio.horaTermino) {
-        // Simple calculation for HH:mm format
-        const [hS, mS] = servicio.horaSalida.split(':').map(Number);
-        const [hT, mT] = servicio.horaTermino.split(':').map(Number);
-        const start = hS * 60 + mS;
-        let end = hT * 60 + mT;
-        if (end < start) end += 24 * 60; // Crosses midnight
-        tiempoServicioMinutos = end - start;
-      }
-
-      return {
-        ...servicio,
-        kmServicio,
-        tiempoServicioMinutos,
-      };
-    });
+    return servicios;
   }
 
   async findOne(id: number) {

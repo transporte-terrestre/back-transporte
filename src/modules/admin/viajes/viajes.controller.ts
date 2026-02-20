@@ -5,7 +5,7 @@ import { ViajeCreateDto } from './dto/viaje/viaje-create.dto';
 import { ViajeUpdateDto } from './dto/viaje/viaje-update.dto';
 import { ViajeResultDto } from './dto/viaje/viaje-result.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { ViajePaginationQueryDto, PaginatedViajeResultDto } from './dto/viaje/viaje-paginated.dto';
+import { ViajePaginationQueryDto, PaginatedViajeResultDto, PaginatedViajeLightResultDto } from './dto/viaje/viaje-paginated.dto';
 import { ViajeConductorCreateDto } from './dto/viaje-conductor/viaje-conductor-create.dto';
 import { ViajeConductorUpdateDto } from './dto/viaje-conductor/viaje-conductor-update.dto';
 import { ViajeConductorResultDto } from './dto/viaje-conductor/viaje-conductor-result.dto';
@@ -18,17 +18,15 @@ import { ViajeComentarioResultDto } from './dto/viaje-comentario/viaje-comentari
 import { ViajeServicioCreateDto } from './dto/viaje-servicio/viaje-servicio-create.dto';
 import { ViajeServicioUpdateDto } from './dto/viaje-servicio/viaje-servicio-update.dto';
 import { ViajeServicioResultDto } from './dto/viaje-servicio/viaje-servicio-result.dto';
-import { ViajeServicioNextStepResultDto } from './dto/viaje-servicio/viaje-servicio-next-step.dto';
+
 import { ChecklistItemCreateDto } from './dto/checklist-item/checklist-item-create.dto';
 import { ChecklistItemUpdateDto } from './dto/checklist-item/checklist-item-update.dto';
 import { ChecklistItemResultDto } from './dto/checklist-item/checklist-item-result.dto';
 import { ViajeChecklistResultDto } from './dto/viaje-checklist/viaje-checklist-result.dto';
-import { ViajeChecklistUpsertBodyDto, ViajeChecklistUpsertQueryDto } from './dto/viaje-checklist/viaje-checklist-upsert.dto';
 
 import { ViajeChecklistQueryDto } from './dto/viaje-checklist/viaje-checklist-query.dto';
 import { ViajePasajeroResultDto } from './dto/viaje-pasajero/viaje-pasajero-result.dto';
 import { ViajePasajeroFillDto } from './dto/viaje-pasajero/viaje-pasajero-fill.dto';
-import { ViajePasajeroUpdateDto } from './dto/viaje-pasajero/viaje-pasajero-update.dto';
 
 @ApiTags('viajes')
 @ApiBearerAuth()
@@ -44,8 +42,34 @@ export class ViajesController {
       'Busca por estado, ruta ocasional y modalidad. Filtra por rango de fechas, modalidad de servicio y tipo de viaje (ocasional o regular). Si el token es de un conductor, solo retorna sus viajes asignados.',
   })
   @ApiResponse({ status: 200, type: PaginatedViajeResultDto })
-  findAll(@Query() query: ViajePaginationQueryDto, @Request() req: { user: { sub: number; tipo: string } }) {
-    return this.viajesService.findAllPaginated(
+  async findAll(@Query() query: ViajePaginationQueryDto, @Request() req: { user: { sub: number; tipo: string } }): Promise<PaginatedViajeResultDto> {
+    return await this.viajesService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+      query.modalidadServicio,
+      query.tipoRuta,
+      query.estado,
+      query.conductoresId,
+      query.clienteId,
+      query.rutaId,
+      query.vehiculosId,
+      query.sentido,
+      query.turno,
+      req.user,
+    );
+  }
+
+  @Get('find-all-light')
+  @ApiOperation({ summary: 'Obtener viajes (formato ligero) con paginación, búsqueda y filtros' })
+  @ApiResponse({ status: 200, type: PaginatedViajeLightResultDto })
+  async findAllLight(
+    @Query() query: ViajePaginationQueryDto,
+    @Request() req: { user: { sub: number; tipo: string } },
+  ): Promise<PaginatedViajeLightResultDto> {
+    return await this.viajesService.findAllLightPaginated(
       query.page,
       query.limit,
       query.search,
@@ -73,14 +97,14 @@ export class ViajesController {
   }
 
   @Post('create')
-  @ApiOperation({ summary: 'Crear un nuevo viaje' })
-  @ApiResponse({ status: 200, type: ViajeResultDto })
-  create(@Body() createViajeDto: ViajeCreateDto) {
-    return this.viajesService.create(createViajeDto);
+  @ApiOperation({ summary: 'Crear un circuito de viajes (ida y vuelta)' })
+  @ApiResponse({ status: 201, description: 'ViajeCircuito creado exitosamente.' })
+  create(@Body() createDto: ViajeCreateDto) {
+    return this.viajesService.createCircuito(createDto);
   }
 
   @Patch('update/:id')
-  @ApiOperation({ summary: 'Actualizar un viaje' })
+  @ApiOperation({ summary: 'Actualizar un viaje individual' })
   @ApiParam({ name: 'id', type: 'number', description: 'ID del viaje' })
   @ApiResponse({ status: 200, type: ViajeResultDto })
   update(@Param('id') id: string, @Body() updateViajeDto: ViajeUpdateDto) {
@@ -88,7 +112,7 @@ export class ViajesController {
   }
 
   @Delete('delete/:id')
-  @ApiOperation({ summary: 'Eliminar un viaje' })
+  @ApiOperation({ summary: 'Eliminar logicamente un viaje individual y desligarlo' })
   @ApiParam({ name: 'id', type: 'number', description: 'ID del viaje' })
   @ApiResponse({ status: 200, type: ViajeResultDto })
   remove(@Param('id') id: string) {
@@ -228,14 +252,6 @@ export class ViajesController {
   @ApiResponse({ status: 200, type: [ViajeServicioResultDto] })
   findServicios(@Param('viajeId') viajeId: string) {
     return this.viajesService.findServicios(+viajeId);
-  }
-
-  @Get(':viajeId/servicio/next-step')
-  @ApiOperation({ summary: 'Obtener sugerencia para el siguiente tramo del viaje' })
-  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
-  @ApiResponse({ status: 200, type: ViajeServicioNextStepResultDto })
-  getNextStep(@Param('viajeId') viajeId: string) {
-    return this.viajesService.getNextStep(+viajeId);
   }
 
   @Post(':viajeId/servicio/create')

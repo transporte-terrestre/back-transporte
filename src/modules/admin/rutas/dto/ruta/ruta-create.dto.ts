@@ -1,7 +1,5 @@
-import { IsString, IsNotEmpty, IsLatitude, IsLongitude, IsArray, IsOptional, ValidateNested, IsIn } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { RutaParadaCreateDto } from '../ruta-parada/ruta-parada-create.dto';
+import { IsString, IsNotEmpty, IsLatitude, IsLongitude, IsArray, IsIn, IsNumber } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 const SENTIDOS = ['ida', 'vuelta'] as const;
 type Sentido = (typeof SENTIDOS)[number];
@@ -62,15 +60,8 @@ export class RutaCreateDto {
   @IsNotEmpty()
   distancia: string;
 
-  @ApiProperty({ example: '50.0', description: 'Costo base' })
-  @IsString()
+  @ApiProperty({ example: 210, description: 'Tiempo estimado de viaje en minutos' })
+  @IsNumber()
   @IsNotEmpty()
-  costoBase: string;
-
-  @ApiPropertyOptional({ type: [RutaParadaCreateDto], description: 'Lista de paradas' })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => RutaParadaCreateDto)
-  paradas?: RutaParadaCreateDto[];
+  tiempoEstimado: number;
 }

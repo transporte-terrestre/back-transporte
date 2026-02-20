@@ -112,30 +112,17 @@ export class RutaCircuitoRepository {
   }
 
   async create(data: RutaCircuitoDTO) {
-    // Es igual solo si AMBAS rutas existen y son el mismo ID
-    const esIgual = data.rutaIdaId && data.rutaVueltaId ? data.rutaIdaId === data.rutaVueltaId : false;
     const result = await database
       .insert(rutaCircuitos)
-      .values({ ...data, esIgual })
+      .values({ ...data })
       .returning();
     return result[0];
   }
 
   async update(id: number, data: Partial<RutaCircuitoDTO>) {
-    let updateData: any = { ...data };
-
-    if (data.rutaIdaId !== undefined || data.rutaVueltaId !== undefined) {
-      const [current] = await database.select().from(rutaCircuitos).where(eq(rutaCircuitos.id, id));
-      if (current) {
-        const ida = data.rutaIdaId ?? current.rutaIdaId;
-        const vuelta = data.rutaVueltaId ?? current.rutaVueltaId;
-        updateData.esIgual = ida === vuelta;
-      }
-    }
-
     const result = await database
       .update(rutaCircuitos)
-      .set({ ...updateData, actualizadoEn: new Date() })
+      .set({ ...data, actualizadoEn: new Date() })
       .where(eq(rutaCircuitos.id, id))
       .returning();
     return result[0];

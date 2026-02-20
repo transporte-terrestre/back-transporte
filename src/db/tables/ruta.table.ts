@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, decimal, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, decimal, timestamp, index, integer } from 'drizzle-orm/pg-core';
 
 export const rutas = pgTable(
   'rutas',
@@ -11,7 +11,7 @@ export const rutas = pgTable(
     destinoLat: decimal('destino_lat', { precision: 10, scale: 7 }).notNull(),
     destinoLng: decimal('destino_lng', { precision: 10, scale: 7 }).notNull(),
     distancia: decimal('distancia', { precision: 10, scale: 2 }).notNull(),
-    costoBase: decimal('costo_base', { precision: 10, scale: 2 }).notNull(),
+    tiempoEstimado: integer('tiempo_estimado').notNull(),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
     eliminadoEn: timestamp('eliminado_en'),
