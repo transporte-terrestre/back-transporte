@@ -822,9 +822,11 @@ export class ViajesService {
 
     const servicios = await this.viajeServicioRepository.findByViajeId(viajeId);
     const lastServicio = servicios.length > 0 ? servicios[servicios.length - 1] : null;
+    // Para kilometraje y pasajeros, ignorar descansos (no tienen esos datos)
+    const lastServicioReal = [...servicios].reverse().find((s) => s.tipo !== 'descanso') || null;
 
-    // Valores por defecto basados en el viaje o el último servicio
-    let ultimoKilometraje = lastServicio?.kilometrajeFinal || 0;
+    // Valores por defecto basados en el viaje o el último servicio real (no descanso)
+    let ultimoKilometraje = lastServicioReal?.kilometrajeFinal || 0;
     let ultimaHora = lastServicio?.horaFinal || viajeInfo.fechaSalida;
 
     // Si es el primer tramo (no hay servicios), buscamos el kilometraje actual del vehículo
@@ -846,7 +848,7 @@ export class ViajesService {
       longitud: lastServicio?.longitud != null ? lastServicio.longitud.toString() : null,
       ultimoKilometraje,
       ultimaHora: (ultimaHora as Date) || new Date(),
-      ultimosPasajeros: lastServicio?.numeroPasajeros || 0,
+      ultimosPasajeros: lastServicioReal?.numeroPasajeros || 0,
       esPuntoFijo: false,
       rutaParadaId: null,
       faltanPuntosFijos: false,
