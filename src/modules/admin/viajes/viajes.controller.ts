@@ -4,6 +4,7 @@ import { ViajesService } from './viajes.service';
 import { ViajeCreateDto } from './dto/viaje/viaje-create.dto';
 import { ViajeUpdateDto } from './dto/viaje/viaje-update.dto';
 import { ViajeResultDto } from './dto/viaje/viaje-result.dto';
+import { ViajeTrayectoResultDto } from './dto/viaje/viaje-trayecto-result.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ViajePaginationQueryDto, PaginatedViajeResultDto, PaginatedViajeLightResultDto } from './dto/viaje/viaje-paginated.dto';
 import { ViajeConductorCreateDto } from './dto/viaje-conductor/viaje-conductor-create.dto';
@@ -15,9 +16,15 @@ import { ViajeVehiculoResultDto } from './dto/viaje-vehiculo/viaje-vehiculo-resu
 import { ViajeComentarioCreateDto } from './dto/viaje-comentario/viaje-comentario-create.dto';
 import { ViajeComentarioUpdateDto } from './dto/viaje-comentario/viaje-comentario-update.dto';
 import { ViajeComentarioResultDto } from './dto/viaje-comentario/viaje-comentario-result.dto';
-import { ViajeServicioCreateDto } from './dto/viaje-servicio/viaje-servicio-create.dto';
 import { ViajeServicioUpdateDto } from './dto/viaje-servicio/viaje-servicio-update.dto';
 import { ViajeServicioResultDto } from './dto/viaje-servicio/viaje-servicio-result.dto';
+import { ViajeRegistrarParadaDto } from './dto/viaje-servicio/viaje-registrar-parada.dto';
+import { ViajeRegistrarDescansoDto } from './dto/viaje-servicio/viaje-registrar-descanso.dto';
+import { ViajeRegistrarSalidaDto } from './dto/viaje-servicio/viaje-registrar-salida.dto';
+import { ViajeRegistrarLlegadaDto } from './dto/viaje-servicio/viaje-registrar-llegada.dto';
+import { ViajeRegistrarPuntoDto } from './dto/viaje-servicio/viaje-registrar-punto.dto';
+import { ViajeProximoTramoResultDto } from './dto/viaje-servicio/viaje-proximo-tramo-result.dto';
+import { ViajeHojaRutaResultDto } from './dto/viaje-servicio/viaje-hoja-ruta-result.dto';
 
 import { ChecklistItemCreateDto } from './dto/checklist-item/checklist-item-create.dto';
 import { ChecklistItemUpdateDto } from './dto/checklist-item/checklist-item-update.dto';
@@ -94,6 +101,14 @@ export class ViajesController {
   @ApiResponse({ status: 200, type: ViajeResultDto })
   findOne(@Param('id') id: string) {
     return this.viajesService.findOne(+id);
+  }
+
+  @Get(':id/trayecto')
+  @ApiOperation({ summary: 'Visualizar trayecto de un vehículo (paradas fijas y ocasionales)' })
+  @ApiParam({ name: 'id', type: 'number', description: 'ID del viaje' })
+  @ApiResponse({ status: 200, type: ViajeTrayectoResultDto })
+  findTrayecto(@Param('id') id: string) {
+    return this.viajesService.findTrayecto(+id);
   }
 
   @Post('create')
@@ -254,12 +269,60 @@ export class ViajesController {
     return this.viajesService.findServicios(+viajeId);
   }
 
-  @Post(':viajeId/servicio/create')
-  @ApiOperation({ summary: 'Crear un nuevo servicio/tramo para un viaje' })
+  @Get(':viajeId/hoja-ruta')
+  @ApiOperation({ summary: 'Obtener los servicios formateados como hoja de ruta (trayectos entre puntos)' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 200, type: ViajeHojaRutaResultDto })
+  getHojaRuta(@Param('viajeId') viajeId: string) {
+    return this.viajesService.getHojaRuta(+viajeId);
+  }
+
+  @Post(':viajeId/registrar-descanso')
+  @ApiOperation({ summary: 'Registrar un descanso por parte del conductor' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
   @ApiResponse({ status: 201, type: ViajeServicioResultDto })
-  createServicio(@Param('viajeId') viajeId: string, @Body() createDto: ViajeServicioCreateDto) {
-    return this.viajesService.createServicio(+viajeId, createDto);
+  registrarDescanso(@Param('viajeId') viajeId: string, @Body() dto: ViajeRegistrarDescansoDto) {
+    return this.viajesService.registrarDescanso(+viajeId, dto);
+  }
+
+  @Post(':viajeId/registrar-salida')
+  @ApiOperation({ summary: 'Registrar la salida del viaje (origen)' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 201, type: ViajeServicioResultDto })
+  registrarSalida(@Param('viajeId') viajeId: string, @Body() dto: ViajeRegistrarSalidaDto) {
+    return this.viajesService.registrarSalida(+viajeId, dto);
+  }
+
+  @Post(':viajeId/registrar-llegada')
+  @ApiOperation({ summary: 'Registrar la llegada del viaje (destino)' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 201, type: ViajeServicioResultDto })
+  registrarLlegada(@Param('viajeId') viajeId: string, @Body() dto: ViajeRegistrarLlegadaDto) {
+    return this.viajesService.registrarLlegada(+viajeId, dto);
+  }
+
+  @Post(':viajeId/registrar-punto')
+  @ApiOperation({ summary: 'Registrar el paso por un punto fijo programado' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 201, type: ViajeServicioResultDto })
+  registrarPunto(@Param('viajeId') viajeId: string, @Body() dto: ViajeRegistrarPuntoDto) {
+    return this.viajesService.registrarPunto(+viajeId, dto);
+  }
+
+  @Post(':viajeId/registrar-parada')
+  @ApiOperation({ summary: 'Registrar una parada ocasional no programada' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 201, type: ViajeServicioResultDto })
+  registrarParada(@Param('viajeId') viajeId: string, @Body() dto: ViajeRegistrarParadaDto) {
+    return this.viajesService.registrarParada(+viajeId, dto);
+  }
+
+  @Get(':viajeId/proximo-tramo')
+  @ApiOperation({ summary: 'Obtener la sugerencia del próximo tramo basado en la ruta y el progreso actual' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 200, type: ViajeProximoTramoResultDto })
+  getProximoTramo(@Param('viajeId') viajeId: string) {
+    return this.viajesService.getProximoTramo(+viajeId);
   }
 
   @Patch('servicio/update/:id')

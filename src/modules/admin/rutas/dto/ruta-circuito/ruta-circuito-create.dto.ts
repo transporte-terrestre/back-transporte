@@ -1,5 +1,17 @@
-import { IsString, IsNotEmpty, IsLatitude, IsLongitude, IsOptional, ValidateNested, IsNumberString, IsBoolean, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsLatitude,
+  IsLongitude,
+  IsOptional,
+  ValidateNested,
+  IsNumberString,
+  IsBoolean,
+  IsNumber,
+  IsArray,
+} from 'class-validator';
 import { Type } from 'class-transformer';
+import { RutaParadaCreateDto } from '../ruta-parada/ruta-parada-create.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RutaCircuitoDetalleDto {
@@ -46,6 +58,13 @@ export class RutaCircuitoDetalleDto {
   @IsNumber()
   @IsNotEmpty()
   tiempoEstimado: number;
+
+  @ApiPropertyOptional({ type: [RutaParadaCreateDto], description: 'Paradas intermedias de la ruta' })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RutaParadaCreateDto)
+  @IsOptional()
+  paradas?: RutaParadaCreateDto[];
 }
 
 export class RutaCircuitoCreateDto {

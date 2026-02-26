@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { tipoServicioEnum } from '@db/tables/viaje-servicio.table';
+import type { ViajeServicioTipo } from '@db/tables/viaje-servicio.table';
 
 export class ViajeServicioResultDto {
   @ApiProperty({ example: 1, description: 'ID del servicio' })
@@ -7,11 +9,11 @@ export class ViajeServicioResultDto {
   @ApiProperty({ example: 1, description: 'ID del viaje al que pertenece' })
   viajeId: number;
 
-  @ApiProperty({ example: 1, description: 'Orden del servicio en el día' })
-  orden: number;
+  @ApiPropertyOptional({ example: 'punto', description: 'Tipo de servicio (punto, parada o descanso)', enum: tipoServicioEnum.enumValues })
+  tipo?: ViajeServicioTipo;
 
-  @ApiProperty({ example: 'trayecto', description: 'Tipo de servicio (trayecto, descanso)' })
-  tipo: string;
+  @ApiPropertyOptional({ example: 1, description: 'ID de la parada de la ruta (si aplica)' })
+  rutaParadaId?: number;
 
   @ApiPropertyOptional({ example: -77.0282, description: 'Longitud mapeada' })
   longitud?: number;
@@ -30,9 +32,6 @@ export class ViajeServicioResultDto {
 
   @ApiPropertyOptional({ example: 12, description: 'Número de pasajeros' })
   numeroPasajeros?: number;
-
-  @ApiPropertyOptional({ example: 'Parada extendida', description: 'Observaciones' })
-  observaciones?: string;
 
   @ApiProperty({ description: 'Fecha de creación' })
   creadoEn: Date;

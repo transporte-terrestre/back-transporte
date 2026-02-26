@@ -3,6 +3,7 @@ import { eq, and, ilike, isNull, count, desc, gte, lte } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { rutaCircuitos, RutaCircuitoDTO } from '@db/tables/ruta-circuito.table';
 import { rutas } from '@db/tables/ruta.table';
+import { rutaParadas } from '@db/tables/ruta-parada.table';
 
 interface PaginationFilters {
   search?: string;
@@ -46,6 +47,15 @@ export class RutaCircuitoRepository {
             .select()
             .from(rutas)
             .where(and(eq(rutas.id, circuito.rutaIdaId), isNull(rutas.eliminadoEn)));
+
+          if (rutaIda) {
+            const paradasIda = await database
+              .select()
+              .from(rutaParadas)
+              .where(and(eq(rutaParadas.rutaId, rutaIda.id), isNull(rutaParadas.eliminadoEn)))
+              .orderBy(rutaParadas.orden);
+            rutaIda.paradas = paradasIda;
+          }
         }
 
         let rutaVuelta = null;
@@ -54,6 +64,15 @@ export class RutaCircuitoRepository {
             .select()
             .from(rutas)
             .where(and(eq(rutas.id, circuito.rutaVueltaId), isNull(rutas.eliminadoEn)));
+
+          if (rutaVuelta) {
+            const paradasVuelta = await database
+              .select()
+              .from(rutaParadas)
+              .where(and(eq(rutaParadas.rutaId, rutaVuelta.id), isNull(rutaParadas.eliminadoEn)))
+              .orderBy(rutaParadas.orden);
+            rutaVuelta.paradas = paradasVuelta;
+          }
         }
 
         return {
@@ -90,6 +109,15 @@ export class RutaCircuitoRepository {
         .select()
         .from(rutas)
         .where(and(eq(rutas.id, circuito.rutaIdaId), isNull(rutas.eliminadoEn)));
+
+      if (rutaIda) {
+        const paradasIda = await database
+          .select()
+          .from(rutaParadas)
+          .where(and(eq(rutaParadas.rutaId, rutaIda.id), isNull(rutaParadas.eliminadoEn)))
+          .orderBy(rutaParadas.orden);
+        rutaIda.paradas = paradasIda;
+      }
     }
 
     let rutaVuelta = null;
@@ -98,6 +126,15 @@ export class RutaCircuitoRepository {
         .select()
         .from(rutas)
         .where(and(eq(rutas.id, circuito.rutaVueltaId), isNull(rutas.eliminadoEn)));
+
+      if (rutaVuelta) {
+        const paradasVuelta = await database
+          .select()
+          .from(rutaParadas)
+          .where(and(eq(rutaParadas.rutaId, rutaVuelta.id), isNull(rutaParadas.eliminadoEn)))
+          .orderBy(rutaParadas.orden);
+        rutaVuelta.paradas = paradasVuelta;
+      }
     }
 
     return {

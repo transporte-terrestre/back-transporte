@@ -13,7 +13,7 @@ import { ClienteRepository } from '@repository/cliente.repository';
 import { ViajeCircuitoRepository } from '@repository/viaje-circuito.repository';
 import { ViajePasajeroRepository } from '@repository/viaje-pasajero.repository';
 import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository';
-// import { RutaParadaRepository } from '@repository/ruta-parada.repository';
+import { RutaParadaRepository } from '@repository/ruta-parada.repository';
 import { VehiculoRepository } from '@repository/vehiculo.repository';
 import { NotificacionesModule } from '../notificaciones/notificaciones.module';
 
@@ -33,7 +33,7 @@ import { NotificacionesModule } from '../notificaciones/notificaciones.module';
     RutaRepository,
     ClienteRepository,
     ViajeCircuitoRepository,
-    // RutaParadaRepository,
+    RutaParadaRepository,
     VehiculoRepository,
   ],
   imports: [NotificacionesModule],

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RutaRepository } from '@repository/ruta.repository';
-
+import { RutaParadaRepository } from '@repository/ruta-parada.repository';
 import { RutaCircuitoRepository } from '@repository/ruta-circuito.repository';
 import { PaginatedRutaResultDto } from './dto/ruta/ruta-paginated.dto';
 import { RutaCreateDto } from './dto/ruta/ruta-create.dto';
@@ -12,6 +12,7 @@ import { RutaCircuitoUpdateDto } from './dto/ruta-circuito/ruta-circuito-update.
 export class RutasService {
   constructor(
     private readonly rutaRepository: RutaRepository,
+    private readonly rutaParadaRepository: RutaParadaRepository,
     private readonly rutaCircuitoRepository: RutaCircuitoRepository,
   ) {}
 
@@ -133,6 +134,15 @@ export class RutasService {
         destinoLng: Number(ruta.destinoLng).toFixed(6),
         distancia: Number(ruta.distancia).toFixed(2),
         tiempoEstimado: ruta.tiempoEstimado,
+        paradas:
+          ruta.paradas?.map((p) => ({
+            nombre: p.nombre,
+            ubicacionLat: Number(p.ubicacionLat).toFixed(6),
+            ubicacionLng: Number(p.ubicacionLng).toFixed(6),
+            orden: p.orden,
+            distanciaPreviaParada: p.distanciaPreviaParada ? Number(p.distanciaPreviaParada).toFixed(2) : null,
+            tiempoEstimado: p.tiempoEstimado,
+          })) || [],
       };
     };
 
@@ -147,6 +157,15 @@ export class RutasService {
         destinoLng: Number(dto.destinoLng).toFixed(6),
         distancia: Number(dto.distancia).toFixed(2),
         tiempoEstimado: dto.tiempoEstimado,
+        paradas:
+          dto.paradas?.map((p) => ({
+            nombre: p.nombre,
+            ubicacionLat: Number(p.ubicacionLat).toFixed(6),
+            ubicacionLng: Number(p.ubicacionLng).toFixed(6),
+            orden: p.orden,
+            distanciaPreviaParada: p.distanciaPreviaParada ? Number(p.distanciaPreviaParada).toFixed(2) : null,
+            tiempoEstimado: p.tiempoEstimado,
+          })) || [],
       };
     };
 
@@ -210,6 +229,19 @@ export class RutasService {
       distancia: data.distancia.toString(),
       tiempoEstimado: data.tiempoEstimado,
     });
+
+    if (data.paradas && data.paradas.length > 0) {
+      const paradasData = data.paradas.map((parada, index) => ({
+        rutaId: nuevaRuta.id,
+        orden: parada.orden ?? index + 1,
+        nombre: parada.nombre,
+        ubicacionLat: parada.ubicacionLat.toString(),
+        ubicacionLng: parada.ubicacionLng.toString(),
+        distanciaPreviaParada: parada.distanciaPreviaParada?.toString(),
+        tiempoEstimado: parada.tiempoEstimado,
+      }));
+      await this.rutaParadaRepository.createMany(paradasData);
+    }
 
     return nuevaRuta;
   }

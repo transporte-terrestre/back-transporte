@@ -12,6 +12,8 @@ import { viajeCircuitos } from '@db/tables/viaje-circuito.table';
 import { viajeServicios } from '@db/tables/viaje-servicio.table';
 import { usuarios } from '@db/tables/usuario.table';
 import { clientes } from '@db/tables/cliente.table';
+import { rutaParadas } from '@db/tables/ruta-parada.table';
+
 import { conductorDocumentos } from '@db/tables/conductor-documento.table';
 import { usuarioDocumentos } from '@db/tables/usuario-documento.table';
 import { clienteDocumentos } from '@db/tables/cliente-documento.table';
@@ -36,6 +38,7 @@ const schema = {
   viajeServicios,
   usuarios,
   clientes,
+  rutaParadas,
   conductorDocumentos,
   usuarioDocumentos,
   clienteDocumentos,
