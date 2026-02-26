@@ -562,11 +562,11 @@ export class ViajesService {
   }
 
   async registrarSalida(viajeId: number, data: ViajeRegistrarSalidaDto) {
-    return this.registrarTramo(viajeId, 'origen', data);
+    return this.registrarTramo(viajeId, 'origen', data, data.rutaParadaId || null);
   }
 
   async registrarLlegada(viajeId: number, data: ViajeRegistrarLlegadaDto) {
-    return this.registrarTramo(viajeId, 'destino', data);
+    return this.registrarTramo(viajeId, 'destino', data, data.rutaParadaId || null);
   }
 
   async registrarPunto(viajeId: number, data: ViajeRegistrarPuntoDto) {
@@ -816,7 +816,7 @@ export class ViajesService {
     return await this.viajePasajeroRepository.findByViajeId(viajeId);
   }
 
-  async getProximoTramo(viajeId: number): Promise<ViajeProximoTramoResultDto> {
+  async getProximoTramo(viajeId: number, tipo?: ViajeServicioTipo): Promise<ViajeProximoTramoResultDto> {
     const viajeInfo = await this.viajeRepository.findOne(viajeId);
     if (!viajeInfo) throw new NotFoundException('Viaje no encontrado');
 
@@ -851,6 +851,26 @@ export class ViajesService {
       rutaParadaId: null,
       faltanPuntosFijos: false,
     };
+
+    // Si se solicita un tipo específico (origen/destino), retornar directamente
+    if (tipo && viajeInfo.ruta) {
+      if (tipo === 'origen') {
+        result.tipo = 'origen';
+        result.nombreLugar = viajeInfo.ruta.origen;
+        result.latitud = viajeInfo.ruta.origenLat;
+        result.longitud = viajeInfo.ruta.origenLng;
+        result.esPuntoFijo = true;
+        return result;
+      }
+      if (tipo === 'destino') {
+        result.tipo = 'destino';
+        result.nombreLugar = viajeInfo.ruta.destino;
+        result.latitud = viajeInfo.ruta.destinoLat;
+        result.longitud = viajeInfo.ruta.destinoLng;
+        result.esPuntoFijo = true;
+        return result;
+      }
+    }
 
     // Si tiene una ruta, analizar el progreso
     if (viajeInfo.ruta) {

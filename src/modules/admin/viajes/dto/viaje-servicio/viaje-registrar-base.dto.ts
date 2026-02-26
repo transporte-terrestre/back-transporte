@@ -33,4 +33,9 @@ export class ViajeRegistrarBaseDto {
   @IsOptional()
   @IsString()
   nombreLugar?: string;
+
+  @ApiPropertyOptional({ example: 1, description: 'ID de la parada de ruta asociada (opcional)' })
+  @IsOptional()
+  @IsInt()
+  rutaParadaId?: number;
 }

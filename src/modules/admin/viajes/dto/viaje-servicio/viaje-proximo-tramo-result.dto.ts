@@ -1,6 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { tipoServicioEnum } from '@db/tables/viaje-servicio.table';
 import type { ViajeServicioTipo } from '@db/tables/viaje-servicio.table';
+import { IsOptional, IsEnum } from 'class-validator';
+
+export class ViajeProximoTramoQueryDto {
+  @ApiPropertyOptional({
+    description: 'Tipo de tramo para el que se solicita sugerencia (origen, punto, parada, descanso, destino)',
+    enum: tipoServicioEnum.enumValues,
+  })
+  @IsOptional()
+  @IsEnum(tipoServicioEnum.enumValues)
+  tipo?: ViajeServicioTipo;
+}
+
 
 export class ViajeProximoTramoResultDto {
   @ApiProperty({

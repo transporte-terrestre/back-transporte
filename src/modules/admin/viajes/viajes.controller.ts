@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Put, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ViajesService } from './viajes.service';
+import type { ViajeServicioTipo } from '@db/tables/viaje-servicio.table';
 import { ViajeCreateDto } from './dto/viaje/viaje-create.dto';
 import { ViajeUpdateDto } from './dto/viaje/viaje-update.dto';
 import { ViajeResultDto } from './dto/viaje/viaje-result.dto';
@@ -23,7 +24,7 @@ import { ViajeRegistrarDescansoDto } from './dto/viaje-servicio/viaje-registrar-
 import { ViajeRegistrarSalidaDto } from './dto/viaje-servicio/viaje-registrar-salida.dto';
 import { ViajeRegistrarLlegadaDto } from './dto/viaje-servicio/viaje-registrar-llegada.dto';
 import { ViajeRegistrarPuntoDto } from './dto/viaje-servicio/viaje-registrar-punto.dto';
-import { ViajeProximoTramoResultDto } from './dto/viaje-servicio/viaje-proximo-tramo-result.dto';
+import { ViajeProximoTramoResultDto, ViajeProximoTramoQueryDto } from './dto/viaje-servicio/viaje-proximo-tramo-result.dto';
 import { ViajeHojaRutaResultDto } from './dto/viaje-servicio/viaje-hoja-ruta-result.dto';
 
 import { ChecklistItemCreateDto } from './dto/checklist-item/checklist-item-create.dto';
@@ -321,8 +322,8 @@ export class ViajesController {
   @ApiOperation({ summary: 'Obtener la sugerencia del próximo tramo basado en la ruta y el progreso actual' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
   @ApiResponse({ status: 200, type: ViajeProximoTramoResultDto })
-  getProximoTramo(@Param('viajeId') viajeId: string) {
-    return this.viajesService.getProximoTramo(+viajeId);
+  getProximoTramo(@Param('viajeId') viajeId: string, @Query() query: ViajeProximoTramoQueryDto) {
+    return this.viajesService.getProximoTramo(+viajeId, query.tipo);
   }
 
   @Patch('servicio/update/:id')
