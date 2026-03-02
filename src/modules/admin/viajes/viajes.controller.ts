@@ -35,6 +35,8 @@ import { ViajeChecklistResultDto } from './dto/viaje-checklist/viaje-checklist-r
 import { ViajeChecklistQueryDto } from './dto/viaje-checklist/viaje-checklist-query.dto';
 import { ViajePasajeroResultDto } from './dto/viaje-pasajero/viaje-pasajero-result.dto';
 import { ViajePasajeroFillDto } from './dto/viaje-pasajero/viaje-pasajero-fill.dto';
+import { ViajeEscanearDnisDto } from './dto/viaje-pasajero/viaje-escanear-dnis.dto';
+import { ViajeEscanearDnisResultDto } from './dto/viaje-pasajero/viaje-escanear-dnis-result.dto';
 
 @ApiTags('viajes')
 @ApiBearerAuth()
@@ -357,6 +359,14 @@ export class ViajesController {
   @ApiResponse({ status: 201, type: [ViajePasajeroResultDto] })
   upsertPasajeros(@Param('viajeId') viajeId: string, @Body() upsertDto: ViajePasajeroFillDto) {
     return this.viajesService.upsertPasajeros(+viajeId, upsertDto);
+  }
+
+  @Post(':viajeId/pasajeros/escanear-dnis')
+  @ApiOperation({ summary: 'Escanear imágenes de DNIs y marcar asistencia/registrar pasajeros automáticamente' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 201, type: ViajeEscanearDnisResultDto })
+  escanearDnis(@Param('viajeId') viajeId: string, @Body() dto: ViajeEscanearDnisDto) {
+    return this.viajesService.escanearDnis(+viajeId, dto);
   }
 
   // ========== CHECKLIST ITEMS (Catálogo) ==========

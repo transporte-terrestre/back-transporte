@@ -46,6 +46,15 @@ export class PasajeroRepository {
     return result[0] || null;
   }
 
+  async findOneByDni(dni: string) {
+    const result = await database
+      .select()
+      .from(pasajeros)
+      .where(and(eq(pasajeros.dni, dni), isNull(pasajeros.eliminadoEn)));
+
+    return result[0] || null;
+  }
+
   async findByClienteId(clienteId: number) {
     return await database
       .select()

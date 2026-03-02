@@ -14,9 +14,11 @@ import { ViajeCircuitoRepository } from '@repository/viaje-circuito.repository';
 import { ViajePasajeroRepository } from '@repository/viaje-pasajero.repository';
 import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository';
 import { RutaParadaRepository } from '@repository/ruta-parada.repository';
+import { PasajeroRepository } from '@repository/pasajero.repository';
 import { VehiculoRepository } from '@repository/vehiculo.repository';
 import { MantenimientoRepository } from '@repository/mantenimiento.repository';
 import { NotificacionesModule } from '../notificaciones/notificaciones.module';
+import { GeminiAiModule } from '@module/gemini-ai/gemini-ai.module';
 
 @Module({
   controllers: [ViajesController],
@@ -26,6 +28,7 @@ import { NotificacionesModule } from '../notificaciones/notificaciones.module';
     ViajeConductorRepository,
     ViajeVehiculoRepository,
     ViajePasajeroRepository,
+    PasajeroRepository,
     ViajeComentarioRepository,
     ViajeServicioRepository,
     ChecklistItemRepository,
@@ -38,7 +41,7 @@ import { NotificacionesModule } from '../notificaciones/notificaciones.module';
     VehiculoRepository,
     MantenimientoRepository,
   ],
-  imports: [NotificacionesModule],
+  imports: [NotificacionesModule, GeminiAiModule],
   exports: [ViajeServicioRepository, ChecklistItemRepository, ViajeChecklistRepository],
 })
 export class ViajesModule {}

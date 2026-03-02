@@ -39,6 +39,10 @@ import { ViajePasajeroFillDto } from './dto/viaje-pasajero/viaje-pasajero-fill.d
 import { ViajeTrayectoResultDto, ViajePuntoTrayectoDto } from './dto/viaje/viaje-trayecto-result.dto';
 import { ViajeHojaRutaResultDto } from './dto/viaje-servicio/viaje-hoja-ruta-result.dto';
 import { NotificacionesService } from '../notificaciones/notificaciones.service';
+import { GeminiAiService } from '@module/gemini-ai/gemini-ai.service';
+import { PasajeroRepository } from '@repository/pasajero.repository';
+import { ViajeEscanearDnisDto } from './dto/viaje-pasajero/viaje-escanear-dnis.dto';
+import { ScanDniResultItem, ViajeEscanearDnisResultDto } from './dto/viaje-pasajero/viaje-escanear-dnis-result.dto';
 
 interface UsuarioAutenticado {
   sub: number;
@@ -64,6 +68,8 @@ export class ViajesService {
     private readonly viajeCircuitoRepository: ViajeCircuitoRepository,
     private readonly notificacionesService: NotificacionesService,
     private readonly mantenimientoRepository: MantenimientoRepository,
+    private readonly geminiAiService: GeminiAiService,
+    private readonly pasajeroRepository: PasajeroRepository,
   ) {}
 
   async findAllPaginated(
@@ -836,34 +842,102 @@ export class ViajesService {
   }
 
   async upsertPasajeros(viajeId: number, data: ViajePasajeroFillDto) {
-    // Deduplicate input by pasajeroId (last one wins)
-    const uniqueMap = new Map<number, boolean>();
-    (data.pasajeros || []).forEach((p) => uniqueMap.set(p.pasajeroId, p.asistencia));
+    // 1. Obtener los pasajeros actuales del viaje
+    const currentList = await this.viajePasajeroRepository.findByViajeId(viajeId);
 
-    const dtos = Array.from(uniqueMap.entries()).map(([pasajeroId, asistencia]) => ({
+    const incoming = data.pasajeros || [];
+
+    // 2. Preparar los DTOs para insertar/actualizar
+    const dtos = incoming.map((p) => ({
       viajeId,
-      pasajeroId,
-      asistencia,
+      pasajeroId: p.pasajeroId || null,
+      dni: p.dni || null,
+      nombres: p.nombres || null,
+      apellidos: p.apellidos || null,
+      asistencia: p.asistencia,
     }));
 
-    // Sync logic: delete passengers NOT in the incoming list
-    const current = await this.viajePasajeroRepository.findByViajeId(viajeId);
-    const splitCurrentIds = new Set(current.map((c) => c.pasajeroId));
-    const incomingIds = new Set(dtos.map((d) => d.pasajeroId));
+    // 3. Identificar registros a eliminar
+    // Un registro se mantiene si coincide por pasajeroId o por DNI
+    const idsToKeep = new Set<number>();
 
-    // IDs to delete: those in the DB but not in our incoming list
-    const toDelete = Array.from(splitCurrentIds).filter((id) => !incomingIds.has(id));
-
-    if (toDelete.length > 0) {
-      await this.viajePasajeroRepository.removePasajeros(viajeId, toDelete);
+    for (const item of incoming) {
+      const match = currentList.find((c) => {
+        if (item.pasajeroId && c.pasajeroId === item.pasajeroId) return true;
+        if (!item.pasajeroId && item.dni && c.dni === item.dni) return true;
+        return false;
+      });
+      if (match) idsToKeep.add(match.id);
     }
 
-    // Upsert the remaining/new ones
+    const idsToDelete = currentList.filter((c) => !idsToKeep.has(c.id)).map((c) => c.id);
+
+    // 4. Ejecutar cambios en la DB
+    if (idsToDelete.length > 0) {
+      await this.viajePasajeroRepository.removePasajeros(viajeId, idsToDelete);
+    }
+
     if (dtos.length > 0) {
       await this.viajePasajeroRepository.addPasajeros(dtos);
     }
 
+    // 5. Retornar la lista actualizada
     return await this.viajePasajeroRepository.findByViajeId(viajeId);
+  }
+
+  async escanearDnis(viajeId: number, dto: ViajeEscanearDnisDto): Promise<ViajeEscanearDnisResultDto> {
+    const resultados: ScanDniResultItem[] = [];
+    const currentPasajeros = await this.viajePasajeroRepository.findByViajeId(viajeId);
+
+    for (const url of dto.urls) {
+      const data = await this.geminiAiService.extractDniData(url);
+      if (data) {
+        // Buscar si ya existe en el viaje (por DNI)
+        const existingInTrip = currentPasajeros.find((p) => (p.dni || p.pasajero?.dni) === data.dni);
+
+        if (existingInTrip) {
+          // Si ya existe, marcar asistencia
+          await this.viajePasajeroRepository.updateAsistencia(existingInTrip.id, true);
+          resultados.push({ ...data, matched: true, status: 'EXISTENTE_EN_VIAJE' });
+        } else {
+          // Buscar en tabla global de pasajeros
+          const globalPasajero = await this.pasajeroRepository.findOneByDni(data.dni);
+
+          if (globalPasajero) {
+            // Existe en el sistema, añadir al viaje
+            await this.viajePasajeroRepository.addPasajeros([
+              {
+                viajeId,
+                pasajeroId: globalPasajero.id,
+                asistencia: true,
+              },
+            ]);
+            resultados.push({ ...data, matched: true, status: 'AGREGADO_DESDE_SISTEMA' });
+          } else {
+            // No existe, añadir como ad-hoc
+            await this.viajePasajeroRepository.addPasajeros([
+              {
+                viajeId,
+                dni: data.dni,
+                nombres: data.nombres,
+                apellidos: data.apellidos,
+                asistencia: true,
+              },
+            ]);
+            resultados.push({ ...data, matched: true, status: 'CREADO_AD_HOC' });
+          }
+        }
+      } else {
+        resultados.push({ url, matched: false, status: 'ERROR_OCR', error: 'No se pudo extraer información de la imagen' });
+      }
+    }
+
+    return {
+      exito: true,
+      mensaje: 'Procesamiento de DNIs completado',
+      resultados,
+      pasajerosActualizados: await this.viajePasajeroRepository.findByViajeId(viajeId),
+    };
   }
 
   async getProximoTramo(viajeId: number, tipo?: ViajeServicioTipo): Promise<ViajeProximoTramoResultDto> {

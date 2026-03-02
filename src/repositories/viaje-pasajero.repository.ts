@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, sql } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { viajePasajeros, ViajePasajeroDTO } from '@db/tables/viaje-pasajero.table';
 import { pasajeros } from '@db/tables/pasajero.table';
@@ -9,8 +9,12 @@ export class ViajePasajeroRepository {
   async findByViajeId(viajeId: number) {
     return await database
       .select({
+        id: viajePasajeros.id,
         viajeId: viajePasajeros.viajeId,
         pasajeroId: viajePasajeros.pasajeroId,
+        dni: viajePasajeros.dni,
+        nombres: viajePasajeros.nombres,
+        apellidos: viajePasajeros.apellidos,
         asistencia: viajePasajeros.asistencia,
         creadoEn: viajePasajeros.creadoEn,
         actualizadoEn: viajePasajeros.actualizadoEn,
@@ -22,15 +26,19 @@ export class ViajePasajeroRepository {
         },
       })
       .from(viajePasajeros)
-      .innerJoin(pasajeros, eq(viajePasajeros.pasajeroId, pasajeros.id))
+      .leftJoin(pasajeros, eq(viajePasajeros.pasajeroId, pasajeros.id))
       .where(eq(viajePasajeros.viajeId, viajeId));
   }
 
-  async findOne(viajeId: number, pasajeroId: number) {
+  async findOne(id: number) {
     const results = await database
       .select({
+        id: viajePasajeros.id,
         viajeId: viajePasajeros.viajeId,
         pasajeroId: viajePasajeros.pasajeroId,
+        dni: viajePasajeros.dni,
+        nombres: viajePasajeros.nombres,
+        apellidos: viajePasajeros.apellidos,
         asistencia: viajePasajeros.asistencia,
         creadoEn: viajePasajeros.creadoEn,
         actualizadoEn: viajePasajeros.actualizadoEn,
@@ -42,8 +50,8 @@ export class ViajePasajeroRepository {
         },
       })
       .from(viajePasajeros)
-      .innerJoin(pasajeros, eq(viajePasajeros.pasajeroId, pasajeros.id))
-      .where(and(eq(viajePasajeros.viajeId, viajeId), eq(viajePasajeros.pasajeroId, pasajeroId)))
+      .leftJoin(pasajeros, eq(viajePasajeros.pasajeroId, pasajeros.id))
+      .where(eq(viajePasajeros.id, id))
       .limit(1);
 
     return results[0] || null;
@@ -52,24 +60,52 @@ export class ViajePasajeroRepository {
   async addPasajeros(data: ViajePasajeroDTO[]) {
     if (data.length === 0) return [];
 
-    return await database
-      .insert(viajePasajeros)
-      .values(data)
-      .onConflictDoUpdate({
-        target: [viajePasajeros.viajeId, viajePasajeros.pasajeroId],
-        set: {
-          asistencia: require('drizzle-orm').sql`excluded.asistencia`,
-          actualizadoEn: new Date(),
-        },
-      })
-      .returning();
+    // Separamos los pasajeros en los que tienen pasajeroId y los que tienen dni (ad-hoc)
+    const withPasajeroId = data.filter((p) => p.pasajeroId);
+    const withDniOnly = data.filter((p) => !p.pasajeroId && p.dni);
+
+    const results = [];
+
+    if (withPasajeroId.length > 0) {
+      const res = await database
+        .insert(viajePasajeros)
+        .values(withPasajeroId)
+        .onConflictDoUpdate({
+          target: [viajePasajeros.viajeId, viajePasajeros.pasajeroId],
+          set: {
+            asistencia: sql`excluded.asistencia`,
+            actualizadoEn: new Date(),
+          },
+        })
+        .returning();
+      results.push(...res);
+    }
+
+    if (withDniOnly.length > 0) {
+      const res = await database
+        .insert(viajePasajeros)
+        .values(withDniOnly)
+        .onConflictDoUpdate({
+          target: [viajePasajeros.viajeId, viajePasajeros.dni],
+          set: {
+            asistencia: sql`excluded.asistencia`,
+            nombres: sql`excluded.nombres`,
+            apellidos: sql`excluded.apellidos`,
+            actualizadoEn: new Date(),
+          },
+        })
+        .returning();
+      results.push(...res);
+    }
+
+    return results;
   }
 
-  async removePasajeros(viajeId: number, pasajeroIds: number[]) {
-    if (pasajeroIds.length === 0) return;
+  async removePasajeros(viajeId: number, ids: number[]) {
+    if (ids.length === 0) return;
     return await database
       .delete(viajePasajeros)
-      .where(and(eq(viajePasajeros.viajeId, viajeId), inArray(viajePasajeros.pasajeroId, pasajeroIds)))
+      .where(and(eq(viajePasajeros.viajeId, viajeId), inArray(viajePasajeros.id, ids)))
       .returning();
   }
 
@@ -77,11 +113,7 @@ export class ViajePasajeroRepository {
     return await database.delete(viajePasajeros).where(eq(viajePasajeros.viajeId, viajeId));
   }
 
-  async updateAsistencia(viajeId: number, pasajeroId: number, asistencia: boolean) {
-    return await database
-      .update(viajePasajeros)
-      .set({ asistencia, actualizadoEn: new Date() })
-      .where(and(eq(viajePasajeros.viajeId, viajeId), eq(viajePasajeros.pasajeroId, pasajeroId)))
-      .returning();
+  async updateAsistencia(id: number, asistencia: boolean) {
+    return await database.update(viajePasajeros).set({ asistencia, actualizadoEn: new Date() }).where(eq(viajePasajeros.id, id)).returning();
   }
 }
