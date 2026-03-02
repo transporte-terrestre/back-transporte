@@ -20,10 +20,12 @@ import { clienteDocumentos } from '@db/tables/cliente-documento.table';
 import { vehiculoDocumentos } from '@db/tables/vehiculo-documento.table';
 import { viajeConductores } from '@db/tables/viaje-conductor.table';
 import { viajeVehiculos } from '@db/tables/viaje-vehiculo.table';
+import { vehiculoComentarios } from '@db/tables/vehiculo-comentario.table';
 import { viajeComentarios } from '@db/tables/viaje-comentario.table';
 import { checklistItems } from '@db/tables/checklist-item.table';
 import { viajeChecklists } from '@db/tables/viaje-checklist.table';
 import { viajeChecklistItems } from '@db/tables/viaje-checklist-item.table';
+import { alquileres } from '@db/tables/alquiler.table';
 
 const pool = new Pool(dbConfig);
 
@@ -45,10 +47,12 @@ const schema = {
   vehiculoDocumentos,
   viajeConductores,
   viajeVehiculos,
+  vehiculoComentarios,
   viajeComentarios,
   checklistItems,
   viajeChecklists,
   viajeChecklistItems,
+  alquileres,
 };
 
 export const database = drizzle(pool, { schema: schema });

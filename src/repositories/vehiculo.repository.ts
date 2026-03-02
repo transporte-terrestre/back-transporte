@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { eq, or, like, and, gte, lte, count, sql, ilike, desc, isNull, getTableColumns, inArray, asc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { vehiculos, VehiculoDTO } from '@db/tables/vehiculo.table';
+import type { VehiculoEstado } from '@db/tables/vehiculo.table';
 import { modelos } from '@db/tables/modelo.table';
 import { marcas } from '@db/tables/marca.table';
 import { propietarios } from '@db/tables/propietario.table';
@@ -15,7 +16,8 @@ interface PaginationFilters {
   search?: string;
   fechaInicio?: string;
   fechaFin?: string;
-  estado?: string;
+  estado?: VehiculoEstado;
+  marcaId?: number;
 }
 
 @Injectable()
@@ -52,6 +54,10 @@ export class VehiculoRepository {
 
     if (filters?.estado) {
       conditions.push(eq(sql`${vehiculos.estado}::text`, filters.estado));
+    }
+
+    if (filters?.marcaId) {
+      conditions.push(eq(modelos.marcaId, filters.marcaId));
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
@@ -255,19 +261,12 @@ export class VehiculoRepository {
     return result[0];
   }
 
-  async findAllWithDocumentos(
-    page: number = 1,
-    limit: number = 10,
-    filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO,
-  ) {
+  async findAllWithDocumentos(page: number = 1, limit: number = 10, filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO) {
     const offset = (page - 1) * limit;
 
     const whereClause = isNull(vehiculos.eliminadoEn);
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(vehiculos)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(vehiculos).where(whereClause);
 
     const vehiculosConConteo = await database
       .select({
@@ -286,9 +285,9 @@ export class VehiculoRepository {
       documentosNulos: tiposDocumentosEsperados - Number(v.cantidadDocumentos),
     }));
 
-    if (filtro === "completo") {
+    if (filtro === 'completo') {
       vehiculosOrdenados.sort((a, b) => a.documentosNulos - b.documentosNulos);
-    } else if (filtro === "incompleto") {
+    } else if (filtro === 'incompleto') {
       vehiculosOrdenados.sort((a, b) => b.documentosNulos - a.documentosNulos);
     }
 
@@ -316,10 +315,7 @@ export class VehiculoRepository {
       return vehiculosData.find((v) => v.id === id)!;
     });
 
-    const documentos = await database
-      .select()
-      .from(vehiculoDocumentos)
-      .where(inArray(vehiculoDocumentos.vehiculoId, ids));
+    const documentos = await database.select().from(vehiculoDocumentos).where(inArray(vehiculoDocumentos.vehiculoId, ids));
 
     const documentosPorVehiculo: Record<number, VehiculoDocumento[]> = {};
     for (const doc of documentos) {

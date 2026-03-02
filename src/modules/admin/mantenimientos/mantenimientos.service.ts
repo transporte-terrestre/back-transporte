@@ -39,7 +39,10 @@ export class MantenimientosService {
     const hasPreviousPage = page > 1;
 
     return {
-      data,
+      data: data.map((item) => ({
+        ...item,
+        taller: item.taller ? ({ ...item.taller, sucursalIds: [] as number[] } as any) : null,
+      })),
       meta: {
         total,
         page,

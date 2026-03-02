@@ -97,7 +97,6 @@ export async function seedVehiculos(modelosData: Modelo[]): Promise<Vehiculo[]> 
       anioModelo: anio + 1,
       pasajeros: Math.floor(Math.random() * 40) + 10,
       ruedas: Math.random() > 0.5 ? 4 : 6,
-      anotaciones: 'Sin novedades',
       sede: randomElement(['Lima', 'Arequipa', 'Trujillo', 'Cusco']),
       potencia: `${Math.floor(Math.random() * 200 + 100)}hp`,
       formulaRodante: Math.random() > 0.5 ? '4x2' : '4x4',

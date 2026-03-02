@@ -1,18 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
-import { clientes, Cliente, ClienteDTO } from '@db/tables/cliente.table';
+import { clientes, ClienteDTO } from '@db/tables/cliente.table';
 import { eq, sql, count, or, like, and, gte, lte, ilike, desc, isNull } from 'drizzle-orm';
-
-interface PaginationFilters {
-  search?: string;
-  fechaInicio?: string;
-  fechaFin?: string;
-  tipoDocumento?: string;
-}
+import { ClientePaginationQueryDto } from '@module/admin/clientes/dto/cliente/cliente-paginated.dto';
 
 @Injectable()
 export class ClienteRepository {
-  async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: Partial<ClientePaginationQueryDto>) {
     const offset = (page - 1) * limit;
 
     // Construir condiciones de filtro

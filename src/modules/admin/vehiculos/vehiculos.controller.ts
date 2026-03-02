@@ -12,6 +12,9 @@ import { VehiculoDocumentosEstadoQueryDto, PaginatedVehiculoEstadoDocumentosResu
 import { VehiculoDocumentoCreateDto } from './dto/vehiculo-documento/vehiculo-documento-create.dto';
 import { VehiculoDocumentoUpdateDto } from './dto/vehiculo-documento/vehiculo-documento-update.dto';
 import { VehiculoDocumentoResultDto } from './dto/vehiculo-documento/vehiculo-documento-result.dto';
+import { VehiculoComentarioCreateDto } from './dto/vehiculo-comentario/vehiculo-comentario-create.dto';
+import { VehiculoComentarioUpdateDto } from './dto/vehiculo-comentario/vehiculo-comentario-update.dto';
+import { VehiculoComentarioResultDto } from './dto/vehiculo-comentario/vehiculo-comentario-result.dto';
 import { MarcaCreateDto } from './dto/marca/marca-create.dto';
 import { MarcaUpdateDto } from './dto/marca/marca-update.dto';
 import { MarcaResultDto } from './dto/marca/marca-result.dto';
@@ -56,7 +59,15 @@ export class VehiculosController {
   @ApiOperation({ summary: 'Obtener vehículos con paginación, búsqueda y filtros' })
   @ApiResponse({ status: 200, type: PaginatedVehiculoResultDto })
   findAll(@Query() query: VehiculoPaginationQueryDto) {
-    return this.vehiculosService.findAllPaginated(query.page, query.limit, query.search, query.fechaInicio, query.fechaFin, query.estado);
+    return this.vehiculosService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+      query.estado,
+      query.marcaId,
+    );
   }
 
   @Get('estado-documentos')
@@ -141,6 +152,46 @@ export class VehiculosController {
   @ApiResponse({ status: 200, type: VehiculoDocumentoResultDto })
   deleteDocumento(@Param('id') id: string) {
     return this.vehiculosService.deleteDocumento(+id);
+  }
+
+  // ========== COMENTARIOS ==========
+  @Get(':id/comentario/find-all')
+  @ApiOperation({ summary: 'Obtener todos los comentarios de un vehículo' })
+  @ApiParam({ name: 'id', description: 'ID del vehículo', type: Number })
+  @ApiResponse({ status: 200, type: [VehiculoComentarioResultDto] })
+  findComentariosByVehiculo(@Param('id') id: string) {
+    return this.vehiculosService.findComentariosByVehiculo(+id);
+  }
+
+  @Get('comentario/find-one/:id')
+  @ApiOperation({ summary: 'Obtener un comentario por ID' })
+  @ApiParam({ name: 'id', description: 'ID del comentario', type: Number })
+  @ApiResponse({ status: 200, type: VehiculoComentarioResultDto })
+  findOneComentario(@Param('id') id: string) {
+    return this.vehiculosService.findOneComentario(+id);
+  }
+
+  @Post('comentario/create')
+  @ApiOperation({ summary: 'Crear un nuevo comentario para un vehículo' })
+  @ApiResponse({ status: 201, type: VehiculoComentarioResultDto })
+  createComentario(@Body() createDto: VehiculoComentarioCreateDto) {
+    return this.vehiculosService.createComentario(createDto);
+  }
+
+  @Patch('comentario/update/:id')
+  @ApiOperation({ summary: 'Actualizar un comentario' })
+  @ApiParam({ name: 'id', description: 'ID del comentario', type: Number })
+  @ApiResponse({ status: 200, type: VehiculoComentarioResultDto })
+  updateComentario(@Param('id') id: string, @Body() updateDto: VehiculoComentarioUpdateDto) {
+    return this.vehiculosService.updateComentario(+id, updateDto);
+  }
+
+  @Delete('comentario/delete/:id')
+  @ApiOperation({ summary: 'Eliminar un comentario' })
+  @ApiParam({ name: 'id', description: 'ID del comentario', type: Number })
+  @ApiResponse({ status: 200, type: VehiculoComentarioResultDto })
+  deleteComentario(@Param('id') id: string) {
+    return this.vehiculosService.deleteComentario(+id);
   }
 
   // ========== MARCAS ==========

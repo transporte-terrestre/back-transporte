@@ -12,6 +12,7 @@ import { RutaRepository } from '@repository/ruta.repository';
 import { RutaParadaRepository } from '@repository/ruta-parada.repository';
 import { VehiculoRepository } from '@repository/vehiculo.repository';
 import { ClienteRepository } from '@repository/cliente.repository';
+import { MantenimientoRepository } from '@repository/mantenimiento.repository';
 import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository'; // Inyectado
 import { ViajeCreateDto, ViajeDetalleCreateDto } from './dto/viaje/viaje-create.dto';
 import { ViajeUpdateDto } from './dto/viaje/viaje-update.dto';
@@ -62,6 +63,7 @@ export class ViajesService {
     private readonly clienteRepository: ClienteRepository,
     private readonly viajeCircuitoRepository: ViajeCircuitoRepository,
     private readonly notificacionesService: NotificacionesService,
+    private readonly mantenimientoRepository: MantenimientoRepository,
   ) {}
 
   async findAllPaginated(
@@ -547,18 +549,66 @@ export class ViajesService {
       rutaParadaId,
     });
 
-    // Actualizar kilometraje del vehículo si es el principal
-    if (result.kilometrajeFinal) {
-      const vehiculosAsignados = await this.viajeVehiculoRepository.findByViajeId(viajeId);
-      const principal = vehiculosAsignados.find((v) => v.esPrincipal) || vehiculosAsignados[0];
-      if (principal) {
-        await this.vehiculoRepository.update(principal.vehiculoId, {
-          kilometraje: result.kilometrajeFinal,
-        });
-      }
-    }
+    // Ejecutar lógica de estados y notificaciones en segundo plano (Fire and Forget)
+    this.procesarSideEffectsViaje(viajeId, tipo, data, result.kilometrajeFinal).catch((err) => {
+      console.error('Error en procesarSideEffectsViaje:', err);
+    });
 
     return result;
+  }
+
+  private async procesarSideEffectsViaje(viajeId: number, tipo: ViajeServicioTipo, data: ViajeRegistrarBaseDto, kilometrajeFinal: number | null) {
+    try {
+      const vehiculosAsignados = await this.viajeVehiculoRepository.findByViajeId(viajeId);
+      const principal = vehiculosAsignados.find((v) => v.esPrincipal) || vehiculosAsignados[0];
+
+      // 1. Actualizar kilometraje del vehículo si es proporcionado
+      if (kilometrajeFinal && principal) {
+        await this.vehiculoRepository.update(principal.vehiculoId, {
+          kilometraje: kilometrajeFinal,
+        });
+      }
+
+      // 2. Lógica según el tipo de tramo (Salida o Llegada)
+      if (tipo === 'origen') {
+        // Inicia el viaje
+        await this.viajeRepository.update(viajeId, { estado: 'en_progreso' });
+        // Vehículo pasa a circulación
+        if (principal) {
+          await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'circulacion' });
+        }
+      } else if (tipo === 'destino') {
+        // Finaliza el viaje
+        await this.viajeRepository.update(viajeId, {
+          estado: 'completado',
+          fechaLlegada: data.horaActual,
+          distanciaFinal: data.kilometrajeActual ? data.kilometrajeActual.toString() : undefined,
+        });
+
+        // Vehículo vuelve a estar disponible
+        if (principal) {
+          await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'disponible' });
+
+          // 3. Verificación de Mantenimiento
+          const ultimoMant = await this.mantenimientoRepository.findLatestByVehiculo(principal.vehiculoId);
+          if (ultimoMant && ultimoMant.kilometrajeProximoMantenimiento) {
+            const kmActual = Number(data.kilometrajeActual);
+            const kmProxMant = Number(ultimoMant.kilometrajeProximoMantenimiento);
+
+            if (kmActual >= kmProxMant) {
+              // Obtener placa para la notificación
+              const vehiculo = await this.vehiculoRepository.findOne(principal.vehiculoId);
+              if (vehiculo) {
+                await this.notificacionesService.notifyMaintenance(vehiculo.id, vehiculo.placa, kmActual, kmProxMant);
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Registrar error pero permitir que el proceso de fondo termine sin afectar al hilo principal
+      console.error(`Error procesando side effects para el viaje ${viajeId}:`, error);
+    }
   }
 
   async registrarSalida(viajeId: number, data: ViajeRegistrarSalidaDto) {

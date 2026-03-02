@@ -52,4 +52,11 @@ export class TallerListDto {
     description: 'Fecha de creación',
   })
   creadoEn: Date;
+
+  @ApiProperty({
+    example: [1, 2],
+    description: 'IDs de las sucursales',
+    type: [Number],
+  })
+  sucursalIds: number[];
 }

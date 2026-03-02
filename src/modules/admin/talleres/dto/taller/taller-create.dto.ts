@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, IsIn } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, IsIn, IsInt, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TallerDTO, talleresTipo } from '@db/tables/taller.table';
 import type { TallerTipo } from '@db/tables/taller.table';
@@ -66,4 +66,14 @@ export class TallerCreateDto implements Omit<TallerDTO, 'id' | 'creadoEn' | 'act
   @IsOptional()
   @MaxLength(255)
   direccion?: string | null;
+
+  @ApiPropertyOptional({
+    example: [1, 2],
+    description: 'IDs de las sucursales del taller',
+    type: [Number],
+  })
+  @IsArray()
+  @IsInt({ each: true })
+  @IsOptional()
+  sucursalIds?: number[];
 }

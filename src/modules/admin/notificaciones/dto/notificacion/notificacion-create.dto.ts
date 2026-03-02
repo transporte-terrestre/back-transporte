@@ -1,4 +1,4 @@
-import { IsString, IsIn, IsOptional } from 'class-validator';
+import { IsString, IsIn, IsOptional, IsObject } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { notificacionTipo } from '@db/tables/notificacion.table';
 import type { NotificacionTipo } from '@db/tables/notificacion.table';
@@ -20,4 +20,9 @@ export class NotificacionCreateDto {
   @IsIn(notificacionTipo.enumValues)
   @IsOptional()
   tipo?: NotificacionTipo;
+
+  @ApiProperty({ required: false, type: Object })
+  @IsObject()
+  @IsOptional()
+  metadata?: Record<string, any>;
 }

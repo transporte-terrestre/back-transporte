@@ -66,6 +66,50 @@ export class NotificacionesService {
     };
   }
 
+  async notifyMaintenance(vehiculoId: number, placa: string, kmActual: number, kmProxMant: number): Promise<void> {
+    const admins = await this.notificacionRepository.findUsersByRole('admin');
+    const adminEmails = admins.map((u) => u.email).filter((e) => e);
+
+    // In-app notification for admins
+    const notificacionData = {
+      titulo: `Mantenimiento requerido: ${placa}`,
+      mensaje: `El vehículo ${placa} alcanzó los ${kmActual} KM (Programado: ${kmProxMant} KM).`,
+      tipo: 'warning' as const,
+      metadata: { entidad: 'vehiculo', id: vehiculoId },
+    };
+    await this.notificacionRepository.create(notificacionData);
+
+    if (adminEmails.length === 0) return;
+
+    const htmlContent = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+        <h2 style="color: #d97706;">Alerta de Mantenimiento Requerido</h2>
+        <p>Se ha detectado que un vehículo ha alcanzado o superado el kilometraje programado para su próximo mantenimiento al finalizar un viaje.</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <p><strong>Vehículo (Placa):</strong> <span style="font-size: 1.2em; color: #111;">${placa}</span></p>
+        <p><strong>Kilometraje Actual:</strong> ${kmActual.toLocaleString('es-PE')} KM</p>
+        <p><strong>Kilometraje Programado:</strong> ${kmProxMant.toLocaleString('es-PE')} KM</p>
+        <p style="margin-top: 20px; color: #cc3300; font-weight: bold;">Por favor, gestione el ingreso a taller del vehículo a la brevedad.</p>
+        <p style="margin-top: 30px; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 10px;">
+          Este es un mensaje automático del Sistema de Gestión de Transporte.
+        </p>
+      </div>
+    `;
+
+    for (const email of adminEmails) {
+      try {
+        await this.sendEmail({
+          to: email,
+          subject: `[ALERTA] Mantenimiento Requerido - Vehículo ${placa}`,
+          text: `El vehículo ${placa} requiere mantenimiento. KM Actual: ${kmActual}, KM Programado: ${kmProxMant}.`,
+          html: htmlContent,
+        });
+      } catch (e) {
+        console.error(`Error enviando alerta de mantenimiento a admin ${email}:`, e);
+      }
+    }
+  }
+
   async create(data: NotificacionCreateDto): Promise<NotificacionResultDto> {
     const result = await this.notificacionRepository.create(data);
     return {
@@ -387,11 +431,17 @@ export class NotificacionesService {
       };
     }
 
-    const notificacionesData = previews.map((preview) => ({
-      titulo: preview.titulo,
-      mensaje: preview.mensaje,
-      tipo: preview.tipo,
-    }));
+    const notificacionesData = previews.map((preview) => {
+      return {
+        titulo: preview.titulo,
+        mensaje: preview.mensaje,
+        tipo: preview.tipo,
+        metadata: {
+          entidad: preview.entidad,
+          id: preview.entidadId,
+        },
+      };
+    });
 
     const createdNotifications = await this.notificacionRepository.createMany(notificacionesData);
 

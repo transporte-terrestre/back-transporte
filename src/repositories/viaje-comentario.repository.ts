@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, and, count } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { viajeComentarios, ViajeComentarioDTO } from '@db/tables/viaje-comentario.table';
+import { viajeComentarios, ViajeComentarioDTO, ViajeComentarioTipo } from '@db/tables/viaje-comentario.table';
 
 @Injectable()
 export class ViajeComentarioRepository {
@@ -9,7 +9,7 @@ export class ViajeComentarioRepository {
     return await database.select().from(viajeComentarios);
   }
 
-  async findAllPaginated(page: number = 1, limit: number = 10, filters?: { viajeId?: number; usuarioId?: number; tipo?: string }) {
+  async findAllPaginated(page: number = 1, limit: number = 10, filters?: { viajeId?: number; usuarioId?: number; tipo?: ViajeComentarioTipo }) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
@@ -22,7 +22,7 @@ export class ViajeComentarioRepository {
     }
 
     if (filters?.tipo) {
-      conditions.push(eq(viajeComentarios.tipo, filters.tipo as any));
+      conditions.push(eq(viajeComentarios.tipo, filters.tipo));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

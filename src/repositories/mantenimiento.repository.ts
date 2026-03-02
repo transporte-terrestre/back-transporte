@@ -164,6 +164,17 @@ export class MantenimientoRepository {
     return result[0];
   }
 
+  async findLatestByVehiculo(vehiculoId: number) {
+    const result = await database
+      .select()
+      .from(mantenimientos)
+      .where(and(eq(mantenimientos.vehiculoId, vehiculoId), isNull(mantenimientos.eliminadoEn)))
+      .orderBy(desc(mantenimientos.fechaIngreso))
+      .limit(1);
+
+    return result[0] || null;
+  }
+
   // ========== TAREAS ==========
   async createTarea(data: any) {
     const result = await database.insert(mantenimientoTareas).values(data).returning();

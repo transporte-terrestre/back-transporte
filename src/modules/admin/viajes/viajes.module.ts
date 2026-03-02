@@ -15,6 +15,7 @@ import { ViajePasajeroRepository } from '@repository/viaje-pasajero.repository';
 import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository';
 import { RutaParadaRepository } from '@repository/ruta-parada.repository';
 import { VehiculoRepository } from '@repository/vehiculo.repository';
+import { MantenimientoRepository } from '@repository/mantenimiento.repository';
 import { NotificacionesModule } from '../notificaciones/notificaciones.module';
 
 @Module({
@@ -35,6 +36,7 @@ import { NotificacionesModule } from '../notificaciones/notificaciones.module';
     ViajeCircuitoRepository,
     RutaParadaRepository,
     VehiculoRepository,
+    MantenimientoRepository,
   ],
   imports: [NotificacionesModule],
   exports: [ViajeServicioRepository, ChecklistItemRepository, ViajeChecklistRepository],

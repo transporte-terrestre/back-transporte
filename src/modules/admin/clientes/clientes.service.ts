@@ -11,6 +11,7 @@ import { PasajeroRepository } from '@repository/pasajero.repository';
 import { PasajeroCreateDto } from './dto/pasajero/pasajero-create.dto';
 import { PasajeroUpdateDto } from './dto/pasajero/pasajero-update.dto';
 import { PaginatedPasajeroResultDto } from './dto/pasajero/pasajero-paginated.dto';
+import type { ClienteTipoDocumento } from '@db/tables/cliente.table';
 
 interface DatabaseError {
   code?: string;
@@ -32,7 +33,7 @@ export class ClientesService {
     search?: string,
     fechaInicio?: string,
     fechaFin?: string,
-    tipoDocumento?: string,
+    tipoDocumento?: ClienteTipoDocumento,
   ): Promise<PaginatedClienteResultDto> {
     const { data, total } = await this.clienteRepository.findAllPaginated(page, limit, {
       search,

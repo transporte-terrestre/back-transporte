@@ -3,6 +3,12 @@ import { vehiculosEstado, combustibleEnum } from '@db/tables/vehiculo.table';
 import { VehiculoDocumentoResultDto } from '../vehiculo-documento/vehiculo-documento-result.dto';
 import type { VehiculoEstado, CombustibleTipo } from '@db/tables/vehiculo.table';
 import type { VehiculoDocumentoTipo } from '@db/tables/vehiculo-documento.table';
+import { VehiculoComentarioResultDto } from '../vehiculo-comentario/vehiculo-comentario-result.dto';
+
+export class VehiculoComentarioDetalleDto extends VehiculoComentarioResultDto {
+  @ApiProperty({ example: 'Juan Pérez', description: 'Nombre del usuario' })
+  usuarioNombreCompleto: string;
+}
 
 export class DocumentosAgrupadosVehiculoDto implements Record<VehiculoDocumentoTipo, VehiculoDocumentoResultDto[]> {
   @ApiProperty({ type: [VehiculoDocumentoResultDto] })
@@ -159,9 +165,8 @@ export class VehiculoResultDto {
   })
   estado: VehiculoEstado;
 
-  // New fields
-  @ApiPropertyOptional({ example: 'Some notes', description: 'Annotations' })
-  anotaciones: string | null;
+  @ApiPropertyOptional({ type: [VehiculoComentarioDetalleDto] })
+  comentarios?: VehiculoComentarioDetalleDto[];
 
   @ApiPropertyOptional({ example: 'Lima', description: 'Headquarters' })
   sede: string | null;
