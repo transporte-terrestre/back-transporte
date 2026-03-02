@@ -9,7 +9,7 @@ import { rutas } from '@db/tables/ruta.table';
 
 import { viajes } from '@db/tables/viaje.table';
 import { viajeCircuitos } from '@db/tables/viaje-circuito.table';
-import { viajeServicios } from '@db/tables/viaje-servicio.table';
+import { viajeTramos } from '@db/tables/viaje-tramo.table';
 import { usuarios } from '@db/tables/usuario.table';
 import { clientes } from '@db/tables/cliente.table';
 import { rutaParadas } from '@db/tables/ruta-parada.table';
@@ -37,7 +37,7 @@ const schema = {
 
   viajes,
   viajeCircuitos,
-  viajeServicios,
+  viajeTramos,
   usuarios,
   clientes,
   rutaParadas,

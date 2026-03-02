@@ -1,25 +1,24 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { tipoServicioEnum } from '@db/tables/viaje-servicio.table';
-import type { ViajeServicioTipo } from '@db/tables/viaje-servicio.table';
+import { tipoTramoEnum } from '@db/tables/viaje-tramo.table';
+import type { ViajeTramoTipo } from '@db/tables/viaje-tramo.table';
 import { IsOptional, IsEnum } from 'class-validator';
 
 export class ViajeProximoTramoQueryDto {
   @ApiPropertyOptional({
     description: 'Tipo de tramo para el que se solicita sugerencia (origen, punto, parada, descanso, destino)',
-    enum: tipoServicioEnum.enumValues,
+    enum: tipoTramoEnum.enumValues,
   })
   @IsOptional()
-  @IsEnum(tipoServicioEnum.enumValues)
-  tipo?: ViajeServicioTipo;
+  @IsEnum(tipoTramoEnum.enumValues)
+  tipo?: ViajeTramoTipo;
 }
-
 
 export class ViajeProximoTramoResultDto {
   @ApiProperty({
     description: 'Tipo sugerido: punto, parada, descanso',
-    enum: tipoServicioEnum.enumValues,
+    enum: tipoTramoEnum.enumValues,
   })
-  tipo: ViajeServicioTipo;
+  tipo: ViajeTramoTipo;
 
   @ApiProperty({ description: 'Nombre del lugar sugerido', nullable: true })
   nombreLugar: string | null;

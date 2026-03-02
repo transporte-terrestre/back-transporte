@@ -5,7 +5,7 @@ import { ViajeCircuitoRepository } from '@repository/viaje-circuito.repository';
 import { ViajeConductorRepository } from '@repository/viaje-conductor.repository';
 import { ViajeVehiculoRepository } from '@repository/viaje-vehiculo.repository';
 import { ViajeComentarioRepository } from '@repository/viaje-comentario.repository';
-import { ViajeServicioRepository } from '@repository/viaje-servicio.repository';
+import { ViajeTramoRepository } from '@repository/viaje-tramo.repository';
 import { ChecklistItemRepository } from '@repository/checklist-item.repository';
 import { ViajeChecklistRepository } from '@repository/viaje-checklist.repository';
 import { RutaRepository } from '@repository/ruta.repository';
@@ -20,15 +20,15 @@ import { PaginatedViajeResultDto } from './dto/viaje/viaje-paginated.dto';
 import { ViajeConductorDTO } from '@db/tables/viaje-conductor.table';
 import { ViajeVehiculoDTO } from '@db/tables/viaje-vehiculo.table';
 import { ViajeComentarioDTO } from '@db/tables/viaje-comentario.table';
-import { ViajeServicioUpdateDto } from './dto/viaje-servicio/viaje-servicio-update.dto';
-import { ViajeRegistrarParadaDto } from './dto/viaje-servicio/viaje-registrar-parada.dto';
-import { ViajeRegistrarDescansoDto } from './dto/viaje-servicio/viaje-registrar-descanso.dto';
-import { ViajeRegistrarSalidaDto } from './dto/viaje-servicio/viaje-registrar-salida.dto';
-import { ViajeRegistrarLlegadaDto } from './dto/viaje-servicio/viaje-registrar-llegada.dto';
-import { ViajeRegistrarPuntoDto } from './dto/viaje-servicio/viaje-registrar-punto.dto';
-import { ViajeRegistrarBaseDto } from './dto/viaje-servicio/viaje-registrar-base.dto';
-import { ViajeServicioTipo } from '@db/tables/viaje-servicio.table';
-import { ViajeProximoTramoResultDto } from './dto/viaje-servicio/viaje-proximo-tramo-result.dto';
+import { ViajeTramoUpdateDto } from './dto/viaje-tramo/viaje-tramo-update.dto';
+import { ViajeRegistrarParadaDto } from './dto/viaje-tramo/viaje-registrar-parada.dto';
+import { ViajeRegistrarDescansoDto } from './dto/viaje-tramo/viaje-registrar-descanso.dto';
+import { ViajeRegistrarSalidaDto } from './dto/viaje-tramo/viaje-registrar-salida.dto';
+import { ViajeRegistrarLlegadaDto } from './dto/viaje-tramo/viaje-registrar-llegada.dto';
+import { ViajeRegistrarPuntoDto } from './dto/viaje-tramo/viaje-registrar-punto.dto';
+import { ViajeRegistrarBaseDto } from './dto/viaje-tramo/viaje-registrar-base.dto';
+import { ViajeTramoTipo } from '@db/tables/viaje-tramo.table';
+import { ViajeProximoTramoResultDto } from './dto/viaje-tramo/viaje-proximo-tramo-result.dto';
 import { ViajeChecklistCreateDto } from './dto/viaje-checklist/viaje-checklist-create.dto';
 import { ViajeChecklistUpdateDto } from './dto/viaje-checklist/viaje-checklist-update.dto';
 import { ChecklistItemCreateDto } from './dto/checklist-item/checklist-item-create.dto';
@@ -37,12 +37,13 @@ import { ViajeChecklistResultDto, ViajeChecklistItemDetalleDto } from './dto/via
 import { ViajePasajeroRepository } from '@repository/viaje-pasajero.repository';
 import { ViajePasajeroFillDto } from './dto/viaje-pasajero/viaje-pasajero-fill.dto';
 import { ViajeTrayectoResultDto, ViajePuntoTrayectoDto } from './dto/viaje/viaje-trayecto-result.dto';
-import { ViajeHojaRutaResultDto } from './dto/viaje-servicio/viaje-hoja-ruta-result.dto';
+import { ViajeHojaRutaResultDto } from './dto/viaje-tramo/viaje-hoja-ruta-result.dto';
 import { NotificacionesService } from '../notificaciones/notificaciones.service';
 import { GeminiAiService } from '@module/gemini-ai/gemini-ai.service';
 import { PasajeroRepository } from '@repository/pasajero.repository';
 import { ViajeEscanearDnisDto } from './dto/viaje-pasajero/viaje-escanear-dnis.dto';
 import { ScanDniResultItem, ViajeEscanearDnisResultDto } from './dto/viaje-pasajero/viaje-escanear-dnis-result.dto';
+import { ViajePasajeroMovimientoRepository } from '@repository/viaje-pasajero-movimiento.repository';
 
 interface UsuarioAutenticado {
   sub: number;
@@ -56,7 +57,7 @@ export class ViajesService {
     private readonly viajeConductorRepository: ViajeConductorRepository,
     private readonly viajeVehiculoRepository: ViajeVehiculoRepository,
     private readonly viajeComentarioRepository: ViajeComentarioRepository,
-    private readonly viajeServicioRepository: ViajeServicioRepository,
+    private readonly viajeTramoRepository: ViajeTramoRepository,
     private readonly checklistItemRepository: ChecklistItemRepository,
     private readonly viajeChecklistRepository: ViajeChecklistRepository,
     private readonly viajePasajeroRepository: ViajePasajeroRepository,
@@ -70,6 +71,7 @@ export class ViajesService {
     private readonly mantenimientoRepository: MantenimientoRepository,
     private readonly geminiAiService: GeminiAiService,
     private readonly pasajeroRepository: PasajeroRepository,
+    private readonly viajePasajeroMovimientoRepository: ViajePasajeroMovimientoRepository,
   ) {}
 
   async findAllPaginated(
@@ -214,12 +216,12 @@ export class ViajesService {
     const puntosTrayecto: ViajePuntoTrayectoDto[] = [];
     let currentOrden = 0;
 
-    // Obtener servicios ya registrados (sin descansos)
-    const servicios = await this.viajeServicioRepository.findByViajeIdWithParadas(id);
-    const serviciosReales = servicios.filter((s) => s.tipo !== 'descanso');
+    // Obtener tramos ya registrados (sin descansos)
+    const tramos = await this.viajeTramoRepository.findByViajeIdWithParadas(id);
+    const tramosReales = tramos.filter((s) => s.tipo !== 'descanso');
 
     // Construir lista de puntos base (Ruta fija)
-    const basePointsRaw: { tipo: ViajeServicioTipo; nombre: string; lat: number; lng: number; rutaParadaId: number | null }[] = [];
+    const basePointsRaw: { tipo: ViajeTramoTipo; nombre: string; lat: number; lng: number; rutaParadaId: number | null }[] = [];
     if (viajeInfo.ruta) {
       const r = viajeInfo.ruta;
       const rutaParadasDB = await this.rutaParadaRepository.findAllByRutaId(r.id);
@@ -229,7 +231,7 @@ export class ViajesService {
         // Si hay paradas, asumimos que la primera es origen y la última es destino segun indicación del usuario
         for (let i = 0; i < rutaParadasDB.length; i++) {
           const p = rutaParadasDB[i];
-          let tipo: ViajeServicioTipo = 'punto';
+          let tipo: ViajeTramoTipo = 'punto';
           if (i === 0) tipo = 'origen';
           else if (i === rutaParadasDB.length - 1) tipo = 'destino';
 
@@ -263,12 +265,12 @@ export class ViajesService {
     // Identificar qué puntos base ya se completaron
     const basePointsCompletadosIds = new Set<string>();
 
-    for (const s of serviciosReales) {
-      // Intentamos identificar a qué punto base corresponde este servicio
+    for (const s of tramosReales) {
+      // Intentamos identificar a qué punto base corresponde este tramo
       // Prioridad: rutaParadaId, luego tipo (origen/destino)
       let key = s.rutaParadaId ? `id:${s.rutaParadaId}` : `tipo:${s.tipo}`;
 
-      // Caso especial: si el servicio registrado es 'origen' pero en basePointsRaw tiene un rutaParadaId
+      // Caso especial: si el tramo registrado es 'origen' pero en basePointsRaw tiene un rutaParadaId
       if (s.tipo === 'origen' && !s.rutaParadaId) {
         const firstBase = basePointsRaw.find((bp) => bp.tipo === 'origen');
         if (firstBase?.rutaParadaId) key = `id:${firstBase.rutaParadaId}`;
@@ -288,7 +290,7 @@ export class ViajesService {
         nombre: nombrePunto,
         latitud: s.latitud ? Number(s.latitud) : null,
         longitud: s.longitud ? Number(s.longitud) : null,
-        tipo: s.tipo as ViajeServicioTipo,
+        tipo: s.tipo as ViajeTramoTipo,
         orden: currentOrden++,
         completado: true,
         rutaParadaId: s.rutaParadaId || null,
@@ -437,17 +439,17 @@ export class ViajesService {
     return await this.viajeComentarioRepository.delete(id);
   }
 
-  // ========== SERVICIOS (Tramos del viaje) ==========
-  async findServicios(viajeId: number) {
-    return await this.viajeServicioRepository.findByViajeIdWithParadas(viajeId);
+  // ========== TRAMOS DEL VIAJE ==========
+  async findTramos(viajeId: number) {
+    return await this.viajeTramoRepository.findByViajeIdWithParadas(viajeId);
   }
 
   async getHojaRuta(viajeId: number): Promise<ViajeHojaRutaResultDto> {
-    let servicios = await this.viajeServicioRepository.findByViajeIdWithParadas(viajeId);
+    let tramos = await this.viajeTramoRepository.findByViajeIdWithParadas(viajeId);
     // Omitir descansos segun solicitud del usuario
-    servicios = servicios.filter((s) => s.tipo !== 'descanso');
+    tramos = tramos.filter((s) => s.tipo !== 'descanso');
 
-    if (servicios.length < 2) {
+    if (tramos.length < 2) {
       return { tramos: [], tiempoTotal: '—', kilometrajeTotal: '—' };
     }
 
@@ -474,22 +476,22 @@ export class ViajesService {
       return m > 0 ? `${h}h ${m}min` : `${h}h`;
     };
 
-    const tramos = [];
+    const tramosResult = [];
     let tiempoTotalMin = 0;
     let kmTotalRecorrido = 0;
 
     let currentKm = 0;
     // Encontrar el primer km disponible
-    for (const s of servicios) {
+    for (const s of tramos) {
       if (s.kilometrajeFinal != null) {
         currentKm = s.kilometrajeFinal;
         break;
       }
     }
 
-    for (let i = 0; i < servicios.length - 1; i++) {
-      const inicio = servicios[i];
-      const fin = servicios[i + 1];
+    for (let i = 0; i < tramos.length - 1; i++) {
+      const inicio = tramos[i];
+      const fin = tramos[i + 1];
 
       if (inicio.kilometrajeFinal != null) {
         currentKm = inicio.kilometrajeFinal;
@@ -506,7 +508,7 @@ export class ViajesService {
       tiempoTotalMin += diffMin;
       kmTotalRecorrido += kmDiff;
 
-      tramos.push({
+      tramosResult.push({
         horaSalida: formatHora(inicio.horaFinal),
         kmInicial: inicio.tipo === 'descanso' ? '—' : formatKm(inicio.kilometrajeFinal),
         puntoPartida: inicio.nombreLugar || '—',
@@ -514,8 +516,8 @@ export class ViajesService {
         numeroPasajeros: fin.tipo === 'descanso' ? null : (fin.numeroPasajeros ?? 0),
         horaTermino: formatHora(fin.horaFinal),
         kmFinal: fin.tipo === 'descanso' ? '—' : formatKm(fin.kilometrajeFinal),
-        tiempoServicio: diffMin > 0 ? formatDuracion(diffMin) : '—',
-        kilometrajeServicio: kmDiff > 0 ? formatKm(kmDiff) : '—',
+        tiempoRecorrido: diffMin > 0 ? formatDuracion(diffMin) : '—',
+        kilometrajeRecorrido: kmDiff > 0 ? formatKm(kmDiff) : '—',
         tipoDestino: fin.tipo,
       });
 
@@ -525,25 +527,25 @@ export class ViajesService {
     }
 
     return {
-      tramos,
+      tramos: tramosResult,
       tiempoTotal: tiempoTotalMin > 0 ? formatDuracion(tiempoTotalMin) : '—',
       kilometrajeTotal: kmTotalRecorrido > 0 ? formatKm(kmTotalRecorrido) : '—',
     };
   }
 
-  async findServicio(servicioId: number) {
-    const servicio = await this.viajeServicioRepository.findOne(servicioId);
-    if (!servicio) {
-      throw new NotFoundException(`Servicio con ID ${servicioId} no encontrado`);
+  async findTramo(tramoId: number) {
+    const tramo = await this.viajeTramoRepository.findOne(tramoId);
+    if (!tramo) {
+      throw new NotFoundException(`Tramo con ID ${tramoId} no encontrado`);
     }
-    return servicio;
+    return tramo;
   }
 
-  private async registrarTramo(viajeId: number, tipo: ViajeServicioTipo, data: ViajeRegistrarBaseDto, rutaParadaId: number | null = null) {
+  private async registrarTramo(viajeId: number, tipo: ViajeTramoTipo, data: ViajeRegistrarBaseDto, rutaParadaId: number | null = null) {
     const viaje = await this.viajeRepository.findOne(viajeId);
     if (!viaje) throw new NotFoundException('Viaje no encontrado');
 
-    const result = await this.viajeServicioRepository.create({
+    const result = await this.viajeTramoRepository.create({
       viajeId,
       tipo,
       longitud: data.longitud,
@@ -563,7 +565,7 @@ export class ViajesService {
     return result;
   }
 
-  private async procesarSideEffectsViaje(viajeId: number, tipo: ViajeServicioTipo, data: ViajeRegistrarBaseDto, kilometrajeFinal: number | null) {
+  private async procesarSideEffectsViaje(viajeId: number, tipo: ViajeTramoTipo, data: ViajeRegistrarBaseDto, kilometrajeFinal: number | null) {
     try {
       const vehiculosAsignados = await this.viajeVehiculoRepository.findByViajeId(viajeId);
       const principal = vehiculosAsignados.find((v) => v.esPrincipal) || vehiculosAsignados[0];
@@ -637,7 +639,7 @@ export class ViajesService {
     const viaje = await this.viajeRepository.findOne(viajeId);
     if (!viaje) throw new NotFoundException('Viaje no encontrado');
 
-    return await this.viajeServicioRepository.create({
+    return await this.viajeTramoRepository.create({
       viajeId,
       tipo: 'descanso',
       longitud: data.longitud ?? null,
@@ -650,8 +652,8 @@ export class ViajesService {
     });
   }
 
-  async updateServicio(servicioId: number, data: ViajeServicioUpdateDto) {
-    const result = await this.viajeServicioRepository.update(servicioId, data);
+  async updateTramo(tramoId: number, data: ViajeTramoUpdateDto) {
+    const result = await this.viajeTramoRepository.update(tramoId, data);
 
     // Si se actualizó el kilometrajeFinal, también actualizar el vehículo
     if (result.kilometrajeFinal) {
@@ -667,8 +669,8 @@ export class ViajesService {
     return result;
   }
 
-  async deleteServicio(servicioId: number) {
-    return await this.viajeServicioRepository.delete(servicioId);
+  async deleteTramo(tramoId: number) {
+    return await this.viajeTramoRepository.delete(tramoId);
   }
 
   // ========== CHECKLIST ITEMS (Catálogo) ==========
@@ -787,6 +789,7 @@ export class ViajesService {
         observacion: existingItem ? existingItem.observacion : null,
         creadoEn: existingItem ? existingItem.creadoEn : null,
         actualizadoEn: existingItem ? existingItem.actualizadoEn : null,
+        isUpdate: !!existingItem,
       };
     });
 
@@ -885,50 +888,109 @@ export class ViajesService {
     return await this.viajePasajeroRepository.findByViajeId(viajeId);
   }
 
-  async escanearDnis(viajeId: number, dto: ViajeEscanearDnisDto): Promise<ViajeEscanearDnisResultDto> {
+  async registrarAbordaje(viajeId: number, viajePasajeroId: number, asistencia: boolean = true, tramoId?: number) {
+    // 1. Actualizar asistencia del pasajero
+    const [updated] = await this.viajePasajeroRepository.updateAsistencia(viajePasajeroId, asistencia);
+    if (!updated) throw new NotFoundException('Registro de pasajero no encontrado');
+
+    // 2. Si es una entrada (asistencia true), registrar movimiento y el tramo especificado (o el actual)
+    if (asistencia) {
+      // Prioridad: usar tramoId proporcionado, de lo contrario buscar el último registrado
+      const targetTramo = tramoId ? await this.viajeTramoRepository.findOne(tramoId) : await this.viajeTramoRepository.findLastByViajeId(viajeId);
+
+      if (targetTramo) {
+        // Evitar duplicados de entrada en el mismo tramo
+        const existingMovements = await this.viajePasajeroMovimientoRepository.findByViajePasajero(viajePasajeroId);
+        const alreadyInTramo = existingMovements.some((m) => m.viajeTramoId === targetTramo.id && m.tipoMovimiento === 'entrada');
+
+        if (!alreadyInTramo) {
+          // Crear movimiento
+          await this.viajePasajeroMovimientoRepository.create({
+            viajePasajeroId,
+            viajeTramoId: targetTramo.id,
+            tipoMovimiento: 'entrada',
+          });
+
+          // Incrementar contador de pasajeros del tramo
+          await this.viajeTramoRepository.update(targetTramo.id, {
+            numeroPasajeros: (targetTramo.numeroPasajeros || 0) + 1,
+          });
+        }
+      }
+    }
+
+    return updated;
+  }
+
+  async escanearDnis(viajeId: number, dto: ViajeEscanearDnisDto, tramoId?: number): Promise<ViajeEscanearDnisResultDto> {
     const resultados: ScanDniResultItem[] = [];
     const currentPasajeros = await this.viajePasajeroRepository.findByViajeId(viajeId);
 
     for (const url of dto.urls) {
       const data = await this.geminiAiService.extractDniData(url);
       if (data) {
+        let viajePasajeroId: number;
+        let status: string;
+
         // Buscar si ya existe en el viaje (por DNI)
         const existingInTrip = currentPasajeros.find((p) => (p.dni || p.pasajero?.dni) === data.dni);
 
         if (existingInTrip) {
-          // Si ya existe, marcar asistencia
-          await this.viajePasajeroRepository.updateAsistencia(existingInTrip.id, true);
-          resultados.push({ ...data, matched: true, status: 'EXISTENTE_EN_VIAJE' });
+          viajePasajeroId = existingInTrip.id;
+          status = 'EXISTENTE_EN_VIAJE';
         } else {
           // Buscar en tabla global de pasajeros
           const globalPasajero = await this.pasajeroRepository.findOneByDni(data.dni);
 
           if (globalPasajero) {
             // Existe en el sistema, añadir al viaje
-            await this.viajePasajeroRepository.addPasajeros([
+            const [added] = await this.viajePasajeroRepository.addPasajeros([
               {
                 viajeId,
                 pasajeroId: globalPasajero.id,
-                asistencia: true,
+                asistencia: false,
               },
             ]);
-            resultados.push({ ...data, matched: true, status: 'AGREGADO_DESDE_SISTEMA' });
+            viajePasajeroId = added.id;
+            status = 'AGREGADO_DESDE_SISTEMA';
           } else {
             // No existe, añadir como ad-hoc
-            await this.viajePasajeroRepository.addPasajeros([
+            const [added] = await this.viajePasajeroRepository.addPasajeros([
               {
                 viajeId,
                 dni: data.dni,
                 nombres: data.nombres,
                 apellidos: data.apellidos,
-                asistencia: true,
+                asistencia: false,
               },
             ]);
-            resultados.push({ ...data, matched: true, status: 'CREADO_AD_HOC' });
+            viajePasajeroId = added.id;
+            status = 'CREADO_AD_HOC';
           }
         }
+
+        // Registrar el abordaje automáticamente
+        let actualTramoId: number | null = tramoId || null;
+        if (viajePasajeroId) {
+          const resultAbordaje = await this.registrarAbordaje(viajeId, viajePasajeroId, true, tramoId);
+          // Si no recibimos tramoId por parámetro pero logramos registrar en el último disponible
+          if (!actualTramoId && resultAbordaje) {
+            // Podríamos obtener el tramoId real del registro de movimientos si fuera necesario,
+            // pero para simplificar, si registrarAbordaje fue exitoso y no hubo error, el tramo fue el último.
+            const lastTramo = await this.viajeTramoRepository.findLastByViajeId(viajeId);
+            actualTramoId = lastTramo?.id || null;
+          }
+        }
+
+        resultados.push({ ...data, matched: true, status, viajeTramoId: actualTramoId });
       } else {
-        resultados.push({ url, matched: false, status: 'ERROR_OCR', error: 'No se pudo extraer información de la imagen' });
+        resultados.push({
+          url,
+          matched: false,
+          status: 'ERROR_OCR',
+          error: 'No se pudo extraer información de la imagen',
+          viajeTramoId: null,
+        });
       }
     }
 
@@ -940,21 +1002,21 @@ export class ViajesService {
     };
   }
 
-  async getProximoTramo(viajeId: number, tipo?: ViajeServicioTipo): Promise<ViajeProximoTramoResultDto> {
+  async getProximoTramo(viajeId: number, tipo?: ViajeTramoTipo): Promise<ViajeProximoTramoResultDto> {
     const viajeInfo = await this.viajeRepository.findOne(viajeId);
     if (!viajeInfo) throw new NotFoundException('Viaje no encontrado');
 
-    const servicios = await this.viajeServicioRepository.findByViajeId(viajeId);
-    const lastServicio = servicios.length > 0 ? servicios[servicios.length - 1] : null;
+    const tramos = await this.viajeTramoRepository.findByViajeId(viajeId);
+    const lastTramo = tramos.length > 0 ? tramos[tramos.length - 1] : null;
     // Para kilometraje y pasajeros, ignorar descansos (no tienen esos datos)
-    const lastServicioReal = [...servicios].reverse().find((s) => s.tipo !== 'descanso') || null;
+    const lastTramoReal = [...tramos].reverse().find((s) => s.tipo !== 'descanso') || null;
 
-    // Valores por defecto basados en el viaje o el último servicio real (no descanso)
-    let ultimoKilometraje = lastServicioReal?.kilometrajeFinal || 0;
-    let ultimaHora = lastServicio?.horaFinal || viajeInfo.fechaSalida;
+    // Valores por defecto basados en el viaje o el último tramo real (no descanso)
+    let ultimoKilometraje = lastTramoReal?.kilometrajeFinal || 0;
+    let ultimaHora = lastTramo?.horaFinal || viajeInfo.fechaSalida;
 
-    // Si es el primer tramo (no hay servicios), buscamos el kilometraje actual del vehículo
-    if (servicios.length === 0) {
+    // Si es el primer tramo (no hay tramos), buscamos el kilometraje actual del vehículo
+    if (tramos.length === 0) {
       const vehiculos = await this.viajeVehiculoRepository.findByViajeId(viajeId);
       const principal = vehiculos.find((v) => v.esPrincipal) || vehiculos[0];
       if (principal) {
@@ -968,11 +1030,11 @@ export class ViajesService {
     const result: ViajeProximoTramoResultDto = {
       tipo: 'parada',
       nombreLugar: null,
-      latitud: lastServicio?.latitud != null ? lastServicio.latitud.toString() : null,
-      longitud: lastServicio?.longitud != null ? lastServicio.longitud.toString() : null,
+      latitud: lastTramo?.latitud != null ? lastTramo.latitud.toString() : null,
+      longitud: lastTramo?.longitud != null ? lastTramo.longitud.toString() : null,
       ultimoKilometraje,
       ultimaHora: (ultimaHora as Date) || new Date(),
-      ultimosPasajeros: lastServicioReal?.numeroPasajeros || 0,
+      ultimosPasajeros: lastTramoReal?.numeroPasajeros || 0,
       esPuntoFijo: false,
       rutaParadaId: null,
       faltanPuntosFijos: false,
@@ -1001,14 +1063,14 @@ export class ViajesService {
     // Si tiene una ruta, analizar el progreso
     if (viajeInfo.ruta) {
       const paradasRuta = await this.rutaParadaRepository.findAllByRutaId(viajeInfo.ruta.id);
-      const hasSalida = servicios.some((s) => s.tipo === 'origen');
-      const hasLlegada = servicios.some((s) => s.tipo === 'destino');
+      const hasSalida = tramos.some((s) => s.tipo === 'origen');
+      const hasLlegada = tramos.some((s) => s.tipo === 'destino');
 
       // Según el usuario, index 0 es origen y el último es destino en paradasRuta
       const puntosControlRuta = paradasRuta.length > 2 ? paradasRuta.slice(1, -1) : [];
 
-      const IDsRegistrados = new Set(servicios.filter((s) => s.rutaParadaId).map((s) => s.rutaParadaId));
-      const nombresRegistrados = new Set(servicios.filter((s) => s.nombreLugar).map((s) => s.nombreLugar.trim().toLowerCase()));
+      const IDsRegistrados = new Set(tramos.filter((s) => s.rutaParadaId).map((s) => s.rutaParadaId));
+      const nombresRegistrados = new Set(tramos.filter((s) => s.nombreLugar).map((s) => s.nombreLugar.trim().toLowerCase()));
 
       const puntosControlFaltantes = puntosControlRuta.filter(
         (p) => !IDsRegistrados.has(p.id) && !nombresRegistrados.has(p.nombre.trim().toLowerCase()),
@@ -1017,7 +1079,7 @@ export class ViajesService {
       // "faltanPuntosFijos" se refiere específicamente a los puntos de control (intermedios)
       result.faltanPuntosFijos = puntosControlFaltantes.length > 0;
 
-      // 1. Si no hay salida registrada, sugerir siempre el origen (aunque haya puntos marcados por error)
+      // 1. Si no hay salida registrada, sugerir siempre el origen
       if (!hasSalida) {
         result.tipo = 'origen';
         result.nombreLugar = viajeInfo.ruta.origen;
@@ -1028,7 +1090,7 @@ export class ViajesService {
         return result;
       }
 
-      // 2. Si faltan puntos de control, sugerir el primero faltante (incluso si hay llegada marcando error)
+      // 2. Si faltan puntos de control, sugerir el primero faltante
       if (puntosControlFaltantes.length > 0) {
         const proxima = puntosControlFaltantes[0];
         result.tipo = 'punto';
@@ -1053,7 +1115,6 @@ export class ViajesService {
       }
 
       // 4. Si hay salida, puntos de control y llegada -> COMPLETADO
-      // Retornar con datos del último servicio pero sin sugerencia de lugar
       result.tipo = 'parada';
       result.nombreLugar = null;
       result.latitud = null;
@@ -1064,7 +1125,7 @@ export class ViajesService {
     }
 
     // Si no hay ruta, solo sugerir hasta que se marque la llegada
-    if (servicios.some((s) => s.tipo === 'destino')) {
+    if (tramos.some((s) => s.tipo === 'destino')) {
       result.tipo = 'parada';
       result.nombreLugar = null;
       result.latitud = null;

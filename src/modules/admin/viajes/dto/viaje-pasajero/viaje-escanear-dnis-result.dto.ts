@@ -1,5 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ViajePasajeroResultDto } from './viaje-pasajero-result.dto';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsInt } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class ViajePasajeroTramoQueryDto {
+  @ApiPropertyOptional({
+    description: 'ID del tramo en el que suben los pasajeros (viaje_tramos)',
+    example: 123,
+  })
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  viajeTramoId?: number;
+}
+
 
 export class ScanDniResultItem {
   @ApiProperty({ example: '72750623', description: 'Número de DNI extraído' })
@@ -22,6 +37,9 @@ export class ScanDniResultItem {
 
   @ApiProperty({ example: 'No se pudo extraer información', required: false, description: 'Mensaje de error' })
   error?: string;
+
+  @ApiProperty({ example: 123, description: 'ID del tramo en el que abordó el pasajero', nullable: true })
+  viajeTramoId?: number | null;
 }
 
 export class ViajeEscanearDnisResultDto {

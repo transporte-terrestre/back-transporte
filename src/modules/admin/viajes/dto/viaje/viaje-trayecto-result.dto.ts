@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { tipoServicioEnum } from '@db/tables/viaje-servicio.table';
-import type { ViajeServicioTipo } from '@db/tables/viaje-servicio.table';
+import { tipoTramoEnum } from '@db/tables/viaje-tramo.table';
+import type { ViajeTramoTipo } from '@db/tables/viaje-tramo.table';
 
 export class ViajePuntoTrayectoDto {
   @ApiProperty({ description: 'Nombre del punto', example: 'Lima' })
@@ -14,9 +14,9 @@ export class ViajePuntoTrayectoDto {
 
   @ApiProperty({
     description: 'Tipo de punto (origen, punto, parada, destino)',
-    enum: tipoServicioEnum.enumValues.filter((v) => v !== 'descanso'),
+    enum: tipoTramoEnum.enumValues.filter((v) => v !== 'descanso'),
   })
-  tipo: ViajeServicioTipo;
+  tipo: ViajeTramoTipo;
 
   @ApiProperty({ description: 'Orden cronológico/secuencial', example: 1 })
   orden: number;
