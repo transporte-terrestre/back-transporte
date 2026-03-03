@@ -1,26 +1,20 @@
-import { ApiProperty } from "@nestjs/swagger";
-import {
-  IsString,
-  IsOptional,
-  IsBoolean,
-  IsNumber,
-  IsNotEmpty,
-} from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsOptional, IsBoolean, IsNumber, IsNotEmpty } from 'class-validator';
 
 export class MantenimientoTareaCreateDto {
-  @ApiProperty({ example: 1, description: "ID del mantenimiento" })
+  @ApiProperty({ example: 1, description: 'ID del mantenimiento' })
   @IsNumber()
   @IsNotEmpty()
   mantenimientoId: number;
 
-  @ApiProperty({ example: 1, description: "ID de la tarea del catálogo" })
+  @ApiProperty({ example: 1, description: 'ID de la tarea del catálogo' })
   @IsNumber()
   @IsNotEmpty()
   tareaId: number;
 
   @ApiProperty({
-    example: "Juan Perez",
-    description: "Responsable de la ejecución",
+    example: 'Juan Perez',
+    description: 'Responsable de la ejecución',
     required: false,
   })
   @IsOptional()
@@ -28,8 +22,8 @@ export class MantenimientoTareaCreateDto {
   responsable?: string;
 
   @ApiProperty({
-    example: "08:00",
-    description: "Hora de inicio",
+    example: '08:00',
+    description: 'Hora de inicio',
     required: false,
   })
   @IsOptional()
@@ -37,8 +31,8 @@ export class MantenimientoTareaCreateDto {
   horaInicio?: string;
 
   @ApiProperty({
-    example: "10:00",
-    description: "Hora de fin",
+    example: '10:00',
+    description: 'Hora de fin',
     required: false,
   })
   @IsOptional()
@@ -47,7 +41,7 @@ export class MantenimientoTareaCreateDto {
 
   @ApiProperty({
     example: false,
-    description: "Si la tarea está completada",
+    description: 'Si la tarea está completada',
     required: false,
   })
   @IsOptional()
@@ -55,8 +49,8 @@ export class MantenimientoTareaCreateDto {
   completada?: boolean;
 
   @ApiProperty({
-    example: "Ninguna",
-    description: "Observaciones",
+    example: 'Ninguna',
+    description: 'Observaciones',
     required: false,
   })
   @IsOptional()

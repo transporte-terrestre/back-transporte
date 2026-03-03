@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { DashboardRepository } from "@repository/dashboard.repository";
+import { Injectable } from '@nestjs/common';
+import { DashboardRepository } from '@repository/dashboard.repository';
 
 @Injectable()
 export class DashboardService {
@@ -41,16 +41,15 @@ export class DashboardService {
     const viajes = await this.dashboardRepository.getRecentTrips();
 
     const data = viajes.map((viaje) => {
-      let rutaTexto = "Ruta desconocida";
-      if (viaje.tipoRuta === "ocasional") {
-        rutaTexto = viaje.rutaOcasional || "Ruta ocasional";
+      let rutaTexto = 'Ruta desconocida';
+      if (viaje.tipoRuta === 'ocasional') {
+        rutaTexto = viaje.rutaOcasional || 'Ruta ocasional';
       } else if (viaje.rutaDetails) {
         rutaTexto = `${viaje.rutaDetails.origen} - ${viaje.rutaDetails.destino}`;
       }
 
-      const conductorTexto =
-        viaje.conductorDetails?.nombreCompleto || "Sin asignar";
-      const vehiculoTexto = viaje.vehiculoDetails?.placa || "N/A";
+      const conductorTexto = viaje.conductorDetails?.nombreCompleto || 'Sin asignar';
+      const vehiculoTexto = viaje.vehiculoDetails?.placa || 'N/A';
 
       return {
         id: viaje.id,
@@ -66,8 +65,7 @@ export class DashboardService {
   }
 
   async getMantenimientosProximos() {
-    const mantenimientos =
-      await this.dashboardRepository.getUpcomingMaintenances();
+    const mantenimientos = await this.dashboardRepository.getUpcomingMaintenances();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -76,12 +74,12 @@ export class DashboardService {
       const diffTime = fechaMant.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      let prioridad = "baja";
-      if (diffDays <= 3) prioridad = "alta";
-      else if (diffDays <= 7) prioridad = "media";
+      let prioridad = 'baja';
+      if (diffDays <= 3) prioridad = 'alta';
+      else if (diffDays <= 7) prioridad = 'media';
 
       return {
-        vehiculo: mant.vehiculoDetails?.placa || "N/A",
+        vehiculo: mant.vehiculoDetails?.placa || 'N/A',
         tipo: mant.tipo,
         fecha: mant.fecha,
         dias: diffDays,
@@ -94,15 +92,12 @@ export class DashboardService {
 
   async getRutasPopulares() {
     const populares = await this.dashboardRepository.getRutasPopulares();
-    const maxViajes =
-      populares.length > 0 ? Number(populares[0].totalViajes) : 1;
+    const maxViajes = populares.length > 0 ? Number(populares[0].totalViajes) : 1;
 
     const data = populares.map((item) => {
       const viajesCount = Number(item.totalViajes);
       return {
-        nombre: item.rutaDetails
-          ? `${item.rutaDetails.origen} - ${item.rutaDetails.destino}`
-          : "Ruta desconocida",
+        nombre: item.rutaDetails ? `${item.rutaDetails.origen} - ${item.rutaDetails.destino}` : 'Ruta desconocida',
         viajes: viajesCount,
         porcentaje: Math.round((viajesCount / maxViajes) * 100),
       };
@@ -112,7 +107,7 @@ export class DashboardService {
   }
 
   async getIngresosMensuales() {
-    const meses = ["Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    const meses = ['Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
     // Por ahora retornamos datos simulados
     const data = meses.map((mes) => ({

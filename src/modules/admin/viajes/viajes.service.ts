@@ -1005,7 +1005,7 @@ export class ViajesService {
 
       let vpid: number;
       let status: string;
-      const existing = currentPasajeros.find((p) => (p.dni || p.pasajero?.dni) === data.dni);
+      const existing = currentPasajeros.find((p) => p.dni === data.dni);
 
       if (existing) {
         vpid = existing.id;

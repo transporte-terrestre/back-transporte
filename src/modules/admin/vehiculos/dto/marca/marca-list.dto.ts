@@ -1,29 +1,29 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsOptional } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
 
 export class MarcaListDto {
-  @ApiProperty({ example: 1, description: "ID de la marca" })
+  @ApiProperty({ example: 1, description: 'ID de la marca' })
   id: number;
 
-  @ApiProperty({ example: "Toyota", description: "Nombre de la marca" })
+  @ApiProperty({ example: 'Toyota', description: 'Nombre de la marca' })
   nombre: string;
 
   @ApiPropertyOptional({
-    example: ["Corolla", "Camry", "RAV4"],
-    description: "Lista de nombres de modelos de la marca",
-    type: [String]
+    example: ['Corolla', 'Camry', 'RAV4'],
+    description: 'Lista de nombres de modelos de la marca',
+    type: [String],
   })
   modelos: string[];
 
   @ApiProperty({
-    example: "2023-01-01T00:00:00.000Z",
-    description: "Fecha de creación",
+    example: '2023-01-01T00:00:00.000Z',
+    description: 'Fecha de creación',
   })
   creadoEn: Date;
 
   @ApiProperty({
-    example: "2023-01-01T00:00:00.000Z",
-    description: "Fecha de actualización",
+    example: '2023-01-01T00:00:00.000Z',
+    description: 'Fecha de actualización',
   })
   actualizadoEn: Date;
 }

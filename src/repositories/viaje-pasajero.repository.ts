@@ -4,69 +4,81 @@ import { database } from '@db/connection.db';
 import { viajePasajeros, ViajePasajeroDTO } from '@db/tables/viaje-pasajero.table';
 import { pasajeros } from '@db/tables/pasajero.table';
 import { viajePasajeroMovimientos } from '@db/tables/viaje-pasajero-movimiento.table';
+import { viajeTramos } from '@db/tables/viaje-tramo.table';
 
 @Injectable()
 export class ViajePasajeroRepository {
   async findByViajeId(viajeId: number, viajeTramoId?: number) {
+    // Alias para el movimiento de entrada global (en cualquier parada)
+    const movEntradaGlobal = viajePasajeroMovimientos;
+
     const query = database
       .select({
         id: viajePasajeros.id,
         viajeId: viajePasajeros.viajeId,
         pasajeroId: viajePasajeros.pasajeroId,
-        dni: viajePasajeros.dni,
-        nombres: viajePasajeros.nombres,
-        apellidos: viajePasajeros.apellidos,
+        // Priorizar datos del pasajero registrado, fallback a datos ad-hoc
+        dni: sql<string | null>`COALESCE(${pasajeros.dni}, ${viajePasajeros.dni})`.as('dni'),
+        nombres: sql<string | null>`COALESCE(${pasajeros.nombres}, ${viajePasajeros.nombres})`.as('nombres'),
+        apellidos: sql<string | null>`COALESCE(${pasajeros.apellidos}, ${viajePasajeros.apellidos})`.as('apellidos'),
         asistencia: viajeTramoId
           ? sql<boolean>`CASE WHEN ${viajePasajeroMovimientos.id} IS NOT NULL THEN TRUE ELSE FALSE END`
           : viajePasajeros.asistencia,
+        // Parada donde tiene asistencia (si tiene entrada en alguna parada)
+        paradaAsistenciaId: sql<number | null>`${movEntradaGlobal.viajeTramoId}`.as('parada_asistencia_id'),
+        paradaAsistenciaNombre: sql<string | null>`${viajeTramos.nombreLugar}`.as('parada_asistencia_nombre'),
+        // Booleano: ¿la asistencia coincide con el tramo actual consultado?
+        esTramoActual: viajeTramoId
+          ? sql<boolean>`CASE WHEN ${movEntradaGlobal.viajeTramoId} = ${viajeTramoId} THEN TRUE ELSE FALSE END`.as('es_tramo_actual')
+          : sql<null>`NULL`.as('es_tramo_actual'),
         creadoEn: viajePasajeros.creadoEn,
         actualizadoEn: viajePasajeros.actualizadoEn,
-        pasajero: {
-          id: pasajeros.id,
-          dni: pasajeros.dni,
-          nombres: pasajeros.nombres,
-          apellidos: pasajeros.apellidos,
-        },
       })
       .from(viajePasajeros)
-      .leftJoin(pasajeros, eq(viajePasajeros.pasajeroId, pasajeros.id));
-
-    if (viajeTramoId) {
-      query.leftJoin(
-        viajePasajeroMovimientos,
+      .leftJoin(pasajeros, eq(viajePasajeros.pasajeroId, pasajeros.id))
+      // JOIN para obtener el movimiento de entrada global (en cualquier parada)
+      .leftJoin(
+        movEntradaGlobal,
         and(
-          eq(viajePasajeroMovimientos.viajePasajeroId, viajePasajeros.id),
-          eq(viajePasajeroMovimientos.viajeTramoId, viajeTramoId),
-          eq(viajePasajeroMovimientos.tipoMovimiento, 'entrada'),
-          isNull(viajePasajeroMovimientos.eliminadoEn),
+          eq(movEntradaGlobal.viajePasajeroId, viajePasajeros.id),
+          eq(movEntradaGlobal.tipoMovimiento, 'entrada'),
+          isNull(movEntradaGlobal.eliminadoEn),
         ),
-      );
-    }
+      )
+      // JOIN al tramo para obtener el nombre de la parada
+      .leftJoin(viajeTramos, eq(movEntradaGlobal.viajeTramoId, viajeTramos.id));
 
     return await query.where(eq(viajePasajeros.viajeId, viajeId));
   }
 
   async findOne(id: number) {
+    const movEntradaGlobal = viajePasajeroMovimientos;
+
     const results = await database
       .select({
         id: viajePasajeros.id,
         viajeId: viajePasajeros.viajeId,
         pasajeroId: viajePasajeros.pasajeroId,
-        dni: viajePasajeros.dni,
-        nombres: viajePasajeros.nombres,
-        apellidos: viajePasajeros.apellidos,
+        dni: sql<string | null>`COALESCE(${pasajeros.dni}, ${viajePasajeros.dni})`.as('dni'),
+        nombres: sql<string | null>`COALESCE(${pasajeros.nombres}, ${viajePasajeros.nombres})`.as('nombres'),
+        apellidos: sql<string | null>`COALESCE(${pasajeros.apellidos}, ${viajePasajeros.apellidos})`.as('apellidos'),
         asistencia: viajePasajeros.asistencia,
+        paradaAsistenciaId: sql<number | null>`${movEntradaGlobal.viajeTramoId}`.as('parada_asistencia_id'),
+        paradaAsistenciaNombre: sql<string | null>`${viajeTramos.nombreLugar}`.as('parada_asistencia_nombre'),
         creadoEn: viajePasajeros.creadoEn,
         actualizadoEn: viajePasajeros.actualizadoEn,
-        pasajero: {
-          id: pasajeros.id,
-          dni: pasajeros.dni,
-          nombres: pasajeros.nombres,
-          apellidos: pasajeros.apellidos,
-        },
       })
       .from(viajePasajeros)
       .leftJoin(pasajeros, eq(viajePasajeros.pasajeroId, pasajeros.id))
+      .leftJoin(
+        movEntradaGlobal,
+        and(
+          eq(movEntradaGlobal.viajePasajeroId, viajePasajeros.id),
+          eq(movEntradaGlobal.tipoMovimiento, 'entrada'),
+          isNull(movEntradaGlobal.eliminadoEn),
+        ),
+      )
+      .leftJoin(viajeTramos, eq(movEntradaGlobal.viajeTramoId, viajeTramos.id))
       .where(eq(viajePasajeros.id, id))
       .limit(1);
 

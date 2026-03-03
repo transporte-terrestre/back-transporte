@@ -103,19 +103,12 @@ export class ConductorRepository {
     return result[0];
   }
 
-  async findAllWithDocumentos(
-    page: number = 1,
-    limit: number = 10,
-    filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO,
-  ) {
+  async findAllWithDocumentos(page: number = 1, limit: number = 10, filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO) {
     const offset = (page - 1) * limit;
 
     const whereClause = isNull(conductores.eliminadoEn);
 
-    const [{ total }] = await database
-      .select({ total: count() })
-      .from(conductores)
-      .where(whereClause);
+    const [{ total }] = await database.select({ total: count() }).from(conductores).where(whereClause);
 
     const conductoresConConteo = await database
       .select({
@@ -134,9 +127,9 @@ export class ConductorRepository {
       documentosNulos: tiposDocumentosEsperados - Number(v.cantidadDocumentos),
     }));
 
-    if (filtro === "completo") {
+    if (filtro === 'completo') {
       conductoresOrdenados.sort((a, b) => a.documentosNulos - b.documentosNulos);
-    } else if (filtro === "incompleto") {
+    } else if (filtro === 'incompleto') {
       conductoresOrdenados.sort((a, b) => b.documentosNulos - a.documentosNulos);
     }
 
@@ -151,10 +144,7 @@ export class ConductorRepository {
       };
     }
 
-    const documentos = await database
-      .select()
-      .from(conductorDocumentos)
-      .where(inArray(conductorDocumentos.conductorId, ids));
+    const documentos = await database.select().from(conductorDocumentos).where(inArray(conductorDocumentos.conductorId, ids));
 
     const documentosPorConductor: Record<number, ConductorDocumento[]> = {};
     for (const doc of documentos) {
@@ -164,17 +154,18 @@ export class ConductorRepository {
       documentosPorConductor[doc.conductorId].push(doc);
     }
 
-    const conductoresData = ids.length > 0
-      ? await database
-          .select({
-            id: conductores.id,
-            nombres: conductores.nombres,
-            apellidos: conductores.apellidos,
-            fotocheck: conductores.fotocheck,
-          })
-          .from(conductores)
-          .where(inArray(conductores.id, ids))
-      : [];
+    const conductoresData =
+      ids.length > 0
+        ? await database
+            .select({
+              id: conductores.id,
+              nombres: conductores.nombres,
+              apellidos: conductores.apellidos,
+              fotocheck: conductores.fotocheck,
+            })
+            .from(conductores)
+            .where(inArray(conductores.id, ids))
+        : [];
 
     const conductoresMap = new Map(conductoresData.map((c) => [c.id, c]));
     const conductoresOrdenadosFinal = ids.map((id) => conductoresMap.get(id)!).filter(Boolean);

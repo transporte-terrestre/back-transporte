@@ -15,7 +15,6 @@ export class ViajePasajeroTramoQueryDto {
   viajeTramoId?: number;
 }
 
-
 export class ScanDniResultItem {
   @ApiProperty({ example: '72750623', description: 'Número de DNI extraído' })
   dni?: string;

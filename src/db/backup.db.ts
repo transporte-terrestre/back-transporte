@@ -34,48 +34,40 @@ const runBackup = () => {
   if (isLocalhost) {
     // === MODO LOCAL (Docker Exec) ===
     if (!DB_CONTAINER_NAME) {
-        console.error('❌ Error: DB_CONTAINER_NAME es requerido en local.');
-        process.exit(1);
+      console.error('❌ Error: DB_CONTAINER_NAME es requerido en local.');
+      process.exit(1);
     }
 
     console.log(`🖥️  Modo Local: Extrayendo desde contenedor '${DB_CONTAINER_NAME}'`);
-    
-    args = [
-        'exec', 
-        '-i', 
-        DB_CONTAINER_NAME, 
-        'pg_dump', 
-        '-U', DB_USER!, 
-        '--clean', 
-        '--if-exists',
-        '--no-owner', 
-        '--no-acl',   
-        DB_NAME!
-    ];
+
+    args = ['exec', '-i', DB_CONTAINER_NAME, 'pg_dump', '-U', DB_USER!, '--clean', '--if-exists', '--no-owner', '--no-acl', DB_NAME!];
 
     if (DB_PASSWORD) {
-        args.splice(2, 0, '-e', `PGPASSWORD=${DB_PASSWORD}`);
+      args.splice(2, 0, '-e', `PGPASSWORD=${DB_PASSWORD}`);
     }
-
   } else {
     // === MODO NUBE (Docker Run Efímero) ===
     console.log(`☁️  Modo Nube: Conectando a servidor ${DB_HOST}:${port}`);
 
     args = [
-        'run',
-        '--rm',
-        '-i',
-        '-e', `PGPASSWORD=${DB_PASSWORD}`,
-        'postgres',
-        'pg_dump',
-        '-h', DB_HOST!,
-        '-p', port,
-        '-U', DB_USER!,
-        '--clean',
-        '--if-exists',
-        '--no-owner', 
-        '--no-acl',
-        DB_NAME!
+      'run',
+      '--rm',
+      '-i',
+      '-e',
+      `PGPASSWORD=${DB_PASSWORD}`,
+      'postgres',
+      'pg_dump',
+      '-h',
+      DB_HOST!,
+      '-p',
+      port,
+      '-U',
+      DB_USER!,
+      '--clean',
+      '--if-exists',
+      '--no-owner',
+      '--no-acl',
+      DB_NAME!,
     ];
   }
 
@@ -92,26 +84,25 @@ const runBackup = () => {
     const msg = data.toString();
     // Ignorar mensajes informativos
     if (!msg.startsWith('NOTICE') && !msg.includes('extension "plpgsql" already exists')) {
-         // console.log(`pg_dump log: ${msg}`); 
+      // console.log(`pg_dump log: ${msg}`);
     }
   });
 
   child.on('close', (code) => {
     if (code === 0) {
       console.log(`✅ Backup generado exitosamente: ${filePath}`);
-      
+
       // Mostrar tamaño
       try {
-          const stats = fs.statSync(filePath);
-          const sizeInMB = stats.size / (1024 * 1024);
-          console.log(`📊 Tamaño: ${sizeInMB.toFixed(2)} MB`);
+        const stats = fs.statSync(filePath);
+        const sizeInMB = stats.size / (1024 * 1024);
+        console.log(`📊 Tamaño: ${sizeInMB.toFixed(2)} MB`);
       } catch (e) {}
-      
     } else {
       console.error(`❌ Error (Código ${code}).`);
       // Borrar si quedó vacío
       if (fs.existsSync(filePath) && fs.statSync(filePath).size === 0) {
-          fs.unlinkSync(filePath);
+        fs.unlinkSync(filePath);
       }
     }
   });
