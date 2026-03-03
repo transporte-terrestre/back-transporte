@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, inArray, sql } from 'drizzle-orm';
+import { eq, and, inArray, sql, isNull } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { viajePasajeros, ViajePasajeroDTO } from '@db/tables/viaje-pasajero.table';
 import { pasajeros } from '@db/tables/pasajero.table';
+import { viajePasajeroMovimientos } from '@db/tables/viaje-pasajero-movimiento.table';
 
 @Injectable()
 export class ViajePasajeroRepository {
-  async findByViajeId(viajeId: number) {
-    return await database
+  async findByViajeId(viajeId: number, viajeTramoId?: number) {
+    const query = database
       .select({
         id: viajePasajeros.id,
         viajeId: viajePasajeros.viajeId,
@@ -15,7 +16,9 @@ export class ViajePasajeroRepository {
         dni: viajePasajeros.dni,
         nombres: viajePasajeros.nombres,
         apellidos: viajePasajeros.apellidos,
-        asistencia: viajePasajeros.asistencia,
+        asistencia: viajeTramoId
+          ? sql<boolean>`CASE WHEN ${viajePasajeroMovimientos.id} IS NOT NULL THEN TRUE ELSE FALSE END`
+          : viajePasajeros.asistencia,
         creadoEn: viajePasajeros.creadoEn,
         actualizadoEn: viajePasajeros.actualizadoEn,
         pasajero: {
@@ -26,8 +29,21 @@ export class ViajePasajeroRepository {
         },
       })
       .from(viajePasajeros)
-      .leftJoin(pasajeros, eq(viajePasajeros.pasajeroId, pasajeros.id))
-      .where(eq(viajePasajeros.viajeId, viajeId));
+      .leftJoin(pasajeros, eq(viajePasajeros.pasajeroId, pasajeros.id));
+
+    if (viajeTramoId) {
+      query.leftJoin(
+        viajePasajeroMovimientos,
+        and(
+          eq(viajePasajeroMovimientos.viajePasajeroId, viajePasajeros.id),
+          eq(viajePasajeroMovimientos.viajeTramoId, viajeTramoId),
+          eq(viajePasajeroMovimientos.tipoMovimiento, 'entrada'),
+          isNull(viajePasajeroMovimientos.eliminadoEn),
+        ),
+      );
+    }
+
+    return await query.where(eq(viajePasajeros.viajeId, viajeId));
   }
 
   async findOne(id: number) {

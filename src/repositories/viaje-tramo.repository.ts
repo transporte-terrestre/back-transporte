@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { eq, and, asc, isNull, sql } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { viajeTramos, ViajeTramoDTO } from '@db/tables/viaje-tramo.table';
+import { viajePasajeroMovimientos } from '@db/tables/viaje-pasajero-movimiento.table';
 
 @Injectable()
 export class ViajeTramoRepository {
@@ -66,6 +67,22 @@ export class ViajeTramoRepository {
       .where(eq(viajeTramos.id, id))
       .returning();
     return result[0];
+  }
+
+  async syncNumeroPasajeros(id: number) {
+    return await database
+      .update(viajeTramos)
+      .set({
+        numeroPasajeros: sql`(
+          SELECT count(*)
+          FROM ${viajePasajeroMovimientos}
+          WHERE ${viajePasajeroMovimientos.viajeTramoId} = ${viajeTramos.id}
+            AND ${viajePasajeroMovimientos.tipoMovimiento} = 'entrada'
+            AND ${viajePasajeroMovimientos.eliminadoEn} IS NULL
+        )`,
+        actualizadoEn: new Date(),
+      })
+      .where(eq(viajeTramos.id, id));
   }
 
   async delete(id: number) {

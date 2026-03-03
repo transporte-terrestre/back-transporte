@@ -37,7 +37,7 @@ import { ViajePasajeroResultDto } from './dto/viaje-pasajero/viaje-pasajero-resu
 import { ViajePasajeroFillDto } from './dto/viaje-pasajero/viaje-pasajero-fill.dto';
 import { ViajeEscanearDnisDto } from './dto/viaje-pasajero/viaje-escanear-dnis.dto';
 import { ViajeEscanearDnisResultDto, ViajePasajeroTramoQueryDto } from './dto/viaje-pasajero/viaje-escanear-dnis-result.dto';
-import { ViajePasajeroAbordajeDto } from './dto/viaje-pasajero/viaje-pasajero-abordaje.dto';
+import { ViajePasajeroAbordarPasajerosDto } from './dto/viaje-pasajero/viaje-pasajero-abordar-pasajeros.dto';
 
 @ApiTags('viajes')
 @ApiBearerAuth()
@@ -350,8 +350,8 @@ export class ViajesController {
   @ApiOperation({ summary: 'Obtener todos los pasajeros de un viaje' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
   @ApiResponse({ status: 200, type: [ViajePasajeroResultDto] })
-  findPasajeros(@Param('viajeId') viajeId: string) {
-    return this.viajesService.findPasajeros(+viajeId);
+  findPasajeros(@Param('viajeId') viajeId: string, @Query() query: ViajePasajeroTramoQueryDto) {
+    return this.viajesService.findPasajeros(+viajeId, query.viajeTramoId);
   }
 
   @Post(':viajeId/pasajeros/upsert')
@@ -370,12 +370,12 @@ export class ViajesController {
     return this.viajesService.escanearDnis(+viajeId, dto, query.viajeTramoId);
   }
 
-  @Post(':viajeId/pasajeros/abordaje-manual')
-  @ApiOperation({ summary: 'Marcar abordaje manual (asistencia) y registrar movimiento en el tramo' })
+  @Post(':viajeId/pasajeros/abordar-pasajeros')
+  @ApiOperation({ summary: 'Marcar abordaje de pasajeros (asistencia) y registrar movimientos en el tramo' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
-  @ApiResponse({ status: 201 })
-  registrarAbordaje(@Param('viajeId') viajeId: string, @Body() dto: ViajePasajeroAbordajeDto, @Query() query: ViajePasajeroTramoQueryDto) {
-    return this.viajesService.registrarAbordaje(+viajeId, dto.viajePasajeroId, dto.asistencia, query.viajeTramoId);
+  @ApiResponse({ status: 201, type: [ViajePasajeroResultDto] })
+  abordarPasajeros(@Param('viajeId') viajeId: string, @Body() dto: ViajePasajeroAbordarPasajerosDto, @Query() query: ViajePasajeroTramoQueryDto) {
+    return this.viajesService.abordarPasajeros(dto.viajePasajeroIds, query.viajeTramoId as number);
   }
 
   // ========== CHECKLIST ITEMS (Catálogo) ==========

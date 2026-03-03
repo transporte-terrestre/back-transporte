@@ -36,6 +36,7 @@ import { ChecklistItemUpdateDto } from './dto/checklist-item/checklist-item-upda
 import { ViajeChecklistResultDto, ViajeChecklistItemDetalleDto } from './dto/viaje-checklist/viaje-checklist-result.dto';
 import { ViajePasajeroRepository } from '@repository/viaje-pasajero.repository';
 import { ViajePasajeroFillDto } from './dto/viaje-pasajero/viaje-pasajero-fill.dto';
+import { ViajePasajeroResultDto } from './dto/viaje-pasajero/viaje-pasajero-result.dto';
 import { ViajeTrayectoResultDto, ViajePuntoTrayectoDto } from './dto/viaje/viaje-trayecto-result.dto';
 import { ViajeHojaRutaResultDto } from './dto/viaje-tramo/viaje-hoja-ruta-result.dto';
 import { NotificacionesService } from '../notificaciones/notificaciones.service';
@@ -840,8 +841,8 @@ export class ViajesService {
   }
 
   // ========== PASAJEROS ==========
-  async findPasajeros(viajeId: number) {
-    return await this.viajePasajeroRepository.findByViajeId(viajeId);
+  async findPasajeros(viajeId: number, viajeTramoId?: number) {
+    return await this.viajePasajeroRepository.findByViajeId(viajeId, viajeTramoId);
   }
 
   async upsertPasajeros(viajeId: number, data: ViajePasajeroFillDto) {
@@ -861,7 +862,6 @@ export class ViajesService {
     }));
 
     // 3. Identificar registros a eliminar
-    // Un registro se mantiene si coincide por pasajeroId o por DNI
     const idsToKeep = new Set<number>();
 
     for (const item of incoming) {
@@ -888,110 +888,105 @@ export class ViajesService {
     return await this.viajePasajeroRepository.findByViajeId(viajeId);
   }
 
-  async registrarAbordaje(viajeId: number, viajePasajeroId: number, asistencia: boolean = true, tramoId?: number) {
-    // 1. Actualizar asistencia del pasajero
-    const [updated] = await this.viajePasajeroRepository.updateAsistencia(viajePasajeroId, asistencia);
-    if (!updated) throw new NotFoundException('Registro de pasajero no encontrado');
+  async abordarPasajeros(viajePasajeroIds: number[], tramoId: number): Promise<ViajePasajeroResultDto[]> {
+    const tramo = await this.viajeTramoRepository.findOne(tramoId);
+    if (!tramo) return [];
 
-    // 2. Si es una entrada (asistencia true), registrar movimiento y el tramo especificado (o el actual)
-    if (asistencia) {
-      // Prioridad: usar tramoId proporcionado, de lo contrario buscar el último registrado
-      const targetTramo = tramoId ? await this.viajeTramoRepository.findOne(tramoId) : await this.viajeTramoRepository.findLastByViajeId(viajeId);
+    const affectedTramos = new Set<number>([tramoId]);
+    const resultados = [];
+    const setIdsNuevos = new Set(viajePasajeroIds);
 
-      if (targetTramo) {
-        // Evitar duplicados de entrada en el mismo tramo
-        const existingMovements = await this.viajePasajeroMovimientoRepository.findByViajePasajero(viajePasajeroId);
-        const alreadyInTramo = existingMovements.some((m) => m.viajeTramoId === targetTramo.id && m.tipoMovimiento === 'entrada');
-
-        if (!alreadyInTramo) {
-          // Crear movimiento
-          await this.viajePasajeroMovimientoRepository.create({
-            viajePasajeroId,
-            viajeTramoId: targetTramo.id,
-            tipoMovimiento: 'entrada',
-          });
-
-          // Incrementar contador de pasajeros del tramo
-          await this.viajeTramoRepository.update(targetTramo.id, {
-            numeroPasajeros: (targetTramo.numeroPasajeros || 0) + 1,
-          });
-        }
+    // 1. Sincronización: Desabordar a los que ya no están en la lista enviada para este tramo
+    const currentInTramo = await this.viajePasajeroMovimientoRepository.findByViajeTramo(tramoId);
+    for (const mov of currentInTramo) {
+      if (mov.tipoMovimiento === 'entrada' && !setIdsNuevos.has(mov.viajePasajeroId)) {
+        await this.viajePasajeroMovimientoRepository.delete(mov.id);
+        await this.viajePasajeroRepository.updateAsistencia(mov.viajePasajeroId, false);
       }
     }
 
-    return updated;
+    // 2. Procesar abordajes (siempre asumiendo asistencia: true)
+    for (const id of viajePasajeroIds) {
+      try {
+        const [updated] = await this.viajePasajeroRepository.updateAsistencia(id, true);
+        if (!updated) continue;
+
+        const movements = await this.viajePasajeroMovimientoRepository.findByViajePasajero(id);
+        const entrada = movements.find((m) => m.tipoMovimiento === 'entrada');
+
+        if (entrada?.viajeTramoId === tramoId) {
+          resultados.push(updated);
+          continue;
+        }
+
+        // Si ya abordó en otro tramo, marcar el antiguo para resincronizarlo
+        if (entrada) {
+          affectedTramos.add(entrada.viajeTramoId);
+          await this.viajePasajeroMovimientoRepository.delete(entrada.id);
+        }
+
+        // Registrar entrada en el tramo objetivo
+        await this.viajePasajeroMovimientoRepository.create({ viajePasajeroId: id, viajeTramoId: tramoId, tipoMovimiento: 'entrada' });
+        resultados.push(updated);
+      } catch (e) {
+        console.error(`Error en abordarPasajeros ${id}:`, e);
+      }
+    }
+
+    // 3. Sincronizar contadores de pasajeros para todos los tramos afectados
+    for (const tid of affectedTramos) {
+      await this.viajeTramoRepository.syncNumeroPasajeros(tid);
+    }
+
+    return resultados;
   }
 
-  async escanearDnis(viajeId: number, dto: ViajeEscanearDnisDto, tramoId?: number): Promise<ViajeEscanearDnisResultDto> {
+  async escanearDnis(viajeId: number, dto: ViajeEscanearDnisDto, tramoId: number): Promise<ViajeEscanearDnisResultDto> {
     const resultados: ScanDniResultItem[] = [];
+    const idsCámara: number[] = [];
     const currentPasajeros = await this.viajePasajeroRepository.findByViajeId(viajeId);
 
     for (const url of dto.urls) {
       const data = await this.geminiAiService.extractDniData(url);
-      if (data) {
-        let viajePasajeroId: number;
-        let status: string;
-
-        // Buscar si ya existe en el viaje (por DNI)
-        const existingInTrip = currentPasajeros.find((p) => (p.dni || p.pasajero?.dni) === data.dni);
-
-        if (existingInTrip) {
-          viajePasajeroId = existingInTrip.id;
-          status = 'EXISTENTE_EN_VIAJE';
-        } else {
-          // Buscar en tabla global de pasajeros
-          const globalPasajero = await this.pasajeroRepository.findOneByDni(data.dni);
-
-          if (globalPasajero) {
-            // Existe en el sistema, añadir al viaje
-            const [added] = await this.viajePasajeroRepository.addPasajeros([
-              {
-                viajeId,
-                pasajeroId: globalPasajero.id,
-                asistencia: false,
-              },
-            ]);
-            viajePasajeroId = added.id;
-            status = 'AGREGADO_DESDE_SISTEMA';
-          } else {
-            // No existe, añadir como ad-hoc
-            const [added] = await this.viajePasajeroRepository.addPasajeros([
-              {
-                viajeId,
-                dni: data.dni,
-                nombres: data.nombres,
-                apellidos: data.apellidos,
-                asistencia: false,
-              },
-            ]);
-            viajePasajeroId = added.id;
-            status = 'CREADO_AD_HOC';
-          }
-        }
-
-        // Registrar el abordaje automáticamente
-        let actualTramoId: number | null = tramoId || null;
-        if (viajePasajeroId) {
-          const resultAbordaje = await this.registrarAbordaje(viajeId, viajePasajeroId, true, tramoId);
-          // Si no recibimos tramoId por parámetro pero logramos registrar en el último disponible
-          if (!actualTramoId && resultAbordaje) {
-            // Podríamos obtener el tramoId real del registro de movimientos si fuera necesario,
-            // pero para simplificar, si registrarAbordaje fue exitoso y no hubo error, el tramo fue el último.
-            const lastTramo = await this.viajeTramoRepository.findLastByViajeId(viajeId);
-            actualTramoId = lastTramo?.id || null;
-          }
-        }
-
-        resultados.push({ ...data, matched: true, status, viajeTramoId: actualTramoId });
-      } else {
-        resultados.push({
-          url,
-          matched: false,
-          status: 'ERROR_OCR',
-          error: 'No se pudo extraer información de la imagen',
-          viajeTramoId: null,
-        });
+      if (!data) {
+        resultados.push({ url, matched: false, status: 'ERROR_OCR', error: 'No se pudo extraer información', viajeTramoId: null });
+        continue;
       }
+
+      let vpid: number;
+      let status: string;
+      const existing = currentPasajeros.find((p) => (p.dni || p.pasajero?.dni) === data.dni);
+
+      if (existing) {
+        vpid = existing.id;
+        status = 'EXISTENTE_EN_VIAJE';
+      } else {
+        const global = await this.pasajeroRepository.findOneByDni(data.dni);
+        const [added] = await this.viajePasajeroRepository.addPasajeros([
+          {
+            viajeId,
+            pasajeroId: global?.id || null,
+            dni: global ? null : data.dni,
+            nombres: global ? null : data.nombres,
+            apellidos: global ? null : data.apellidos,
+            asistencia: false,
+          },
+        ]);
+        vpid = added.id;
+        status = global ? 'AGREGADO_DESDE_SISTEMA' : 'CREADO_AD_HOC';
+      }
+
+      idsCámara.push(vpid);
+      resultados.push({ ...data, matched: true, status, viajeTramoId: tramoId });
+    }
+
+    // Para no desabordar a los que ya estaban, unimos los detectados con los actuales del tramo
+    const currentInTramo = await this.viajePasajeroMovimientoRepository.findByViajeTramo(tramoId);
+    const existingIds = currentInTramo.filter((m) => m.tipoMovimiento === 'entrada').map((m) => m.viajePasajeroId);
+    const idsAAbordar = Array.from(new Set([...existingIds, ...idsCámara]));
+
+    if (idsAAbordar.length > 0) {
+      await this.abordarPasajeros(idsAAbordar, tramoId);
     }
 
     return {
