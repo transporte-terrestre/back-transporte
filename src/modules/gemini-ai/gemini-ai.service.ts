@@ -30,7 +30,7 @@ export class GeminiAiService {
       const mimeType = response.headers.get('content-type') || 'image/jpeg';
 
       const model = this.genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-3.1-flash-image-preview',
         generationConfig: {
           responseMimeType: 'application/json',
         },

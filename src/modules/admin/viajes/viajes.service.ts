@@ -671,7 +671,57 @@ export class ViajesService {
   }
 
   async deleteTramo(tramoId: number) {
-    return await this.viajeTramoRepository.delete(tramoId);
+    const tramo = await this.viajeTramoRepository.findOne(tramoId);
+    if (!tramo) throw new NotFoundException('Tramo no encontrado');
+
+    const result = await this.viajeTramoRepository.delete(tramoId);
+
+    // Ajustar estados y kilometraje en segundo plano (Fire and Forget)
+    this.procesarSideEffectsEliminarTramo(tramo.viajeId, tramo.tipo as ViajeTramoTipo).catch((err) => {
+      console.error('Error en procesarSideEffectsEliminarTramo:', err);
+    });
+
+    return result;
+  }
+
+  private async procesarSideEffectsEliminarTramo(viajeId: number, tipoEliminado: ViajeTramoTipo) {
+    try {
+      const vehiculosAsignados = await this.viajeVehiculoRepository.findByViajeId(viajeId);
+      const principal = vehiculosAsignados.find((v) => v.esPrincipal) || vehiculosAsignados[0];
+
+      // 1. Lógica de reversión de estados según el tipo de tramo eliminado
+      if (tipoEliminado === 'origen') {
+        // Si se elimina el origen, el viaje vuelve a estar programado
+        await this.viajeRepository.update(viajeId, { estado: 'programado' });
+        if (principal) {
+          // El vehículo vuelve a estar disponible
+          await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'disponible' });
+        }
+      } else if (tipoEliminado === 'destino') {
+        // Si se elimina el destino, el viaje vuelve a estar en progreso
+        await this.viajeRepository.update(viajeId, {
+          estado: 'en_progreso',
+          fechaLlegada: null,
+          distanciaFinal: null,
+        });
+        if (principal) {
+          // El vehículo vuelve a estar en circulación
+          await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'circulacion' });
+        }
+      }
+
+      // 2. Re-sincronizar el kilometraje del vehículo con el ÚLTIMO tramo que queda registrado
+      if (principal) {
+        const ultimoTramo = await this.viajeTramoRepository.findLastByViajeId(viajeId);
+        if (ultimoTramo && ultimoTramo.kilometrajeFinal) {
+          await this.vehiculoRepository.update(principal.vehiculoId, {
+            kilometraje: ultimoTramo.kilometrajeFinal,
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`Error procesando side effects para eliminación en viaje ${viajeId}:`, error);
+    }
   }
 
   // ========== CHECKLIST ITEMS (Catálogo) ==========
