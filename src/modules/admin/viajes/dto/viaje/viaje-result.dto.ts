@@ -119,13 +119,25 @@ export class ViajeResultDto {
 
   @ApiProperty({
     example: '2025-01-01T10:00:00Z',
-    description: 'Departure date',
+    description: 'Scheduled departure date',
   })
-  fechaSalida: Date;
+  fechaSalidaProgramada: Date;
 
   @ApiPropertyOptional({
     example: '2025-01-01T18:00:00Z',
-    description: 'Arrival date',
+    description: 'Scheduled arrival date',
+  })
+  fechaLlegadaProgramada: Date | null;
+
+  @ApiPropertyOptional({
+    example: '2025-01-01T10:00:00Z',
+    description: 'Real Departure date',
+  })
+  fechaSalida: Date | null;
+
+  @ApiPropertyOptional({
+    example: '2025-01-01T18:00:00Z',
+    description: 'Real Arrival date',
   })
   fechaLlegada: Date | null;
 

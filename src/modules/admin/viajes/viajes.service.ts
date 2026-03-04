@@ -45,6 +45,13 @@ import { PasajeroRepository } from '@repository/pasajero.repository';
 import { ViajeEscanearDnisDto } from './dto/viaje-pasajero/viaje-escanear-dnis.dto';
 import { ScanDniResultItem, ViajeEscanearDnisResultDto } from './dto/viaje-pasajero/viaje-escanear-dnis-result.dto';
 import { ViajePasajeroMovimientoRepository } from '@repository/viaje-pasajero-movimiento.repository';
+import { AlquilerRepository } from '@repository/alquiler.repository';
+import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repository';
+import { ConductorDocumentoRepository } from '@repository/conductor-documento.repository';
+import { ConductorRepository } from '@repository/conductor.repository';
+import { ValidarVehiculoQueryDto } from './dto/viaje/validar-vehiculo-query.dto';
+import { ValidarConductorQueryDto } from './dto/viaje/validar-conductor-query.dto';
+import { ValidacionResultDto } from './dto/viaje/validacion-result.dto';
 
 interface UsuarioAutenticado {
   sub: number;
@@ -73,6 +80,10 @@ export class ViajesService {
     private readonly geminiAiService: GeminiAiService,
     private readonly pasajeroRepository: PasajeroRepository,
     private readonly viajePasajeroMovimientoRepository: ViajePasajeroMovimientoRepository,
+    private readonly alquilerRepository: AlquilerRepository,
+    private readonly vehiculoDocumentoRepository: VehiculoDocumentoRepository,
+    private readonly conductorDocumentoRepository: ConductorDocumentoRepository,
+    private readonly conductorRepository: ConductorRepository,
   ) {}
 
   async findAllPaginated(
@@ -559,81 +570,11 @@ export class ViajesService {
     });
 
     // Ejecutar lógica de estados y notificaciones en segundo plano (Fire and Forget)
-    this.procesarSideEffectsViaje(viajeId, tipo, data, result.kilometrajeFinal).catch((err) => {
+    this.procesarSideEffectsRegistrarTramo(viajeId, tipo, data, result.kilometrajeFinal).catch((err) => {
       console.error('Error en procesarSideEffectsViaje:', err);
     });
 
     return result;
-  }
-
-  private async procesarSideEffectsViaje(viajeId: number, tipo: ViajeTramoTipo, data: ViajeRegistrarBaseDto, kilometrajeFinal: number | null) {
-    try {
-      const vehiculosAsignados = await this.viajeVehiculoRepository.findByViajeId(viajeId);
-      const principal = vehiculosAsignados.find((v) => v.esPrincipal) || vehiculosAsignados[0];
-
-      // 1. Actualizar kilometraje del vehículo si es proporcionado
-      if (kilometrajeFinal && principal) {
-        await this.vehiculoRepository.update(principal.vehiculoId, {
-          kilometraje: kilometrajeFinal,
-        });
-      }
-
-      // 2. Lógica según el tipo de tramo (Salida o Llegada)
-      if (tipo === 'origen') {
-        // Inicia el viaje
-        await this.viajeRepository.update(viajeId, { estado: 'en_progreso' });
-        // Vehículo pasa a circulación
-        if (principal) {
-          await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'circulacion' });
-        }
-      } else if (tipo === 'destino') {
-        // Finaliza el viaje
-        await this.viajeRepository.update(viajeId, {
-          estado: 'completado',
-          fechaLlegada: data.horaActual,
-          distanciaFinal: data.kilometrajeActual ? data.kilometrajeActual.toString() : undefined,
-        });
-
-        // Vehículo vuelve a estar disponible
-        if (principal) {
-          await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'disponible' });
-
-          // 3. Verificación de Mantenimiento
-          const ultimoMant = await this.mantenimientoRepository.findLatestByVehiculo(principal.vehiculoId);
-          if (ultimoMant && ultimoMant.kilometrajeProximoMantenimiento) {
-            const kmActual = Number(data.kilometrajeActual);
-            const kmProxMant = Number(ultimoMant.kilometrajeProximoMantenimiento);
-
-            if (kmActual >= kmProxMant) {
-              // Obtener placa para la notificación
-              const vehiculo = await this.vehiculoRepository.findOne(principal.vehiculoId);
-              if (vehiculo) {
-                await this.notificacionesService.notifyMaintenance(vehiculo.id, vehiculo.placa, kmActual, kmProxMant);
-              }
-            }
-          }
-        }
-      }
-    } catch (error) {
-      // Registrar error pero permitir que el proceso de fondo termine sin afectar al hilo principal
-      console.error(`Error procesando side effects para el viaje ${viajeId}:`, error);
-    }
-  }
-
-  async registrarSalida(viajeId: number, data: ViajeRegistrarSalidaDto) {
-    return this.registrarTramo(viajeId, 'origen', data, data.rutaParadaId || null);
-  }
-
-  async registrarLlegada(viajeId: number, data: ViajeRegistrarLlegadaDto) {
-    return this.registrarTramo(viajeId, 'destino', data, data.rutaParadaId || null);
-  }
-
-  async registrarPunto(viajeId: number, data: ViajeRegistrarPuntoDto) {
-    return this.registrarTramo(viajeId, 'punto', data, data.rutaParadaId);
-  }
-
-  async registrarParada(viajeId: number, data: ViajeRegistrarParadaDto) {
-    return this.registrarTramo(viajeId, 'parada', data);
   }
 
   async registrarDescanso(viajeId: number, data: ViajeRegistrarDescansoDto) {
@@ -667,6 +608,16 @@ export class ViajesService {
       }
     }
 
+    // SI se actualiza la hora final de origen o destino, sincronizarlo con el viaje para mantener consistencia
+    if (data.horaFinal && result.tipo === 'origen') {
+      await this.viajeRepository.update(result.viajeId, { fechaSalida: new Date(data.horaFinal) });
+    } else if (data.horaFinal && result.tipo === 'destino') {
+      await this.viajeRepository.update(result.viajeId, { fechaLlegada: new Date(data.horaFinal) });
+    }
+
+    // Recalcular distancia final por si actualizamos el origen o el destino
+    this.recalcularDistanciaViaje(result.viajeId).catch(console.error);
+
     return result;
   }
 
@@ -677,22 +628,143 @@ export class ViajesService {
     const result = await this.viajeTramoRepository.delete(tramoId);
 
     // Ajustar estados y kilometraje en segundo plano (Fire and Forget)
-    this.procesarSideEffectsEliminarTramo(tramo.viajeId, tramo.tipo as ViajeTramoTipo).catch((err) => {
+    this.procesarSideEffectsEliminarTramo(tramo.viajeId, tramo.tipo as ViajeTramoTipo, tramoId).catch((err) => {
       console.error('Error en procesarSideEffectsEliminarTramo:', err);
     });
 
     return result;
   }
 
-  private async procesarSideEffectsEliminarTramo(viajeId: number, tipoEliminado: ViajeTramoTipo) {
+  async registrarSalida(viajeId: number, data: ViajeRegistrarSalidaDto) {
+    return this.registrarTramo(viajeId, 'origen', data, data.rutaParadaId || null);
+  }
+
+  async registrarLlegada(viajeId: number, data: ViajeRegistrarLlegadaDto) {
+    return this.registrarTramo(viajeId, 'destino', data, data.rutaParadaId || null);
+  }
+
+  async registrarPunto(viajeId: number, data: ViajeRegistrarPuntoDto) {
+    return this.registrarTramo(viajeId, 'punto', data, data.rutaParadaId);
+  }
+
+  async registrarParada(viajeId: number, data: ViajeRegistrarParadaDto) {
+    return this.registrarTramo(viajeId, 'parada', data);
+  }
+
+  private async recalcularDistanciaViaje(viajeId: number) {
+    const tramos = await this.viajeTramoRepository.findByViajeIdWithParadas(viajeId);
+
+    const tramoInicial = tramos.find((s) => s.tipo !== 'descanso');
+    const tramoFinal = [...tramos].reverse().find((s) => s.tipo === 'destino');
+
+    if (tramoInicial && tramoFinal && tramoInicial.kilometrajeFinal != null && tramoFinal.kilometrajeFinal != null) {
+      const kmInicial = Number(tramoInicial.kilometrajeFinal);
+      const kmFinal = Number(tramoFinal.kilometrajeFinal);
+      let kmRecorrido = Math.max(kmFinal - kmInicial, 0);
+
+      if (kmRecorrido > 0) {
+        kmRecorrido = kmRecorrido / 1000;
+      }
+
+      await this.viajeRepository.update(viajeId, {
+        distanciaFinal: kmRecorrido.toFixed(2),
+      });
+    }
+  }
+
+  private async procesarSideEffectsRegistrarTramo(
+    viajeId: number,
+    tipo: ViajeTramoTipo,
+    data: ViajeRegistrarBaseDto,
+    kilometrajeFinal: number | null,
+  ) {
+    try {
+      const vehiculosAsignados = await this.viajeVehiculoRepository.findByViajeId(viajeId);
+      const principal = vehiculosAsignados.find((v) => v.esPrincipal) || vehiculosAsignados[0];
+
+      // 1. Actualizar kilometraje del vehículo si es proporcionado
+      if (kilometrajeFinal && principal) {
+        await this.vehiculoRepository.update(principal.vehiculoId, {
+          kilometraje: kilometrajeFinal,
+        });
+      }
+
+      // 2. Lógica según el tipo de tramo (Salida o Llegada)
+      if (tipo === 'origen') {
+        // Inicia el viaje
+        await this.viajeRepository.update(viajeId, {
+          estado: 'en_progreso',
+          fechaSalida: new Date(data.horaActual),
+        });
+        // Vehículo pasa a circulación
+        if (principal) {
+          await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'circulacion' });
+        }
+      } else if (tipo === 'destino') {
+        let distanciaFinalCalculada = data.kilometrajeActual ? data.kilometrajeActual.toString() : undefined;
+
+        if (data.kilometrajeActual) {
+          const tramos = await this.viajeTramoRepository.findByViajeIdWithParadas(viajeId);
+          const tramoInicial = tramos.find((s) => s.tipo !== 'descanso');
+          if (tramoInicial && tramoInicial.kilometrajeFinal != null) {
+            const kmInicial = Number(tramoInicial.kilometrajeFinal);
+            const kmFinal = Number(data.kilometrajeActual);
+            let kmRecorrido = Math.max(kmFinal - kmInicial, 0);
+
+            // Convertir a kilómetros si el valor viene en metros (e.g. 2000 -> 2.00)
+            if (kmRecorrido > 0) {
+              kmRecorrido = kmRecorrido / 1000;
+            }
+
+            distanciaFinalCalculada = kmRecorrido.toFixed(2);
+          }
+        }
+
+        // Finaliza el viaje
+        await this.viajeRepository.update(viajeId, {
+          estado: 'completado',
+          fechaLlegada: data.horaActual,
+          distanciaFinal: distanciaFinalCalculada,
+        });
+
+        // Vehículo vuelve a estar disponible
+        if (principal) {
+          await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'disponible' });
+
+          // 3. Verificación de Mantenimiento
+          const ultimoMant = await this.mantenimientoRepository.findLatestByVehiculo(principal.vehiculoId);
+          if (ultimoMant && ultimoMant.kilometrajeProximoMantenimiento) {
+            const kmActual = Number(data.kilometrajeActual);
+            const kmProxMant = Number(ultimoMant.kilometrajeProximoMantenimiento);
+
+            if (kmActual >= kmProxMant) {
+              // Obtener placa para la notificación
+              const vehiculo = await this.vehiculoRepository.findOne(principal.vehiculoId);
+              if (vehiculo) {
+                await this.notificacionesService.notifyMaintenance(vehiculo.id, vehiculo.placa, kmActual, kmProxMant);
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Registrar error pero permitir que el proceso de fondo termine sin afectar al hilo principal
+      console.error(`Error procesando side effects para el viaje ${viajeId}:`, error);
+    }
+  }
+
+  private async procesarSideEffectsEliminarTramo(viajeId: number, tipoEliminado: ViajeTramoTipo, tramoId: number) {
     try {
       const vehiculosAsignados = await this.viajeVehiculoRepository.findByViajeId(viajeId);
       const principal = vehiculosAsignados.find((v) => v.esPrincipal) || vehiculosAsignados[0];
 
       // 1. Lógica de reversión de estados según el tipo de tramo eliminado
       if (tipoEliminado === 'origen') {
-        // Si se elimina el origen, el viaje vuelve a estar programado
-        await this.viajeRepository.update(viajeId, { estado: 'programado' });
+        // Si se elimina el origen, el viaje vuelve a estar programado y se limpia la fecha real
+        await this.viajeRepository.update(viajeId, {
+          estado: 'programado',
+          fechaSalida: null,
+        });
         if (principal) {
           // El vehículo vuelve a estar disponible
           await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'disponible' });
@@ -719,6 +791,27 @@ export class ViajesService {
           });
         }
       }
+
+      // 3. Eliminar asistencia de pasajeros marcada en este tramo
+      const movimientos = await this.viajePasajeroMovimientoRepository.findByViajeTramo(tramoId);
+      for (const mov of movimientos) {
+        if (mov.tipoMovimiento === 'entrada') {
+          // Borrar el movimiento del tramo
+          await this.viajePasajeroMovimientoRepository.delete(mov.id);
+
+          // Comprobar si tiene más entradas vinculadas a OTROS tramos del mismo viaje
+          const otrosMovs = await this.viajePasajeroMovimientoRepository.findByViajePasajero(mov.viajePasajeroId);
+          const aunTieneAsistencia = otrosMovs.some((m) => m.tipoMovimiento === 'entrada' && m.viajeTramoId !== tramoId && m.eliminadoEn === null);
+
+          if (!aunTieneAsistencia) {
+            await this.viajePasajeroRepository.updateAsistencia(mov.viajePasajeroId, false);
+          }
+        }
+      }
+
+      // Finalmente, resincronizar el contador de pasajeros de ese tramo (quedará en 0 si lo borramos,
+      // pero nunca hace daño asegurar integridad)
+      await this.viajeTramoRepository.syncNumeroPasajeros(tramoId);
     } catch (error) {
       console.error(`Error procesando side effects para eliminación en viaje ${viajeId}:`, error);
     }
@@ -1058,7 +1151,7 @@ export class ViajesService {
 
     // Valores por defecto basados en el viaje o el último tramo real (no descanso)
     let ultimoKilometraje = lastTramoReal?.kilometrajeFinal || 0;
-    let ultimaHora = lastTramo?.horaFinal || viajeInfo.fechaSalida;
+    let ultimaHora = lastTramo?.horaFinal || viajeInfo.fechaSalida || viajeInfo.fechaSalidaProgramada;
 
     // Si es el primer tramo (no hay tramos), buscamos el kilometraje actual del vehículo
     if (tramos.length === 0) {
@@ -1181,5 +1274,110 @@ export class ViajesService {
     }
 
     return result;
+  }
+
+  async validarVehiculo(query: ValidarVehiculoQueryDto): Promise<ValidacionResultDto> {
+    const vehiculo = await this.vehiculoRepository.findOne(query.vehiculoId);
+    if (!vehiculo) {
+      return { status: false, message: 'Vehículo no encontrado.' };
+    }
+
+    if (vehiculo.estado === 'retirado') {
+      return { status: false, message: 'El vehículo se encuentra retirado de circulación.' };
+    }
+
+    const { fechaSalida, fechaLlegada, viajeId } = query;
+
+    // 1. Validar alquileres cruzados
+    const activeAlquileres = await this.alquilerRepository.findActivosByVehiculo(query.vehiculoId);
+
+    for (const alq of activeAlquileres) {
+      if (alq.fechaFin && new Date(alq.fechaFin) < new Date(fechaLlegada)) {
+        return {
+          status: false,
+          message: `El alquiler del vehículo vence el ${alq.fechaFin.toLocaleDateString()}, antes de la fecha programada de llegada.`,
+        };
+      }
+    }
+
+    // 2. Validar mantenimientos (si hay un mantenimiento pendiente/en_proceso que cruce con el viaje)
+    const activeMantenimientos = await this.mantenimientoRepository.findCruzadosPorVehiculo(
+      query.vehiculoId,
+      new Date(fechaSalida),
+      new Date(fechaLlegada),
+    );
+
+    if (activeMantenimientos.length > 0) {
+      return { status: false, message: `El vehículo tiene un mantenimiento programado/en proceso que cruza con este horario.` };
+    }
+
+    // 3. Validar viajes que cruzan (excluyendo el viajeId actual si se envía)
+    const viajesCruzados = await this.viajeRepository.findCruzadosPorVehiculo(
+      query.vehiculoId,
+      new Date(fechaSalida),
+      new Date(fechaLlegada),
+      viajeId,
+    );
+
+    if (viajesCruzados.length > 0) {
+      return {
+        status: false,
+        message: `El vehículo ya tiene ${viajesCruzados.length} viaje(s) asignado(s) que se cruza(n) con el horario programado.`,
+      };
+    }
+
+    // 4. Validar documentos vencidos del vehiculo
+    const docs = await this.vehiculoDocumentoRepository.findByVehiculoId(query.vehiculoId);
+
+    // Si la fecha de expiracion del documento es menor a la fecha de llegada de este viaje,
+    // significa que el documento caducará durante (o antes) del viaje
+    for (const d of docs) {
+      if (d.fechaExpiracion && new Date(d.fechaExpiracion) < new Date(fechaLlegada)) {
+        return {
+          status: false,
+          message: `El documento "${d.nombre}" expirará el ${new Date(d.fechaExpiracion).toLocaleDateString()}, y no cubre todo el horario del viaje.`,
+        };
+      }
+    }
+
+    return { status: true, message: 'El vehículo está disponible y habilitado.' };
+  }
+
+  async validarConductor(query: ValidarConductorQueryDto): Promise<ValidacionResultDto> {
+    const conductor = await this.conductorRepository.findOne(query.conductorId);
+    if (!conductor) {
+      return { status: false, message: 'Conductor no encontrado.' };
+    }
+
+    const { fechaSalida, fechaLlegada, viajeId } = query;
+
+    // 1. Validar documentos vencidos del conductor
+    const docs = await this.conductorDocumentoRepository.findByConductorId(query.conductorId);
+
+    for (const d of docs) {
+      if (d.fechaExpiracion && new Date(d.fechaExpiracion) < new Date(fechaLlegada)) {
+        return {
+          status: false,
+          message: `El documento del conductor "${d.nombre}" expirará el ${new Date(d.fechaExpiracion).toLocaleDateString()}, y no cubre todo el horario del viaje.`,
+        };
+      }
+    }
+
+    // 2. Validar viajes que cruzan
+    const viajesCruzados = await this.viajeRepository.findCruzadosPorConductor(
+      query.conductorId,
+      new Date(fechaSalida),
+      new Date(fechaLlegada),
+      viajeId,
+    );
+
+    if (viajesCruzados.length > 0) {
+      return {
+        status: false,
+        message: `El conductor ya tiene ${viajesCruzados.length} viaje(s) asignado(s) que se cruza(n) con el horario programado.`,
+      };
+    }
+
+    return { status: true, message: 'El conductor está disponible y habilitado.' };
   }
 }

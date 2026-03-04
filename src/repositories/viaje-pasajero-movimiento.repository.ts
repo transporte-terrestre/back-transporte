@@ -32,4 +32,13 @@ export class ViajePasajeroMovimientoRepository {
       .returning();
     return deletedItem;
   }
+
+  async deleteByViajeTramo(viajeTramoId: number) {
+    const deletedItems = await database
+      .update(viajePasajeroMovimientos)
+      .set({ eliminadoEn: new Date() })
+      .where(and(eq(viajePasajeroMovimientos.viajeTramoId, viajeTramoId), isNull(viajePasajeroMovimientos.eliminadoEn)))
+      .returning();
+    return deletedItems;
+  }
 }

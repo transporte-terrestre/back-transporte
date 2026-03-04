@@ -28,7 +28,9 @@ export const viajes = pgTable('viajes', {
   turno: viajesTurno('turno'), // Turno del viaje: día o noche
   sentido: viajesSentido('sentido').default('ida').notNull(), // Sentido del viaje: ida o vuelta
   numeroVale: varchar('numero_vale', { length: 50 }), // Número de vale de combustible
-  fechaSalida: timestamp('fecha_salida').notNull(),
+  fechaSalidaProgramada: timestamp('fecha_salida_programada').defaultNow().notNull(),
+  fechaLlegadaProgramada: timestamp('fecha_llegada_programada'),
+  fechaSalida: timestamp('fecha_salida'),
   fechaLlegada: timestamp('fecha_llegada'),
   creadoEn: timestamp('creado_en').defaultNow().notNull(),
   actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),

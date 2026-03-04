@@ -141,4 +141,11 @@ export class AlquilerRepository {
 
     return record;
   }
+
+  async findActivosByVehiculo(vehiculoId: number) {
+    return await database
+      .select()
+      .from(alquileres)
+      .where(and(eq(alquileres.vehiculoId, vehiculoId), eq(alquileres.estado, 'activo'), isNull(alquileres.eliminadoEn)));
+  }
 }

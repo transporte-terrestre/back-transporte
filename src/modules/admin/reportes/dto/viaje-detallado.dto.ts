@@ -49,8 +49,25 @@ export class ViajeDetalladoDto {
   modalidadServicio: string;
 
   @ApiProperty()
-  fechaSalida: Date;
+  fechaSalidaProgramada: Date;
+
+  @ApiProperty({ nullable: true })
+  fechaLlegadaProgramada: Date | null;
+
+  @ApiProperty({ nullable: true })
+  fechaSalida: Date | null;
 
   @ApiProperty({ nullable: true })
   fechaLlegada: Date | null;
+
+  @ApiProperty({
+    description: 'ID del circuito al que pertenece este viaje',
+    nullable: true,
+  })
+  circuitoId: number | null;
+
+  @ApiProperty({
+    description: 'Sentido del viaje',
+  })
+  sentido: string;
 }

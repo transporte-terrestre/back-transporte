@@ -36,8 +36,11 @@ import { ViajeChecklistQueryDto } from './dto/viaje-checklist/viaje-checklist-qu
 import { ViajePasajeroResultDto } from './dto/viaje-pasajero/viaje-pasajero-result.dto';
 import { ViajePasajeroFillDto } from './dto/viaje-pasajero/viaje-pasajero-fill.dto';
 import { ViajeEscanearDnisDto } from './dto/viaje-pasajero/viaje-escanear-dnis.dto';
-import { ViajeEscanearDnisResultDto, ViajePasajeroTramoQueryDto } from './dto/viaje-pasajero/viaje-escanear-dnis-result.dto';
+import { ScanDniResultItem, ViajeEscanearDnisResultDto, ViajePasajeroTramoQueryDto } from './dto/viaje-pasajero/viaje-escanear-dnis-result.dto';
 import { ViajePasajeroAbordarPasajerosDto } from './dto/viaje-pasajero/viaje-pasajero-abordar-pasajeros.dto';
+import { ValidarVehiculoQueryDto } from './dto/viaje/validar-vehiculo-query.dto';
+import { ValidarConductorQueryDto } from './dto/viaje/validar-conductor-query.dto';
+import { ValidacionResultDto } from './dto/viaje/validacion-result.dto';
 
 @ApiTags('viajes')
 @ApiBearerAuth()
@@ -97,6 +100,20 @@ export class ViajesController {
       query.turno,
       req.user,
     );
+  }
+
+  @Get('validar-vehiculo')
+  @ApiOperation({ summary: 'Validar disponibilidad y requisitos de un vehículo para un horario programado' })
+  @ApiResponse({ status: 200, type: ValidacionResultDto })
+  async validarVehiculo(@Query() query: ValidarVehiculoQueryDto) {
+    return this.viajesService.validarVehiculo(query);
+  }
+
+  @Get('validar-conductor')
+  @ApiOperation({ summary: 'Validar disponibilidad y requisitos de un conductor para un horario programado' })
+  @ApiResponse({ status: 200, type: ValidacionResultDto })
+  async validarConductor(@Query() query: ValidarConductorQueryDto) {
+    return this.viajesService.validarConductor(query);
   }
 
   @Get('find-one/:id')

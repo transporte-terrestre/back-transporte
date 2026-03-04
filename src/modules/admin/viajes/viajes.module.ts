@@ -18,6 +18,10 @@ import { PasajeroRepository } from '@repository/pasajero.repository';
 import { VehiculoRepository } from '@repository/vehiculo.repository';
 import { MantenimientoRepository } from '@repository/mantenimiento.repository';
 import { ViajePasajeroMovimientoRepository } from '@repository/viaje-pasajero-movimiento.repository';
+import { AlquilerRepository } from '@repository/alquiler.repository';
+import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repository';
+import { ConductorDocumentoRepository } from '@repository/conductor-documento.repository';
+import { ConductorRepository } from '@repository/conductor.repository';
 import { NotificacionesModule } from '../notificaciones/notificaciones.module';
 import { GeminiAiModule } from '@module/gemini-ai/gemini-ai.module';
 
@@ -42,6 +46,10 @@ import { GeminiAiModule } from '@module/gemini-ai/gemini-ai.module';
     VehiculoRepository,
     MantenimientoRepository,
     ViajePasajeroMovimientoRepository,
+    AlquilerRepository,
+    VehiculoDocumentoRepository,
+    ConductorDocumentoRepository,
+    ConductorRepository,
   ],
   imports: [NotificacionesModule, GeminiAiModule],
   exports: [ViajeTramoRepository, ChecklistItemRepository, ViajeChecklistRepository],

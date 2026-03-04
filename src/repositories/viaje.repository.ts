@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, like, and, gte, lte, count, sql, isNull, getTableColumns, inArray, desc } from 'drizzle-orm';
+import { eq, like, and, gte, lte, count, sql, isNull, getTableColumns, inArray, desc, or } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { viajes, ViajeDTO } from '@db/tables/viaje.table';
 import { viajeConductores } from '@db/tables/viaje-conductor.table';
@@ -57,12 +57,12 @@ export class ViajeRepository {
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
-      conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
-      conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + 'T23:59:59')));
+      conditions.push(gte(viajes.fechaSalidaProgramada, new Date(filters.fechaInicio)));
+      conditions.push(lte(viajes.fechaSalidaProgramada, new Date(filters.fechaFin + 'T23:59:59')));
     } else if (filters?.fechaInicio) {
-      conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
+      conditions.push(gte(viajes.fechaSalidaProgramada, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + 'T23:59:59')));
+      conditions.push(lte(viajes.fechaSalidaProgramada, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
     if (filters?.clienteId) {
@@ -136,7 +136,7 @@ export class ViajeRepository {
       .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .where(whereClause)
-      .orderBy(desc(viajes.fechaSalida))
+      .orderBy(desc(viajes.fechaSalidaProgramada))
       .limit(limit)
       .offset(offset);
 
@@ -168,12 +168,12 @@ export class ViajeRepository {
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
-      conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
-      conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + 'T23:59:59')));
+      conditions.push(gte(viajes.fechaSalidaProgramada, new Date(filters.fechaInicio)));
+      conditions.push(lte(viajes.fechaSalidaProgramada, new Date(filters.fechaFin + 'T23:59:59')));
     } else if (filters?.fechaInicio) {
-      conditions.push(gte(viajes.fechaSalida, new Date(filters.fechaInicio)));
+      conditions.push(gte(viajes.fechaSalidaProgramada, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(lte(viajes.fechaSalida, new Date(filters.fechaFin + 'T23:59:59')));
+      conditions.push(lte(viajes.fechaSalidaProgramada, new Date(filters.fechaFin + 'T23:59:59')));
     }
 
     if (filters?.clienteId) {
@@ -223,7 +223,7 @@ export class ViajeRepository {
       .select({
         id: viajes.id,
         estado: viajes.estado,
-        fecha: viajes.fechaSalida,
+        fecha: viajes.fechaSalidaProgramada,
         tipoRuta: viajes.tipoRuta,
         rutaOcasional: viajes.rutaOcasional,
         rutaOrigen: rutas.origen,
@@ -232,7 +232,7 @@ export class ViajeRepository {
       .from(viajes)
       .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
       .where(whereClause)
-      .orderBy(desc(viajes.fechaSalida))
+      .orderBy(desc(viajes.fechaSalidaProgramada))
       .limit(limit)
       .offset(offset);
 
@@ -333,7 +333,7 @@ export class ViajeRepository {
       .select({
         id: viajes.id,
         estado: viajes.estado,
-        fecha: viajes.fechaSalida,
+        fecha: viajes.fechaSalidaProgramada,
         tipoRuta: viajes.tipoRuta,
         rutaOcasional: viajes.rutaOcasional,
         rutaOrigen: rutas.origen,
@@ -487,5 +487,50 @@ export class ViajeRepository {
   async delete(id: number) {
     const result = await database.update(viajes).set({ eliminadoEn: new Date() }).where(eq(viajes.id, id)).returning();
     return result[0];
+  }
+
+  async findCruzadosPorVehiculo(vehiculoId: number, fechaSalida: Date, fechaLlegada: Date, excludeViajeId?: number) {
+    let viajesFilter = and(
+      eq(viajeVehiculos.vehiculoId, vehiculoId),
+      or(eq(viajes.estado, 'programado'), eq(viajes.estado, 'en_progreso')),
+      isNull(viajes.eliminadoEn),
+      or(
+        and(
+          lte(sql`COALESCE(${viajes.fechaSalidaProgramada}, ${viajes.fechaSalida})`, fechaLlegada),
+          gte(sql`COALESCE(${viajes.fechaLlegadaProgramada}, ${viajes.fechaLlegada})`, fechaSalida),
+        ),
+      ),
+    );
+
+    if (excludeViajeId) {
+      viajesFilter = and(viajesFilter, sql`${viajes.id} != ${excludeViajeId}`);
+    }
+
+    return await database.select({ id: viajes.id }).from(viajes).innerJoin(viajeVehiculos, eq(viajeVehiculos.viajeId, viajes.id)).where(viajesFilter);
+  }
+
+  async findCruzadosPorConductor(conductorId: number, fechaSalida: Date, fechaLlegada: Date, excludeViajeId?: number) {
+    let viajesFilter = and(
+      eq(viajeConductores.conductorId, conductorId),
+      or(eq(viajes.estado, 'programado'), eq(viajes.estado, 'en_progreso')),
+      isNull(viajes.eliminadoEn),
+      or(
+        and(
+          lte(sql`COALESCE(${viajes.fechaSalidaProgramada}, ${viajes.fechaSalida})`, fechaLlegada),
+          gte(sql`COALESCE(${viajes.fechaLlegadaProgramada}, ${viajes.fechaLlegada})`, fechaSalida),
+        ),
+      ),
+    );
+
+    if (excludeViajeId) {
+      // @ts-ignore
+      viajesFilter = and(viajesFilter, sql`${viajes.id} != ${excludeViajeId}`);
+    }
+
+    return await database
+      .select({ id: viajes.id })
+      .from(viajes)
+      .innerJoin(viajeConductores, eq(viajeConductores.viajeId, viajes.id))
+      .where(viajesFilter);
   }
 }
