@@ -8,7 +8,7 @@ export const FiltroDocumentoEstado = {
   INCOMPLETO: 'incompleto',
 } as const;
 
-export type FiltroDocumentoEstado = typeof FiltroDocumentoEstado[keyof typeof FiltroDocumentoEstado];
+export type FiltroDocumentoEstado = (typeof FiltroDocumentoEstado)[keyof typeof FiltroDocumentoEstado];
 
 export class VehiculoDocumentosEstadoQueryDto {
   @ApiProperty({

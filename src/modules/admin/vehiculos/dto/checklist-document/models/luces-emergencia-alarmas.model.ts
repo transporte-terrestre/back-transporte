@@ -32,7 +32,7 @@ export const LucesEmergenciaAlarmasModel: VehiculoChecklistDocumentItemUpsertDto
 export const LucesEmergenciaAlarmasMap: Record<LucesEmergenciaAlarmasLabel, keyof LucesEmergenciaAlarmasDto> = {
   'Alarma de Retroceso': 'alarmaRetroceso',
   'Alarma Cinturón de Seguridad': 'alarmaCinturon',
-  'Claxon': 'claxon',
+  Claxon: 'claxon',
   'Luces de la cabina conducción': 'lucesCabina',
   'Luces salón de pasajeros': 'lucesSalon',
   'Luces altas (lado derecho)': 'lucesAltasDerecho',

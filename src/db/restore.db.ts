@@ -56,7 +56,7 @@ const runRestore = async () => {
   }
 
   console.log(`♻️  Restaurando hacia: ${DB_HOST} (Base de datos: ${DB_NAME})`);
-  
+
   // 4. Configurar comandos según el entorno
   let baseCommand = 'docker';
   let cleanArgs: string[] = [];
@@ -66,18 +66,28 @@ const runRestore = async () => {
   if (isLocalhost) {
     // === MODO LOCAL (Docker Exec) ===
     console.log(`🖥️  Modo Local: Inyectando directamente en contenedor ${DB_CONTAINER_NAME}`);
-    
+
     if (!DB_CONTAINER_NAME) {
-        console.error('❌ Error: DB_CONTAINER_NAME es requerido en local.');
-        process.exit(1);
+      console.error('❌ Error: DB_CONTAINER_NAME es requerido en local.');
+      process.exit(1);
     }
 
     // Limpiar
-    cleanArgs = ['exec', '-i', DB_CONTAINER_NAME, 'psql', '-U', DB_USER!, '-d', DB_NAME!, '-c', 'DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public;'];
-    
+    cleanArgs = [
+      'exec',
+      '-i',
+      DB_CONTAINER_NAME,
+      'psql',
+      '-U',
+      DB_USER!,
+      '-d',
+      DB_NAME!,
+      '-c',
+      'DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public;',
+    ];
+
     // Restaurar (Directo)
     restoreArgs = ['exec', '-i', DB_CONTAINER_NAME, 'psql', '-U', DB_USER!, DB_NAME!];
-
   } else {
     // === MODO NUBE (Docker Run + Filtro SED) ===
     console.log(`☁️  Modo Nube: Usando cliente temporal hacia ${DB_HOST}`);
@@ -88,25 +98,30 @@ const runRestore = async () => {
     // Limpiar (Conexión psql normal desde contenedor efímero)
     cleanArgs = [
       ...commonDockerFlags,
-      'psql', '-h', DB_HOST!, '-p', port, '-U', DB_USER!, '-d', DB_NAME!, 
-      '-c', 'DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public;'
+      'psql',
+      '-h',
+      DB_HOST!,
+      '-p',
+      port,
+      '-U',
+      DB_USER!,
+      '-d',
+      DB_NAME!,
+      '-c',
+      'DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public;',
     ];
 
     // Restaurar (Con tubería Bash para SED)
     // Explicación: El stream de Node entra a Docker -> Bash -> sed (quita OWNER) -> psql (inserta)
-    restoreArgs = [
-      ...commonDockerFlags,
-      '/bin/bash', '-c', 
-      `sed '/OWNER TO/d' | psql -h ${DB_HOST} -p ${port} -U ${DB_USER} ${DB_NAME}`
-    ];
+    restoreArgs = [...commonDockerFlags, '/bin/bash', '-c', `sed '/OWNER TO/d' | psql -h ${DB_HOST} -p ${port} -U ${DB_USER} ${DB_NAME}`];
   }
 
   // --- EJECUCIÓN ---
 
   // PASO A: Limpieza
   console.log(`🧹 Limpiando esquema 'public'...`);
-  const resetProc = spawn(baseCommand, cleanArgs, { 
-    env: { ...process.env, PGPASSWORD: DB_PASSWORD }
+  const resetProc = spawn(baseCommand, cleanArgs, {
+    env: { ...process.env, PGPASSWORD: DB_PASSWORD },
   });
 
   resetProc.on('close', (code) => {
@@ -121,19 +136,19 @@ const runRestore = async () => {
 
     // PASO B: Restauración
     const restoreChild = spawn(baseCommand, restoreArgs, {
-        env: { ...process.env, PGPASSWORD: DB_PASSWORD }
+      env: { ...process.env, PGPASSWORD: DB_PASSWORD },
     });
-    
+
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(restoreChild.stdin);
 
     restoreChild.stderr.on('data', (data) => {
-        const msg = data.toString();
-        // Ignorar mensajes informativos o advertencias de extensiones
-        if (!msg.startsWith('NOTICE') && !msg.includes('extension "plpgsql" already exists')) {
-            // Si es un error real, lo mostramos
-            console.log(`psql: ${msg}`);
-        }
+      const msg = data.toString();
+      // Ignorar mensajes informativos o advertencias de extensiones
+      if (!msg.startsWith('NOTICE') && !msg.includes('extension "plpgsql" already exists')) {
+        // Si es un error real, lo mostramos
+        console.log(`psql: ${msg}`);
+      }
     });
 
     restoreChild.on('close', (rCode) => {

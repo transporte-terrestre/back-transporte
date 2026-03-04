@@ -373,19 +373,24 @@ export class ConductoresService {
 
     let docY = doc.y;
     for (const docInfo of documentos) {
+      if (docY > 720) {
+        doc.addPage();
+        docY = 50; // Reset to top margin
+      }
+
       const status = docInfo.url ? 'ADJUNTADO' : 'PENDIENTE';
       const vencimiento = docInfo.fechaExpiracion ? new Date(docInfo.fechaExpiracion).toLocaleDateString() : '-';
 
       // Alternating row background could be nice, but simple lines needed?
       // Just text
       doc.fillColor(primaryColor);
-      doc.text(mapDocLabel(docInfo.tipo), col1, docY);
+      doc.text(mapDocLabel(docInfo.tipo), col1, docY, { width: 290, lineBreak: false });
 
       doc.fillColor(docInfo.url ? 'green' : 'red');
-      doc.text(status, col2, docY);
+      doc.text(status, col2, docY, { width: 90, lineBreak: false });
 
       doc.fillColor(primaryColor);
-      doc.text(vencimiento, col3, docY);
+      doc.text(vencimiento, col3, docY, { width: 80, lineBreak: false });
 
       docY += 20;
 
@@ -397,8 +402,6 @@ export class ConductoresService {
         .lineTo(550, docY - 5)
         .stroke();
     }
-
-    doc.text('', 50, docY); // Restore cursor
 
     // --- FOTOCHECKS DOWNLOAD LOOP (Hidden from PDF now) ---
     // Keep downloading fotochecks to ZIP

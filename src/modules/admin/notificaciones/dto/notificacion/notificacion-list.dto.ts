@@ -24,4 +24,7 @@ export class NotificacionListDto {
 
   @ApiProperty()
   leido: boolean;
+
+  @ApiProperty({ required: false, type: Object })
+  metadata?: Record<string, any>;
 }

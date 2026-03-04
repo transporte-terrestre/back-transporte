@@ -164,6 +164,35 @@ export class MantenimientoRepository {
     return result[0];
   }
 
+  async findLatestByVehiculo(vehiculoId: number) {
+    const result = await database
+      .select()
+      .from(mantenimientos)
+      .where(and(eq(mantenimientos.vehiculoId, vehiculoId), isNull(mantenimientos.eliminadoEn)))
+      .orderBy(desc(mantenimientos.fechaIngreso))
+      .limit(1);
+
+    return result[0] || null;
+  }
+
+  async findCruzadosPorVehiculo(vehiculoId: number, fechaSalida: Date, fechaLlegada: Date) {
+    return await database
+      .select()
+      .from(mantenimientos)
+      .where(
+        and(
+          eq(mantenimientos.vehiculoId, vehiculoId),
+          or(eq(mantenimientos.estado, 'pendiente'), eq(mantenimientos.estado, 'en_proceso')),
+          isNull(mantenimientos.eliminadoEn),
+          // Mantenimiento que cruce las fechas del viaje
+          and(
+            lte(mantenimientos.fechaIngreso, fechaLlegada),
+            gte(sql`COALESCE(${mantenimientos.fechaSalida}, ${mantenimientos.fechaIngreso})`, fechaSalida),
+          ),
+        ),
+      );
+  }
+
   // ========== TAREAS ==========
   async createTarea(data: any) {
     const result = await database.insert(mantenimientoTareas).values(data).returning();

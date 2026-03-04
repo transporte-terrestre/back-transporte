@@ -17,6 +17,7 @@ import { NotificacionesModule } from './modules/admin/notificaciones/notificacio
 import { ReportesModule } from './modules/admin/reportes/reportes.module';
 import { PropietariosModule } from './modules/admin/propietarios/propietarios.module';
 import { ProveedoresModule } from './modules/admin/proveedores/proveedores.module';
+import { AlquileresModule } from './modules/admin/alquileres/alquileres.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ProveedoresModule } from './modules/admin/proveedores/proveedores.modul
     ReportesModule,
     PropietariosModule,
     ProveedoresModule,
+    AlquileresModule,
     StorageModule,
     CronjobModule,
   ],

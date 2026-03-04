@@ -6,6 +6,8 @@ import { ClienteResultDto } from '../../../clientes/dto/cliente/cliente-result.d
 import { viajeConductoresRol } from '@db/tables/viaje-conductor.table';
 import { viajeVehiculosRol } from '@db/tables/viaje-vehiculo.table';
 import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta, ViajeTurno, ViajeSentido } from '@db/tables/viaje.table';
+import type { ViajeConductorRol } from '@db/tables/viaje-conductor.table';
+import type { ViajeVehiculoRol } from '@db/tables/viaje-vehiculo.table';
 import { ViajeComentarioResultDto } from '../viaje-comentario/viaje-comentario-result.dto';
 import { RutaResultDto } from '@module/admin/rutas/dto/ruta/ruta-result.dto';
 
@@ -18,7 +20,7 @@ export class ViajeConductorDetalleDto extends OmitType(ConductorResultDto, ['doc
     example: viajeConductoresRol.enumValues[0],
     description: 'Rol del conductor',
   })
-  rol: string;
+  rol: ViajeConductorRol;
 }
 
 export class ViajeVehiculoDetalleDto extends OmitType(VehiculoResultDto, ['documentos', 'propietarios', 'proveedores']) {
@@ -30,7 +32,7 @@ export class ViajeVehiculoDetalleDto extends OmitType(VehiculoResultDto, ['docum
     example: viajeVehiculosRol.enumValues[0],
     description: 'Rol del vehículo',
   })
-  rol: string;
+  rol: ViajeVehiculoRol;
 }
 
 export class ViajeComentarioDetalleDto extends ViajeComentarioResultDto {
@@ -117,13 +119,25 @@ export class ViajeResultDto {
 
   @ApiProperty({
     example: '2025-01-01T10:00:00Z',
-    description: 'Departure date',
+    description: 'Scheduled departure date',
   })
-  fechaSalida: Date;
+  fechaSalidaProgramada: Date;
 
   @ApiPropertyOptional({
     example: '2025-01-01T18:00:00Z',
-    description: 'Arrival date',
+    description: 'Scheduled arrival date',
+  })
+  fechaLlegadaProgramada: Date | null;
+
+  @ApiPropertyOptional({
+    example: '2025-01-01T10:00:00Z',
+    description: 'Real Departure date',
+  })
+  fechaSalida: Date | null;
+
+  @ApiPropertyOptional({
+    example: '2025-01-01T18:00:00Z',
+    description: 'Real Arrival date',
   })
   fechaLlegada: Date | null;
 

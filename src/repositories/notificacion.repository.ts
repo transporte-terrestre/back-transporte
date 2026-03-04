@@ -51,6 +51,7 @@ export class NotificacionRepository {
         titulo: notificaciones.titulo,
         mensaje: notificaciones.mensaje,
         tipo: notificaciones.tipo,
+        metadata: notificaciones.metadata,
         creadoEn: notificaciones.creadoEn,
         leido: sql<boolean>`CASE WHEN ${notificacionesLeidas.id} IS NOT NULL THEN true ELSE false END`.as('leido'),
       })
@@ -139,6 +140,7 @@ export class NotificacionRepository {
         titulo: notificaciones.titulo,
         mensaje: notificaciones.mensaje,
         tipo: notificaciones.tipo,
+        metadata: notificaciones.metadata,
         creadoEn: notificaciones.creadoEn,
         leido: sql<boolean>`CASE WHEN ${notificacionesConductorLeidas.leidoEn} IS NOT NULL THEN true ELSE false END`.as('leido'),
         leidoEn: notificacionesConductorLeidas.leidoEn,

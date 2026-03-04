@@ -1,39 +1,26 @@
-import {
-  pgTable,
-  serial,
-  varchar,
-  timestamp,
-  index,
-  uniqueIndex,
-} from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { pgTable, serial, varchar, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
 // Catálogo de tareas de mantenimiento (reutilizables)
 export const tareas = pgTable(
-  "tareas",
+  'tareas',
   {
-    id: serial("id").primaryKey(),
-    codigo: varchar("codigo", { length: 50 }).notNull(),
-    nombreTrabajo: varchar("nombre_trabajo", { length: 255 }).notNull(),
-    grupo: varchar("grupo", { length: 100 }).notNull(),
-    creadoEn: timestamp("creado_en").defaultNow().notNull(),
-    actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
-    eliminadoEn: timestamp("eliminado_en"),
+    id: serial('id').primaryKey(),
+    codigo: varchar('codigo', { length: 50 }).notNull(),
+    nombreTrabajo: varchar('nombre_trabajo', { length: 255 }).notNull(),
+    grupo: varchar('grupo', { length: 100 }).notNull(),
+    creadoEn: timestamp('creado_en').defaultNow().notNull(),
+    actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
+    eliminadoEn: timestamp('eliminado_en'),
   },
   (t) => [
-    index("tarea_codigo_idx").on(t.codigo),
-    index("tarea_nombre_trabajo_gin_idx").using(
-      "gin",
-      sql`${t.nombreTrabajo} gin_trgm_ops`
-    ),
-    index("grupo_idx").using(
-      "gin",
-      sql`${t.grupo} gin_trgm_ops`
-    ),
-    uniqueIndex("tarea_codigo_unique_idx")
+    index('tarea_codigo_idx').on(t.codigo),
+    index('tarea_nombre_trabajo_gin_idx').using('gin', sql`${t.nombreTrabajo} gin_trgm_ops`),
+    index('grupo_idx').using('gin', sql`${t.grupo} gin_trgm_ops`),
+    uniqueIndex('tarea_codigo_unique_idx')
       .on(t.codigo)
       .where(sql`${t.eliminadoEn} IS NULL`),
-  ]
+  ],
 );
 
 export type Tarea = typeof tareas.$inferSelect;

@@ -65,6 +65,15 @@ export class VehiculoPaginationQueryDto {
   @IsOptional()
   @IsIn(vehiculosEstado.enumValues, { each: true })
   estado?: VehiculoEstado;
+
+  @ApiProperty({
+    description: 'Filtrar por ID de marca',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  marcaId?: number;
 }
 
 export class PaginatedVehiculoResultDto {

@@ -1,4 +1,5 @@
 import { seedPasajeros } from '@seed/pasajero.seed';
+import { seedTallerSucursal } from '@seed/taller-sucursal.seed';
 
 async function seed() {
   try {
@@ -33,7 +34,10 @@ async function seed() {
     // await seedVehiculoDocumentos(vehiclesData);
 
     // 4. Pasajeros
-    await seedPasajeros();
+    // await seedPasajeros();
+
+    // 5. Taller Sucursales
+    await seedTallerSucursal();
 
     console.log('\n✨ Database seeding completed successfully!');
     process.exit(0);

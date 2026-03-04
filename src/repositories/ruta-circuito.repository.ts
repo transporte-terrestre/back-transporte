@@ -3,6 +3,7 @@ import { eq, and, ilike, isNull, count, desc, gte, lte } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { rutaCircuitos, RutaCircuitoDTO } from '@db/tables/ruta-circuito.table';
 import { rutas } from '@db/tables/ruta.table';
+import { rutaParadas } from '@db/tables/ruta-parada.table';
 
 interface PaginationFilters {
   search?: string;
@@ -46,6 +47,15 @@ export class RutaCircuitoRepository {
             .select()
             .from(rutas)
             .where(and(eq(rutas.id, circuito.rutaIdaId), isNull(rutas.eliminadoEn)));
+
+          if (rutaIda) {
+            const paradasIda = await database
+              .select()
+              .from(rutaParadas)
+              .where(and(eq(rutaParadas.rutaId, rutaIda.id), isNull(rutaParadas.eliminadoEn)))
+              .orderBy(rutaParadas.orden);
+            rutaIda.paradas = paradasIda;
+          }
         }
 
         let rutaVuelta = null;
@@ -54,6 +64,15 @@ export class RutaCircuitoRepository {
             .select()
             .from(rutas)
             .where(and(eq(rutas.id, circuito.rutaVueltaId), isNull(rutas.eliminadoEn)));
+
+          if (rutaVuelta) {
+            const paradasVuelta = await database
+              .select()
+              .from(rutaParadas)
+              .where(and(eq(rutaParadas.rutaId, rutaVuelta.id), isNull(rutaParadas.eliminadoEn)))
+              .orderBy(rutaParadas.orden);
+            rutaVuelta.paradas = paradasVuelta;
+          }
         }
 
         return {
@@ -90,6 +109,15 @@ export class RutaCircuitoRepository {
         .select()
         .from(rutas)
         .where(and(eq(rutas.id, circuito.rutaIdaId), isNull(rutas.eliminadoEn)));
+
+      if (rutaIda) {
+        const paradasIda = await database
+          .select()
+          .from(rutaParadas)
+          .where(and(eq(rutaParadas.rutaId, rutaIda.id), isNull(rutaParadas.eliminadoEn)))
+          .orderBy(rutaParadas.orden);
+        rutaIda.paradas = paradasIda;
+      }
     }
 
     let rutaVuelta = null;
@@ -98,6 +126,15 @@ export class RutaCircuitoRepository {
         .select()
         .from(rutas)
         .where(and(eq(rutas.id, circuito.rutaVueltaId), isNull(rutas.eliminadoEn)));
+
+      if (rutaVuelta) {
+        const paradasVuelta = await database
+          .select()
+          .from(rutaParadas)
+          .where(and(eq(rutaParadas.rutaId, rutaVuelta.id), isNull(rutaParadas.eliminadoEn)))
+          .orderBy(rutaParadas.orden);
+        rutaVuelta.paradas = paradasVuelta;
+      }
     }
 
     return {
@@ -112,30 +149,17 @@ export class RutaCircuitoRepository {
   }
 
   async create(data: RutaCircuitoDTO) {
-    // Es igual solo si AMBAS rutas existen y son el mismo ID
-    const esIgual = data.rutaIdaId && data.rutaVueltaId ? data.rutaIdaId === data.rutaVueltaId : false;
     const result = await database
       .insert(rutaCircuitos)
-      .values({ ...data, esIgual })
+      .values({ ...data })
       .returning();
     return result[0];
   }
 
   async update(id: number, data: Partial<RutaCircuitoDTO>) {
-    let updateData: any = { ...data };
-
-    if (data.rutaIdaId !== undefined || data.rutaVueltaId !== undefined) {
-      const [current] = await database.select().from(rutaCircuitos).where(eq(rutaCircuitos.id, id));
-      if (current) {
-        const ida = data.rutaIdaId ?? current.rutaIdaId;
-        const vuelta = data.rutaVueltaId ?? current.rutaVueltaId;
-        updateData.esIgual = ida === vuelta;
-      }
-    }
-
     const result = await database
       .update(rutaCircuitos)
-      .set({ ...updateData, actualizadoEn: new Date() })
+      .set({ ...data, actualizadoEn: new Date() })
       .where(eq(rutaCircuitos.id, id))
       .returning();
     return result[0];

@@ -51,8 +51,7 @@ export class RutasService {
     if (!ruta) {
       throw new NotFoundException(`Ruta con ID ${id} no encontrada`);
     }
-    const paradas = await this.rutaParadaRepository.findByRutaId(id);
-    return { ...ruta, paradas };
+    return ruta;
   }
 
   async create(data: RutaCreateDto) {
@@ -65,13 +64,6 @@ export class RutasService {
 
   async delete(id: number) {
     return this.rutaRepository.delete(id);
-  }
-
-  async findParadas(rutaId: number, search?: string) {
-    if (search) {
-      return await this.rutaParadaRepository.search(rutaId, search);
-    }
-    return await this.rutaParadaRepository.findByRutaId(rutaId);
   }
 
   async findAllCircuitosPaginated(page: number = 1, limit: number = 10, search?: string, fechaInicio?: string, fechaFin?: string) {
@@ -103,24 +95,7 @@ export class RutasService {
     if (!circuito) {
       throw new NotFoundException(`Circuito con ID ${id} no encontrado`);
     }
-
-    const result = {
-      ...circuito,
-      rutaIda: circuito.rutaIda ? { ...circuito.rutaIda, paradas: [] } : null,
-      rutaVuelta: circuito.rutaVuelta ? { ...circuito.rutaVuelta, paradas: [] } : null,
-    };
-
-    if (result.rutaIda) {
-      const paradas = await this.rutaParadaRepository.findByRutaId(result.rutaIda.id);
-      result.rutaIda.paradas = paradas;
-    }
-
-    if (result.rutaVuelta) {
-      const paradas = await this.rutaParadaRepository.findByRutaId(result.rutaVuelta.id);
-      result.rutaVuelta.paradas = paradas;
-    }
-
-    return result;
+    return circuito;
   }
 
   async createCircuito(data: RutaCircuitoCreateDto) {
@@ -128,11 +103,11 @@ export class RutasService {
     let rutaVuelta = null;
 
     if (data.ida) {
-      rutaIda = await this.crearRutaConParadas(data.ida);
+      rutaIda = await this.crearRuta(data.ida);
     }
 
     if (data.vuelta) {
-      rutaVuelta = await this.crearRutaConParadas(data.vuelta);
+      rutaVuelta = await this.crearRuta(data.vuelta);
     }
 
     const circuito = await this.rutaCircuitoRepository.create({
@@ -158,16 +133,16 @@ export class RutasService {
         destinoLat: Number(ruta.destinoLat).toFixed(6),
         destinoLng: Number(ruta.destinoLng).toFixed(6),
         distancia: Number(ruta.distancia).toFixed(2),
-        costoBase: Number(ruta.costoBase).toFixed(2),
+        tiempoEstimado: ruta.tiempoEstimado,
         paradas:
-          ruta.paradas
-            ?.sort((a, b) => a.orden - b.orden)
-            .map((p) => ({
-              nombre: p.nombre,
-              ubicacionLat: Number(p.ubicacionLat).toFixed(6),
-              ubicacionLng: Number(p.ubicacionLng).toFixed(6),
-              orden: p.orden,
-            })) || [],
+          ruta.paradas?.map((p) => ({
+            nombre: p.nombre,
+            ubicacionLat: Number(p.ubicacionLat).toFixed(6),
+            ubicacionLng: Number(p.ubicacionLng).toFixed(6),
+            orden: p.orden,
+            distanciaPreviaParada: p.distanciaPreviaParada ? Number(p.distanciaPreviaParada).toFixed(2) : null,
+            tiempoEstimado: p.tiempoEstimado,
+          })) || [],
       };
     };
 
@@ -181,16 +156,16 @@ export class RutasService {
         destinoLat: Number(dto.destinoLat).toFixed(6),
         destinoLng: Number(dto.destinoLng).toFixed(6),
         distancia: Number(dto.distancia).toFixed(2),
-        costoBase: Number(dto.costoBase).toFixed(2),
+        tiempoEstimado: dto.tiempoEstimado,
         paradas:
-          dto.paradas
-            ?.map((p, index) => ({
-              nombre: p.nombre,
-              ubicacionLat: Number(p.ubicacionLat).toFixed(6),
-              ubicacionLng: Number(p.ubicacionLng).toFixed(6),
-              orden: p.orden ?? index,
-            }))
-            .sort((a, b) => a.orden - b.orden) || [],
+          dto.paradas?.map((p) => ({
+            nombre: p.nombre,
+            ubicacionLat: Number(p.ubicacionLat).toFixed(6),
+            ubicacionLng: Number(p.ubicacionLng).toFixed(6),
+            orden: p.orden,
+            distanciaPreviaParada: p.distanciaPreviaParada ? Number(p.distanciaPreviaParada).toFixed(2) : null,
+            tiempoEstimado: p.tiempoEstimado,
+          })) || [],
       };
     };
 
@@ -213,8 +188,8 @@ export class RutasService {
       let newRutaIda = null;
       let newRutaVuelta = null;
 
-      if (data.ida) newRutaIda = await this.crearRutaConParadas(data.ida);
-      if (data.vuelta) newRutaVuelta = await this.crearRutaConParadas(data.vuelta);
+      if (data.ida) newRutaIda = await this.crearRuta(data.ida);
+      if (data.vuelta) newRutaVuelta = await this.crearRuta(data.vuelta);
 
       await this.rutaCircuitoRepository.update(id, {
         nombre: data.nombre ?? circuitoExistente.nombre,
@@ -243,7 +218,7 @@ export class RutasService {
     return { message: 'Circuito y rutas asociadas eliminados correctamente' };
   }
 
-  private async crearRutaConParadas(data: RutaCircuitoDetalleDto) {
+  private async crearRuta(data: RutaCircuitoDetalleDto) {
     const nuevaRuta = await this.rutaRepository.create({
       origen: data.origen,
       destino: data.destino,
@@ -252,27 +227,20 @@ export class RutasService {
       destinoLat: data.destinoLat,
       destinoLng: data.destinoLng,
       distancia: data.distancia.toString(),
-      costoBase: data.costoBase.toString(),
+      tiempoEstimado: data.tiempoEstimado,
     });
 
     if (data.paradas && data.paradas.length > 0) {
-      const paradasToCreate = data.paradas.map((p, index) => ({
+      const paradasData = data.paradas.map((parada, index) => ({
         rutaId: nuevaRuta.id,
-        nombre: p.nombre,
-        ubicacionLat: p.ubicacionLat,
-        ubicacionLng: p.ubicacionLng,
-        orden: p.orden ?? index,
-        distanciaPreviaParada: p.distanciaPreviaParada,
+        orden: parada.orden ?? index + 1,
+        nombre: parada.nombre,
+        ubicacionLat: parada.ubicacionLat.toString(),
+        ubicacionLng: parada.ubicacionLng.toString(),
+        distanciaPreviaParada: parada.distanciaPreviaParada?.toString(),
+        tiempoEstimado: parada.tiempoEstimado,
       }));
-
-      await this.rutaParadaRepository.createMany(paradasToCreate);
-    } else {
-      if (!data.paradas) {
-        await this.rutaParadaRepository.createMany([
-          { rutaId: nuevaRuta.id, nombre: nuevaRuta.origen, orden: 0, ubicacionLat: nuevaRuta.origenLat, ubicacionLng: nuevaRuta.origenLng },
-          { rutaId: nuevaRuta.id, nombre: nuevaRuta.destino, orden: 1, ubicacionLat: nuevaRuta.destinoLat, ubicacionLng: nuevaRuta.destinoLng },
-        ]);
-      }
+      await this.rutaParadaRepository.createMany(paradasData);
     }
 
     return nuevaRuta;

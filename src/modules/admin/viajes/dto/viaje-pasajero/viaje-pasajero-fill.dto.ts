@@ -1,11 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsInt, IsNotEmpty, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class PasajeroItemDto {
   @IsInt()
-  @IsNotEmpty()
-  pasajeroId: number;
+  @IsOptional()
+  pasajeroId?: number;
+
+  @IsString()
+  @IsOptional()
+  dni?: string;
+
+  @IsString()
+  @IsOptional()
+  nombres?: string;
+
+  @IsString()
+  @IsOptional()
+  apellidos?: string;
 
   @IsBoolean()
   asistencia: boolean;

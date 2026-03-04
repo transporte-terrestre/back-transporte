@@ -1,9 +1,9 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsOptional } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsDateString, IsOptional } from 'class-validator';
 
 export class ReporteDetalladoQueryDto {
   @ApiProperty({
-    description: "Fecha de inicio del reporte (YYYY-MM-DD)",
+    description: 'Fecha de inicio del reporte (YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()
@@ -11,7 +11,7 @@ export class ReporteDetalladoQueryDto {
   fechaInicio?: string;
 
   @ApiProperty({
-    description: "Fecha de fin del reporte (YYYY-MM-DD)",
+    description: 'Fecha de fin del reporte (YYYY-MM-DD)',
     required: false,
   })
   @IsOptional()

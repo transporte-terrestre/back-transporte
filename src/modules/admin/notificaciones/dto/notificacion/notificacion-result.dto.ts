@@ -23,4 +23,7 @@ export class NotificacionResultDto {
 
   @ApiProperty({ example: false })
   leido: boolean;
+
+  @ApiProperty({ required: false, type: Object })
+  metadata?: Record<string, any>;
 }

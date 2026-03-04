@@ -1,13 +1,13 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class RutaPopularDto {
-  @ApiProperty({ example: "Lima - Arequipa", description: "Nombre de la ruta" })
+  @ApiProperty({ example: 'Lima - Arequipa', description: 'Nombre de la ruta' })
   nombre: string;
 
-  @ApiProperty({ example: 45, description: "Número de viajes" })
+  @ApiProperty({ example: 45, description: 'Número de viajes' })
   viajes: number;
 
-  @ApiProperty({ example: 85, description: "Porcentaje relativo" })
+  @ApiProperty({ example: 85, description: 'Porcentaje relativo' })
   porcentaje: number;
 }
 

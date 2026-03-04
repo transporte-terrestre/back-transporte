@@ -116,11 +116,6 @@ export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 
   estado: VehiculoEstado;
 
   // New fields
-  @ApiPropertyOptional({ example: 'Some notes', description: 'Annotations' })
-  @IsString()
-  @IsOptional()
-  anotaciones: string | null;
-
   @ApiPropertyOptional({ example: 'Lima', description: 'Headquarters' })
   @IsString()
   @IsOptional()

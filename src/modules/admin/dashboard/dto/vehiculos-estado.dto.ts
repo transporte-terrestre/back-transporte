@@ -1,13 +1,13 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class VehiculosPorEstadoItemDto {
-  @ApiProperty({ example: "activo", description: "Estado del vehículo" })
+  @ApiProperty({ example: 'activo', description: 'Estado del vehículo' })
   estado: string;
 
-  @ApiProperty({ example: 28, description: "Cantidad de vehículos" })
+  @ApiProperty({ example: 28, description: 'Cantidad de vehículos' })
   cantidad: number;
 
-  @ApiProperty({ example: 62, description: "Porcentaje del total" })
+  @ApiProperty({ example: 62, description: 'Porcentaje del total' })
   porcentaje: number;
 }
 

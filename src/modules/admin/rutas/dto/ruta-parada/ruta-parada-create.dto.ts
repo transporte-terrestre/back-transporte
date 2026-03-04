@@ -1,36 +1,36 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsLatitude, IsLongitude } from 'class-validator';
+import { IsString, IsNotEmpty, IsLatitude, IsLongitude, IsOptional, IsNumberString, IsNumber } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { RutaParadaDTO } from '@db/tables/ruta-parada.table';
 
-export class RutaParadaCreateDto implements Omit<RutaParadaDTO, 'id' | 'rutaId' | 'orden' | 'creadoEn' | 'actualizadoEn'> {
-  @ApiPropertyOptional({ example: 1, description: 'ID de la parada (opcional para updates)' })
-  @IsNumber()
-  @IsOptional()
-  id?: number;
-
-  @ApiProperty({ example: 'PEIP - Educans', description: 'Nombre de la parada' })
+export class RutaParadaCreateDto {
+  @ApiProperty({ example: 'Parada 1', description: 'Nombre de la parada' })
   @IsString()
   @IsNotEmpty()
   nombre: string;
 
-  @ApiPropertyOptional({ example: '-12.0464', description: 'Latitud de la ubicación' })
+  @ApiProperty({ example: '-12.0464', description: 'Latitud de la parada' })
   @IsString()
-  @IsOptional()
-  @IsLatitude({ message: 'La latitud debe estar entre -90 y 90' })
-  ubicacionLat?: string;
+  @IsNotEmpty()
+  @IsLatitude()
+  ubicacionLat: string;
 
-  @ApiPropertyOptional({ example: '-77.0428', description: 'Longitud de la ubicación' })
+  @ApiProperty({ example: '-77.0428', description: 'Longitud de la parada' })
   @IsString()
-  @IsOptional()
-  @IsLongitude({ message: 'La longitud debe estar entre -180 y 180' })
-  ubicacionLng?: string;
-  @ApiPropertyOptional({ example: 1, description: 'Orden de la parada', default: 0 })
+  @IsNotEmpty()
+  @IsLongitude()
+  ubicacionLng: string;
+
+  @ApiPropertyOptional({ example: 1, description: 'Orden de la parada' })
   @IsNumber()
   @IsOptional()
   orden?: number;
 
-  @ApiPropertyOptional({ example: '10.5', description: 'Distancia desde la parada anterior' })
-  @IsString()
+  @ApiPropertyOptional({ example: '10.5', description: 'Distancia desde la parada previa' })
+  @IsNumberString()
   @IsOptional()
   distanciaPreviaParada?: string;
+
+  @ApiPropertyOptional({ example: 15, description: 'Tiempo estimado desde la parada previa en minutos' })
+  @IsNumber()
+  @IsOptional()
+  tiempoEstimado?: number;
 }

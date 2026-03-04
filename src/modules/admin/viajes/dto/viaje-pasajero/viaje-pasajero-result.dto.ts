@@ -1,36 +1,54 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PasajeroDTO } from '@db/tables/pasajero.table';
-
-export class ViajePasajeroDetalleDto {
-  @ApiProperty({ example: 1, description: 'ID del pasajero' })
-  id: number;
-
-  @ApiProperty({ example: '12345678', description: 'DNI del pasajero' })
-  dni: string;
-
-  @ApiProperty({ example: 'Juan', description: 'Nombres del pasajero' })
-  nombres: string;
-
-  @ApiProperty({ example: 'Pérez', description: 'Apellidos del pasajero' })
-  apellidos: string;
-}
 
 export class ViajePasajeroResultDto {
+  @ApiProperty({ example: 1, description: 'ID del registro' })
+  id: number;
+
   @ApiProperty({ example: 1, description: 'ID del viaje' })
   viajeId: number;
 
-  @ApiProperty({ example: 1, description: 'ID del pasajero' })
-  pasajeroId: number;
+  @ApiProperty({ example: 1, description: 'ID del pasajero', required: false })
+  pasajeroId?: number | null;
 
-  @ApiProperty({ example: false, description: 'Asistencia del pasajero' })
+  @ApiProperty({ example: '12345678', description: 'DNI del pasajero', required: false })
+  dni?: string | null;
+
+  @ApiProperty({ example: 'Juan', description: 'Nombres del pasajero', required: false })
+  nombres?: string | null;
+
+  @ApiProperty({ example: 'Pérez', description: 'Apellidos del pasajero', required: false })
+  apellidos?: string | null;
+
+  @ApiProperty({ example: false, description: 'Asistencia del pasajero en la parada consultada' })
   asistencia: boolean;
+
+  @ApiProperty({
+    example: 5,
+    description: 'ID de la parada donde el pasajero ya tiene asistencia (si abordó en otra parada)',
+    required: false,
+    nullable: true,
+  })
+  paradaAsistenciaId?: number | null;
+
+  @ApiProperty({
+    example: 'Parada Central',
+    description: 'Nombre de la parada donde el pasajero ya tiene asistencia',
+    required: false,
+    nullable: true,
+  })
+  paradaAsistenciaNombre?: string | null;
+
+  @ApiProperty({
+    example: true,
+    description: 'Indica si la asistencia del pasajero coincide con el tramo consultado',
+    required: false,
+    nullable: true,
+  })
+  esTramoActual?: boolean | null;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z', description: 'Fecha de creación' })
   creadoEn: Date;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z', description: 'Fecha de actualización' })
   actualizadoEn: Date;
-
-  @ApiProperty({ type: ViajePasajeroDetalleDto })
-  pasajero: ViajePasajeroDetalleDto;
 }

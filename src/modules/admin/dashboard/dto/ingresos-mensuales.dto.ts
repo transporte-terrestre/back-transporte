@@ -1,10 +1,10 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class IngresoMensualDto {
-  @ApiProperty({ example: "Jul", description: "Mes" })
+  @ApiProperty({ example: 'Jul', description: 'Mes' })
   mes: string;
 
-  @ApiProperty({ example: 45000, description: "Monto de ingresos" })
+  @ApiProperty({ example: 45000, description: 'Monto de ingresos' })
   monto: number;
 }
 

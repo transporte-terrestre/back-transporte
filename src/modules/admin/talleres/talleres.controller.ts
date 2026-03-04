@@ -5,6 +5,10 @@ import { PaginatedTallerResultDto, TallerPaginationQueryDto } from './dto/taller
 import { TallerResultDto } from './dto/taller/taller-result.dto';
 import { TallerCreateDto } from './dto/taller/taller-create.dto';
 import { TallerUpdateDto } from './dto/taller/taller-update.dto';
+import { SucursalCreateDto } from './dto/sucursal/sucursal-create.dto';
+import { SucursalUpdateDto } from './dto/sucursal/sucursal-update.dto';
+import { SucursalResultDto } from './dto/sucursal/sucursal-result.dto';
+import { PaginatedSucursalResultDto, SucursalPaginationQueryDto } from './dto/sucursal/sucursal-paginated.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('talleres')
@@ -14,6 +18,7 @@ import { AuthGuard } from '@nestjs/passport';
 export class TalleresController {
   constructor(private readonly talleresService: TalleresService) {}
 
+  // --- TALLERES ---
   @Post('create')
   @ApiOperation({ summary: 'Crear un nuevo taller' })
   create(@Body() createTallerDto: TallerCreateDto) {
@@ -44,5 +49,44 @@ export class TalleresController {
   @ApiOperation({ summary: 'Eliminar un taller por ID' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.talleresService.remove(id);
+  }
+
+  // --- SUCURSALES ---
+  @Post('sucursales/create')
+  @ApiOperation({ summary: 'Crear una nueva sucursal de taller' })
+  createSucursal(@Body() createSucursalDto: SucursalCreateDto) {
+    return this.talleresService.createSucursal(createSucursalDto);
+  }
+
+  @Get('sucursales/find-all-paginated')
+  @ApiOperation({ summary: 'Listar sucursales de forma paginada' })
+  @ApiResponse({ status: 200, type: PaginatedSucursalResultDto })
+  findAllSucursalesPaginated(@Query() query: SucursalPaginationQueryDto) {
+    return this.talleresService.findAllSucursalesPaginated(query.page, query.limit, query.search, query.fechaInicio, query.fechaFin);
+  }
+
+  @Get('sucursales/find-all')
+  @ApiOperation({ summary: 'Obtener todas las sucursales de talleres disponibles' })
+  findAllSucursales() {
+    return this.talleresService.findAllSucursales();
+  }
+
+  @Get('sucursales/find-one/:id')
+  @ApiOperation({ summary: 'Obtener una sucursal por ID' })
+  @ApiResponse({ status: 200, type: SucursalResultDto })
+  findOneSucursal(@Param('id', ParseIntPipe) id: number) {
+    return this.talleresService.findOneSucursal(id);
+  }
+
+  @Patch('sucursales/update/:id')
+  @ApiOperation({ summary: 'Actualizar una sucursal por ID' })
+  updateSucursal(@Param('id', ParseIntPipe) id: number, @Body() updateSucursalDto: SucursalUpdateDto) {
+    return this.talleresService.updateSucursal(id, updateSucursalDto);
+  }
+
+  @Delete('sucursales/delete/:id')
+  @ApiOperation({ summary: 'Eliminar una sucursal por ID' })
+  removeSucursal(@Param('id', ParseIntPipe) id: number) {
+    return this.talleresService.removeSucursal(id);
   }
 }

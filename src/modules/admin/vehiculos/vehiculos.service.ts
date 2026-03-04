@@ -7,6 +7,7 @@ import { VehiculoCreateDto } from './dto/vehiculo/vehiculo-create.dto';
 import { VehiculoUpdateDto } from './dto/vehiculo/vehiculo-update.dto';
 import { PaginatedVehiculoResultDto } from './dto/vehiculo/vehiculo-paginated.dto';
 import { VehiculoDocumentoDTO, vehiculoDocumentosTipo } from '@db/tables/vehiculo-documento.table';
+import { VehiculoEstado, vehiculosEstado } from '@db/tables/vehiculo.table';
 import { DocumentosAgrupadosVehiculoDto } from './dto/vehiculo/vehiculo-result.dto';
 import {
   PaginatedVehiculoEstadoDocumentosResultDto,
@@ -20,6 +21,8 @@ import { ModeloUpdateDto } from './dto/modelo/modelo-update.dto';
 
 import { VehiculoChecklistDocumentRepository } from '@repository/vehiculo-checklist-document.repository';
 import { ChecklistItemRepository } from '@repository/checklist-item.repository';
+import { VehiculoComentarioRepository } from '@repository/vehiculo-comentario.repository';
+import { VehiculoComentarioDTO } from '@db/tables/vehiculo-comentario.table';
 
 import { VehiculoChecklistDocumentUpsertDto } from './dto/checklist-document/upsert-checklist-document.dto';
 import { PaginatedVehiculoChecklistHistoryResultDto } from './dto/checklist-document/checklist-history.dto';
@@ -89,6 +92,7 @@ export class VehiculosService {
     private readonly modeloRepository: ModeloRepository,
     private readonly vehiculoChecklistDocumentRepository: VehiculoChecklistDocumentRepository,
     private readonly checklistItemRepository: ChecklistItemRepository,
+    private readonly vehiculoComentarioRepository: VehiculoComentarioRepository,
   ) {}
 
   async findAllPaginated(
@@ -97,9 +101,10 @@ export class VehiculosService {
     search?: string,
     fechaInicio?: string,
     fechaFin?: string,
-    estado?: string,
+    estado?: VehiculoEstado,
+    marcaId?: number,
   ): Promise<PaginatedVehiculoResultDto> {
-    const { data, total } = await this.vehiculoRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin, estado });
+    const { data, total } = await this.vehiculoRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin, estado, marcaId });
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
@@ -120,6 +125,7 @@ export class VehiculosService {
   async findOne(id: number) {
     const vehiculo = await this.vehiculoRepository.findOne(id);
     const documentos = await this.vehiculoDocumentoRepository.findByVehiculoId(id);
+    const comentarios = await this.vehiculoComentarioRepository.findByVehiculoId(id);
 
     const documentosAgrupados = vehiculoDocumentosTipo.enumValues.reduce((acc, tipo) => {
       acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
@@ -129,6 +135,7 @@ export class VehiculosService {
     return {
       ...vehiculo,
       documentos: documentosAgrupados,
+      comentarios: comentarios,
     };
   }
 
@@ -229,6 +236,27 @@ export class VehiculosService {
 
   async deleteDocumento(id: number) {
     return await this.vehiculoDocumentoRepository.delete(id);
+  }
+
+  // ========== COMENTARIOS ==========
+  async findComentariosByVehiculo(vehiculoId: number) {
+    return await this.vehiculoComentarioRepository.findByVehiculoId(vehiculoId);
+  }
+
+  async findOneComentario(id: number) {
+    return await this.vehiculoComentarioRepository.findOne(id);
+  }
+
+  async createComentario(data: VehiculoComentarioDTO) {
+    return await this.vehiculoComentarioRepository.create(data);
+  }
+
+  async updateComentario(id: number, data: Partial<VehiculoComentarioDTO>) {
+    return await this.vehiculoComentarioRepository.update(id, data);
+  }
+
+  async deleteComentario(id: number) {
+    return await this.vehiculoComentarioRepository.delete(id);
   }
 
   // ========== MARCAS ==========
@@ -371,17 +399,22 @@ export class VehiculosService {
 
     let docY = doc.y;
     for (const docInfo of documentos) {
+      if (docY > 720) {
+        doc.addPage();
+        docY = 50; // Reset to top margin
+      }
+
       const status = docInfo.url ? 'ADJUNTADO' : 'PENDIENTE';
       const vencimiento = docInfo.fechaExpiracion ? new Date(docInfo.fechaExpiracion).toLocaleDateString() : '-';
 
       doc.fillColor(primaryColor);
-      doc.text(mapDocLabel(docInfo.tipo), col1, docY);
+      doc.text(mapDocLabel(docInfo.tipo), col1, docY, { width: 290, lineBreak: false });
 
       doc.fillColor(docInfo.url ? 'green' : 'red');
-      doc.text(status, col2, docY);
+      doc.text(status, col2, docY, { width: 90, lineBreak: false });
 
       doc.fillColor(primaryColor);
-      doc.text(vencimiento, col3, docY);
+      doc.text(vencimiento, col3, docY, { width: 80, lineBreak: false });
 
       docY += 20;
 
@@ -393,8 +426,6 @@ export class VehiculosService {
         .lineTo(550, docY - 5)
         .stroke();
     }
-
-    doc.text('', 50, docY);
 
     // --- IMAGES DOWNLOAD LOOP (Hidden from PDF) ---
     // Download vehicle photos

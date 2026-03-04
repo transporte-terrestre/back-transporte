@@ -38,11 +38,11 @@ export class ConductorCreateDto implements Omit<ConductorDTO, 'id' | 'nombreComp
   @IsOptional()
   email?: string;
 
-  @ApiPropertyOptional({ example: 'password123', description: 'Contraseña del conductor (mínimo 6 caracteres)' })
+  @ApiProperty({ example: 'password123', description: 'Contraseña del conductor (mínimo 6 caracteres)' })
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   @MinLength(6)
-  contrasenia?: string;
+  contrasenia: string;
 
   @ApiPropertyOptional({ example: '999888777', description: 'Celular del conductor' })
   @IsString()

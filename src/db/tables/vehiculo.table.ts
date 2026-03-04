@@ -42,7 +42,6 @@ export const vehiculos = pgTable(
 
     placaAnterior: varchar('placa_anterior', { length: 20 }),
 
-    anotaciones: text('anotaciones'),
     sede: varchar('sede', { length: 100 }),
 
     potencia: varchar('potencia', { length: 50 }),
