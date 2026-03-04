@@ -60,7 +60,6 @@ export class TallerRepository {
         tipo: talleres.tipo,
         telefono: talleres.telefono,
         email: talleres.email,
-        direccion: talleres.direccion,
         creadoEn: talleres.creadoEn,
         actualizadoEn: talleres.actualizadoEn,
         eliminadoEn: talleres.eliminadoEn,

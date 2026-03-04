@@ -2,6 +2,15 @@ import { ApiProperty } from '@nestjs/swagger';
 import { talleresTipo } from '@db/tables/taller.table';
 import type { TallerTipo } from '@db/tables/taller.table';
 
+class SucursalDetalleResDto {
+  @ApiProperty({ example: 1 }) sucursalId: number;
+  @ApiProperty({ example: 1 }) id: number;
+  @ApiProperty({ example: 'Lima' }) departamento: string;
+  @ApiProperty({ example: 'Lima' }) provincia: string;
+  @ApiProperty({ example: 'Miraflores' }) distrito: string;
+  @ApiProperty({ example: 'Av. Direccion Exacta 123' }) direccion: string;
+}
+
 export class TallerListDto {
   @ApiProperty({ example: 1, description: 'ID del taller' })
   id: number;
@@ -41,13 +50,6 @@ export class TallerListDto {
   email: string | null;
 
   @ApiProperty({
-    example: 'Av. Principal 123',
-    description: 'Dirección',
-    nullable: true,
-  })
-  direccion: string | null;
-
-  @ApiProperty({
     example: '2023-01-01T00:00:00.000Z',
     description: 'Fecha de creación',
   })
@@ -59,4 +61,10 @@ export class TallerListDto {
     type: [Number],
   })
   sucursalIds: number[];
+
+  @ApiProperty({
+    description: 'Detalle de las sucursales con dirección (solo disponible en findOne)',
+    type: [SucursalDetalleResDto],
+  })
+  sucursales?: SucursalDetalleResDto[];
 }

@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, integer, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { talleres } from './taller.table';
 import { sucursales } from './sucursal.table';
 
@@ -12,6 +12,7 @@ export const tallerSucursales = pgTable(
     sucursalId: integer('sucursal_id')
       .references(() => sucursales.id, { onDelete: 'cascade' })
       .notNull(),
+    direccion: varchar('direccion', { length: 255 }).default('Sin especificar').notNull(),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
   },
   (t) => [uniqueIndex('taller_sucursales_unique_idx').on(t.tallerId, t.sucursalId)],

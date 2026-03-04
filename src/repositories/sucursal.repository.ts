@@ -21,7 +21,13 @@ export class SucursalRepository {
 
     if (filters?.search) {
       const searchTerm = filters.search.trim();
-      conditions.push(or(ilike(sucursales.nombre, `%${searchTerm}%`), ilike(sucursales.direccion, `%${searchTerm}%`)));
+      conditions.push(
+        or(
+          ilike(sucursales.departamento, `%${searchTerm}%`),
+          ilike(sucursales.provincia, `%${searchTerm}%`),
+          ilike(sucursales.distrito, `%${searchTerm}%`),
+        ),
+      );
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {

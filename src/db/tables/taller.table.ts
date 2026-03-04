@@ -13,7 +13,6 @@ export const talleres = pgTable(
     tipo: talleresTipo('tipo').default('externo').notNull(),
     telefono: varchar('telefono', { length: 20 }),
     email: varchar('email', { length: 100 }),
-    direccion: varchar('direccion', { length: 255 }),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
     eliminadoEn: timestamp('eliminado_en'),

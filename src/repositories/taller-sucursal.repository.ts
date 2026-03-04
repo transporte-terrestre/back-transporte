@@ -6,14 +6,15 @@ import { sucursales } from '@db/tables/sucursal.table';
 
 @Injectable()
 export class TallerSucursalRepository {
-  async linkSucursalesToTaller(tallerId: number, sucursalIds: number[]) {
+  async linkSucursalesToTaller(tallerId: number, sucursales: { sucursalId: number; direccion: string }[]) {
     // Eliminar relaciones previas
     await database.delete(tallerSucursales).where(eq(tallerSucursales.tallerId, tallerId));
 
-    if (sucursalIds.length > 0) {
-      const values = sucursalIds.map((sucursalId) => ({
+    if (sucursales.length > 0) {
+      const values = sucursales.map((s) => ({
         tallerId,
-        sucursalId,
+        sucursalId: s.sucursalId,
+        direccion: s.direccion,
       }));
       await database.insert(tallerSucursales).values(values).returning();
     }
@@ -27,8 +28,10 @@ export class TallerSucursalRepository {
     const result = await database
       .select({
         id: sucursales.id,
-        nombre: sucursales.nombre,
-        direccion: sucursales.direccion,
+        departamento: sucursales.departamento,
+        provincia: sucursales.provincia,
+        distrito: sucursales.distrito,
+        direccion: tallerSucursales.direccion,
         creadoEn: sucursales.creadoEn,
         actualizadoEn: sucursales.actualizadoEn,
       })

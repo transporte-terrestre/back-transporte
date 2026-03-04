@@ -17,11 +17,11 @@ export class TalleresService {
 
   // --- MÉTODOS PARA TALLERES ---
   async create(createTallerDto: TallerCreateDto) {
-    const { sucursalIds, ...tallerData } = createTallerDto;
+    const { sucursales, ...tallerData } = createTallerDto;
     const taller = await this.tallerRepository.create(tallerData);
 
-    if (sucursalIds && sucursalIds.length > 0) {
-      await this.tallerSucursalRepository.linkSucursalesToTaller(taller.id, sucursalIds);
+    if (sucursales && sucursales.length > 0) {
+      await this.tallerSucursalRepository.linkSucursalesToTaller(taller.id, sucursales);
     }
 
     return taller;
@@ -58,12 +58,12 @@ export class TalleresService {
 
   async update(id: number, updateTallerDto: TallerUpdateDto) {
     await this.findOne(id);
-    const { sucursalIds, ...tallerData } = updateTallerDto;
+    const { sucursales, ...tallerData } = updateTallerDto;
 
     const updated = await this.tallerRepository.update(id, tallerData);
 
-    if (sucursalIds !== undefined) {
-      await this.tallerSucursalRepository.linkSucursalesToTaller(id, sucursalIds);
+    if (sucursales !== undefined) {
+      await this.tallerSucursalRepository.linkSucursalesToTaller(id, sucursales);
     }
 
     return updated;

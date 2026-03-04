@@ -8,12 +8,14 @@ export async function seedTallerSucursal() {
       .insert(sucursales)
       .values([
         {
-          nombre: 'Sucursal Principal',
-          direccion: 'Av. Principal 123',
+          departamento: 'Lima',
+          provincia: 'Lima',
+          distrito: 'San Isidro',
         },
         {
-          nombre: 'Sucursal Norte',
-          direccion: 'Av. Norte 456',
+          departamento: 'Arequipa',
+          provincia: 'Arequipa',
+          distrito: 'Miraflores',
         },
       ])
       .returning();

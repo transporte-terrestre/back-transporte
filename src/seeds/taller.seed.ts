@@ -12,27 +12,23 @@ export async function seedTalleres() {
         nombreComercial: 'Taller Mecanico Express',
         ruc: '20100000001',
         tipo: 'externo',
-        direccion: 'Av. Industrial 123',
       },
       {
         razonSocial: 'Motor Service Center EIRL',
         nombreComercial: 'Motor Service Center',
         ruc: '20100000002',
         tipo: 'externo',
-        direccion: 'Jr. Los Motores 456',
       },
       {
         razonSocial: 'Frenos y Mas SA',
         nombreComercial: 'Frenos y Mas',
         ruc: '20100000003',
         tipo: 'externo',
-        direccion: 'Calle Las Ruedas 789',
       },
       {
         razonSocial: 'Taller Interno Principal',
         nombreComercial: 'Taller Interno',
         tipo: 'interno',
-        direccion: 'Sede Central',
       },
     ])
     .returning();

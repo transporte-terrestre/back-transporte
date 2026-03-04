@@ -1,7 +1,21 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, IsIn, IsInt, IsArray } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, IsIn, IsInt, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TallerDTO, talleresTipo } from '@db/tables/taller.table';
 import type { TallerTipo } from '@db/tables/taller.table';
+
+export class SucursalTallerDto {
+  @ApiProperty({ example: 1, description: 'ID de la sucursal' })
+  @IsInt()
+  @IsNotEmpty()
+  sucursalId: number;
+
+  @ApiProperty({ example: 'Av. Direccion Exacta 123', description: 'Direccion exacta del taller en esta sucursal' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  direccion: string;
+}
 
 export class TallerCreateDto implements Omit<TallerDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
   @ApiPropertyOptional({
@@ -59,21 +73,12 @@ export class TallerCreateDto implements Omit<TallerDTO, 'id' | 'creadoEn' | 'act
   email?: string | null;
 
   @ApiPropertyOptional({
-    example: 'Av. Industrial 555',
-    description: 'Dirección del taller',
-  })
-  @IsString()
-  @IsOptional()
-  @MaxLength(255)
-  direccion?: string | null;
-
-  @ApiPropertyOptional({
-    example: [1, 2],
-    description: 'IDs de las sucursales del taller',
-    type: [Number],
+    description: 'Lista de sucursales a vincular con su dirección',
+    type: [SucursalTallerDto],
   })
   @IsArray()
-  @IsInt({ each: true })
+  @ValidateNested({ each: true })
+  @Type(() => SucursalTallerDto)
   @IsOptional()
-  sucursalIds?: number[];
+  sucursales?: SucursalTallerDto[];
 }
