@@ -105,6 +105,14 @@ export class ViajesService {
   ): Promise<PaginatedViajeResultDto> {
     // Si el token es de un conductor, filtrar automáticamente solo sus viajes
     const conductoresFiltro = usuario?.tipo === 'conductor' ? [usuario.sub] : conductoresId;
+    console.log(
+      '[DEBUG findAllPaginated] usuario:',
+      JSON.stringify(usuario),
+      '| conductoresFiltro:',
+      conductoresFiltro,
+      '| conductoresId param:',
+      conductoresId,
+    );
 
     const filters = {
       search,
@@ -120,7 +128,7 @@ export class ViajesService {
       sentido,
       turno,
     };
-    
+
     const { data: circuitos, total } = await this.viajeCircuitoRepository.findAllPaginated(page, limit, filters);
 
     const idsSet = new Set<number>();
@@ -195,7 +203,7 @@ export class ViajesService {
       sentido,
       turno,
     };
-    
+
     const { data: circuitos, total } = await this.viajeCircuitoRepository.findAllPaginated(page, limit, filters);
 
     const totalPages = Math.ceil(total / limit);
