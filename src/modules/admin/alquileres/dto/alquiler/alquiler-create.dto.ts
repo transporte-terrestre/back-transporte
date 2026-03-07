@@ -31,4 +31,9 @@ export class AlquilerCreateDto implements Omit<AlquilerDTO, 'id' | 'creadoEn' | 
   @IsString()
   @IsOptional()
   observaciones?: string | null;
+
+  @ApiPropertyOptional({ description: 'Si es true, el vehículo cambiará su estado a alquilado.' })
+  @IsOptional()
+  @Type(() => Boolean)
+  marcarComoAlquilado?: boolean;
 }

@@ -48,6 +48,11 @@ export class ViajeDetalleCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' |
   @IsNotEmpty()
   clienteId: number;
 
+  @ApiPropertyOptional({ example: 1, description: 'ID de la entidad (opcional)' })
+  @IsOptional()
+  @IsInt()
+  entidadId?: number;
+
   @ApiPropertyOptional({
     enum: modalidadServicio.enumValues,
     description: 'Modalidad de servicio',

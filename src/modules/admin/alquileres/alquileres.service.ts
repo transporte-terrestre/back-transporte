@@ -5,9 +5,14 @@ import { AlquilerUpdateDto } from './dto/alquiler/alquiler-update.dto';
 import { AlquilerQueryDto, AlquilerListDto } from './dto/alquiler/alquiler-list.dto';
 import { AlquilerResultDto } from './dto/alquiler/alquiler-result.dto';
 
+import { VehiculoRepository } from '@repository/vehiculo.repository';
+
 @Injectable()
 export class AlquileresService {
-  constructor(private readonly alquilerRepository: AlquilerRepository) {}
+  constructor(
+    private readonly alquilerRepository: AlquilerRepository,
+    private readonly vehiculoRepository: VehiculoRepository,
+  ) {}
 
   async findAll(query: AlquilerQueryDto): Promise<AlquilerListDto> {
     const { page = 1, limit = 10, ...filters } = query;
@@ -16,7 +21,7 @@ export class AlquileresService {
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data: data as any, // Cast temporario para mapear al ItemDto
+      data,
       meta: {
         total,
         page,
@@ -33,23 +38,31 @@ export class AlquileresService {
     if (!alquiler) {
       throw new NotFoundException(`Alquiler con ID ${id} no encontrado`);
     }
-    return alquiler as any;
+    return alquiler;
   }
 
   async create(data: AlquilerCreateDto): Promise<void> {
+    const { marcarComoAlquilado, ...rest } = data;
     const payload = {
-      ...data,
-      fechaFin: data.fechaFin || null,
+      ...rest,
+      fechaFin: rest.fechaFin || null,
     };
-    await this.alquilerRepository.create(payload as any);
+    await this.alquilerRepository.create(payload);
+
+    if (marcarComoAlquilado) {
+      await this.vehiculoRepository.update(rest.vehiculoId, { estado: 'alquilado' });
+    }
   }
 
   async update(id: number, data: AlquilerUpdateDto): Promise<void> {
     const prev = await this.findOne(id);
-    const payload = {
-      ...data,
-    };
-    await this.alquilerRepository.update(id, payload as any);
+    const { marcarComoAlquilado, ...payload } = data;
+
+    await this.alquilerRepository.update(id, payload);
+
+    if (marcarComoAlquilado) {
+      await this.vehiculoRepository.update(data.vehiculoId || prev.vehiculoId, { estado: 'alquilado' });
+    }
   }
 
   async delete(id: number): Promise<void> {

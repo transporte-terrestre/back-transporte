@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 import { talleres } from './taller.table';
 import { pgEnum } from 'drizzle-orm/pg-core';
 import { vehiculos } from './vehiculo.table';
+import { sucursales } from './sucursal.table';
 
 export const mantenimientosTipo = pgEnum('mantenimientos_tipo', ['preventivo', 'correctivo']);
 
@@ -18,6 +19,7 @@ export const mantenimientos = pgTable(
     tallerId: integer('taller_id')
       .references(() => talleres.id)
       .notNull(),
+    sucursalId: integer('sucursal_id').references(() => sucursales.id),
     codigoOrden: varchar('codigo_orden', { length: 50 }),
     tipo: mantenimientosTipo('tipo').notNull(),
     costoTotal: decimal('costo_total', { precision: 10, scale: 2 }).default('0').notNull(),

@@ -4,7 +4,7 @@ import { modelos } from './modelo.table';
 
 export const combustibleEnum = pgEnum('combustible_tipo', ['gasolina', 'diesel', 'gnv', 'glp', 'electrico', 'hibrido']);
 
-export const vehiculosEstado = pgEnum('vehiculos_estado', ['disponible', 'circulacion', 'taller', 'retirado']);
+export const vehiculosEstado = pgEnum('vehiculos_estado', ['disponible', 'circulacion', 'taller', 'retirado', 'alquilado']);
 
 export const vehiculos = pgTable(
   'vehiculos',

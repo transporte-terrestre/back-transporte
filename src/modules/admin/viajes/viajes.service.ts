@@ -105,14 +105,6 @@ export class ViajesService {
   ): Promise<PaginatedViajeResultDto> {
     // Si el token es de un conductor, filtrar automáticamente solo sus viajes
     const conductoresFiltro = usuario?.tipo === 'conductor' ? [usuario.sub] : conductoresId;
-    console.log(
-      '[DEBUG findAllPaginated] usuario:',
-      JSON.stringify(usuario),
-      '| conductoresFiltro:',
-      conductoresFiltro,
-      '| conductoresId param:',
-      conductoresId,
-    );
 
     const filters = {
       search,
@@ -1292,8 +1284,12 @@ export class ViajesService {
       return result;
     }
 
-    // Si no hay ruta, solo sugerir hasta que se marque la llegada
-    if (tramos.some((s) => s.tipo === 'destino')) {
+    // Si no hay ruta fija (ruta ocasional/dinámica)
+    const hasSalidaOcasional = tramos.some((s) => s.tipo === 'origen');
+    const hasLlegadaOcasional = tramos.some((s) => s.tipo === 'destino');
+
+    // Si ya tiene llegada -> viaje completado
+    if (hasLlegadaOcasional) {
       result.tipo = 'parada';
       result.nombreLugar = null;
       result.latitud = null;
@@ -1303,6 +1299,23 @@ export class ViajesService {
       return result;
     }
 
+    // Si no tiene salida, sugerir origen con el nombre de la ruta ocasional
+    if (!hasSalidaOcasional) {
+      result.tipo = 'origen';
+      result.nombreLugar = viajeInfo.rutaOcasional || null;
+      result.latitud = null;
+      result.longitud = null;
+      result.esPuntoFijo = false;
+      return result;
+    }
+
+    // Si tiene salida pero no llegada, sugerir parada (el conductor decide si es parada o llegada)
+    result.tipo = 'parada';
+    result.nombreLugar = null;
+    result.latitud = null;
+    result.longitud = null;
+    result.esPuntoFijo = false;
+    result.faltanPuntosFijos = false;
     return result;
   }
 
@@ -1321,11 +1334,19 @@ export class ViajesService {
     // 1. Validar alquileres cruzados
     const activeAlquileres = await this.alquilerRepository.findActivosByVehiculo(query.vehiculoId);
 
+    const vSalida = new Date(fechaSalida);
+    const vLlegada = new Date(fechaLlegada);
+
     for (const alq of activeAlquileres) {
-      if (alq.fechaFin && new Date(alq.fechaFin) < new Date(fechaLlegada)) {
+      const aInicio = new Date(alq.fechaInicio);
+      const aFin = alq.fechaFin ? new Date(alq.fechaFin) : null;
+
+      const overlap = aFin ? aInicio <= vLlegada && aFin >= vSalida : aInicio <= vLlegada;
+
+      if (overlap) {
         return {
           status: false,
-          message: `El alquiler del vehículo vence el ${alq.fechaFin.toLocaleDateString()}, antes de la fecha programada de llegada.`,
+          message: `El vehículo está alquilado desde el ${aInicio.toLocaleDateString()} hasta ${aFin ? aFin.toLocaleDateString() : 'indefinidamente'}, por lo que cruza con este horario.`,
         };
       }
     }

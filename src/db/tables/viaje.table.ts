@@ -1,6 +1,7 @@
 import { pgTable, serial, integer, timestamp, pgEnum, varchar, text, decimal } from 'drizzle-orm/pg-core';
 import { rutas } from './ruta.table';
 import { clientes } from './cliente.table';
+import { entidades } from './entidad.table';
 
 export const viajesEstado = pgEnum('viajes_estado', ['programado', 'en_progreso', 'completado', 'cancelado']);
 
@@ -22,6 +23,7 @@ export const viajes = pgTable('viajes', {
   clienteId: integer('cliente_id')
     .references(() => clientes.id)
     .notNull(),
+  entidadId: integer('entidad_id').references(() => entidades.id),
   modalidadServicio: modalidadServicio('modalidad_servicio').default('regular').notNull(),
   horasContrato: decimal('horas_contrato', { precision: 10, scale: 2 }).default('0.00').notNull(),
   estado: viajesEstado('estado').default('programado').notNull(),

@@ -9,6 +9,7 @@ import { talleres } from '@db/tables/taller.table';
 import { mantenimientoTareas } from '@db/tables/mantenimiento-tarea.table';
 import { mantenimientoDocumentos } from '@db/tables/mantenimiento-documento.table';
 import { tareas } from '@db/tables/tarea.table';
+import { sucursales } from '@db/tables/sucursal.table';
 
 interface PaginationFilters {
   search?: string;
@@ -67,12 +68,16 @@ export class MantenimientoRepository {
         taller: {
           ...getTableColumns(talleres),
         },
+        sucursal: {
+          ...getTableColumns(sucursales),
+        },
       })
       .from(mantenimientos)
       .leftJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
       .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .leftJoin(talleres, eq(mantenimientos.tallerId, talleres.id))
+      .leftJoin(sucursales, eq(mantenimientos.sucursalId, sucursales.id))
       .where(whereClause)
       .limit(limit)
       .offset(offset);
@@ -95,12 +100,16 @@ export class MantenimientoRepository {
         taller: {
           ...getTableColumns(talleres),
         },
+        sucursal: {
+          ...getTableColumns(sucursales),
+        },
       })
       .from(mantenimientos)
       .leftJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
       .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .leftJoin(talleres, eq(mantenimientos.tallerId, talleres.id))
+      .leftJoin(sucursales, eq(mantenimientos.sucursalId, sucursales.id))
       .where(and(eq(mantenimientos.id, id), isNull(mantenimientos.eliminadoEn)));
 
     if (result.length === 0) return null;

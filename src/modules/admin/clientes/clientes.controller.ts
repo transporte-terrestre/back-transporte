@@ -14,6 +14,11 @@ import { PasajeroUpdateDto } from './dto/pasajero/pasajero-update.dto';
 import { PaginatedPasajeroResultDto } from './dto/pasajero/pasajero-paginated.dto';
 import { PasajeroPaginationQueryDto } from './dto/pasajero/pasajero-pagination.dto';
 import { PasajeroResultDto } from './dto/pasajero/pasajero-result.dto';
+import { EntidadCreateDto } from './dto/entidad/entidad-create.dto';
+import { EntidadUpdateDto } from './dto/entidad/entidad-update.dto';
+import { PaginatedEntidadResultDto } from './dto/entidad/entidad-paginated.dto';
+import { EntidadPaginationQueryDto } from './dto/entidad/entidad-pagination.dto';
+import { EntidadResultDto } from './dto/entidad/entidad-result.dto';
 
 @ApiTags('clientes')
 @ApiBearerAuth()
@@ -134,5 +139,47 @@ export class ClientesController {
   @ApiResponse({ status: 200, type: PasajeroResultDto })
   deletePasajero(@Param('id') id: string) {
     return this.clientesService.deletePasajero(+id);
+  }
+
+  // ========== ENTIDADES ==========
+
+  @Get('entidad/find-all')
+  @ApiOperation({
+    summary: 'Obtener entidades con paginación, búsqueda y filtro por cliente',
+  })
+  @ApiResponse({ status: 200, type: PaginatedEntidadResultDto })
+  findAllEntidades(@Query() query: EntidadPaginationQueryDto) {
+    return this.clientesService.findAllEntidadesPaginated(query.page, query.limit, query.search, query.clienteId);
+  }
+
+  @Get('entidad/find-one/:id')
+  @ApiOperation({ summary: 'Obtener una entidad por ID' })
+  @ApiParam({ name: 'id', description: 'ID de la entidad', type: Number })
+  @ApiResponse({ status: 200, type: EntidadResultDto })
+  findEntidad(@Param('id') id: string) {
+    return this.clientesService.findEntidad(+id);
+  }
+
+  @Post('entidad/create')
+  @ApiOperation({ summary: 'Crear una nueva entidad' })
+  @ApiResponse({ status: 201, type: EntidadResultDto })
+  createEntidad(@Body() createDto: EntidadCreateDto) {
+    return this.clientesService.createEntidad(createDto);
+  }
+
+  @Patch('entidad/update/:id')
+  @ApiOperation({ summary: 'Actualizar una entidad' })
+  @ApiParam({ name: 'id', description: 'ID de la entidad', type: Number })
+  @ApiResponse({ status: 200, type: EntidadResultDto })
+  updateEntidad(@Param('id') id: string, @Body() updateDto: EntidadUpdateDto) {
+    return this.clientesService.updateEntidad(+id, updateDto);
+  }
+
+  @Delete('entidad/delete/:id')
+  @ApiOperation({ summary: 'Eliminar una entidad' })
+  @ApiParam({ name: 'id', description: 'ID de la entidad', type: Number })
+  @ApiResponse({ status: 200, type: EntidadResultDto })
+  deleteEntidad(@Param('id') id: string) {
+    return this.clientesService.deleteEntidad(+id);
   }
 }
