@@ -1,13 +1,25 @@
+
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
 import { viajeCircuitos, ViajeCircuitoDTO } from '@db/tables/viaje-circuito.table';
 import { viajes } from '@db/tables/viaje.table';
-import { eq, isNull, and, like, count, desc, gte, lte } from 'drizzle-orm';
+import { viajeConductores } from '@db/tables/viaje-conductor.table';
+import { viajeVehiculos } from '@db/tables/viaje-vehiculo.table';
+import { eq, isNull, and, sql, count, desc, gte, lte, inArray, or } from 'drizzle-orm';
 
 interface PaginationFilters {
   search?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  modalidadServicio?: string;
+  tipoRuta?: string;
+  estado?: string;
+  conductoresId?: number[];
+  clienteId?: number;
+  rutaId?: number;
+  vehiculosId?: number[];
+  sentido?: string;
+  turno?: string;
 }
 
 @Injectable()
@@ -20,13 +32,78 @@ export class ViajeCircuitoRepository {
       conditions.push(eq(viajeCircuitos.id, Number(filters.search)));
     }
 
-    if (filters?.fechaInicio && filters?.fechaFin) {
-      conditions.push(gte(viajeCircuitos.creadoEn, new Date(filters.fechaInicio)));
-      conditions.push(lte(viajeCircuitos.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
-    } else if (filters?.fechaInicio) {
-      conditions.push(gte(viajeCircuitos.creadoEn, new Date(filters.fechaInicio)));
-    } else if (filters?.fechaFin) {
-      conditions.push(lte(viajeCircuitos.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
+    const hasInnerFilters = !!(
+      filters?.fechaInicio ||
+      filters?.fechaFin ||
+      filters?.modalidadServicio ||
+      filters?.tipoRuta ||
+      filters?.estado ||
+      (filters?.conductoresId && filters.conductoresId.length > 0) ||
+      filters?.clienteId ||
+      filters?.rutaId ||
+      (filters?.vehiculosId && filters.vehiculosId.length > 0) ||
+      filters?.sentido ||
+      filters?.turno
+    );
+
+    if (hasInnerFilters) {
+      const tripConditions: any[] = [isNull(viajes.eliminadoEn)];
+
+      if (filters?.modalidadServicio) {
+        tripConditions.push(eq(sql`${viajes.modalidadServicio}::text`, filters.modalidadServicio));
+      }
+      if (filters?.tipoRuta) {
+        tripConditions.push(eq(sql`${viajes.tipoRuta}::text`, filters.tipoRuta));
+      }
+      if (filters?.estado) {
+        tripConditions.push(eq(sql`${viajes.estado}::text`, filters.estado));
+      }
+      if (filters?.fechaInicio && filters?.fechaFin) {
+        tripConditions.push(gte(viajes.fechaSalidaProgramada, new Date(filters.fechaInicio)));
+        tripConditions.push(lte(viajes.fechaSalidaProgramada, new Date(filters.fechaFin + 'T23:59:59')));
+      } else if (filters?.fechaInicio) {
+        tripConditions.push(gte(viajes.fechaSalidaProgramada, new Date(filters.fechaInicio)));
+      } else if (filters?.fechaFin) {
+        tripConditions.push(lte(viajes.fechaSalidaProgramada, new Date(filters.fechaFin + 'T23:59:59')));
+      }
+      if (filters?.clienteId) {
+        tripConditions.push(eq(viajes.clienteId, filters.clienteId));
+      }
+      if (filters?.rutaId) {
+        tripConditions.push(eq(viajes.rutaId, filters.rutaId));
+      }
+      if (filters?.sentido) {
+        tripConditions.push(eq(sql`${viajes.sentido}::text`, filters.sentido));
+      }
+      if (filters?.turno) {
+        tripConditions.push(eq(sql`${viajes.turno}::text`, filters.turno));
+      }
+      if (filters?.conductoresId && filters.conductoresId.length > 0) {
+        const viajesConConductores = database
+          .select({ viajeId: viajeConductores.viajeId })
+          .from(viajeConductores)
+          .where(inArray(viajeConductores.conductorId, filters.conductoresId));
+        tripConditions.push(inArray(viajes.id, viajesConConductores));
+      }
+      if (filters?.vehiculosId && filters.vehiculosId.length > 0) {
+        const viajesConVehiculo = database
+          .select({ viajeId: viajeVehiculos.viajeId })
+          .from(viajeVehiculos)
+          .where(inArray(viajeVehiculos.vehiculoId, filters.vehiculosId));
+        tripConditions.push(inArray(viajes.id, viajesConVehiculo));
+      }
+
+      const matchingTripsQuery = database
+        .select({ id: viajes.id })
+        .from(viajes)
+        .where(and(...tripConditions));
+
+      conditions.push(
+        or(
+          inArray(viajeCircuitos.viajeIdaId, matchingTripsQuery),
+          inArray(viajeCircuitos.viajeVueltaId, matchingTripsQuery)
+        )
+      );
     }
 
     const whereClause = and(...conditions);
