@@ -138,10 +138,24 @@ export class ViajesService {
     }
 
     const data = circuitos.map((circuito) => {
-      const ida = circuito.viajeIdaId ? viajesMap.get(circuito.viajeIdaId) || null : null;
-      const vuelta = circuito.viajeVueltaId ? viajesMap.get(circuito.viajeVueltaId) || null : null;
+      let ida = circuito.viajeIdaId ? viajesMap.get(circuito.viajeIdaId) || null : null;
+      let vuelta = circuito.viajeVueltaId ? viajesMap.get(circuito.viajeVueltaId) || null : null;
+      let circuitoCompleto = null;
+
+      // Si el viaje de ida es realmente un circuito, moverlo
+      if (ida && ida.sentido === 'circuito') {
+        circuitoCompleto = ida;
+        ida = null;
+      }
+
+      // Por si acaso el de vuelta fuera circuito (no debería pasar por lógica de negocio pero para consistencia)
+      if (vuelta && vuelta.sentido === 'circuito') {
+        circuitoCompleto = vuelta;
+        vuelta = null;
+      }
+
       const { viajeIdaId, viajeVueltaId, ...circuitoRest } = circuito;
-      return { ...circuitoRest, ida, vuelta };
+      return { ...circuitoRest, ida, vuelta, circuito: circuitoCompleto };
     });
 
     const totalPages = Math.ceil(total / limit);
@@ -217,11 +231,22 @@ export class ViajesService {
     }
 
     const data = circuitos.map((c) => {
-      const ida = c.viajeIdaId ? viajesMap.get(c.viajeIdaId) || null : null;
-      const vuelta = c.viajeVueltaId ? viajesMap.get(c.viajeVueltaId) || null : null;
+      let ida = c.viajeIdaId ? viajesMap.get(c.viajeIdaId) || null : null;
+      let vuelta = c.viajeVueltaId ? viajesMap.get(c.viajeVueltaId) || null : null;
+      let circuitoCompleto = null;
+
+      if (ida && ida.sentido === 'circuito') {
+        circuitoCompleto = ida;
+        ida = null;
+      }
+
+      if (vuelta && vuelta.sentido === 'circuito') {
+        circuitoCompleto = vuelta;
+        vuelta = null;
+      }
 
       const { viajeIdaId, viajeVueltaId, ...cRest } = c;
-      return { ...cRest, ida, vuelta };
+      return { ...cRest, ida, vuelta, circuito: circuitoCompleto };
     });
 
     return {

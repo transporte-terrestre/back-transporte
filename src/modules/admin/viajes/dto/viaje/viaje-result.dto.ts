@@ -145,6 +145,9 @@ export class ViajeResultDto {
   })
   fechaLlegada: Date | null;
 
+  @ApiPropertyOptional({ description: 'Datos adicionales del viaje (metadata)' })
+  metadata: Record<string, any> | null;
+
   @ApiProperty({
     example: '2023-01-01T00:00:00.000Z',
     description: 'Creation date',

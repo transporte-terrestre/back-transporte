@@ -12,6 +12,9 @@ export class ViajeCircuitoResultDto {
   @ApiPropertyOptional({ type: ViajeListDto, description: 'Viaje de vuelta' })
   vuelta?: ViajeListDto | null;
 
+  @ApiPropertyOptional({ type: ViajeListDto, description: 'Viaje de circuito completo' })
+  circuito?: ViajeListDto | null;
+
   @ApiProperty({ example: '2025-01-01T10:00:00Z', description: 'Fecha de creación' })
   creadoEn: Date;
 }
@@ -25,6 +28,9 @@ export class ViajeCircuitoLightResultDto {
 
   @ApiPropertyOptional({ type: ViajeLightResultDto, description: 'Viaje de vuelta (ligero)' })
   vuelta?: ViajeLightResultDto | null;
+
+  @ApiPropertyOptional({ type: ViajeLightResultDto, description: 'Viaje de circuito completo (ligero)' })
+  circuito?: ViajeLightResultDto | null;
 
   @ApiProperty({ example: '2025-01-01T10:00:00Z', description: 'Fecha de creación' })
   creadoEn: Date;
