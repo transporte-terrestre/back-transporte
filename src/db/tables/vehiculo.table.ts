@@ -36,7 +36,7 @@ export const vehiculos = pgTable(
     ejes: integer('ejes').default(2),
     ruedas: integer('ruedas').default(4),
 
-    kilometraje: integer('kilometraje').default(0).notNull(),
+    kilometraje: decimal('kilometraje', { precision: 12, scale: 2 }).default('0.00').notNull(),
     estado: vehiculosEstado('estado').default('disponible').notNull(),
     imagenes: text('imagenes').array().default([]),
 
