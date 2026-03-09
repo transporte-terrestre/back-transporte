@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { VehiculoChecklistDocumentViajeTipo } from '@db/tables/vehiculo-checklist-document.table';
 import { ViajeRepository } from '@repository/viaje.repository';
 import { ViajeCircuitoRepository } from '@repository/viaje-circuito.repository';
@@ -701,17 +701,13 @@ export class ViajesService {
   private async recalcularDistanciaViaje(viajeId: number) {
     const tramos = await this.viajeTramoRepository.findByViajeIdWithParadas(viajeId);
 
-    const tramoInicial = tramos.find((s) => s.tipo !== 'descanso');
+    const tramoInicial = tramos.find((s) => s.tipo === 'origen');
     const tramoFinal = [...tramos].reverse().find((s) => s.tipo === 'destino');
 
     if (tramoInicial && tramoFinal && tramoInicial.kilometrajeFinal != null && tramoFinal.kilometrajeFinal != null) {
       const kmInicial = Number(tramoInicial.kilometrajeFinal);
       const kmFinal = Number(tramoFinal.kilometrajeFinal);
-      let kmRecorrido = Math.max(kmFinal - kmInicial, 0);
-
-      if (kmRecorrido > 0) {
-        kmRecorrido = kmRecorrido / 1000;
-      }
+      const kmRecorrido = Math.max(kmFinal - kmInicial, 0);
 
       await this.viajeRepository.update(viajeId, {
         distanciaFinal: kmRecorrido.toFixed(2),
@@ -748,20 +744,15 @@ export class ViajesService {
           await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'circulacion' });
         }
       } else if (tipo === 'destino') {
-        let distanciaFinalCalculada = data.kilometrajeActual ? data.kilometrajeActual.toString() : undefined;
+        let distanciaFinalCalculada: string | undefined = undefined;
 
-        if (data.kilometrajeActual) {
+        if (data.kilometrajeActual != null) {
           const tramos = await this.viajeTramoRepository.findByViajeIdWithParadas(viajeId);
-          const tramoInicial = tramos.find((s) => s.tipo !== 'descanso');
+          const tramoInicial = tramos.find((s) => s.tipo === 'origen');
           if (tramoInicial && tramoInicial.kilometrajeFinal != null) {
             const kmInicial = Number(tramoInicial.kilometrajeFinal);
             const kmFinal = Number(data.kilometrajeActual);
-            let kmRecorrido = Math.max(kmFinal - kmInicial, 0);
-
-            // Convertir a kilómetros si el valor viene en metros (e.g. 2000 -> 2.00)
-            if (kmRecorrido > 0) {
-              kmRecorrido = kmRecorrido / 1000;
-            }
+            const kmRecorrido = Math.max(kmFinal - kmInicial, 0);
 
             distanciaFinalCalculada = kmRecorrido.toFixed(2);
           }
@@ -1129,6 +1120,46 @@ export class ViajesService {
     }
 
     return resultados;
+  }
+
+  async abordarPasajerosPorDni(viajeId: number, dnis: string[], tramoId: number): Promise<ViajePasajeroResultDto[]> {
+    if (!Array.isArray(dnis) || dnis.length === 0) {
+      throw new BadRequestException('Debe enviar al menos un DNI para abordar pasajeros.');
+    }
+
+    const dnisNormalizados = Array.from(new Set(dnis.map((dni) => String(dni ?? '').replace(/\D/g, '')).filter((dni) => dni.length > 0)));
+
+    if (dnisNormalizados.length === 0) {
+      throw new BadRequestException('Los DNIs enviados no tienen un formato valido.');
+    }
+
+    const pasajerosViaje = await this.viajePasajeroRepository.findByViajeId(viajeId);
+    const idsPorDni = new Map<string, number>();
+
+    for (const pasajero of pasajerosViaje) {
+      const dni = String(pasajero.dni ?? '').replace(/\D/g, '');
+      if (dni.length > 0 && !idsPorDni.has(dni)) {
+        idsPorDni.set(dni, pasajero.id);
+      }
+    }
+
+    const viajePasajeroIds: number[] = [];
+    const dnisNoEncontrados: string[] = [];
+
+    for (const dni of dnisNormalizados) {
+      const id = idsPorDni.get(dni);
+      if (id) {
+        viajePasajeroIds.push(id);
+      } else {
+        dnisNoEncontrados.push(dni);
+      }
+    }
+
+    if (dnisNoEncontrados.length > 0) {
+      throw new NotFoundException(`No se encontraron estos DNIs en el viaje ${viajeId}: ${dnisNoEncontrados.join(', ')}`);
+    }
+
+    return this.abordarPasajeros(viajePasajeroIds, tramoId);
   }
 
   async escanearDnis(viajeId: number, dto: ViajeEscanearDnisDto, tramoId: number): Promise<ViajeEscanearDnisResultDto> {

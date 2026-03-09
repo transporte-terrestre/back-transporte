@@ -38,6 +38,7 @@ import { ViajePasajeroFillDto } from './dto/viaje-pasajero/viaje-pasajero-fill.d
 import { ViajeEscanearDnisDto } from './dto/viaje-pasajero/viaje-escanear-dnis.dto';
 import { ScanDniResultItem, ViajeEscanearDnisResultDto, ViajePasajeroTramoQueryDto } from './dto/viaje-pasajero/viaje-escanear-dnis-result.dto';
 import { ViajePasajeroAbordarPasajerosDto } from './dto/viaje-pasajero/viaje-pasajero-abordar-pasajeros.dto';
+import { ViajePasajeroAbordarDnisDto } from './dto/viaje-pasajero/viaje-pasajero-abordar-dnis.dto';
 import { ValidarVehiculoQueryDto } from './dto/viaje/validar-vehiculo-query.dto';
 import { ValidarConductorQueryDto } from './dto/viaje/validar-conductor-query.dto';
 import { ValidacionResultDto } from './dto/viaje/validacion-result.dto';
@@ -393,6 +394,14 @@ export class ViajesController {
   @ApiResponse({ status: 201, type: [ViajePasajeroResultDto] })
   abordarPasajeros(@Param('viajeId') viajeId: string, @Body() dto: ViajePasajeroAbordarPasajerosDto, @Query() query: ViajePasajeroTramoQueryDto) {
     return this.viajesService.abordarPasajeros(dto.viajePasajeroIds, query.viajeTramoId as number);
+  }
+
+  @Post(':viajeId/pasajeros/abordar-por-dni')
+  @ApiOperation({ summary: 'Marcar abordaje de pasajeros por DNI y registrar movimientos en el tramo' })
+  @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
+  @ApiResponse({ status: 201, type: [ViajePasajeroResultDto] })
+  abordarPasajerosPorDni(@Param('viajeId') viajeId: string, @Body() dto: ViajePasajeroAbordarDnisDto, @Query() query: ViajePasajeroTramoQueryDto) {
+    return this.viajesService.abordarPasajerosPorDni(+viajeId, dto.dnis, query.viajeTramoId as number);
   }
 
   // ========== CHECKLIST ITEMS (Catálogo) ==========
