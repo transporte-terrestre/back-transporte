@@ -5,6 +5,7 @@ import { VehiculoResultDto } from '../../../vehiculos/dto/vehiculo/vehiculo-resu
 import { MantenimientoTareaResultDto } from '../mantenimiento-tarea/mantenimiento-tarea-result.dto';
 import { MantenimientoDocumentoResultDto } from '../mantenimiento-documento/mantenimiento-documento-result.dto';
 import { TallerResultDto } from '@module/admin/talleres/dto/taller/taller-result.dto';
+import { SucursalResultDto } from '@module/admin/talleres/dto/sucursal/sucursal-result.dto';
 
 export class VehiculoMantenimientoResultDto extends OmitType(VehiculoResultDto, ['documentos', 'propietarios', 'proveedores']) {}
 
@@ -49,6 +50,17 @@ export class MantenimientoResultDto {
     description: 'Workshop details',
   })
   taller: TallerResultDto;
+
+  @ApiProperty({ example: 1, description: 'Branch ID', nullable: true })
+  sucursalId: number | null;
+
+  @ApiProperty({
+    type: () => SucursalResultDto,
+    description: 'Branch details',
+    required: false,
+    nullable: true,
+  })
+  sucursal?: SucursalResultDto;
 
   @ApiProperty({ example: 'ORD-001', description: 'Service Order Code' })
   codigoOrden: string | null;

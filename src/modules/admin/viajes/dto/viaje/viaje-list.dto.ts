@@ -4,6 +4,7 @@ import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta, ViajeTurno, Vi
 import { ConductorResultDto } from '@module/admin/conductores/dto/conductor/conductor-result.dto';
 import { VehiculoResultDto } from '@module/admin/vehiculos/dto/vehiculo/vehiculo-result.dto';
 import { ClienteResultDto } from '@module/admin/clientes/dto/cliente/cliente-result.dto';
+import { EntidadResultDto } from '@module/admin/clientes/dto/entidad/entidad-result.dto';
 import { RutaResultDto } from '@module/admin/rutas/dto/ruta/ruta-result.dto';
 
 export class ConductorViajeDto extends OmitType(ConductorResultDto, ['documentos']) {}
@@ -44,6 +45,9 @@ export class ViajeListDto {
 
   @ApiProperty({ example: 1, description: 'ID del cliente' })
   clienteId: number;
+
+  @ApiPropertyOptional({ example: 1, description: 'ID de la entidad' })
+  entidadId: number | null;
 
   @ApiProperty({
     enum: modalidadServicio.enumValues,
@@ -117,6 +121,9 @@ export class ViajeListDto {
 
   @ApiPropertyOptional({ type: ClienteViajeDto })
   cliente?: ClienteViajeDto;
+
+  @ApiPropertyOptional({ type: EntidadResultDto })
+  entidad?: EntidadResultDto;
 
   @ApiPropertyOptional({ type: RutaResultDto })
   ruta?: RutaResultDto;

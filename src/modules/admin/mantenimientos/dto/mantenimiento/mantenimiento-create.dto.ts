@@ -1,6 +1,6 @@
 import { IsInt, IsString, IsNotEmpty, IsIn, IsOptional, IsDate } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { MantenimientoDTO, mantenimientosTipo, mantenimientosEstado } from '@db/tables/mantenimiento.table';
 import type { MantenimientoTipo, MantenimientoEstado } from '@db/tables/mantenimiento.table';
 
@@ -14,6 +14,11 @@ export class MantenimientoCreateDto implements Omit<MantenimientoDTO, 'id' | 'cr
   @IsInt()
   @IsNotEmpty()
   tallerId: number;
+
+  @ApiPropertyOptional({ example: 1, description: 'Branch ID' })
+  @IsInt()
+  @IsOptional()
+  sucursalId?: number;
 
   @ApiProperty({
     enum: mantenimientosTipo.enumValues,
@@ -64,4 +69,9 @@ export class MantenimientoCreateDto implements Omit<MantenimientoDTO, 'id' | 'cr
   @IsIn(mantenimientosEstado.enumValues, { each: true })
   @IsOptional()
   estado: MantenimientoEstado;
+
+  @ApiPropertyOptional({ description: 'Si es true, el vehículo cambiará su estado a taller.' })
+  @IsOptional()
+  @Type(() => Boolean)
+  marcarEnTaller?: boolean;
 }

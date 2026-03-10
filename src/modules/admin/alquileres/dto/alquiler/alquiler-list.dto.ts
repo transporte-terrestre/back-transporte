@@ -13,6 +13,17 @@ export class AlquilerFiltersDto {
   @IsString()
   @IsOptional()
   estado?: string;
+
+  @ApiProperty({ required: false })
+  @Transform(({ value }) => (value != null ? parseInt(value, 10) : undefined))
+  @IsInt()
+  @IsOptional()
+  clienteId?: number;
+
+  @ApiProperty({ required: false, enum: ['maquina_seca', 'maquina_operada'] })
+  @IsString()
+  @IsOptional()
+  tipo?: string;
 }
 
 export class AlquilerQueryDto extends AlquilerFiltersDto {

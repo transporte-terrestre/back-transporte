@@ -3,6 +3,7 @@ import { viajesEstado, modalidadServicio, viajesTipoRuta, viajesTurno, viajesSen
 import { ConductorResultDto } from '../../../conductores/dto/conductor/conductor-result.dto';
 import { VehiculoResultDto } from '../../../vehiculos/dto/vehiculo/vehiculo-result.dto';
 import { ClienteResultDto } from '../../../clientes/dto/cliente/cliente-result.dto';
+import { EntidadResultDto } from '../../../clientes/dto/entidad/entidad-result.dto';
 import { viajeConductoresRol } from '@db/tables/viaje-conductor.table';
 import { viajeVehiculosRol } from '@db/tables/viaje-vehiculo.table';
 import type { ViajeModalidadServicio, ViajeEstado, ViajeTipoRuta, ViajeTurno, ViajeSentido } from '@db/tables/viaje.table';
@@ -77,6 +78,9 @@ export class ViajeResultDto {
   @ApiProperty({ example: 1, description: 'ID del cliente' })
   clienteId: number;
 
+  @ApiPropertyOptional({ example: 1, description: 'ID de la entidad' })
+  entidadId: number | null;
+
   @ApiProperty({
     enum: modalidadServicio.enumValues,
     example: modalidadServicio.enumValues[0],
@@ -141,6 +145,9 @@ export class ViajeResultDto {
   })
   fechaLlegada: Date | null;
 
+  @ApiPropertyOptional({ description: 'Datos adicionales del viaje (metadata)' })
+  metadata: Record<string, any> | null;
+
   @ApiProperty({
     example: '2023-01-01T00:00:00.000Z',
     description: 'Creation date',
@@ -166,6 +173,11 @@ export class ViajeResultDto {
     type: ClienteViajeResultDto,
   })
   cliente?: ClienteViajeResultDto;
+
+  @ApiPropertyOptional({
+    type: EntidadResultDto,
+  })
+  entidad?: EntidadResultDto;
 
   @ApiPropertyOptional({ type: RutaResultDto })
   ruta?: Omit<RutaResultDto, 'documentos'>;

@@ -10,6 +10,7 @@ import { modelos } from '@db/tables/modelo.table';
 import { marcas } from '@db/tables/marca.table';
 import { rutas } from '@db/tables/ruta.table';
 import { clientes } from '@db/tables/cliente.table';
+import { entidades } from '@db/tables/entidad.table';
 import { viajeComentarios } from '@db/tables/viaje-comentario.table';
 import { usuarios } from '@db/tables/usuario.table';
 import { viajeChecklists } from '@db/tables/viaje-checklist.table';
@@ -125,10 +126,14 @@ export class ViajeRepository {
         cliente: {
           ...getTableColumns(clientes),
         },
+        entidad: {
+          ...getTableColumns(entidades),
+        },
       })
       .from(viajes)
       .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
       .leftJoin(clientes, eq(clientes.id, viajes.clienteId))
+      .leftJoin(entidades, eq(entidades.id, viajes.entidadId))
       .leftJoin(viajeConductores, and(eq(viajeConductores.viajeId, viajes.id), eq(viajeConductores.esPrincipal, true)))
       .leftJoin(conductores, eq(conductores.id, viajeConductores.conductorId))
       .leftJoin(viajeVehiculos, and(eq(viajeVehiculos.viajeId, viajes.id), eq(viajeVehiculos.esPrincipal, true)))
@@ -305,10 +310,14 @@ export class ViajeRepository {
         cliente: {
           ...getTableColumns(clientes),
         },
+        entidad: {
+          ...getTableColumns(entidades),
+        },
       })
       .from(viajes)
       .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
       .leftJoin(clientes, eq(clientes.id, viajes.clienteId))
+      .leftJoin(entidades, eq(entidades.id, viajes.entidadId))
       .leftJoin(viajeConductores, and(eq(viajeConductores.viajeId, viajes.id), eq(viajeConductores.esPrincipal, true)))
       .leftJoin(conductores, eq(conductores.id, viajeConductores.conductorId))
       .leftJoin(viajeVehiculos, and(eq(viajeVehiculos.viajeId, viajes.id), eq(viajeVehiculos.esPrincipal, true)))
@@ -323,6 +332,7 @@ export class ViajeRepository {
       vehiculoPrincipal: item.vehiculoPrincipal?.id ? item.vehiculoPrincipal : null,
       ruta: item.ruta?.id ? item.ruta : null,
       cliente: item.cliente?.id ? item.cliente : null,
+      entidad: item.entidad?.id ? item.entidad : null,
     }));
   }
 
@@ -389,16 +399,18 @@ export class ViajeRepository {
         viaje: getTableColumns(viajes),
         cliente: getTableColumns(clientes),
         ruta: getTableColumns(rutas),
+        entidad: getTableColumns(entidades),
       })
       .from(viajes)
       .leftJoin(clientes, eq(clientes.id, viajes.clienteId))
       .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
+      .leftJoin(entidades, eq(entidades.id, viajes.entidadId))
       .where(and(eq(viajes.id, id), isNull(viajes.eliminadoEn)))
       .limit(1);
 
     if (result.length === 0) return null;
 
-    const { viaje, cliente, ruta } = result[0];
+    const { viaje, cliente, ruta, entidad } = result[0];
 
     const conductorsQuery = database
       .select({
@@ -462,6 +474,7 @@ export class ViajeRepository {
       ...viaje,
       cliente: cliente || null,
       ruta: ruta || null,
+      entidad: entidad || null,
       conductores: conductoresList,
       vehiculos: vehiculosList,
       comentarios: comentariosList,

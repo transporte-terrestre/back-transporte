@@ -1,6 +1,7 @@
-import { pgTable, serial, integer, timestamp, pgEnum, varchar, text, decimal } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, timestamp, pgEnum, varchar, decimal, jsonb } from 'drizzle-orm/pg-core';
 import { rutas } from './ruta.table';
 import { clientes } from './cliente.table';
+import { entidades } from './entidad.table';
 
 export const viajesEstado = pgEnum('viajes_estado', ['programado', 'en_progreso', 'completado', 'cancelado']);
 
@@ -10,7 +11,7 @@ export const viajesTipoRuta = pgEnum('viajes_tipo_ruta', ['ocasional', 'fija']);
 
 export const viajesTurno = pgEnum('viajes_turno', ['dia', 'noche']);
 
-export const viajesSentido = pgEnum('viajes_sentido', ['ida', 'vuelta']);
+export const viajesSentido = pgEnum('viajes_sentido', ['ida', 'vuelta', 'circuito']);
 
 export const viajes = pgTable('viajes', {
   id: serial('id').primaryKey(),
@@ -22,6 +23,7 @@ export const viajes = pgTable('viajes', {
   clienteId: integer('cliente_id')
     .references(() => clientes.id)
     .notNull(),
+  entidadId: integer('entidad_id').references(() => entidades.id),
   modalidadServicio: modalidadServicio('modalidad_servicio').default('regular').notNull(),
   horasContrato: decimal('horas_contrato', { precision: 10, scale: 2 }).default('0.00').notNull(),
   estado: viajesEstado('estado').default('programado').notNull(),
@@ -32,6 +34,7 @@ export const viajes = pgTable('viajes', {
   fechaLlegadaProgramada: timestamp('fecha_llegada_programada'),
   fechaSalida: timestamp('fecha_salida'),
   fechaLlegada: timestamp('fecha_llegada'),
+  metadata: jsonb('metadata'),
   creadoEn: timestamp('creado_en').defaultNow().notNull(),
   actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
   eliminadoEn: timestamp('eliminado_en'),

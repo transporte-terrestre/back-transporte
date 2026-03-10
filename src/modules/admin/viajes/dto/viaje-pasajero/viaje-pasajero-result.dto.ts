@@ -44,7 +44,31 @@ export class ViajePasajeroResultDto {
     required: false,
     nullable: true,
   })
-  esTramoActual?: boolean | null;
+  esAsistenciaTramoActual?: boolean | null;
+
+  @ApiProperty({
+    example: 5,
+    description: 'ID de la parada donde el pasajero bajó (si tiene salida registrada)',
+    required: false,
+    nullable: true,
+  })
+  paradaSalidaId?: number | null;
+
+  @ApiProperty({
+    example: 'Parada Central',
+    description: 'Nombre de la parada donde el pasajero bajó',
+    required: false,
+    nullable: true,
+  })
+  paradaSalidaNombre?: string | null;
+
+  @ApiProperty({
+    example: true,
+    description: 'Indica si la salida del pasajero coincide con el tramo consultado',
+    required: false,
+    nullable: true,
+  })
+  esSalidaTramoActual?: boolean | null;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z', description: 'Fecha de creación' })
   creadoEn: Date;

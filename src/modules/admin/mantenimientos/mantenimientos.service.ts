@@ -16,11 +16,14 @@ import { MantenimientoReporteEstadoDto, PaginatedReporteEstadoResultDto } from '
 import { MantenimientoDocumentoDTO, mantenimientoDocumentosTipo } from '@db/tables/mantenimiento-documento.table';
 import { DocumentosAgrupadosMantenimientoDto } from './dto/mantenimiento/mantenimiento-result.dto';
 
+import { VehiculoRepository } from '@repository/vehiculo.repository';
+
 @Injectable()
 export class MantenimientosService {
   constructor(
     private readonly mantenimientoRepository: MantenimientoRepository,
     private readonly tareaRepository: TareaRepository,
+    private readonly vehiculoRepository: VehiculoRepository,
   ) {}
 
   async findAllPaginated(
@@ -129,8 +132,15 @@ export class MantenimientosService {
   }
 
   async create(data: MantenimientoCreateDto) {
-    const codigoOrden = await this.generarCodigoOrden(data.vehiculoId);
-    return this.mantenimientoRepository.create({ ...data, codigoOrden });
+    const { marcarEnTaller, ...rest } = data;
+    const codigoOrden = await this.generarCodigoOrden(rest.vehiculoId);
+    const result = await this.mantenimientoRepository.create({ ...rest, codigoOrden });
+
+    if (marcarEnTaller) {
+      await this.vehiculoRepository.update(rest.vehiculoId, { estado: 'taller' });
+    }
+
+    return result;
   }
 
   private async generarCodigoOrden(vehiculoId: number): Promise<string> {
@@ -147,8 +157,16 @@ export class MantenimientosService {
     return `${placa}-${numeroFormateado}`;
   }
 
-  update(id: number, data: MantenimientoUpdateDto) {
-    return this.mantenimientoRepository.update(id, data);
+  async update(id: number, data: MantenimientoUpdateDto) {
+    const prev = await this.findOne(id);
+    const { marcarEnTaller, ...rest } = data;
+    const result = await this.mantenimientoRepository.update(id, rest);
+
+    if (marcarEnTaller && prev) {
+      await this.vehiculoRepository.update(rest.vehiculoId || prev.vehiculoId, { estado: 'taller' });
+    }
+
+    return result;
   }
 
   delete(id: number) {

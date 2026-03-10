@@ -4,7 +4,7 @@ import { modelos } from './modelo.table';
 
 export const combustibleEnum = pgEnum('combustible_tipo', ['gasolina', 'diesel', 'gnv', 'glp', 'electrico', 'hibrido']);
 
-export const vehiculosEstado = pgEnum('vehiculos_estado', ['disponible', 'circulacion', 'taller', 'retirado']);
+export const vehiculosEstado = pgEnum('vehiculos_estado', ['disponible', 'circulacion', 'taller', 'retirado', 'alquilado']);
 
 export const vehiculos = pgTable(
   'vehiculos',
@@ -36,7 +36,7 @@ export const vehiculos = pgTable(
     ejes: integer('ejes').default(2),
     ruedas: integer('ruedas').default(4),
 
-    kilometraje: integer('kilometraje').default(0).notNull(),
+    kilometraje: decimal('kilometraje', { precision: 12, scale: 2, mode: 'number' }).default(0).notNull(),
     estado: vehiculosEstado('estado').default('disponible').notNull(),
     imagenes: text('imagenes').array().default([]),
 

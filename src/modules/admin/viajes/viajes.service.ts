@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { VehiculoChecklistDocumentViajeTipo } from '@db/tables/vehiculo-checklist-document.table';
 import { ViajeRepository } from '@repository/viaje.repository';
 import { ViajeCircuitoRepository } from '@repository/viaje-circuito.repository';
@@ -105,14 +105,6 @@ export class ViajesService {
   ): Promise<PaginatedViajeResultDto> {
     // Si el token es de un conductor, filtrar automáticamente solo sus viajes
     const conductoresFiltro = usuario?.tipo === 'conductor' ? [usuario.sub] : conductoresId;
-    console.log(
-      '[DEBUG findAllPaginated] usuario:',
-      JSON.stringify(usuario),
-      '| conductoresFiltro:',
-      conductoresFiltro,
-      '| conductoresId param:',
-      conductoresId,
-    );
 
     const filters = {
       search,
@@ -146,10 +138,24 @@ export class ViajesService {
     }
 
     const data = circuitos.map((circuito) => {
-      const ida = circuito.viajeIdaId ? viajesMap.get(circuito.viajeIdaId) || null : null;
-      const vuelta = circuito.viajeVueltaId ? viajesMap.get(circuito.viajeVueltaId) || null : null;
+      let ida = circuito.viajeIdaId ? viajesMap.get(circuito.viajeIdaId) || null : null;
+      let vuelta = circuito.viajeVueltaId ? viajesMap.get(circuito.viajeVueltaId) || null : null;
+      let circuitoCompleto = null;
+
+      // Si el viaje de ida es realmente un circuito, moverlo
+      if (ida && ida.sentido === 'circuito') {
+        circuitoCompleto = ida;
+        ida = null;
+      }
+
+      // Por si acaso el de vuelta fuera circuito (no debería pasar por lógica de negocio pero para consistencia)
+      if (vuelta && vuelta.sentido === 'circuito') {
+        circuitoCompleto = vuelta;
+        vuelta = null;
+      }
+
       const { viajeIdaId, viajeVueltaId, ...circuitoRest } = circuito;
-      return { ...circuitoRest, ida, vuelta };
+      return { ...circuitoRest, ida, vuelta, circuito: circuitoCompleto };
     });
 
     const totalPages = Math.ceil(total / limit);
@@ -225,11 +231,22 @@ export class ViajesService {
     }
 
     const data = circuitos.map((c) => {
-      const ida = c.viajeIdaId ? viajesMap.get(c.viajeIdaId) || null : null;
-      const vuelta = c.viajeVueltaId ? viajesMap.get(c.viajeVueltaId) || null : null;
+      let ida = c.viajeIdaId ? viajesMap.get(c.viajeIdaId) || null : null;
+      let vuelta = c.viajeVueltaId ? viajesMap.get(c.viajeVueltaId) || null : null;
+      let circuitoCompleto = null;
+
+      if (ida && ida.sentido === 'circuito') {
+        circuitoCompleto = ida;
+        ida = null;
+      }
+
+      if (vuelta && vuelta.sentido === 'circuito') {
+        circuitoCompleto = vuelta;
+        vuelta = null;
+      }
 
       const { viajeIdaId, viajeVueltaId, ...cRest } = c;
-      return { ...cRest, ida, vuelta };
+      return { ...cRest, ida, vuelta, circuito: circuitoCompleto };
     });
 
     return {
@@ -684,17 +701,13 @@ export class ViajesService {
   private async recalcularDistanciaViaje(viajeId: number) {
     const tramos = await this.viajeTramoRepository.findByViajeIdWithParadas(viajeId);
 
-    const tramoInicial = tramos.find((s) => s.tipo !== 'descanso');
+    const tramoInicial = tramos.find((s) => s.tipo === 'origen');
     const tramoFinal = [...tramos].reverse().find((s) => s.tipo === 'destino');
 
     if (tramoInicial && tramoFinal && tramoInicial.kilometrajeFinal != null && tramoFinal.kilometrajeFinal != null) {
       const kmInicial = Number(tramoInicial.kilometrajeFinal);
       const kmFinal = Number(tramoFinal.kilometrajeFinal);
-      let kmRecorrido = Math.max(kmFinal - kmInicial, 0);
-
-      if (kmRecorrido > 0) {
-        kmRecorrido = kmRecorrido / 1000;
-      }
+      const kmRecorrido = Math.max(kmFinal - kmInicial, 0);
 
       await this.viajeRepository.update(viajeId, {
         distanciaFinal: kmRecorrido.toFixed(2),
@@ -731,20 +744,15 @@ export class ViajesService {
           await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'circulacion' });
         }
       } else if (tipo === 'destino') {
-        let distanciaFinalCalculada = data.kilometrajeActual ? data.kilometrajeActual.toString() : undefined;
+        let distanciaFinalCalculada: string | undefined = undefined;
 
-        if (data.kilometrajeActual) {
+        if (data.kilometrajeActual != null) {
           const tramos = await this.viajeTramoRepository.findByViajeIdWithParadas(viajeId);
-          const tramoInicial = tramos.find((s) => s.tipo !== 'descanso');
+          const tramoInicial = tramos.find((s) => s.tipo === 'origen');
           if (tramoInicial && tramoInicial.kilometrajeFinal != null) {
             const kmInicial = Number(tramoInicial.kilometrajeFinal);
             const kmFinal = Number(data.kilometrajeActual);
-            let kmRecorrido = Math.max(kmFinal - kmInicial, 0);
-
-            // Convertir a kilómetros si el valor viene en metros (e.g. 2000 -> 2.00)
-            if (kmRecorrido > 0) {
-              kmRecorrido = kmRecorrido / 1000;
-            }
+            const kmRecorrido = Math.max(kmFinal - kmInicial, 0);
 
             distanciaFinalCalculada = kmRecorrido.toFixed(2);
           }
@@ -839,9 +847,8 @@ export class ViajesService {
         }
       }
 
-      // Finalmente, resincronizar el contador de pasajeros de ese tramo (quedará en 0 si lo borramos,
-      // pero nunca hace daño asegurar integridad)
-      await this.viajeTramoRepository.syncNumeroPasajeros(tramoId);
+      // Finalmente, resincronizar los contadores acumulados de todos los tramos del viaje
+      await this.viajeTramoRepository.syncAllNumeroPasajeros(viajeId);
     } catch (error) {
       console.error(`Error procesando side effects para eliminación en viaje ${viajeId}:`, error);
     }
@@ -1065,7 +1072,6 @@ export class ViajesService {
     const tramo = await this.viajeTramoRepository.findOne(tramoId);
     if (!tramo) return [];
 
-    const affectedTramos = new Set<number>([tramoId]);
     const resultados = [];
     const setIdsNuevos = new Set(viajePasajeroIds);
 
@@ -1092,9 +1098,8 @@ export class ViajesService {
           continue;
         }
 
-        // Si ya abordó en otro tramo, marcar el antiguo para resincronizarlo
+        // Si ya abordó en otro tramo, eliminar la entrada antigua
         if (entrada) {
-          affectedTramos.add(entrada.viajeTramoId);
           await this.viajePasajeroMovimientoRepository.delete(entrada.id);
         }
 
@@ -1106,12 +1111,99 @@ export class ViajesService {
       }
     }
 
-    // 3. Sincronizar contadores de pasajeros para todos los tramos afectados
-    for (const tid of affectedTramos) {
-      await this.viajeTramoRepository.syncNumeroPasajeros(tid);
-    }
+    // 3. Sincronizar contadores de pasajeros acumulados para todos los tramos del viaje
+    await this.viajeTramoRepository.syncAllNumeroPasajeros(tramo.viajeId);
 
     return resultados;
+  }
+
+  async desabordarPasajeros(viajePasajeroIds: number[], tramoId: number): Promise<ViajePasajeroResultDto[]> {
+    const tramo = await this.viajeTramoRepository.findOne(tramoId);
+    if (!tramo) return [];
+
+    const resultados = [];
+    const setIdsNuevos = new Set(viajePasajeroIds);
+
+    // 1. Sincronización: quitar salidas previas en este tramo que ya no están en la lista
+    const currentInTramo = await this.viajePasajeroMovimientoRepository.findByViajeTramo(tramoId);
+    for (const mov of currentInTramo) {
+      if (mov.tipoMovimiento === 'salida' && !setIdsNuevos.has(mov.viajePasajeroId)) {
+        await this.viajePasajeroMovimientoRepository.delete(mov.id);
+      }
+    }
+
+    // 2. Registrar salida para cada pasajero
+    for (const id of viajePasajeroIds) {
+      try {
+        const movements = await this.viajePasajeroMovimientoRepository.findByViajePasajero(id);
+        const salidaExistente = movements.find((m) => m.tipoMovimiento === 'salida' && m.viajeTramoId === tramoId);
+
+        if (salidaExistente) {
+          // Ya tiene salida en este tramo, solo agregar al resultado
+          const pasajero = await this.viajePasajeroRepository.findOne(id);
+          if (pasajero) resultados.push(pasajero);
+          continue;
+        }
+
+        // Si ya tiene salida en otro tramo, eliminarla
+        const salidaOtroTramo = movements.find((m) => m.tipoMovimiento === 'salida' && m.viajeTramoId !== tramoId);
+        if (salidaOtroTramo) {
+          await this.viajePasajeroMovimientoRepository.delete(salidaOtroTramo.id);
+        }
+
+        // Registrar salida en el tramo
+        await this.viajePasajeroMovimientoRepository.create({ viajePasajeroId: id, viajeTramoId: tramoId, tipoMovimiento: 'salida' });
+        const pasajero = await this.viajePasajeroRepository.findOne(id);
+        if (pasajero) resultados.push(pasajero);
+      } catch (e) {
+        console.error(`Error en desabordarPasajeros ${id}:`, e);
+      }
+    }
+
+    // Sincronizar contadores acumulados para todos los tramos del viaje
+    await this.viajeTramoRepository.syncAllNumeroPasajeros(tramo.viajeId);
+
+    return resultados;
+  }
+
+  async abordarPasajerosPorDni(viajeId: number, dnis: string[], tramoId: number): Promise<ViajePasajeroResultDto[]> {
+    if (!Array.isArray(dnis) || dnis.length === 0) {
+      throw new BadRequestException('Debe enviar al menos un DNI para abordar pasajeros.');
+    }
+
+    const dnisNormalizados = Array.from(new Set(dnis.map((dni) => String(dni ?? '').replace(/\D/g, '')).filter((dni) => dni.length > 0)));
+
+    if (dnisNormalizados.length === 0) {
+      throw new BadRequestException('Los DNIs enviados no tienen un formato valido.');
+    }
+
+    const pasajerosViaje = await this.viajePasajeroRepository.findByViajeId(viajeId);
+    const idsPorDni = new Map<string, number>();
+
+    for (const pasajero of pasajerosViaje) {
+      const dni = String(pasajero.dni ?? '').replace(/\D/g, '');
+      if (dni.length > 0 && !idsPorDni.has(dni)) {
+        idsPorDni.set(dni, pasajero.id);
+      }
+    }
+
+    const viajePasajeroIds: number[] = [];
+    const dnisNoEncontrados: string[] = [];
+
+    for (const dni of dnisNormalizados) {
+      const id = idsPorDni.get(dni);
+      if (id) {
+        viajePasajeroIds.push(id);
+      } else {
+        dnisNoEncontrados.push(dni);
+      }
+    }
+
+    if (dnisNoEncontrados.length > 0) {
+      throw new NotFoundException(`No se encontraron estos DNIs en el viaje ${viajeId}: ${dnisNoEncontrados.join(', ')}`);
+    }
+
+    return this.abordarPasajeros(viajePasajeroIds, tramoId);
   }
 
   async escanearDnis(viajeId: number, dto: ViajeEscanearDnisDto, tramoId: number): Promise<ViajeEscanearDnisResultDto> {
@@ -1292,8 +1384,12 @@ export class ViajesService {
       return result;
     }
 
-    // Si no hay ruta, solo sugerir hasta que se marque la llegada
-    if (tramos.some((s) => s.tipo === 'destino')) {
+    // Si no hay ruta fija (ruta ocasional/dinámica)
+    const hasSalidaOcasional = tramos.some((s) => s.tipo === 'origen');
+    const hasLlegadaOcasional = tramos.some((s) => s.tipo === 'destino');
+
+    // Si ya tiene llegada -> viaje completado
+    if (hasLlegadaOcasional) {
       result.tipo = 'parada';
       result.nombreLugar = null;
       result.latitud = null;
@@ -1303,6 +1399,23 @@ export class ViajesService {
       return result;
     }
 
+    // Si no tiene salida, sugerir origen con el nombre de la ruta ocasional
+    if (!hasSalidaOcasional) {
+      result.tipo = 'origen';
+      result.nombreLugar = viajeInfo.rutaOcasional || null;
+      result.latitud = null;
+      result.longitud = null;
+      result.esPuntoFijo = false;
+      return result;
+    }
+
+    // Si tiene salida pero no llegada, sugerir parada (el conductor decide si es parada o llegada)
+    result.tipo = 'parada';
+    result.nombreLugar = null;
+    result.latitud = null;
+    result.longitud = null;
+    result.esPuntoFijo = false;
+    result.faltanPuntosFijos = false;
     return result;
   }
 
@@ -1321,11 +1434,19 @@ export class ViajesService {
     // 1. Validar alquileres cruzados
     const activeAlquileres = await this.alquilerRepository.findActivosByVehiculo(query.vehiculoId);
 
+    const vSalida = new Date(fechaSalida);
+    const vLlegada = new Date(fechaLlegada);
+
     for (const alq of activeAlquileres) {
-      if (alq.fechaFin && new Date(alq.fechaFin) < new Date(fechaLlegada)) {
+      const aInicio = new Date(alq.fechaInicio);
+      const aFin = alq.fechaFin ? new Date(alq.fechaFin) : null;
+
+      const overlap = aFin ? aInicio <= vLlegada && aFin >= vSalida : aInicio <= vLlegada;
+
+      if (overlap) {
         return {
           status: false,
-          message: `El alquiler del vehículo vence el ${alq.fechaFin.toLocaleDateString()}, antes de la fecha programada de llegada.`,
+          message: `El vehículo está alquilado desde el ${aInicio.toLocaleDateString()} hasta ${aFin ? aFin.toLocaleDateString() : 'indefinidamente'}, por lo que cruza con este horario.`,
         };
       }
     }

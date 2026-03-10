@@ -11,6 +11,10 @@ import { PasajeroRepository } from '@repository/pasajero.repository';
 import { PasajeroCreateDto } from './dto/pasajero/pasajero-create.dto';
 import { PasajeroUpdateDto } from './dto/pasajero/pasajero-update.dto';
 import { PaginatedPasajeroResultDto } from './dto/pasajero/pasajero-paginated.dto';
+import { EntidadRepository } from '@repository/entidad.repository';
+import { EntidadCreateDto } from './dto/entidad/entidad-create.dto';
+import { EntidadUpdateDto } from './dto/entidad/entidad-update.dto';
+import { PaginatedEntidadResultDto } from './dto/entidad/entidad-paginated.dto';
 import type { ClienteTipoDocumento } from '@db/tables/cliente.table';
 
 interface DatabaseError {
@@ -25,6 +29,7 @@ export class ClientesService {
     private readonly clienteRepository: ClienteRepository,
     private readonly clienteDocumentoRepository: ClienteDocumentoRepository,
     private readonly pasajeroRepository: PasajeroRepository,
+    private readonly entidadRepository: EntidadRepository,
   ) {}
 
   async findAllPaginated(
@@ -160,7 +165,7 @@ export class ClientesService {
     const hasPreviousPage = page > 1;
 
     return {
-      data: data as any[],
+      data,
       meta: {
         total,
         page,
@@ -210,5 +215,70 @@ export class ClientesService {
 
   async deletePasajero(id: number) {
     return await this.pasajeroRepository.delete(id);
+  }
+
+  // ========== ENTIDADES ==========
+
+  async findAllEntidadesPaginated(page: number = 1, limit: number = 10, search?: string, clienteId?: number): Promise<PaginatedEntidadResultDto> {
+    const { data, total } = await this.entidadRepository.findAllPaginated(page, limit, {
+      search,
+      clienteId,
+    });
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
+  async findEntidad(id: number) {
+    return await this.entidadRepository.findOne(id);
+  }
+
+  async createEntidad(createEntidadDto: EntidadCreateDto) {
+    try {
+      return await this.entidadRepository.create(createEntidadDto);
+    } catch (error: unknown) {
+      const dbError = error as DatabaseError;
+      const constraint = dbError.cause?.constraint || dbError.constraint;
+      if (dbError.code === '23505' || dbError.cause?.code === '23505') {
+        if (constraint?.includes('cliente_nombre')) {
+          throw new BadRequestException(['La entidad con este nombre ya existe para este cliente']);
+        }
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
+      }
+      throw error;
+    }
+  }
+
+  async updateEntidad(id: number, updateEntidadDto: EntidadUpdateDto) {
+    try {
+      return await this.entidadRepository.update(id, updateEntidadDto);
+    } catch (error: unknown) {
+      const dbError = error as DatabaseError;
+      const constraint = dbError.cause?.constraint || dbError.constraint;
+      if (dbError.code === '23505' || dbError.cause?.code === '23505') {
+        if (constraint?.includes('cliente_nombre')) {
+          throw new BadRequestException(['La entidad con este nombre ya existe para este cliente']);
+        }
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
+      }
+      throw error;
+    }
+  }
+
+  async deleteEntidad(id: number) {
+    return await this.entidadRepository.delete(id);
   }
 }

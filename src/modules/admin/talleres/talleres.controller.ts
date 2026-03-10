@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { TalleresService } from './talleres.service';
 import { PaginatedTallerResultDto, TallerPaginationQueryDto } from './dto/taller/taller-paginated.dto';
 import { TallerResultDto } from './dto/taller/taller-result.dto';
@@ -37,6 +37,15 @@ export class TalleresController {
   @ApiResponse({ status: 200, type: TallerResultDto })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.talleresService.findOne(id);
+  }
+
+  @Get(':id/sucursales')
+  @ApiOperation({ summary: 'Obtener todas las sucursales de un taller' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, type: [SucursalResultDto] })
+  async findSucursalesByTaller(@Param('id', ParseIntPipe) id: number) {
+    const data = await this.talleresService.findOne(id);
+    return data.sucursales;
   }
 
   @Patch('update/:id')

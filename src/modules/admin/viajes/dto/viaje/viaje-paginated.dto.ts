@@ -97,7 +97,6 @@ export class ViajePaginationQueryDto {
 
   @ApiProperty({
     description: 'Filtrar por ID de cliente',
-    example: 1,
     required: false,
   })
   @IsOptional()
@@ -107,7 +106,6 @@ export class ViajePaginationQueryDto {
 
   @ApiProperty({
     description: 'Filtrar por ID de ruta',
-    example: 1,
     required: false,
   })
   @IsOptional()

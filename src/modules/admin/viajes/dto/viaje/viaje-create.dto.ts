@@ -48,6 +48,11 @@ export class ViajeDetalleCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' |
   @IsNotEmpty()
   clienteId: number;
 
+  @ApiPropertyOptional({ example: 1, description: 'ID de la entidad (opcional)' })
+  @IsOptional()
+  @IsInt()
+  entidadId?: number;
+
   @ApiPropertyOptional({
     enum: modalidadServicio.enumValues,
     description: 'Modalidad de servicio',
@@ -107,7 +112,7 @@ export class ViajeDetalleCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' |
   })
   @IsOptional()
   @IsIn(viajesSentido.enumValues, { each: true })
-  sentido?: 'ida' | 'vuelta';
+  sentido?: 'ida' | 'vuelta' | 'circuito';
 
   @ApiPropertyOptional({
     example: '242155',
@@ -130,6 +135,10 @@ export class ViajeDetalleCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' |
   @IsOptional()
   @IsInt()
   vehiculoId?: number;
+
+  @ApiPropertyOptional({ description: 'Datos adicionales del viaje (metadata)' })
+  @IsOptional()
+  metadata?: Record<string, any>;
 }
 
 export class ViajeCreateDto {
