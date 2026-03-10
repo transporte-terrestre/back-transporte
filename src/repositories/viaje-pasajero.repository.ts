@@ -15,6 +15,29 @@ export class ViajePasajeroRepository {
     const tramoEntrada = viajeTramos;
     const tramoSalida = alias(viajeTramos, 'tramo_salida');
 
+    // Filtro temporal: solo movimientos de tramos con horaFinal <= horaFinal del tramo consultado
+    const timeFilter = viajeTramoId
+      ? sql`IN (SELECT id FROM viaje_tramos WHERE hora_final <= (SELECT hora_final FROM viaje_tramos WHERE id = ${viajeTramoId}))`
+      : undefined;
+
+    const entradaJoinConditions = [
+      eq(movEntrada.viajePasajeroId, viajePasajeros.id),
+      eq(movEntrada.tipoMovimiento, 'entrada'),
+      isNull(movEntrada.eliminadoEn),
+    ];
+    if (timeFilter) {
+      entradaJoinConditions.push(sql`${movEntrada.viajeTramoId} ${timeFilter}`);
+    }
+
+    const salidaJoinConditions = [
+      eq(movSalida.viajePasajeroId, viajePasajeros.id),
+      eq(movSalida.tipoMovimiento, 'salida'),
+      isNull(movSalida.eliminadoEn),
+    ];
+    if (timeFilter) {
+      salidaJoinConditions.push(sql`${movSalida.viajeTramoId} ${timeFilter}`);
+    }
+
     const query = database
       .select({
         id: viajePasajeros.id,
@@ -46,23 +69,21 @@ export class ViajePasajeroRepository {
       // JOIN entrada
       .leftJoin(
         movEntrada,
-        and(
-          eq(movEntrada.viajePasajeroId, viajePasajeros.id),
-          eq(movEntrada.tipoMovimiento, 'entrada'),
-          isNull(movEntrada.eliminadoEn),
-        ),
+        and(...entradaJoinConditions),
       )
-      .leftJoin(tramoEntrada, eq(movEntrada.viajeTramoId, tramoEntrada.id))
+      .leftJoin(
+        tramoEntrada,
+        eq(movEntrada.viajeTramoId, tramoEntrada.id),
+      )
       // JOIN salida
       .leftJoin(
         movSalida,
-        and(
-          eq(movSalida.viajePasajeroId, viajePasajeros.id),
-          eq(movSalida.tipoMovimiento, 'salida'),
-          isNull(movSalida.eliminadoEn),
-        ),
+        and(...salidaJoinConditions),
       )
-      .leftJoin(tramoSalida, eq(movSalida.viajeTramoId, tramoSalida.id));
+      .leftJoin(
+        tramoSalida,
+        eq(movSalida.viajeTramoId, tramoSalida.id),
+      );
 
     return await query.where(eq(viajePasajeros.viajeId, viajeId));
   }
