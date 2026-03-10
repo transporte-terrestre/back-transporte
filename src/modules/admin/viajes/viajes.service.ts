@@ -1145,6 +1145,12 @@ export class ViajesService {
           continue;
         }
 
+        // Si ya tiene salida en otro tramo, eliminarla
+        const salidaOtroTramo = movements.find((m) => m.tipoMovimiento === 'salida' && m.viajeTramoId !== tramoId);
+        if (salidaOtroTramo) {
+          await this.viajePasajeroMovimientoRepository.delete(salidaOtroTramo.id);
+        }
+
         // Registrar salida en el tramo
         await this.viajePasajeroMovimientoRepository.create({ viajePasajeroId: id, viajeTramoId: tramoId, tipoMovimiento: 'salida' });
         const pasajero = await this.viajePasajeroRepository.findOne(id);
