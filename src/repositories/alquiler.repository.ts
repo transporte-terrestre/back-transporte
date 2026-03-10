@@ -5,6 +5,8 @@ import { alquileres, AlquilerDTO } from '@db/tables/alquiler.table';
 import { vehiculos } from '@db/tables/vehiculo.table';
 import { modelos } from '@db/tables/modelo.table';
 import { marcas } from '@db/tables/marca.table';
+import { clientes } from '@db/tables/cliente.table';
+import { conductores } from '@db/tables/conductor.table';
 import { proveedores } from '@db/tables/proveedor.table';
 import { vehiculoProveedores } from '@db/tables/vehiculo-proveedor.table';
 import { AlquilerFiltersDto } from '@module/admin/alquileres/dto/alquiler/alquiler-list.dto';
@@ -17,11 +19,26 @@ export class AlquilerRepository {
     const conditions: SQL<unknown>[] = [isNull(alquileres.eliminadoEn)];
 
     if (filters.search) {
-      conditions.push(or(ilike(proveedores.nombreCompleto, `%${filters.search}%`), ilike(vehiculos.placa, `%${filters.search}%`)));
+      conditions.push(
+        or(
+          ilike(proveedores.nombreCompleto, `%${filters.search}%`),
+          ilike(clientes.nombreCompleto, `%${filters.search}%`),
+          ilike(conductores.nombreCompleto, `%${filters.search}%`),
+          ilike(vehiculos.placa, `%${filters.search}%`),
+        ),
+      );
     }
 
     if (filters.estado) {
       conditions.push(eq(alquileres.estado, filters.estado));
+    }
+
+    if (filters.clienteId) {
+      conditions.push(eq(alquileres.clienteId, filters.clienteId));
+    }
+
+    if (filters.tipo) {
+      conditions.push(eq(alquileres.tipo, filters.tipo as any));
     }
 
     const whereClause = and(...conditions);
@@ -29,7 +46,18 @@ export class AlquilerRepository {
     const baseQuery = database
       .select({
         id: alquileres.id,
+        clienteId: alquileres.clienteId,
         vehiculoId: alquileres.vehiculoId,
+        conductorId: alquileres.conductorId,
+
+        tipo: alquileres.tipo,
+
+        kilometrajeInicial: alquileres.kilometrajeInicial,
+        kilometrajeFinal: alquileres.kilometrajeFinal,
+
+        montoPorDia: alquileres.montoPorDia,
+        montoTotalFinal: alquileres.montoTotalFinal,
+        razon: alquileres.razon,
 
         fechaInicio: alquileres.fechaInicio,
         fechaFin: alquileres.fechaFin,
@@ -39,11 +67,21 @@ export class AlquilerRepository {
         creadoEn: alquileres.creadoEn,
         actualizadoEn: alquileres.actualizadoEn,
 
+        cliente: {
+          id: clientes.id,
+          nombreCompleto: sql<string>`CASE WHEN ${clientes.tipoDocumento} = 'RUC' THEN COALESCE(${clientes.razonSocial}, ${clientes.nombreCompleto}) ELSE ${clientes.nombreCompleto} END`,
+        },
+
         vehiculo: {
           id: vehiculos.id,
           placa: vehiculos.placa,
           marca: marcas.nombre,
           modelo: modelos.nombre,
+        },
+        conductor: {
+          id: conductores.id,
+          nombreCompleto: conductores.nombreCompleto,
+          dni: conductores.dni,
         },
         proveedor: {
           id: proveedores.id,
@@ -53,7 +91,9 @@ export class AlquilerRepository {
         },
       })
       .from(alquileres)
+      .leftJoin(clientes, eq(alquileres.clienteId, clientes.id))
       .leftJoin(vehiculos, eq(alquileres.vehiculoId, vehiculos.id))
+      .leftJoin(conductores, eq(alquileres.conductorId, conductores.id))
       .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .leftJoin(vehiculoProveedores, eq(vehiculos.id, vehiculoProveedores.vehiculoId))
@@ -65,7 +105,9 @@ export class AlquilerRepository {
     const [{ count }] = await database
       .select({ count: sql<number>`count(*)::int` })
       .from(alquileres)
+      .leftJoin(clientes, eq(alquileres.clienteId, clientes.id))
       .leftJoin(vehiculos, eq(alquileres.vehiculoId, vehiculos.id))
+      .leftJoin(conductores, eq(alquileres.conductorId, conductores.id))
       .leftJoin(vehiculoProveedores, eq(vehiculos.id, vehiculoProveedores.vehiculoId))
       .leftJoin(proveedores, eq(vehiculoProveedores.proveedorId, proveedores.id))
       .where(whereClause);
@@ -80,7 +122,18 @@ export class AlquilerRepository {
     const [record] = await database
       .select({
         id: alquileres.id,
+        clienteId: alquileres.clienteId,
         vehiculoId: alquileres.vehiculoId,
+        conductorId: alquileres.conductorId,
+
+        tipo: alquileres.tipo,
+
+        kilometrajeInicial: alquileres.kilometrajeInicial,
+        kilometrajeFinal: alquileres.kilometrajeFinal,
+
+        montoPorDia: alquileres.montoPorDia,
+        montoTotalFinal: alquileres.montoTotalFinal,
+        razon: alquileres.razon,
 
         fechaInicio: alquileres.fechaInicio,
         fechaFin: alquileres.fechaFin,
@@ -90,11 +143,21 @@ export class AlquilerRepository {
         creadoEn: alquileres.creadoEn,
         actualizadoEn: alquileres.actualizadoEn,
 
+        cliente: {
+          id: clientes.id,
+          nombreCompleto: clientes.nombreCompleto,
+        },
+
         vehiculo: {
           id: vehiculos.id,
           placa: vehiculos.placa,
           marca: marcas.nombre,
           modelo: modelos.nombre,
+        },
+        conductor: {
+          id: conductores.id,
+          nombreCompleto: conductores.nombreCompleto,
+          dni: conductores.dni,
         },
         proveedor: {
           id: proveedores.id,
@@ -104,7 +167,9 @@ export class AlquilerRepository {
         },
       })
       .from(alquileres)
+      .leftJoin(clientes, eq(alquileres.clienteId, clientes.id))
       .leftJoin(vehiculos, eq(alquileres.vehiculoId, vehiculos.id))
+      .leftJoin(conductores, eq(alquileres.conductorId, conductores.id))
       .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .leftJoin(vehiculoProveedores, eq(vehiculos.id, vehiculoProveedores.vehiculoId))

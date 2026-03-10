@@ -6,6 +6,10 @@ import { AlquilerCreateDto } from './dto/alquiler/alquiler-create.dto';
 import { AlquilerUpdateDto } from './dto/alquiler/alquiler-update.dto';
 import { AlquilerQueryDto, AlquilerListDto } from './dto/alquiler/alquiler-list.dto';
 import { AlquilerResultDto } from './dto/alquiler/alquiler-result.dto';
+import { AlquilerTerminarDto } from './dto/alquiler/alquiler-terminar.dto';
+import { AlquilerDocumentoCreateDto } from './dto/alquiler-documento/alquiler-documento-create.dto';
+import { AlquilerDocumentoUpdateDto } from './dto/alquiler-documento/alquiler-documento-update.dto';
+import { AlquilerDocumentoResultDto } from './dto/alquiler-documento/alquiler-documento-result.dto';
 
 @ApiTags('alquileres')
 @ApiBearerAuth()
@@ -42,10 +46,46 @@ export class AlquileresController {
     return this.alquileresService.update(id, data);
   }
 
+  @Put(':id/terminar')
+  @ApiOperation({ summary: 'Finalizar un alquiler (fecha fin, kilometraje final y monto final)' })
+  @ApiResponse({ status: 200 })
+  terminar(@Param('id', ParseIntPipe) id: number, @Body() data: AlquilerTerminarDto) {
+    return this.alquileresService.terminar(id, data);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar un alquiler' })
   @ApiResponse({ status: 200 })
   delete(@Param('id', ParseIntPipe) id: number) {
     return this.alquileresService.delete(id);
+  }
+
+  // ========== DOCUMENTOS ==========
+  @Get('documento/:id')
+  @ApiOperation({ summary: 'Obtener un documento de alquiler por ID' })
+  @ApiResponse({ status: 200, type: AlquilerDocumentoResultDto })
+  findDocumento(@Param('id', ParseIntPipe) id: number) {
+    return this.alquileresService.findDocumento(id);
+  }
+
+  @Post('documento/create')
+  @ApiOperation({ summary: 'Crear un documento de alquiler' })
+  @ApiResponse({ status: 201, type: AlquilerDocumentoResultDto })
+  createDocumento(@Body() data: AlquilerDocumentoCreateDto) {
+    return this.alquileresService.createDocumento(data);
+  }
+
+  @Put('documento/update/:id')
+  @ApiOperation({ summary: 'Actualizar un documento de alquiler' })
+  @ApiResponse({ status: 200, type: AlquilerDocumentoResultDto })
+  updateDocumento(@Param('id', ParseIntPipe) id: number, @Body() data: AlquilerDocumentoUpdateDto) {
+    return this.alquileresService.updateDocumento(id, data);
+  }
+
+  @Delete('documento/delete/:id')
+  @ApiOperation({ summary: 'Eliminar un documento de alquiler' })
+  @ApiResponse({ status: 200, type: AlquilerDocumentoResultDto })
+  deleteDocumento(@Param('id', ParseIntPipe) id: number) {
+    return this.alquileresService.deleteDocumento(id);
   }
 }
