@@ -847,9 +847,8 @@ export class ViajesService {
         }
       }
 
-      // Finalmente, resincronizar el contador de pasajeros de ese tramo (quedará en 0 si lo borramos,
-      // pero nunca hace daño asegurar integridad)
-      await this.viajeTramoRepository.syncNumeroPasajeros(tramoId);
+      // Finalmente, resincronizar los contadores acumulados de todos los tramos del viaje
+      await this.viajeTramoRepository.syncAllNumeroPasajeros(viajeId);
     } catch (error) {
       console.error(`Error procesando side effects para eliminación en viaje ${viajeId}:`, error);
     }
@@ -1073,7 +1072,6 @@ export class ViajesService {
     const tramo = await this.viajeTramoRepository.findOne(tramoId);
     if (!tramo) return [];
 
-    const affectedTramos = new Set<number>([tramoId]);
     const resultados = [];
     const setIdsNuevos = new Set(viajePasajeroIds);
 
@@ -1100,9 +1098,8 @@ export class ViajesService {
           continue;
         }
 
-        // Si ya abordó en otro tramo, marcar el antiguo para resincronizarlo
+        // Si ya abordó en otro tramo, eliminar la entrada antigua
         if (entrada) {
-          affectedTramos.add(entrada.viajeTramoId);
           await this.viajePasajeroMovimientoRepository.delete(entrada.id);
         }
 
@@ -1114,10 +1111,51 @@ export class ViajesService {
       }
     }
 
-    // 3. Sincronizar contadores de pasajeros para todos los tramos afectados
-    for (const tid of affectedTramos) {
-      await this.viajeTramoRepository.syncNumeroPasajeros(tid);
+    // 3. Sincronizar contadores de pasajeros acumulados para todos los tramos del viaje
+    await this.viajeTramoRepository.syncAllNumeroPasajeros(tramo.viajeId);
+
+    return resultados;
+  }
+
+  async desabordarPasajeros(viajePasajeroIds: number[], tramoId: number): Promise<ViajePasajeroResultDto[]> {
+    const tramo = await this.viajeTramoRepository.findOne(tramoId);
+    if (!tramo) return [];
+
+    const resultados = [];
+    const setIdsNuevos = new Set(viajePasajeroIds);
+
+    // 1. Sincronización: quitar salidas previas en este tramo que ya no están en la lista
+    const currentInTramo = await this.viajePasajeroMovimientoRepository.findByViajeTramo(tramoId);
+    for (const mov of currentInTramo) {
+      if (mov.tipoMovimiento === 'salida' && !setIdsNuevos.has(mov.viajePasajeroId)) {
+        await this.viajePasajeroMovimientoRepository.delete(mov.id);
+      }
     }
+
+    // 2. Registrar salida para cada pasajero
+    for (const id of viajePasajeroIds) {
+      try {
+        const movements = await this.viajePasajeroMovimientoRepository.findByViajePasajero(id);
+        const salidaExistente = movements.find((m) => m.tipoMovimiento === 'salida' && m.viajeTramoId === tramoId);
+
+        if (salidaExistente) {
+          // Ya tiene salida en este tramo, solo agregar al resultado
+          const pasajero = await this.viajePasajeroRepository.findOne(id);
+          if (pasajero) resultados.push(pasajero);
+          continue;
+        }
+
+        // Registrar salida en el tramo
+        await this.viajePasajeroMovimientoRepository.create({ viajePasajeroId: id, viajeTramoId: tramoId, tipoMovimiento: 'salida' });
+        const pasajero = await this.viajePasajeroRepository.findOne(id);
+        if (pasajero) resultados.push(pasajero);
+      } catch (e) {
+        console.error(`Error en desabordarPasajeros ${id}:`, e);
+      }
+    }
+
+    // Sincronizar contadores acumulados para todos los tramos del viaje
+    await this.viajeTramoRepository.syncAllNumeroPasajeros(tramo.viajeId);
 
     return resultados;
   }

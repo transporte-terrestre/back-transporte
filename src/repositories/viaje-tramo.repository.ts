@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, asc, isNull, sql } from 'drizzle-orm';
+import { eq, and, asc, isNull, sql, inArray } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { viajeTramos, ViajeTramoDTO } from '@db/tables/viaje-tramo.table';
 import { viajePasajeroMovimientos } from '@db/tables/viaje-pasajero-movimiento.table';
@@ -83,6 +83,50 @@ export class ViajeTramoRepository {
         actualizadoEn: new Date(),
       })
       .where(eq(viajeTramos.id, id));
+  }
+
+  /**
+   * Recalcula numeroPasajeros como total acumulado (entradas - salidas)
+   * hasta cada tramo, para TODOS los tramos del viaje.
+   */
+  async syncAllNumeroPasajeros(viajeId: number) {
+    const tramos = await database
+      .select({ id: viajeTramos.id })
+      .from(viajeTramos)
+      .where(and(eq(viajeTramos.viajeId, viajeId), isNull(viajeTramos.eliminadoEn)))
+      .orderBy(asc(viajeTramos.horaFinal));
+
+    if (tramos.length === 0) return;
+
+    const movCounts = await database
+      .select({
+        viajeTramoId: viajePasajeroMovimientos.viajeTramoId,
+        tipoMovimiento: viajePasajeroMovimientos.tipoMovimiento,
+        total: sql<number>`count(*)`.mapWith(Number),
+      })
+      .from(viajePasajeroMovimientos)
+      .where(
+        and(
+          inArray(viajePasajeroMovimientos.viajeTramoId, tramos.map((t) => t.id)),
+          isNull(viajePasajeroMovimientos.eliminadoEn),
+        ),
+      )
+      .groupBy(viajePasajeroMovimientos.viajeTramoId, viajePasajeroMovimientos.tipoMovimiento);
+
+    const deltaMap = new Map<number, number>();
+    for (const m of movCounts) {
+      const current = deltaMap.get(m.viajeTramoId) || 0;
+      deltaMap.set(m.viajeTramoId, current + (m.tipoMovimiento === 'entrada' ? m.total : -m.total));
+    }
+
+    let running = 0;
+    for (const tramo of tramos) {
+      running += deltaMap.get(tramo.id) || 0;
+      await database
+        .update(viajeTramos)
+        .set({ numeroPasajeros: running, actualizadoEn: new Date() })
+        .where(eq(viajeTramos.id, tramo.id));
+    }
   }
 
   async delete(id: number) {
