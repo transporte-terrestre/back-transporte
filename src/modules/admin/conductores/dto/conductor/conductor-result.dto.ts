@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { conductoresClaseLicencia, conductoresCategoriaLicencia, conductoresTipoDocumento } from '@db/tables/conductor.table';
 import { ConductorDocumentoResultDto } from '../conductor-documento/conductor-documento-result.dto';
+import { conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
 import type { ConductorClaseLicencia, ConductorCategoriaLicencia, ConductorTipoDocumento } from '@db/tables/conductor.table';
 import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 
@@ -140,6 +141,13 @@ export class ConductorResultDto {
     nullable: true,
   })
   eliminadoEn: Date | null;
+
+  @ApiProperty({
+    description: 'Documentos que no aplican para el conductor',
+    type: [String],
+    enum: conductorDocumentosTipo.enumValues,
+  })
+  documentosNoAplicables: ConductorDocumentoTipo[];
 
   @ApiProperty({ description: 'Driver documents grouped by type' })
   documentos: DocumentosAgrupadosConductorDto;

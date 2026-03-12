@@ -2,6 +2,7 @@ import { IsString, IsNotEmpty, IsInt, Min, IsOptional, IsIn, IsArray, IsNumber }
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { VehiculoDTO, vehiculosEstado, combustibleEnum } from '@db/tables/vehiculo.table';
 import type { VehiculoEstado, CombustibleTipo } from '@db/tables/vehiculo.table';
+import type { VehiculoDocumentoTipo } from '@db/tables/vehiculo-documento.table';
 
 export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 'actualizadoEn' | 'codigoInterno'> {
   @ApiProperty({ example: 'ABC-123', description: 'Vehicle license plate' })
@@ -106,6 +107,12 @@ export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 
   @Min(0)
   kilometraje: number;
 
+  @ApiProperty({ example: 50000, description: 'Maintenance mileage' })
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  kilometrajeMantenimiento: number;
+
   @ApiPropertyOptional({
     enum: vehiculosEstado.enumValues,
     description: 'Vehicle status',
@@ -184,12 +191,12 @@ export class VehiculoCreateDto implements Omit<VehiculoDTO, 'id' | 'creadoEn' | 
   imagenes?: string[];
 
   @ApiPropertyOptional({
-    example: ['https://res.cloudinary.com/xxx/document.pdf'],
-    description: 'Lista de URLs de documentos del vehículo',
+    example: ['tarjeta_propiedad'],
+    description: 'Lista de tipos de documentos que no aplican a este vehículo',
     type: [String],
   })
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  documentos?: string[];
+  documentosNoAplicables?: VehiculoDocumentoTipo[];
 }

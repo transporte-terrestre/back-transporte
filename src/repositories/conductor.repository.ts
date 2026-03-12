@@ -114,6 +114,7 @@ export class ConductorRepository {
       .select({
         id: conductores.id,
         cantidadDocumentos: count(conductorDocumentos.id),
+        documentosNoAplicables: conductores.documentosNoAplicables,
       })
       .from(conductores)
       .leftJoin(conductorDocumentos, eq(conductores.id, conductorDocumentos.conductorId))
@@ -122,10 +123,13 @@ export class ConductorRepository {
 
     const tiposDocumentosEsperados = 18;
 
-    const conductoresOrdenados = conductoresConConteo.map((v) => ({
-      id: v.id,
-      documentosNulos: tiposDocumentosEsperados - Number(v.cantidadDocumentos),
-    }));
+    const conductoresOrdenados = conductoresConConteo.map((v) => {
+      const noAplicables = v.documentosNoAplicables?.length || 0;
+      return {
+        id: v.id,
+        documentosNulos: (tiposDocumentosEsperados - noAplicables) - Number(v.cantidadDocumentos),
+      };
+    });
 
     if (filtro === 'completo') {
       conductoresOrdenados.sort((a, b) => a.documentosNulos - b.documentosNulos);
@@ -162,6 +166,7 @@ export class ConductorRepository {
               nombres: conductores.nombres,
               apellidos: conductores.apellidos,
               fotocheck: conductores.fotocheck,
+              documentosNoAplicables: conductores.documentosNoAplicables,
             })
             .from(conductores)
             .where(inArray(conductores.id, ids))

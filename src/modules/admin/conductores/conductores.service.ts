@@ -9,7 +9,7 @@ import {
   ConductorEstadoDocumentosDto,
   FiltroDocumentoEstado,
 } from './dto/conductor/conductor-documentos-estado.dto';
-import { ConductorDocumentoDTO, conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
+import { ConductorDocumentoDTO, conductorDocumentosTipo, ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 import { DocumentosAgrupadosConductorDto } from './dto/conductor/conductor-result.dto';
 import { ConductorDTO } from '@db/tables/conductor.table';
 import * as bcrypt from 'bcrypt';
@@ -75,7 +75,11 @@ export class ConductoresService {
     const data: ConductorEstadoDocumentosDto[] = conductores.map((conductor) => {
       const documentos = documentosPorConductor[conductor.id] || [];
 
-      const calcularEstado = (tipoDocumento: string): string => {
+      const calcularEstado = (tipoDocumento: ConductorDocumentoTipo): string => {
+        if (conductor.documentosNoAplicables?.includes(tipoDocumento)) {
+          return 'no_aplica';
+        }
+
         const documento = documentos.find((doc) => doc.tipo === tipoDocumento);
         if (!documento) {
           return 'nulo';

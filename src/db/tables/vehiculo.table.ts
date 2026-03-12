@@ -1,6 +1,7 @@
 import { pgEnum, pgTable, serial, varchar, integer, timestamp, text, index, uniqueIndex, decimal } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { modelos } from './modelo.table';
+import { vehiculoDocumentosTipo } from './vehiculo-documento.table';
 
 export const combustibleEnum = pgEnum('combustible_tipo', ['gasolina', 'diesel', 'gnv', 'glp', 'electrico', 'hibrido']);
 
@@ -37,6 +38,7 @@ export const vehiculos = pgTable(
     ruedas: integer('ruedas').default(4),
 
     kilometraje: decimal('kilometraje', { precision: 12, scale: 2, mode: 'number' }).default(0).notNull(),
+    kilometrajeMantenimiento: decimal('kilometraje_mantenimiento', { precision: 12, scale: 2, mode: 'number' }).default(0).notNull(),
     estado: vehiculosEstado('estado').default('disponible').notNull(),
     imagenes: text('imagenes').array().default([]),
 
@@ -53,6 +55,8 @@ export const vehiculos = pgTable(
     longitud: decimal('longitud', { precision: 10, scale: 2 }),
     altura: decimal('altura', { precision: 10, scale: 2 }),
     ancho: decimal('ancho', { precision: 10, scale: 2 }),
+
+    documentosNoAplicables: vehiculoDocumentosTipo('documentos_no_aplicables').array().default([]), // Array of VehiculoDocumentoTipo strings
 
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),

@@ -409,7 +409,11 @@ export class ViajesController {
   @ApiOperation({ summary: 'Registrar descenso de pasajeros en el tramo' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })
   @ApiResponse({ status: 201, type: [ViajePasajeroResultDto] })
-  desabordarPasajeros(@Param('viajeId') viajeId: string, @Body() dto: ViajePasajeroDesabordarPasajerosDto, @Query() query: ViajePasajeroTramoQueryDto) {
+  desabordarPasajeros(
+    @Param('viajeId') viajeId: string,
+    @Body() dto: ViajePasajeroDesabordarPasajerosDto,
+    @Query() query: ViajePasajeroTramoQueryDto,
+  ) {
     return this.viajesService.desabordarPasajeros(dto.viajePasajeroIds, query.viajeTramoId as number);
   }
 
