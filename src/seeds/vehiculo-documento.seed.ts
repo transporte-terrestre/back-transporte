@@ -30,7 +30,10 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
       | 'certificado_valor_anadido'
       | 'constancia_gps'
       | 'certificado_extintores_hidrostatica'
-      | 'certificado_norma_r66'
+      | 'certificado_extintores_operatividad'
+      | 'certificado_rops'
+      | 'certificado_radio_frecuencia'
+      | 'certificacion_frenos'
       | 'certificado_laminados_lunas'
       | 'certificado_carroceria'
       | 'certificado_caracteristicas_tecnicas'
@@ -127,12 +130,20 @@ export async function seedVehiculoDocumentos(vehiculosData: Vehiculo[]) {
       });
     }
 
-    // Certificado Extintores
+    // Certificado Extintores y ROPS
     if (i < 10) {
       documentosData.push({
         vehiculoId: vehiculo.id,
         tipo: 'certificado_extintores_hidrostatica',
         nombre: `Cert_Extintores_${vehiculo.placa}`,
+        url: DEFAULT_PDF_URL,
+        fechaEmision: formatDate(getDate(-365)),
+        fechaExpiracion: formatDate(getDate(90 + i * 12)),
+      });
+      documentosData.push({
+        vehiculoId: vehiculo.id,
+        tipo: 'certificado_rops',
+        nombre: `Cert_ROPS_${vehiculo.placa}`,
         url: DEFAULT_PDF_URL,
         fechaEmision: formatDate(getDate(-365)),
         fechaExpiracion: formatDate(getDate(90 + i * 12)),

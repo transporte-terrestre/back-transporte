@@ -272,18 +272,23 @@ export class VehiculoRepository {
       .select({
         id: vehiculos.id,
         cantidadDocumentos: count(vehiculoDocumentos.id),
+        documentosNoAplicables: vehiculos.documentosNoAplicables,
       })
       .from(vehiculos)
       .leftJoin(vehiculoDocumentos, eq(vehiculos.id, vehiculoDocumentos.vehiculoId))
       .where(whereClause)
       .groupBy(vehiculos.id);
 
-    const tiposDocumentosEsperados = 17;
+    const tiposDocumentosTotales = 17;
 
-    const vehiculosOrdenados = vehiculosConConteo.map((v) => ({
-      id: v.id,
-      documentosNulos: tiposDocumentosEsperados - Number(v.cantidadDocumentos),
-    }));
+    const vehiculosOrdenados = vehiculosConConteo.map((v) => {
+      const docsNoAplicablesCount = v.documentosNoAplicables ? v.documentosNoAplicables.length : 0;
+      const tiposEsperados = tiposDocumentosTotales - docsNoAplicablesCount;
+      return {
+        id: v.id,
+        documentosNulos: tiposEsperados - Number(v.cantidadDocumentos),
+      };
+    });
 
     if (filtro === 'completo') {
       vehiculosOrdenados.sort((a, b) => a.documentosNulos - b.documentosNulos);
@@ -307,6 +312,7 @@ export class VehiculoRepository {
         id: vehiculos.id,
         placa: vehiculos.placa,
         imagenes: vehiculos.imagenes,
+        documentosNoAplicables: vehiculos.documentosNoAplicables,
       })
       .from(vehiculos)
       .where(inArray(vehiculos.id, ids));

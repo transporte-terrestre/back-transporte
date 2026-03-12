@@ -100,14 +100,20 @@ export class VehiculoEstadoDocumentosDto {
   @ApiProperty({ example: 'nulo' })
   constancia_gps: string;
 
-  @ApiProperty({ example: 'caducado' })
-  certificado_tacos: string;
-
   @ApiProperty({ example: 'activo' })
   certificado_extintores_hidrostatica: string;
 
   @ApiProperty({ example: 'nulo' })
-  certificado_norma_r66: string;
+  certificado_extintores_operatividad: string;
+
+  @ApiProperty({ example: 'activo' })
+  certificado_rops: string;
+
+  @ApiProperty({ example: 'nulo' })
+  certificado_radio_frecuencia: string;
+
+  @ApiProperty({ example: 'activo' })
+  certificacion_frenos: string;
 
   @ApiProperty({ example: 'activo' })
   certificado_laminados_lunas: string;

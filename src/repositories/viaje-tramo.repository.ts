@@ -107,7 +107,10 @@ export class ViajeTramoRepository {
       .from(viajePasajeroMovimientos)
       .where(
         and(
-          inArray(viajePasajeroMovimientos.viajeTramoId, tramos.map((t) => t.id)),
+          inArray(
+            viajePasajeroMovimientos.viajeTramoId,
+            tramos.map((t) => t.id),
+          ),
           isNull(viajePasajeroMovimientos.eliminadoEn),
         ),
       )
@@ -122,10 +125,7 @@ export class ViajeTramoRepository {
     let running = 0;
     for (const tramo of tramos) {
       running += deltaMap.get(tramo.id) || 0;
-      await database
-        .update(viajeTramos)
-        .set({ numeroPasajeros: running, actualizadoEn: new Date() })
-        .where(eq(viajeTramos.id, tramo.id));
+      await database.update(viajeTramos).set({ numeroPasajeros: running, actualizadoEn: new Date() }).where(eq(viajeTramos.id, tramo.id));
     }
   }
 

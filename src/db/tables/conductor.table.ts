@@ -1,5 +1,6 @@
 import { pgTable, serial, varchar, timestamp, pgEnum, text, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { conductorDocumentosTipo } from './conductor-documento.table';
 
 export const conductoresClaseLicencia = pgEnum('conductores_clase_licencia', ['A', 'B']);
 
@@ -24,6 +25,7 @@ export const conductores = pgTable(
     claseLicencia: conductoresClaseLicencia('clase_licencia').notNull(),
     categoriaLicencia: conductoresCategoriaLicencia('categoria_licencia').notNull(),
     fotocheck: text('fotocheck').array().default([]),
+    documentosNoAplicables: conductorDocumentosTipo('documentos_no_aplicables').array().default([]),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
     eliminadoEn: timestamp('eliminado_en'),

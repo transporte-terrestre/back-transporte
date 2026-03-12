@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
 import { viajeCircuitos, ViajeCircuitoDTO } from '@db/tables/viaje-circuito.table';
@@ -98,12 +97,7 @@ export class ViajeCircuitoRepository {
         .from(viajes)
         .where(and(...tripConditions));
 
-      conditions.push(
-        or(
-          inArray(viajeCircuitos.viajeIdaId, matchingTripsQuery),
-          inArray(viajeCircuitos.viajeVueltaId, matchingTripsQuery)
-        )
-      );
+      conditions.push(or(inArray(viajeCircuitos.viajeIdaId, matchingTripsQuery), inArray(viajeCircuitos.viajeVueltaId, matchingTripsQuery)));
     }
 
     const whereClause = and(...conditions);

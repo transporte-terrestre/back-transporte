@@ -48,7 +48,16 @@ export class DocumentosAgrupadosVehiculoDto implements Record<VehiculoDocumentoT
   certificado_extintores_hidrostatica: VehiculoDocumentoResultDto[];
 
   @ApiProperty({ type: [VehiculoDocumentoResultDto] })
-  certificado_norma_r66: VehiculoDocumentoResultDto[];
+  certificado_extintores_operatividad: VehiculoDocumentoResultDto[];
+
+  @ApiProperty({ type: [VehiculoDocumentoResultDto] })
+  certificado_rops: VehiculoDocumentoResultDto[];
+
+  @ApiProperty({ type: [VehiculoDocumentoResultDto] })
+  certificado_radio_frecuencia: VehiculoDocumentoResultDto[];
+
+  @ApiProperty({ type: [VehiculoDocumentoResultDto] })
+  certificacion_frenos: VehiculoDocumentoResultDto[];
 
   @ApiProperty({ type: [VehiculoDocumentoResultDto] })
   certificado_laminados_lunas: VehiculoDocumentoResultDto[];
@@ -158,6 +167,9 @@ export class VehiculoResultDto {
   @ApiProperty({ example: 50000, description: 'Current mileage' })
   kilometraje: number;
 
+  @ApiProperty({ example: 50000, description: 'Maintenance mileage' })
+  kilometrajeMantenimiento: number;
+
   @ApiProperty({
     enum: vehiculosEstado.enumValues,
     example: vehiculosEstado.enumValues[0],
@@ -219,6 +231,13 @@ export class VehiculoResultDto {
     description: 'Update date',
   })
   actualizadoEn: Date;
+
+  @ApiPropertyOptional({
+    example: ['tarjeta_propiedad'],
+    description: 'Lista de tipos de documentos que no aplican a este vehículo',
+    type: [String],
+  })
+  documentosNoAplicables: VehiculoDocumentoTipo[];
 
   @ApiProperty({ description: 'Vehicle documents grouped by type' })
   documentos: DocumentosAgrupadosVehiculoDto;

@@ -46,9 +46,7 @@ export class ViajePasajeroRepository {
         dni: sql<string | null>`COALESCE(${pasajeros.dni}, ${viajePasajeros.dni})`.as('dni'),
         nombres: sql<string | null>`COALESCE(${pasajeros.nombres}, ${viajePasajeros.nombres})`.as('nombres'),
         apellidos: sql<string | null>`COALESCE(${pasajeros.apellidos}, ${viajePasajeros.apellidos})`.as('apellidos'),
-        asistencia: viajeTramoId
-          ? sql<boolean>`CASE WHEN ${movEntrada.id} IS NOT NULL THEN TRUE ELSE FALSE END`
-          : viajePasajeros.asistencia,
+        asistencia: viajeTramoId ? sql<boolean>`CASE WHEN ${movEntrada.id} IS NOT NULL THEN TRUE ELSE FALSE END` : viajePasajeros.asistencia,
         // Entrada
         paradaAsistenciaId: sql<number | null>`${movEntrada.viajeTramoId}`.as('parada_asistencia_id'),
         paradaAsistenciaNombre: sql<string | null>`${tramoEntrada.nombreLugar}`.as('parada_asistencia_nombre'),
@@ -67,23 +65,11 @@ export class ViajePasajeroRepository {
       .from(viajePasajeros)
       .leftJoin(pasajeros, eq(viajePasajeros.pasajeroId, pasajeros.id))
       // JOIN entrada
-      .leftJoin(
-        movEntrada,
-        and(...entradaJoinConditions),
-      )
-      .leftJoin(
-        tramoEntrada,
-        eq(movEntrada.viajeTramoId, tramoEntrada.id),
-      )
+      .leftJoin(movEntrada, and(...entradaJoinConditions))
+      .leftJoin(tramoEntrada, eq(movEntrada.viajeTramoId, tramoEntrada.id))
       // JOIN salida
-      .leftJoin(
-        movSalida,
-        and(...salidaJoinConditions),
-      )
-      .leftJoin(
-        tramoSalida,
-        eq(movSalida.viajeTramoId, tramoSalida.id),
-      );
+      .leftJoin(movSalida, and(...salidaJoinConditions))
+      .leftJoin(tramoSalida, eq(movSalida.viajeTramoId, tramoSalida.id));
 
     return await query.where(eq(viajePasajeros.viajeId, viajeId));
   }

@@ -1,4 +1,4 @@
-﻿import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { VehiculoRepository } from '@repository/vehiculo.repository';
 import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repository';
 import { MarcaRepository } from '@repository/marca.repository';
@@ -6,7 +6,7 @@ import { ModeloRepository } from '@repository/modelo.repository';
 import { VehiculoCreateDto } from './dto/vehiculo/vehiculo-create.dto';
 import { VehiculoUpdateDto } from './dto/vehiculo/vehiculo-update.dto';
 import { PaginatedVehiculoResultDto } from './dto/vehiculo/vehiculo-paginated.dto';
-import { VehiculoDocumentoDTO, vehiculoDocumentosTipo } from '@db/tables/vehiculo-documento.table';
+import { VehiculoDocumentoDTO, vehiculoDocumentosTipo, VehiculoDocumentoTipo } from '@db/tables/vehiculo-documento.table';
 import { VehiculoEstado, vehiculosEstado } from '@db/tables/vehiculo.table';
 import { DocumentosAgrupadosVehiculoDto } from './dto/vehiculo/vehiculo-result.dto';
 import {
@@ -150,7 +150,11 @@ export class VehiculosService {
     const data: VehiculoEstadoDocumentosDto[] = vehiculos.map((vehiculo) => {
       const documentos = documentosPorVehiculo[vehiculo.id] || [];
 
-      const calcularEstado = (tipoDocumento: string): string => {
+      const calcularEstado = (tipoDocumento: VehiculoDocumentoTipo): string => {
+        if (vehiculo.documentosNoAplicables?.includes(tipoDocumento)) {
+          return 'no_aplica';
+        }
+
         const documento = documentos.find((doc) => doc.tipo === tipoDocumento);
         if (!documento) {
           return 'nulo';
@@ -176,9 +180,11 @@ export class VehiculosService {
         certificado_instalacion_gps: calcularEstado('certificado_instalacion_gps'),
         certificado_valor_anadido: calcularEstado('certificado_valor_anadido'),
         constancia_gps: calcularEstado('constancia_gps'),
-        certificado_tacos: calcularEstado('certificado_tacos'),
         certificado_extintores_hidrostatica: calcularEstado('certificado_extintores_hidrostatica'),
-        certificado_norma_r66: calcularEstado('certificado_norma_r66'),
+        certificado_extintores_operatividad: calcularEstado('certificado_extintores_operatividad'),
+        certificado_rops: calcularEstado('certificado_rops'),
+        certificado_radio_frecuencia: calcularEstado('certificado_radio_frecuencia'),
+        certificacion_frenos: calcularEstado('certificacion_frenos'),
         certificado_laminados_lunas: calcularEstado('certificado_laminados_lunas'),
         certificado_carroceria: calcularEstado('certificado_carroceria'),
         certificado_caracteristicas_tecnicas: calcularEstado('certificado_caracteristicas_tecnicas'),

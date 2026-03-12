@@ -1,7 +1,9 @@
 import { IsString, IsNotEmpty, IsIn, IsArray, IsOptional, MinLength, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ConductorDTO, conductoresClaseLicencia, conductoresCategoriaLicencia, conductoresTipoDocumento } from '@db/tables/conductor.table';
+import { conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
 import type { ConductorCategoriaLicencia, ConductorClaseLicencia, ConductorTipoDocumento } from '@db/tables/conductor.table';
+import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 
 export class ConductorCreateDto implements Omit<ConductorDTO, 'id' | 'nombreCompleto' | 'creadoEn' | 'actualizadoEn'> {
   @ApiProperty({
@@ -82,4 +84,13 @@ export class ConductorCreateDto implements Omit<ConductorDTO, 'id' | 'nombreComp
   @IsString({ each: true })
   @IsOptional()
   fotocheck?: string[];
+
+  @ApiPropertyOptional({
+    description: 'Documentos que no aplican para el conductor',
+    type: [String],
+    enum: conductorDocumentosTipo.enumValues,
+  })
+  @IsArray()
+  @IsOptional()
+  documentosNoAplicables?: ConductorDocumentoTipo[];
 }
