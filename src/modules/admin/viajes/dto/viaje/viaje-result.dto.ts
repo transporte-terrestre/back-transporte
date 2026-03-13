@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
-import { viajesEstado, modalidadServicio, viajesTipoRuta, viajesTurno, viajesSentido } from '@db/tables/viaje.table';
+import { viajesEstado, viajesModalidadServicio, viajesTipoRuta, viajesTurno, viajesSentido } from '@db/tables/viaje.table';
 import { ConductorResultDto } from '../../../conductores/dto/conductor/conductor-result.dto';
 import { VehiculoResultDto } from '../../../vehiculos/dto/vehiculo/vehiculo-result.dto';
 import { ClienteResultDto } from '../../../clientes/dto/cliente/cliente-result.dto';
@@ -82,8 +82,8 @@ export class ViajeResultDto {
   entidadId: number | null;
 
   @ApiProperty({
-    enum: modalidadServicio.enumValues,
-    example: modalidadServicio.enumValues[0],
+    enum: viajesModalidadServicio.enumValues,
+    example: viajesModalidadServicio.enumValues[0],
     description: 'Modalidad de servicio',
   })
   modalidadServicio: ViajeModalidadServicio;

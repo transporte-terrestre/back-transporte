@@ -1,13 +1,15 @@
 import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { AlquilerCreateDto } from './alquiler-create.dto';
-import { IsDate, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
+import { alquilerEstado } from '@db/tables/alquiler.table';
+import type { AlquilerEstado } from '@db/tables/alquiler.table';
 
 export class AlquilerUpdateDto extends PartialType(AlquilerCreateDto) {
-  @ApiPropertyOptional()
-  @IsString()
+  @ApiPropertyOptional({ enum: alquilerEstado.enumValues })
   @IsOptional()
-  estado?: string;
+  @IsEnum(alquilerEstado.enumValues)
+  estado?: AlquilerEstado;
 
   @ApiPropertyOptional({ type: String, format: 'date-time' })
   @IsOptional()

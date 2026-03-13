@@ -18,17 +18,6 @@ export class AlquilerRepository {
 
     const conditions: SQL<unknown>[] = [isNull(alquileres.eliminadoEn)];
 
-    if (filters.search) {
-      conditions.push(
-        or(
-          ilike(proveedores.nombreCompleto, `%${filters.search}%`),
-          ilike(clientes.nombreCompleto, `%${filters.search}%`),
-          ilike(conductores.nombreCompleto, `%${filters.search}%`),
-          ilike(vehiculos.placa, `%${filters.search}%`),
-        ),
-      );
-    }
-
     if (filters.estado) {
       conditions.push(eq(alquileres.estado, filters.estado));
     }
@@ -37,8 +26,24 @@ export class AlquilerRepository {
       conditions.push(eq(alquileres.clienteId, filters.clienteId));
     }
 
+    if (filters.conductorId) {
+      conditions.push(eq(alquileres.conductorId, filters.conductorId));
+    }
+
+    if (filters.vehiculoId) {
+      conditions.push(eq(alquileres.vehiculoId, filters.vehiculoId));
+    }
+
     if (filters.tipo) {
-      conditions.push(eq(alquileres.tipo, filters.tipo as any));
+      conditions.push(eq(alquileres.tipo, filters.tipo));
+    }
+
+    if (filters.fechaInicio) {
+      conditions.push(sql`date(${alquileres.fechaInicio}) >= ${filters.fechaInicio}`);
+    }
+
+    if (filters.fechaFin) {
+      conditions.push(sql`date(${alquileres.fechaInicio}) <= ${filters.fechaFin}`);
     }
 
     const whereClause = and(...conditions);

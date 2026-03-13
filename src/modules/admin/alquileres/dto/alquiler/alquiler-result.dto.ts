@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AlquilerDocumentoResultDto } from '../alquiler-documento/alquiler-documento-result.dto';
+import { alquilerTipo, alquilerEstado } from '@db/tables/alquiler.table';
+import type { AlquilerTipo, AlquilerEstado } from '@db/tables/alquiler.table';
 
 export class AlquilerVehiculoDto {
   @ApiProperty() id: number;
@@ -33,7 +35,7 @@ export class AlquilerResultDto {
   @ApiProperty() vehiculoId: number;
   @ApiProperty({ required: false }) conductorId?: number | null;
 
-  @ApiProperty({ enum: ['maquina_seca', 'maquina_operada'] }) tipo: string;
+  @ApiProperty({ enum: alquilerTipo.enumValues }) tipo: AlquilerTipo;
 
   @ApiProperty() kilometrajeInicial: number;
   @ApiProperty({ required: false }) kilometrajeFinal?: number | null;
@@ -47,7 +49,7 @@ export class AlquilerResultDto {
 
   @ApiProperty({ required: false }) monto?: string | null;
   @ApiProperty({ required: false }) observaciones?: string | null;
-  @ApiProperty() estado: string;
+  @ApiProperty({ enum: alquilerEstado.enumValues }) estado: AlquilerEstado;
 
   @ApiProperty() creadoEn: Date;
   @ApiProperty() actualizadoEn: Date;

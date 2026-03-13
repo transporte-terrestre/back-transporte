@@ -17,6 +17,8 @@ interface PaginationFilters {
   fechaFin?: string;
   tipo?: string;
   estado?: string;
+  tallerId?: number;
+  vehiculoId?: number;
 }
 
 @Injectable()
@@ -33,7 +35,16 @@ export class MantenimientoRepository {
 
     if (filters?.search) {
       const searchTerm = `%${filters.search}%`;
-      conditions.push(or(like(mantenimientos.descripcion, searchTerm), like(mantenimientos.codigoOrden, searchTerm)));
+      const searchConditions = [
+        like(mantenimientos.codigoOrden, searchTerm),
+      ];
+
+      // Si el término de búsqueda es un número, también buscar por ID exacto
+      if (!isNaN(Number(filters.search))) {
+        searchConditions.push(eq(mantenimientos.id, Number(filters.search)));
+      }
+
+      conditions.push(or(...searchConditions));
     }
 
     if (filters?.tipo) {
@@ -44,13 +55,21 @@ export class MantenimientoRepository {
       conditions.push(eq(sql`${mantenimientos.estado}::text`, filters.estado));
     }
 
+    if (filters?.tallerId) {
+      conditions.push(eq(mantenimientos.tallerId, filters.tallerId));
+    }
+
+    if (filters?.vehiculoId) {
+      conditions.push(eq(mantenimientos.vehiculoId, filters.vehiculoId));
+    }
+
     if (filters?.fechaInicio && filters?.fechaFin) {
-      conditions.push(gte(sql`${mantenimientos.fechaIngreso}::timestamp`, new Date(filters.fechaInicio)));
-      conditions.push(lte(sql`${mantenimientos.fechaIngreso}::timestamp`, new Date(filters.fechaFin + 'T23:59:59')));
+      conditions.push(gte(sql`${mantenimientos.fechaIngreso}::date`, new Date(filters.fechaInicio)));
+      conditions.push(lte(sql`${mantenimientos.fechaIngreso}::date`, new Date(filters.fechaFin)));
     } else if (filters?.fechaInicio) {
-      conditions.push(gte(sql`${mantenimientos.fechaIngreso}::timestamp`, new Date(filters.fechaInicio)));
+      conditions.push(gte(sql`${mantenimientos.fechaIngreso}::date`, new Date(filters.fechaInicio)));
     } else if (filters?.fechaFin) {
-      conditions.push(lte(sql`${mantenimientos.fechaIngreso}::timestamp`, new Date(filters.fechaFin + 'T23:59:59')));
+      conditions.push(lte(sql`${mantenimientos.fechaIngreso}::date`, new Date(filters.fechaFin)));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -247,10 +266,21 @@ export class MantenimientoRepository {
     return result[0];
   }
 
-  async getReporteEstadoVehiculos(page: number, limit: number, sort: 'proximos' | 'ultimos' = 'proximos') {
+  async getReporteEstadoVehiculos(
+    page: number,
+    limit: number,
+    sort: 'proximos' | 'ultimos' = 'proximos',
+    vehiculoId?: number,
+  ) {
     const offset = (page - 1) * limit;
 
-    const [{ total }] = await database.select({ total: count() }).from(vehiculos).where(isNull(vehiculos.eliminadoEn));
+    const conditions = [isNull(vehiculos.eliminadoEn)];
+    if (vehiculoId) {
+      conditions.push(eq(vehiculos.id, vehiculoId));
+    }
+    const whereClause = and(...conditions);
+
+    const [{ total }] = await database.select({ total: count() }).from(vehiculos).where(whereClause);
 
     // Consultar todos los datos necesarios para el reporte y ordenamiento
     // Se trae todo en memoria porque el ordenamiento depende de campos calculados complejos
@@ -268,7 +298,7 @@ export class MantenimientoRepository {
       })
       .from(vehiculos)
       .leftJoin(mantenimientos, and(eq(vehiculos.id, mantenimientos.vehiculoId), isNull(mantenimientos.eliminadoEn)))
-      .where(isNull(vehiculos.eliminadoEn))
+      .where(whereClause)
       .orderBy(vehiculos.id, desc(mantenimientos.fechaIngreso));
 
     // Procesar para ordenamiento
