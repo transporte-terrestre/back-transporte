@@ -8,7 +8,6 @@ import { ViajeComentarioRepository } from '@repository/viaje-comentario.reposito
 import { ViajeTramoRepository } from '@repository/viaje-tramo.repository';
 import { ChecklistItemRepository } from '@repository/checklist-item.repository';
 import { ViajeChecklistRepository } from '@repository/viaje-checklist.repository';
-import { RutaRepository } from '@repository/ruta.repository';
 import { RutaParadaRepository } from '@repository/ruta-parada.repository';
 import { VehiculoRepository } from '@repository/vehiculo.repository';
 import { ClienteRepository } from '@repository/cliente.repository';
@@ -39,7 +38,7 @@ import { ViajePasajeroFillDto } from './dto/viaje-pasajero/viaje-pasajero-fill.d
 import { ViajePasajeroResultDto } from './dto/viaje-pasajero/viaje-pasajero-result.dto';
 import { ViajeTrayectoResultDto, ViajePuntoTrayectoDto } from './dto/viaje/viaje-trayecto-result.dto';
 import { ViajeHojaRutaResultDto } from './dto/viaje-tramo/viaje-hoja-ruta-result.dto';
-import { NotificacionesService } from '../notificaciones/notificaciones.service';
+
 import { GeminiAiService } from '@module/gemini-ai/gemini-ai.service';
 import { PasajeroRepository } from '@repository/pasajero.repository';
 import { ViajeEscanearDnisDto } from './dto/viaje-pasajero/viaje-escanear-dnis.dto';
@@ -70,12 +69,11 @@ export class ViajesService {
     private readonly viajeChecklistRepository: ViajeChecklistRepository,
     private readonly viajePasajeroRepository: ViajePasajeroRepository,
     private readonly vehiculoChecklistDocumentRepository: VehiculoChecklistDocumentRepository, // Inyectado
-    private readonly rutaRepository: RutaRepository,
     private readonly rutaParadaRepository: RutaParadaRepository,
     private readonly vehiculoRepository: VehiculoRepository,
     private readonly clienteRepository: ClienteRepository,
     private readonly viajeCircuitoRepository: ViajeCircuitoRepository,
-    private readonly notificacionesService: NotificacionesService,
+
     private readonly mantenimientoRepository: MantenimientoRepository,
     private readonly geminiAiService: GeminiAiService,
     private readonly pasajeroRepository: PasajeroRepository,
@@ -768,21 +766,6 @@ export class ViajesService {
         // Vehículo vuelve a estar disponible
         if (principal) {
           await this.vehiculoRepository.update(principal.vehiculoId, { estado: 'disponible' });
-
-          // 3. Verificación de Mantenimiento
-          const ultimoMant = await this.mantenimientoRepository.findLatestByVehiculo(principal.vehiculoId);
-          if (ultimoMant && ultimoMant.kilometrajeProximoMantenimiento) {
-            const kmActual = Number(data.kilometrajeActual);
-            const kmProxMant = Number(ultimoMant.kilometrajeProximoMantenimiento);
-
-            if (kmActual >= kmProxMant) {
-              // Obtener placa para la notificación
-              const vehiculo = await this.vehiculoRepository.findOne(principal.vehiculoId);
-              if (vehiculo) {
-                await this.notificacionesService.notifyMaintenance(vehiculo.id, vehiculo.placa, kmActual, kmProxMant);
-              }
-            }
-          }
         }
       }
     } catch (error) {

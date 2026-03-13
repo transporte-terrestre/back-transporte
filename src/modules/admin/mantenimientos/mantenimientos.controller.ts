@@ -32,7 +32,7 @@ export class MantenimientosController {
   @Get('find-all')
   @ApiOperation({
     summary: 'Obtener mantenimientos con paginación, búsqueda y filtros',
-    description: 'Busca por tipo, proveedor o descripción. Filtra por rango de fechas.',
+    description: 'Busca por código de orden o ID. Filtra por fechas, tipo, estado, taller y vehículo.',
   })
   @ApiResponse({ status: 200, type: PaginatedMantenimientoResultDto })
   findAll(@Query() query: MantenimientoPaginationQueryDto) {
@@ -44,6 +44,8 @@ export class MantenimientosController {
       query.fechaFin,
       query.tipo,
       query.estado,
+      query.tallerId,
+      query.vehiculoId,
     );
   }
 
@@ -188,6 +190,6 @@ export class MantenimientosController {
   @ApiOperation({ summary: 'Obtener reporte de estado de mantenimiento de vehículos' })
   @ApiResponse({ status: 200, type: PaginatedReporteEstadoResultDto })
   getReporteEstadoVehiculos(@Query() query: ReporteEstadoPaginationQueryDto) {
-    return this.mantenimientosService.getReporteEstadoVehiculos(query.page, query.limit, query.sort);
+    return this.mantenimientosService.getReporteEstadoVehiculos(query.page, query.limit, query.sort, query.vehiculoId);
   }
 }

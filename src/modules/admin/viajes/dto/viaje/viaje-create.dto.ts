@@ -1,7 +1,7 @@
 import { IsInt, IsIn, IsNotEmpty, IsDate, IsOptional, IsString, IsArray, MaxLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ViajeDTO, viajesEstado, modalidadServicio, viajesTipoRuta, viajesTurno, viajesSentido } from '@db/tables/viaje.table';
+import { ViajeDTO, viajesEstado, viajesModalidadServicio, viajesTipoRuta, viajesTurno, viajesSentido } from '@db/tables/viaje.table';
 import type { ViajeEstado, ViajeModalidadServicio, ViajeTipoRuta, ViajeTurno } from '@db/tables/viaje.table';
 
 export class ViajeDetalleCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' | 'actualizadoEn' | 'eliminadoEn'> {
@@ -54,12 +54,12 @@ export class ViajeDetalleCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' |
   entidadId?: number;
 
   @ApiPropertyOptional({
-    enum: modalidadServicio.enumValues,
+    enum: viajesModalidadServicio.enumValues,
     description: 'Modalidad de servicio',
-    default: modalidadServicio.enumValues[0],
+    default: viajesModalidadServicio.enumValues[0],
   })
   @IsOptional()
-  @IsIn(modalidadServicio.enumValues, { each: true })
+  @IsIn(viajesModalidadServicio.enumValues, { each: true })
   modalidadServicio?: ViajeModalidadServicio;
 
   @ApiPropertyOptional({

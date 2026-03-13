@@ -4,6 +4,7 @@ import { clientes } from './cliente.table';
 import { conductores } from './conductor.table';
 
 export const alquilerTipo = pgEnum('alquiler_tipo', ['maquina_seca', 'maquina_operada']);
+export const alquilerEstado = pgEnum('alquiler_estado', ['activo', 'finalizado', 'cancelado']);
 
 export const alquileres = pgTable(
   'alquileres',
@@ -32,7 +33,7 @@ export const alquileres = pgTable(
     monto: decimal('monto', { precision: 10, scale: 2 }), // Monto acordado
     observaciones: varchar('observaciones', { length: 500 }),
 
-    estado: varchar('estado', { length: 50 }).default('activo').notNull(), // activo, finalizado, cancelado
+    estado: alquilerEstado('estado').default('activo').notNull(),
 
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
@@ -50,3 +51,4 @@ export const alquileres = pgTable(
 export type Alquiler = typeof alquileres.$inferSelect;
 export type AlquilerDTO = typeof alquileres.$inferInsert;
 export type AlquilerTipo = (typeof alquilerTipo.enumValues)[number];
+export type AlquilerEstado = (typeof alquilerEstado.enumValues)[number];

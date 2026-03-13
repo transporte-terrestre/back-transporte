@@ -17,6 +17,7 @@ import { MantenimientoDocumentoDTO, mantenimientoDocumentosTipo } from '@db/tabl
 import { DocumentosAgrupadosMantenimientoDto } from './dto/mantenimiento/mantenimiento-result.dto';
 
 import { VehiculoRepository } from '@repository/vehiculo.repository';
+import { NotificacionesService } from '../notificaciones/notificaciones.service';
 
 @Injectable()
 export class MantenimientosService {
@@ -24,6 +25,7 @@ export class MantenimientosService {
     private readonly mantenimientoRepository: MantenimientoRepository,
     private readonly tareaRepository: TareaRepository,
     private readonly vehiculoRepository: VehiculoRepository,
+    private readonly notificacionesService: NotificacionesService,
   ) {}
 
   async findAllPaginated(
@@ -34,8 +36,18 @@ export class MantenimientosService {
     fechaFin?: string,
     tipo?: string,
     estado?: string,
+    tallerId?: number,
+    vehiculoId?: number,
   ): Promise<PaginatedMantenimientoResultDto> {
-    const { data, total } = await this.mantenimientoRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin, tipo, estado });
+    const { data, total } = await this.mantenimientoRepository.findAllPaginated(page, limit, {
+      search,
+      fechaInicio,
+      fechaFin,
+      tipo,
+      estado,
+      tallerId,
+      vehiculoId,
+    });
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -61,8 +73,14 @@ export class MantenimientosService {
     page: number = 1,
     limit: number = 10,
     sort: 'proximos' | 'ultimos' = 'proximos',
+    vehiculoId?: number,
   ): Promise<PaginatedReporteEstadoResultDto> {
-    const { data: rawData, total } = await this.mantenimientoRepository.getReporteEstadoVehiculos(page, limit, sort);
+    const { data: rawData, total } = await this.mantenimientoRepository.getReporteEstadoVehiculos(
+      page,
+      limit,
+      sort,
+      vehiculoId,
+    );
 
     const data = rawData.map((row) => {
       const actual = Number(row.kilometraje_actual || 0);
@@ -238,5 +256,101 @@ export class MantenimientosService {
 
   deleteDocumento(id: number) {
     return this.mantenimientoRepository.deleteDocumento(id);
+  }
+
+  async verificarYGenerarMantenimiento(vehiculoId: number) {
+    const vehiculo = await this.vehiculoRepository.findOne(vehiculoId);
+    if (!vehiculo || !vehiculo.kilometrajeMantenimiento) return;
+
+    const ultimoMant = await this.mantenimientoRepository.findLatestByVehiculo(vehiculoId);
+
+    // CASO 1: No hay ningún mantenimiento registrado
+    if (!ultimoMant) {
+      await this.generarNuevoMantenimiento(vehiculoId, 'preventivo', 'Generado automáticamente: Primer mantenimiento programado.');
+      return;
+    }
+
+    if (ultimoMant.estado === 'en_proceso') return;
+
+    if (ultimoMant.estado === 'finalizado') {
+      // Si el intervalo de mantenimiento del vehículo cambió, actualizamos el km próximo del último mantenimiento
+      const intervaloActual = Number(vehiculo.kilometrajeMantenimiento || 0);
+      const kmBase = Number(ultimoMant.kilometraje || 0);
+      const nuevoKmProximoEsperado = kmBase + intervaloActual;
+      const kmProximoActual = Number(ultimoMant.kilometrajeProximoMantenimiento || 0);
+
+      if (intervaloActual > 0 && kmProximoActual !== nuevoKmProximoEsperado) {
+        await this.mantenimientoRepository.update(ultimoMant.id, {
+          kilometrajeProximoMantenimiento: nuevoKmProximoEsperado,
+        });
+        ultimoMant.kilometrajeProximoMantenimiento = nuevoKmProximoEsperado; // Actualizar localmente para la siguiente lógica
+      }
+
+      // Revisar si ya le toca el siguiente basado en el intervalo
+      const kmActual = Number(vehiculo.kilometraje);
+      const kmProximoProgramado = Number(ultimoMant.kilometrajeProximoMantenimiento || 0);
+
+      // Si el kilometraje actual superó o igualó al programado, creamos uno nuevo
+      if (kmActual >= kmProximoProgramado) {
+        await this.generarNuevoMantenimiento(
+          vehiculoId,
+          'preventivo',
+          `Generado automáticamente: Superado KM programado (${kmProximoProgramado} km).`,
+        );
+
+        await this.notificacionesService.create({
+          titulo: `Nuevo Mantenimiento Programado: ${vehiculo.placa}`,
+          mensaje: `Se ha creado un nuevo mantenimiento para ${vehiculo.placa} al alcanzar ${kmActual} KM.`,
+          tipo: 'info',
+          metadata: { entidad: 'vehiculo', id: vehiculoId },
+        });
+      }
+    } else if (ultimoMant.estado === 'pendiente') {
+      const kmActualVehiculo = Number(vehiculo.kilometraje || 0);
+      const intervaloActual = Number(vehiculo.kilometrajeMantenimiento || 0);
+      const nuevoKmProximoEsperado = kmActualVehiculo + intervaloActual;
+
+      await this.mantenimientoRepository.update(ultimoMant.id, {
+        kilometraje: kmActualVehiculo,
+        kilometrajeProximoMantenimiento: nuevoKmProximoEsperado,
+      });
+
+      // Ya hay uno pendiente, notificar
+      await this.notificacionesService.create({
+        titulo: `Mantenimiento Pendiente: ${vehiculo.placa}`,
+        mensaje: `El vehículo ${vehiculo.placa} tiene un mantenimiento pendiente.`,
+        tipo: 'warning',
+        metadata: { entidad: 'vehiculo', id: vehiculoId },
+      });
+      return;
+    }
+  }
+
+  private async generarNuevoMantenimiento(vehiculoId: number, tipo: 'preventivo' | 'correctivo', descripcion: string) {
+    const vehiculo = await this.vehiculoRepository.findOne(vehiculoId);
+    if (!vehiculo) return;
+
+    const kmActual = Number(vehiculo.kilometraje);
+    const intervalo = Number(vehiculo.kilometrajeMantenimiento || 500);
+    const kmProximo = kmActual + intervalo;
+
+    const codigoOrden = await this.generarCodigoOrden(vehiculoId);
+
+    // Taller opcional: buscamos el último taller usado pero no forzamos id 1 ni error
+    const ultimo = await this.mantenimientoRepository.findLatestByVehiculo(vehiculoId);
+    const tallerId = ultimo?.tallerId || null;
+
+    return await this.mantenimientoRepository.create({
+      vehiculoId,
+      tallerId,
+      tipo,
+      descripcion,
+      fechaIngreso: new Date(),
+      kilometraje: kmActual,
+      kilometrajeProximoMantenimiento: kmProximo,
+      estado: 'pendiente',
+      codigoOrden,
+      costoTotal: '0',
+    });
   }
 }

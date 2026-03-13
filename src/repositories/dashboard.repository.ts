@@ -8,7 +8,7 @@ import { rutas } from '@db/tables/ruta.table';
 import { viajeConductores } from '@db/tables/viaje-conductor.table';
 import { viajeVehiculos } from '@db/tables/viaje-vehiculo.table';
 import { clientes } from '@db/tables/cliente.table';
-import { count, eq, gte, lte, and, desc, sql } from 'drizzle-orm';
+import { count, eq, gte, lte, and, desc, sql, or, asc } from 'drizzle-orm';
 
 @Injectable()
 export class DashboardRepository {
@@ -53,7 +53,7 @@ export class DashboardRepository {
         estado: viajes.estado,
       })
       .from(viajes)
-      .orderBy(desc(viajes.fechaSalida))
+      .orderBy(desc(viajes.creadoEn))
       .limit(limit);
 
     // Provide enriched data (could be done via JOINs but Drizzle raw joins often easier than ORM object mapping for simple listing)
@@ -105,10 +105,13 @@ export class DashboardRepository {
         tipo: mantenimientos.tipo,
         fecha: mantenimientos.fechaIngreso,
         descripcion: mantenimientos.descripcion,
+        estado: mantenimientos.estado,
       })
       .from(mantenimientos)
-      .where(and(gte(mantenimientos.fechaIngreso, today), lte(mantenimientos.fechaIngreso, futureDate)))
-      .orderBy(mantenimientos.fechaIngreso)
+      .where(
+        or(eq(mantenimientos.estado, 'pendiente'), eq(mantenimientos.estado, 'en_proceso')),
+      )
+      .orderBy(asc(mantenimientos.fechaIngreso))
       .limit(limit);
 
     return await Promise.all(

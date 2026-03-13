@@ -23,5 +23,6 @@ import { VehiculoComentarioRepository } from '@repository/vehiculo-comentario.re
     MantenimientoRepository,
     VehiculoComentarioRepository,
   ],
+  exports: [VehiculoRepository],
 })
 export class VehiculosModule {}

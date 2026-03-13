@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsDateString, IsInt, IsIn, IsOptional, IsString, Min } from 'class-validator';
 import { AlquilerResultDto } from './alquiler-result.dto';
+import { alquilerTipo, alquilerEstado } from '@db/tables/alquiler.table';
+import type { AlquilerTipo, AlquilerEstado } from '@db/tables/alquiler.table';
 
 export class AlquilerFiltersDto {
   @ApiProperty({ required: false })
@@ -9,10 +11,14 @@ export class AlquilerFiltersDto {
   @IsOptional()
   search?: string;
 
-  @ApiProperty({ required: false })
-  @IsString()
+  @ApiProperty({
+    description: 'Filtrar por estado',
+    enum: alquilerEstado.enumValues,
+    required: false,
+  })
   @IsOptional()
-  estado?: string;
+  @IsIn(alquilerEstado.enumValues)
+  estado?: AlquilerEstado;
 
   @ApiProperty({ required: false })
   @Transform(({ value }) => (value != null ? parseInt(value, 10) : undefined))
@@ -20,10 +26,37 @@ export class AlquilerFiltersDto {
   @IsOptional()
   clienteId?: number;
 
-  @ApiProperty({ required: false, enum: ['maquina_seca', 'maquina_operada'] })
-  @IsString()
+  @ApiProperty({
+    description: 'Filtrar por tipo',
+    enum: alquilerTipo.enumValues,
+    required: false,
+  })
   @IsOptional()
-  tipo?: string;
+  @IsIn(alquilerTipo.enumValues, { each: true })
+  tipo?: AlquilerTipo;
+
+
+  @ApiProperty({ required: false })
+  @Transform(({ value }) => (value != null ? parseInt(value, 10) : undefined))
+  @IsInt()
+  @IsOptional()
+  conductorId?: number;
+
+  @ApiProperty({ required: false })
+  @Transform(({ value }) => (value != null ? parseInt(value, 10) : undefined))
+  @IsInt()
+  @IsOptional()
+  vehiculoId?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsDateString()
+  fechaInicio?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsDateString()
+  fechaFin?: string;
 }
 
 export class AlquilerQueryDto extends AlquilerFiltersDto {

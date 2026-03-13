@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type, Transform } from 'class-transformer';
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn, IsArray, IsEnum } from 'class-validator';
-import { modalidadServicio, viajesTipoRuta, viajesEstado, viajesSentido, viajesTurno } from '@db/tables/viaje.table';
+import { viajesModalidadServicio, viajesTipoRuta, viajesEstado, viajesSentido, viajesTurno } from '@db/tables/viaje.table';
 import type { ViajeModalidadServicio, ViajeTipoRuta, ViajeEstado, ViajeSentido, ViajeTurno } from '@db/tables/viaje.table';
 import { ViajeCircuitoResultDto, ViajeCircuitoLightResultDto } from '../viaje-circuito/viaje-circuito-result.dto';
-import { ViajeLightResultDto } from './viaje-light-result.dto';
 import { PaginationMetaDto } from '../../../../../common/dto/pagination-meta.dto';
 
 export class ViajePaginationQueryDto {
@@ -59,11 +58,11 @@ export class ViajePaginationQueryDto {
 
   @ApiProperty({
     description: 'Filtrar por modalidad de servicio',
-    enum: modalidadServicio.enumValues,
+    enum: viajesModalidadServicio.enumValues,
     required: false,
   })
   @IsOptional()
-  @IsIn(modalidadServicio.enumValues, { each: true })
+  @IsIn(viajesModalidadServicio.enumValues, { each: true })
   modalidadServicio?: ViajeModalidadServicio;
 
   @ApiProperty({

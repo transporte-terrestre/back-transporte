@@ -22,7 +22,7 @@ import { AlquilerRepository } from '@repository/alquiler.repository';
 import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repository';
 import { ConductorDocumentoRepository } from '@repository/conductor-documento.repository';
 import { ConductorRepository } from '@repository/conductor.repository';
-import { NotificacionesModule } from '../notificaciones/notificaciones.module';
+
 import { GeminiAiModule } from '@module/gemini-ai/gemini-ai.module';
 
 @Module({
@@ -51,7 +51,7 @@ import { GeminiAiModule } from '@module/gemini-ai/gemini-ai.module';
     ConductorDocumentoRepository,
     ConductorRepository,
   ],
-  imports: [NotificacionesModule, GeminiAiModule],
+  imports: [GeminiAiModule],
   exports: [ViajeTramoRepository, ChecklistItemRepository, ViajeChecklistRepository],
 })
 export class ViajesModule {}

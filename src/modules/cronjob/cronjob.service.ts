@@ -7,7 +7,9 @@ export class CronjobService {
   private readonly logger = new Logger(CronjobService.name);
   private readonly keepAliveUrl = process.env.KEEP_ALIVE_URL || 'http://localhost:3000';
 
-  constructor(private readonly notificacionesService: NotificacionesService) {}
+  constructor(
+    private readonly notificacionesService: NotificacionesService,
+  ) {}
 
   @Cron('*/10 * * * *') // Cada 10 minutos
   handleKeepAlive() {

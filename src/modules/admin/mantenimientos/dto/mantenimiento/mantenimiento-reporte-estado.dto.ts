@@ -66,6 +66,12 @@ export class ReporteEstadoPaginationQueryDto {
   @IsEnum(ReporteEstadoSort)
   @IsOptional()
   sort: ReporteEstadoSort = ReporteEstadoSort.PROXIMOS;
+
+  @ApiPropertyOptional({ description: 'ID del vehículo para filtrar' })
+  @Transform(({ value }) => (value ? parseInt(value) : undefined))
+  @IsNumber()
+  @IsOptional()
+  vehiculoId?: number;
 }
 
 export class PaginatedReporteEstadoResultDto {

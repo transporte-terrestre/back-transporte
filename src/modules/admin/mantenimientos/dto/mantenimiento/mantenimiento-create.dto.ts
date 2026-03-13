@@ -10,10 +10,10 @@ export class MantenimientoCreateDto implements Omit<MantenimientoDTO, 'id' | 'cr
   @IsNotEmpty()
   vehiculoId: number;
 
-  @ApiProperty({ example: 1, description: 'Workshop ID' })
+  @ApiPropertyOptional({ example: 1, description: 'Workshop ID' })
   @IsInt()
-  @IsNotEmpty()
-  tallerId: number;
+  @IsOptional()
+  tallerId?: number;
 
   @ApiPropertyOptional({ example: 1, description: 'Branch ID' })
   @IsInt()

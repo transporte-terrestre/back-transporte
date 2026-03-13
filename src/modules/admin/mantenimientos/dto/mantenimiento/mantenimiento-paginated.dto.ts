@@ -33,7 +33,7 @@ export class MantenimientoPaginationQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description: 'Búsqueda por tipo, descripción o código de orden del mantenimiento',
+    description: 'Búsqueda por código de orden o ID exacto del mantenimiento',
     required: false,
   })
   @IsOptional()
@@ -75,6 +75,24 @@ export class MantenimientoPaginationQueryDto {
   @IsOptional()
   @IsIn(mantenimientosEstado.enumValues, { each: true })
   estado?: MantenimientoEstado;
+
+  @ApiProperty({
+    description: 'Filtrar por taller',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  tallerId?: number;
+
+  @ApiProperty({
+    description: 'Filtrar por vehículo',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  vehiculoId?: number;
 }
 
 import { MantenimientoListDto } from './mantenimiento-list.dto';

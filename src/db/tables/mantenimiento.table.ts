@@ -16,9 +16,7 @@ export const mantenimientos = pgTable(
     vehiculoId: integer('vehiculo_id')
       .references(() => vehiculos.id)
       .notNull(),
-    tallerId: integer('taller_id')
-      .references(() => talleres.id)
-      .notNull(),
+    tallerId: integer('taller_id').references(() => talleres.id),
     sucursalId: integer('sucursal_id').references(() => sucursales.id),
     codigoOrden: varchar('codigo_orden', { length: 50 }),
     tipo: mantenimientosTipo('tipo').notNull(),
