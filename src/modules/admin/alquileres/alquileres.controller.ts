@@ -34,21 +34,21 @@ export class AlquileresController {
 
   @Post()
   @ApiOperation({ summary: 'Crear un nuevo alquiler' })
-  @ApiResponse({ status: 201 })
+  @ApiResponse({ status: 201, type: AlquilerResultDto })
   create(@Body() data: AlquilerCreateDto) {
     return this.alquileresService.create(data);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar un alquiler' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: AlquilerResultDto })
   update(@Param('id', ParseIntPipe) id: number, @Body() data: AlquilerUpdateDto) {
     return this.alquileresService.update(id, data);
   }
 
   @Put(':id/terminar')
   @ApiOperation({ summary: 'Finalizar un alquiler (fecha fin, kilometraje final y monto final)' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: AlquilerResultDto })
   terminar(@Param('id', ParseIntPipe) id: number, @Body() data: AlquilerTerminarDto) {
     return this.alquileresService.terminar(id, data);
   }

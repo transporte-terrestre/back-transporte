@@ -67,6 +67,7 @@ export class VehiculosController {
       query.fechaFin,
       query.estado,
       query.marcaId,
+      query.propietarioId,
     );
   }
 

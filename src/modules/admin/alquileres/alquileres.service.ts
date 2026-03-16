@@ -53,7 +53,7 @@ export class AlquileresService {
     };
   }
 
-  async create(data: AlquilerCreateDto): Promise<void> {
+  async create(data: AlquilerCreateDto): Promise<AlquilerResultDto> {
     if (data.tipo === 'maquina_operada' && !data.conductorId) {
       throw new BadRequestException('Para alquiler tipo maquina_operada debe enviar conductorId.');
     }
@@ -68,14 +68,17 @@ export class AlquileresService {
       conductorId: data.tipo === 'maquina_seca' ? null : rest.conductorId,
       fechaFin: null,
     };
-    await this.alquilerRepository.create(payload);
+    const alquiler = await this.alquilerRepository.create(payload);
+    const id = alquiler.id;
 
     if (marcarComoAlquilado) {
       await this.vehiculoRepository.update(rest.vehiculoId, { estado: 'alquilado' });
     }
+
+    return this.findOne(id);
   }
 
-  async update(id: number, data: AlquilerUpdateDto): Promise<void> {
+  async update(id: number, data: AlquilerUpdateDto): Promise<AlquilerResultDto> {
     const prev = await this.findOne(id);
     const { marcarComoAlquilado, ...payload } = data;
 
@@ -98,6 +101,8 @@ export class AlquileresService {
     if (marcarComoAlquilado) {
       await this.vehiculoRepository.update(data.vehiculoId || prev.vehiculoId, { estado: 'alquilado' });
     }
+
+    return this.findOne(id);
   }
 
   async delete(id: number): Promise<void> {
@@ -105,7 +110,7 @@ export class AlquileresService {
     await this.alquilerRepository.delete(id);
   }
 
-  async terminar(id: number, data: AlquilerTerminarDto): Promise<void> {
+  async terminar(id: number, data: AlquilerTerminarDto): Promise<AlquilerResultDto> {
     const prev = await this.findOne(id);
 
     if (prev.estado === 'finalizado') {
@@ -130,6 +135,8 @@ export class AlquileresService {
       estado: 'disponible',
       kilometraje: data.kilometrajeFinal,
     });
+
+    return this.findOne(id);
   }
 
   // ========== DOCUMENTOS ==========

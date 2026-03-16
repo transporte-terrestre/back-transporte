@@ -74,6 +74,15 @@ export class VehiculoPaginationQueryDto {
   @Type(() => Number)
   @IsInt()
   marcaId?: number;
+
+  @ApiProperty({
+    description: 'Filtrar por ID de propietario',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  propietarioId?: number;
 }
 
 export class PaginatedVehiculoResultDto {
