@@ -103,8 +103,16 @@ export class VehiculosService {
     fechaFin?: string,
     estado?: VehiculoEstado,
     marcaId?: number,
+    propietarioId?: number,
   ): Promise<PaginatedVehiculoResultDto> {
-    const { data, total } = await this.vehiculoRepository.findAllPaginated(page, limit, { search, fechaInicio, fechaFin, estado, marcaId });
+    const { data, total } = await this.vehiculoRepository.findAllPaginated(page, limit, {
+      search,
+      fechaInicio,
+      fechaFin,
+      estado,
+      marcaId,
+      propietarioId,
+    });
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;

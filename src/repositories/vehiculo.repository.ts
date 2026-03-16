@@ -18,6 +18,7 @@ interface PaginationFilters {
   fechaFin?: string;
   estado?: VehiculoEstado;
   marcaId?: number;
+  propietarioId?: number;
 }
 
 @Injectable()
@@ -58,6 +59,16 @@ export class VehiculoRepository {
 
     if (filters?.marcaId) {
       conditions.push(eq(modelos.marcaId, filters.marcaId));
+    }
+
+    if (filters?.propietarioId) {
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${vehiculoPropietarios}
+          WHERE ${vehiculoPropietarios.vehiculoId} = ${vehiculos.id}
+          AND ${vehiculoPropietarios.propietarioId} = ${filters.propietarioId}
+        )`,
+      );
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
