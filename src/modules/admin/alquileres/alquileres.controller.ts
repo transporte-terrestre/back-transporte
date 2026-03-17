@@ -10,6 +10,8 @@ import { AlquilerTerminarDto } from './dto/alquiler/alquiler-terminar.dto';
 import { AlquilerDocumentoCreateDto } from './dto/alquiler-documento/alquiler-documento-create.dto';
 import { AlquilerDocumentoUpdateDto } from './dto/alquiler-documento/alquiler-documento-update.dto';
 import { AlquilerDocumentoResultDto } from './dto/alquiler-documento/alquiler-documento-result.dto';
+import { ValidarVehiculoAlquilerQueryDto } from './dto/alquiler/validar-vehiculo-alquiler-query.dto';
+import { ValidacionAlquilerResultDto } from './dto/alquiler/validacion-alquiler-result.dto';
 
 @ApiTags('alquileres')
 @ApiBearerAuth()
@@ -23,6 +25,13 @@ export class AlquileresController {
   @ApiResponse({ status: 200, type: AlquilerListDto })
   findAll(@Query() query: AlquilerQueryDto) {
     return this.alquileresService.findAll(query);
+  }
+
+  @Get('validar-vehiculo')
+  @ApiOperation({ summary: 'Validar disponibilidad y estado del vehículo para alquiler' })
+  @ApiResponse({ status: 200, type: ValidacionAlquilerResultDto })
+  validarVehiculo(@Query() query: ValidarVehiculoAlquilerQueryDto) {
+    return this.alquileresService.validarVehiculo(query);
   }
 
   @Get(':id')

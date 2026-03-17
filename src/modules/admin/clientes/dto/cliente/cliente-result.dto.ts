@@ -1,8 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty } from 'class-validator';
 import { ClienteDocumentoResultDto } from '../cliente-documento/cliente-documento-result.dto';
-import { clientesTipoDocumento } from '@db/tables/cliente.table';
+import { clientesTipoDocumento, clientesTipo } from '@db/tables/cliente.table';
 import type { ClienteDocumentoTipo } from '@db/tables/cliente-documento.table';
-import type { ClienteTipoDocumento } from '@db/tables/cliente.table';
+import type { ClienteTipoDocumento, ClienteTipo } from '@db/tables/cliente.table';
 
 export class DocumentosAgrupadosClienteDto implements Record<ClienteDocumentoTipo, ClienteDocumentoResultDto[]> {
   @ApiProperty({ type: [ClienteDocumentoResultDto] })
@@ -33,7 +34,15 @@ export class ClienteResultDto {
     enum: clientesTipoDocumento.enumValues,
     example: clientesTipoDocumento.enumValues[0],
   })
+  @IsNotEmpty()
   tipoDocumento: ClienteTipoDocumento;
+
+  @ApiProperty({
+    description: 'Tipo de cliente',
+    enum: clientesTipo.enumValues,
+    example: clientesTipo.enumValues[0],
+  })
+  tipo: ClienteTipo;
 
   @ApiProperty({ example: '12345678', description: 'DNI del cliente' })
   dni: string | null;

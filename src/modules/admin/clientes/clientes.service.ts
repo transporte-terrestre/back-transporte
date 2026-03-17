@@ -15,7 +15,7 @@ import { EntidadRepository } from '@repository/entidad.repository';
 import { EntidadCreateDto } from './dto/entidad/entidad-create.dto';
 import { EntidadUpdateDto } from './dto/entidad/entidad-update.dto';
 import { PaginatedEntidadResultDto } from './dto/entidad/entidad-paginated.dto';
-import type { ClienteTipoDocumento } from '@db/tables/cliente.table';
+import type { ClienteTipoDocumento, ClienteTipo } from '@db/tables/cliente.table';
 
 interface DatabaseError {
   code?: string;
@@ -39,12 +39,14 @@ export class ClientesService {
     fechaInicio?: string,
     fechaFin?: string,
     tipoDocumento?: ClienteTipoDocumento,
+    tipo?: ClienteTipo,
   ): Promise<PaginatedClienteResultDto> {
     const { data, total } = await this.clienteRepository.findAllPaginated(page, limit, {
       search,
       fechaInicio,
       fechaFin,
       tipoDocumento,
+      tipo,
     });
 
     const totalPages = Math.ceil(total / limit);

@@ -33,7 +33,15 @@ export class ClientesController {
   })
   @ApiResponse({ status: 200, type: PaginatedClienteResultDto })
   findAll(@Query() query: ClientePaginationQueryDto) {
-    return this.clientesService.findAllPaginated(query.page, query.limit, query.search, query.fechaInicio, query.fechaFin, query.tipoDocumento);
+    return this.clientesService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+      query.tipoDocumento,
+      query.tipo,
+    );
   }
 
   @Get('find-one/:id')

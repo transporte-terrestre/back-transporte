@@ -11,6 +11,11 @@ import { AlquilerDocumentoUpdateDto } from './dto/alquiler-documento/alquiler-do
 import { AlquilerDocumentoResultDto } from './dto/alquiler-documento/alquiler-documento-result.dto';
 
 import { VehiculoRepository } from '@repository/vehiculo.repository';
+import { MantenimientoRepository } from '@repository/mantenimiento.repository';
+import { ViajeRepository } from '@repository/viaje.repository';
+import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repository';
+import { ValidarVehiculoAlquilerQueryDto } from './dto/alquiler/validar-vehiculo-alquiler-query.dto';
+import { ValidacionAlquilerResultDto } from './dto/alquiler/validacion-alquiler-result.dto';
 
 @Injectable()
 export class AlquileresService {
@@ -18,6 +23,9 @@ export class AlquileresService {
     private readonly alquilerRepository: AlquilerRepository,
     private readonly vehiculoRepository: VehiculoRepository,
     private readonly alquilerDocumentoRepository: AlquilerDocumentoRepository,
+    private readonly mantenimientoRepository: MantenimientoRepository,
+    private readonly viajeRepository: ViajeRepository,
+    private readonly vehiculoDocumentoRepository: VehiculoDocumentoRepository,
   ) {}
 
   async findAll(query: AlquilerQueryDto): Promise<AlquilerListDto> {
@@ -162,5 +170,81 @@ export class AlquileresService {
   async deleteDocumento(id: number): Promise<AlquilerDocumentoResultDto> {
     await this.findDocumento(id);
     return await this.alquilerDocumentoRepository.delete(id);
+  }
+
+  async validarVehiculo(query: ValidarVehiculoAlquilerQueryDto): Promise<ValidacionAlquilerResultDto> {
+    const vehiculo = await this.vehiculoRepository.findOne(query.vehiculoId);
+    if (!vehiculo) {
+      return { status: false, message: 'Vehículo no encontrado.' };
+    }
+
+    if (vehiculo.estado === 'taller') {
+      return { status: false, message: 'El vehículo se encuentra en taller e inoperativo.' };
+    }
+
+    if (vehiculo.estado === 'retirado') {
+      return { status: false, message: 'El vehículo se encuentra retirado de circulación.' };
+    }
+
+    const { fechaInicio, fechaFin, alquilerId } = query;
+    const vInicio = new Date(fechaInicio);
+    const vFin = fechaFin ? new Date(fechaFin) : new Date(vInicio.getTime() + 1000 * 60 * 60 * 24 * 365); // 1 year if not set
+
+    // 1. Validar alquileres cruzados
+    const activeAlquileres = await this.alquilerRepository.findActivosByVehiculo(query.vehiculoId);
+
+    for (const alq of activeAlquileres) {
+      if (alquilerId && alq.id === alquilerId) continue;
+
+      const aInicio = new Date(alq.fechaInicio);
+      const aFin = alq.fechaFin ? new Date(alq.fechaFin) : null;
+
+      const overlap = aFin ? aInicio <= vFin && aFin >= vInicio : aInicio <= vFin;
+
+      if (overlap) {
+        return {
+          status: false,
+          message: `El vehículo ya está alquilado desde el ${aInicio.toLocaleDateString()} hasta ${aFin ? aFin.toLocaleDateString() : 'indefinidamente'}, por lo que cruza con este horario.`,
+        };
+      }
+    }
+
+    // 2. Validar mantenimientos
+    const activeMantenimientos = await this.mantenimientoRepository.findCruzadosPorVehiculo(
+      query.vehiculoId,
+      vInicio,
+      vFin,
+    );
+
+    if (activeMantenimientos.length > 0) {
+      return { status: false, message: `El vehículo tiene un mantenimiento programado/en proceso que cruza con este horario.` };
+    }
+
+    // 3. Validar viajes
+    const viajesCruzados = await this.viajeRepository.findCruzadosPorVehiculo(
+      query.vehiculoId,
+      vInicio,
+      vFin,
+    );
+
+    if (viajesCruzados.length > 0) {
+      return {
+        status: false,
+        message: `El vehículo ya tiene ${viajesCruzados.length} viaje(s) asignado(s) que se cruza(n) con el horario del alquiler.`,
+      };
+    }
+
+    // 4. Validar documentos vencidos
+    const docs = await this.vehiculoDocumentoRepository.findByVehiculoId(query.vehiculoId);
+    for (const d of docs) {
+      if (d.fechaExpiracion && new Date(d.fechaExpiracion) < vFin) {
+        return {
+          status: false,
+          message: `El documento "${d.nombre}" expirará el ${new Date(d.fechaExpiracion).toLocaleDateString()}, y no cubre todo el periodo del alquiler.`,
+        };
+      }
+    }
+
+    return { status: true, message: 'El vehículo está disponible y habilitado.' };
   }
 }

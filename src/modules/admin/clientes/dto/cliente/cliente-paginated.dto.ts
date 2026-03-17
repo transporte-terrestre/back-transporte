@@ -3,8 +3,8 @@ import { ClienteListDto } from './cliente-list.dto';
 import { PaginationMetaDto } from '../../../../../common/dto/pagination-meta.dto';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
-import { clientesTipoDocumento } from '@db/tables/cliente.table';
-import type { ClienteTipoDocumento } from '@db/tables/cliente.table';
+import { clientesTipoDocumento, clientesTipo } from '@db/tables/cliente.table';
+import type { ClienteTipoDocumento, ClienteTipo } from '@db/tables/cliente.table';
 
 export class ClientePaginationQueryDto {
   @ApiProperty({
@@ -56,6 +56,7 @@ export class ClientePaginationQueryDto {
   @IsDateString()
   fechaFin?: string;
 
+
   @ApiProperty({
     description: 'Filtrar por tipo de documento',
     enum: clientesTipoDocumento.enumValues,
@@ -65,6 +66,16 @@ export class ClientePaginationQueryDto {
   @IsOptional()
   @IsIn(clientesTipoDocumento.enumValues, { each: true })
   tipoDocumento?: ClienteTipoDocumento;
+
+  @ApiProperty({
+    description: 'Filtrar por tipo de cliente',
+    enum: clientesTipo.enumValues,
+    example: clientesTipo.enumValues[0],
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(clientesTipo.enumValues, { each: true })
+  tipo?: ClienteTipo;
 }
 
 export class PaginatedClienteResultDto {
