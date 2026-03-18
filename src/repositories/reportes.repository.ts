@@ -13,9 +13,63 @@ import { mantenimientos } from '@db/tables/mantenimiento.table';
 import { talleres } from '@db/tables/taller.table';
 import { conductores } from '@db/tables/conductor.table';
 import { conductorDocumentos } from '@db/tables/conductor-documento.table';
+import { clientes } from '@db/tables/cliente.table';
+import { entidades } from '@db/tables/entidad.table';
 
 @Injectable()
 export class ReportesRepository {
+  // ========== CAMPOS COMUNES DE VIAJES DETALLADOS ==========
+
+  private get viajeSelectFields() {
+    return {
+      id: viajes.id,
+      tipoRuta: viajes.tipoRuta,
+      rutaOcasional: viajes.rutaOcasional,
+      rutaOrigen: rutas.origen,
+      rutaDestino: rutas.destino,
+      distanciaEstimada: viajes.distanciaEstimada,
+      distanciaFinal: viajes.distanciaFinal,
+      diferencia: sql<number>`COALESCE(CAST(${viajes.distanciaFinal} AS DECIMAL) - CAST(${viajes.distanciaEstimada} AS DECIMAL), 0)`.mapWith(
+        Number,
+      ),
+      horasContrato: viajes.horasContrato,
+      horasTotales: sql<number>`
+        CASE 
+          WHEN ${viajes.fechaLlegada} IS NOT NULL THEN 
+            ROUND(CAST(EXTRACT(EPOCH FROM (${viajes.fechaLlegada} - ${viajes.fechaSalida})) / 3600 AS NUMERIC), 2)
+          ELSE 0 
+        END`.mapWith(Number),
+      horasExcedidas: sql<number>`
+        CASE 
+          WHEN ${viajes.fechaLlegada} IS NOT NULL THEN 
+            GREATEST(0, ROUND(CAST((EXTRACT(EPOCH FROM (${viajes.fechaLlegada} - ${viajes.fechaSalida})) / 3600) - CAST(${viajes.horasContrato} AS NUMERIC) AS NUMERIC), 2))
+          ELSE 0 
+        END`.mapWith(Number),
+      estado: viajes.estado,
+      modalidadServicio: viajes.modalidadServicio,
+      turno: viajes.turno,
+      numeroVale: viajes.numeroVale,
+      fechaSalidaProgramada: viajes.fechaSalidaProgramada,
+      fechaLlegadaProgramada: viajes.fechaLlegadaProgramada,
+      fechaSalida: viajes.fechaSalida,
+      fechaLlegada: viajes.fechaLlegada,
+      circuitoId: viajeCircuitos.id,
+      sentido: viajes.sentido,
+      // Datos del vehículo principal
+      vehiculoPlaca: vehiculos.placa,
+      vehiculoMarca: marcas.nombre,
+      vehiculoModelo: modelos.nombre,
+      // Datos del conductor principal
+      conductorNombre: conductores.nombreCompleto,
+      conductorDni: conductores.dni,
+      // Datos del cliente
+      clienteNombre: sql<string>`COALESCE(NULLIF(TRIM(${clientes.razonSocial}), ''), ${clientes.nombreCompleto})`,
+      clienteDocumento: sql<string>`COALESCE(${clientes.ruc}, ${clientes.dni}, '')`,
+      // Datos de la entidad
+      entidadNombre: entidades.nombreServicio,
+    };
+  }
+
   // ========== REPORTES DETALLADOS ==========
 
   async getViajesDetalladosPorVehiculo(vehiculoId: number, fechaInicio?: Date, fechaFin?: Date) {
@@ -25,46 +79,21 @@ export class ReportesRepository {
     if (fechaFin) filters.push(lte(viajes.fechaSalidaProgramada, fechaFin));
 
     return await database
-      .select({
-        id: viajes.id,
-        tipoRuta: viajes.tipoRuta,
-        rutaOcasional: viajes.rutaOcasional,
-        rutaOrigen: rutas.origen,
-        rutaDestino: rutas.destino,
-        distanciaEstimada: viajes.distanciaEstimada,
-        distanciaFinal: viajes.distanciaFinal,
-        diferencia: sql<number>`COALESCE(CAST(${viajes.distanciaFinal} AS DECIMAL) - CAST(${viajes.distanciaEstimada} AS DECIMAL), 0)`.mapWith(
-          Number,
-        ),
-        horasContrato: viajes.horasContrato,
-        horasTotales: sql<number>`
-          CASE 
-            WHEN ${viajes.fechaLlegada} IS NOT NULL THEN 
-              ROUND(CAST(EXTRACT(EPOCH FROM (${viajes.fechaLlegada} - ${viajes.fechaSalida})) / 3600 AS NUMERIC), 2)
-            ELSE 0 
-          END`.mapWith(Number),
-        horasExcedidas: sql<number>`
-          CASE 
-            WHEN ${viajes.fechaLlegada} IS NOT NULL THEN 
-              GREATEST(0, ROUND(CAST((EXTRACT(EPOCH FROM (${viajes.fechaLlegada} - ${viajes.fechaSalida})) / 3600) - CAST(${viajes.horasContrato} AS NUMERIC) AS NUMERIC), 2))
-            ELSE 0 
-          END`.mapWith(Number),
-        estado: viajes.estado,
-        modalidadServicio: viajes.modalidadServicio,
-        fechaSalidaProgramada: viajes.fechaSalidaProgramada,
-        fechaLlegadaProgramada: viajes.fechaLlegadaProgramada,
-        fechaSalida: viajes.fechaSalida,
-        fechaLlegada: viajes.fechaLlegada,
-        circuitoId: viajeCircuitos.id,
-        sentido: viajes.sentido,
-      })
+      .select(this.viajeSelectFields)
       .from(viajes)
       .innerJoin(
         viajeCircuitos,
         and(or(eq(viajeCircuitos.viajeIdaId, viajes.id), eq(viajeCircuitos.viajeVueltaId, viajes.id)), isNull(viajeCircuitos.eliminadoEn)),
       )
-      .innerJoin(viajeVehiculos, eq(viajes.id, viajeVehiculos.viajeId))
+      .innerJoin(viajeVehiculos, and(eq(viajes.id, viajeVehiculos.viajeId), eq(viajeVehiculos.esPrincipal, true)))
+      .leftJoin(vehiculos, eq(viajeVehiculos.vehiculoId, vehiculos.id))
+      .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .leftJoin(viajeConductores, and(eq(viajes.id, viajeConductores.viajeId), eq(viajeConductores.esPrincipal, true)))
+      .leftJoin(conductores, eq(viajeConductores.conductorId, conductores.id))
       .leftJoin(rutas, eq(viajes.rutaId, rutas.id))
+      .innerJoin(clientes, eq(viajes.clienteId, clientes.id))
+      .leftJoin(entidades, eq(viajes.entidadId, entidades.id))
       .where(and(...filters))
       .orderBy(desc(viajeCircuitos.id), viajes.fechaSalidaProgramada);
   }
@@ -76,46 +105,21 @@ export class ReportesRepository {
     if (fechaFin) filters.push(lte(viajes.fechaSalidaProgramada, fechaFin));
 
     return await database
-      .select({
-        id: viajes.id,
-        tipoRuta: viajes.tipoRuta,
-        rutaOcasional: viajes.rutaOcasional,
-        rutaOrigen: rutas.origen,
-        rutaDestino: rutas.destino,
-        distanciaEstimada: viajes.distanciaEstimada,
-        distanciaFinal: viajes.distanciaFinal,
-        diferencia: sql<number>`COALESCE(CAST(${viajes.distanciaFinal} AS DECIMAL) - CAST(${viajes.distanciaEstimada} AS DECIMAL), 0)`.mapWith(
-          Number,
-        ),
-        horasContrato: viajes.horasContrato,
-        horasTotales: sql<number>`
-          CASE 
-            WHEN ${viajes.fechaLlegada} IS NOT NULL THEN 
-              ROUND(CAST(EXTRACT(EPOCH FROM (${viajes.fechaLlegada} - ${viajes.fechaSalida})) / 3600 AS NUMERIC), 2)
-            ELSE 0 
-          END`.mapWith(Number),
-        horasExcedidas: sql<number>`
-          CASE 
-            WHEN ${viajes.fechaLlegada} IS NOT NULL THEN 
-              GREATEST(0, ROUND(CAST((EXTRACT(EPOCH FROM (${viajes.fechaLlegada} - ${viajes.fechaSalida})) / 3600) - CAST(${viajes.horasContrato} AS NUMERIC) AS NUMERIC), 2))
-            ELSE 0 
-          END`.mapWith(Number),
-        estado: viajes.estado,
-        modalidadServicio: viajes.modalidadServicio,
-        fechaSalidaProgramada: viajes.fechaSalidaProgramada,
-        fechaLlegadaProgramada: viajes.fechaLlegadaProgramada,
-        fechaSalida: viajes.fechaSalida,
-        fechaLlegada: viajes.fechaLlegada,
-        circuitoId: viajeCircuitos.id,
-        sentido: viajes.sentido,
-      })
+      .select(this.viajeSelectFields)
       .from(viajes)
       .innerJoin(
         viajeCircuitos,
         and(or(eq(viajeCircuitos.viajeIdaId, viajes.id), eq(viajeCircuitos.viajeVueltaId, viajes.id)), isNull(viajeCircuitos.eliminadoEn)),
       )
-      .innerJoin(viajeConductores, eq(viajes.id, viajeConductores.viajeId))
+      .innerJoin(viajeConductores, and(eq(viajes.id, viajeConductores.viajeId), eq(viajeConductores.esPrincipal, true)))
+      .leftJoin(conductores, eq(viajeConductores.conductorId, conductores.id))
+      .leftJoin(viajeVehiculos, and(eq(viajes.id, viajeVehiculos.viajeId), eq(viajeVehiculos.esPrincipal, true)))
+      .leftJoin(vehiculos, eq(viajeVehiculos.vehiculoId, vehiculos.id))
+      .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .leftJoin(rutas, eq(viajes.rutaId, rutas.id))
+      .innerJoin(clientes, eq(viajes.clienteId, clientes.id))
+      .leftJoin(entidades, eq(viajes.entidadId, entidades.id))
       .where(and(...filters))
       .orderBy(desc(viajeCircuitos.id), viajes.fechaSalidaProgramada);
   }
@@ -127,45 +131,21 @@ export class ReportesRepository {
     if (fechaFin) filters.push(lte(viajes.fechaSalidaProgramada, fechaFin));
 
     return await database
-      .select({
-        id: viajes.id,
-        tipoRuta: viajes.tipoRuta,
-        rutaOcasional: viajes.rutaOcasional,
-        rutaOrigen: rutas.origen,
-        rutaDestino: rutas.destino,
-        distanciaEstimada: viajes.distanciaEstimada,
-        distanciaFinal: viajes.distanciaFinal,
-        diferencia: sql<number>`COALESCE(CAST(${viajes.distanciaFinal} AS DECIMAL) - CAST(${viajes.distanciaEstimada} AS DECIMAL), 0)`.mapWith(
-          Number,
-        ),
-        horasContrato: viajes.horasContrato,
-        horasTotales: sql<number>`
-          CASE 
-            WHEN ${viajes.fechaLlegada} IS NOT NULL THEN 
-              ROUND(CAST(EXTRACT(EPOCH FROM (${viajes.fechaLlegada} - ${viajes.fechaSalida})) / 3600 AS NUMERIC), 2)
-            ELSE 0 
-          END`.mapWith(Number),
-        horasExcedidas: sql<number>`
-          CASE 
-            WHEN ${viajes.fechaLlegada} IS NOT NULL THEN 
-              GREATEST(0, ROUND(CAST((EXTRACT(EPOCH FROM (${viajes.fechaLlegada} - ${viajes.fechaSalida})) / 3600) - CAST(${viajes.horasContrato} AS NUMERIC) AS NUMERIC), 2))
-            ELSE 0 
-          END`.mapWith(Number),
-        estado: viajes.estado,
-        modalidadServicio: viajes.modalidadServicio,
-        fechaSalidaProgramada: viajes.fechaSalidaProgramada,
-        fechaLlegadaProgramada: viajes.fechaLlegadaProgramada,
-        fechaSalida: viajes.fechaSalida,
-        fechaLlegada: viajes.fechaLlegada,
-        circuitoId: viajeCircuitos.id,
-        sentido: viajes.sentido,
-      })
+      .select(this.viajeSelectFields)
       .from(viajes)
       .innerJoin(
         viajeCircuitos,
         and(or(eq(viajeCircuitos.viajeIdaId, viajes.id), eq(viajeCircuitos.viajeVueltaId, viajes.id)), isNull(viajeCircuitos.eliminadoEn)),
       )
+      .leftJoin(viajeVehiculos, and(eq(viajes.id, viajeVehiculos.viajeId), eq(viajeVehiculos.esPrincipal, true)))
+      .leftJoin(vehiculos, eq(viajeVehiculos.vehiculoId, vehiculos.id))
+      .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .leftJoin(viajeConductores, and(eq(viajes.id, viajeConductores.viajeId), eq(viajeConductores.esPrincipal, true)))
+      .leftJoin(conductores, eq(viajeConductores.conductorId, conductores.id))
       .leftJoin(rutas, eq(viajes.rutaId, rutas.id))
+      .innerJoin(clientes, eq(viajes.clienteId, clientes.id))
+      .leftJoin(entidades, eq(viajes.entidadId, entidades.id))
       .where(and(...filters))
       .orderBy(desc(viajeCircuitos.id), viajes.fechaSalidaProgramada);
   }

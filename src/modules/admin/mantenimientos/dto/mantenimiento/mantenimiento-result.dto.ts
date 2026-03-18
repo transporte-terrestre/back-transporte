@@ -7,7 +7,7 @@ import { MantenimientoDocumentoResultDto } from '../mantenimiento-documento/mant
 import { TallerResultDto } from '@module/admin/talleres/dto/taller/taller-result.dto';
 import { SucursalResultDto } from '@module/admin/talleres/dto/sucursal/sucursal-result.dto';
 
-export class VehiculoMantenimientoResultDto extends OmitType(VehiculoResultDto, ['documentos', 'propietarios', 'proveedores']) {}
+export class VehiculoMantenimientoResultDto extends OmitType(VehiculoResultDto, ['documentos', 'proveedores', 'propietarios']) {}
 
 export class DocumentosAgrupadosMantenimientoDto {
   @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
@@ -24,6 +24,9 @@ export class DocumentosAgrupadosMantenimientoDto {
 
   @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
   fotos: MantenimientoDocumentoResultDto[];
+
+  @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
+  cartilla: MantenimientoDocumentoResultDto[];
 
   @ApiProperty({ type: [MantenimientoDocumentoResultDto] })
   otros: MantenimientoDocumentoResultDto[];

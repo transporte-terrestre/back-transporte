@@ -566,7 +566,7 @@ export class NotificacionesService {
       conductor: 'Conductor',
       vehiculo: 'Vehículo',
       usuario: 'Usuario',
-      propietario: 'Propietario',
+      propietario: 'Proveedor',
     };
     return labels[entidad] || entidad;
   }

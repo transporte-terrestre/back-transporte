@@ -48,6 +48,12 @@ export class ViajeDetalladoDto {
   @ApiProperty()
   modalidadServicio: string;
 
+  @ApiProperty({ nullable: true, description: 'Turno del viaje: día o noche' })
+  turno: string | null;
+
+  @ApiProperty({ nullable: true, description: 'Número de vale de combustible' })
+  numeroVale: string | null;
+
   @ApiProperty()
   fechaSalidaProgramada: Date;
 
@@ -70,4 +76,36 @@ export class ViajeDetalladoDto {
     description: 'Sentido del viaje',
   })
   sentido: string;
+
+  // === Datos del vehículo principal ===
+
+  @ApiProperty({ nullable: true, description: 'Placa del vehículo principal' })
+  vehiculoPlaca: string | null;
+
+  @ApiProperty({ nullable: true, description: 'Marca del vehículo principal' })
+  vehiculoMarca: string | null;
+
+  @ApiProperty({ nullable: true, description: 'Modelo del vehículo principal' })
+  vehiculoModelo: string | null;
+
+  // === Datos del conductor principal ===
+
+  @ApiProperty({ nullable: true, description: 'Nombre completo del conductor principal' })
+  conductorNombre: string | null;
+
+  @ApiProperty({ nullable: true, description: 'DNI del conductor principal' })
+  conductorDni: string | null;
+
+  // === Datos del cliente ===
+
+  @ApiProperty({ description: 'Nombre del cliente' })
+  clienteNombre: string;
+
+  @ApiProperty({ nullable: true, description: 'Documento del cliente (RUC o DNI)' })
+  clienteDocumento: string | null;
+
+  // === Datos de la entidad ===
+
+  @ApiProperty({ nullable: true, description: 'Nombre del servicio/entidad' })
+  entidadNombre: string | null;
 }
