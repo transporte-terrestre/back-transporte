@@ -1,20 +1,21 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, IsIn, IsInt, IsArray, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TallerDTO, talleresTipo } from '@db/tables/taller.table';
 import type { TallerTipo } from '@db/tables/taller.table';
 
-export class SucursalTallerDto {
-  @ApiProperty({ example: 1, description: 'ID de la sucursal' })
-  @IsInt()
+export class TallerSucursalNestedDto {
+  @ApiProperty({ example: 'San Isidro', description: 'Distrito de la sucursal' })
+  @IsString()
   @IsNotEmpty()
-  sucursalId: number;
+  @MaxLength(100)
+  distrito: string;
 
-  @ApiProperty({ example: 'Av. Direccion Exacta 123', description: 'Direccion exacta del taller en esta sucursal' })
+  @ApiProperty({ example: 'Av. Juan de Arona 123', description: 'Ubicación exacta de la sucursal' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  direccion: string;
+  ubicacionExacta: string;
 }
 
 export class TallerCreateDto implements Omit<TallerDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
@@ -25,6 +26,7 @@ export class TallerCreateDto implements Omit<TallerDTO, 'id' | 'creadoEn' | 'act
   @IsString()
   @IsOptional()
   @MaxLength(20)
+  @Transform(({ value }) => (value === '' ? null : value))
   ruc?: string | null;
 
   @ApiProperty({
@@ -43,6 +45,7 @@ export class TallerCreateDto implements Omit<TallerDTO, 'id' | 'creadoEn' | 'act
   @IsString()
   @IsOptional()
   @MaxLength(200)
+  @Transform(({ value }) => (value === '' ? null : value))
   nombreComercial?: string | null;
 
   @ApiProperty({
@@ -61,6 +64,7 @@ export class TallerCreateDto implements Omit<TallerDTO, 'id' | 'creadoEn' | 'act
   @IsString()
   @IsOptional()
   @MaxLength(20)
+  @Transform(({ value }) => (value === '' ? null : value))
   telefono?: string | null;
 
   @ApiPropertyOptional({
@@ -70,15 +74,16 @@ export class TallerCreateDto implements Omit<TallerDTO, 'id' | 'creadoEn' | 'act
   @IsEmail()
   @IsOptional()
   @MaxLength(100)
+  @Transform(({ value }) => (value === '' ? null : value))
   email?: string | null;
 
   @ApiPropertyOptional({
-    description: 'Lista de sucursales a vincular con su dirección',
-    type: [SucursalTallerDto],
+    description: 'Lista de sucursales del taller',
+    type: [TallerSucursalNestedDto],
   })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => SucursalTallerDto)
+  @Type(() => TallerSucursalNestedDto)
   @IsOptional()
-  sucursales?: SucursalTallerDto[];
+  sucursales?: TallerSucursalNestedDto[];
 }

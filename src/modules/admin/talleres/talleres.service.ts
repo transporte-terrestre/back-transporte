@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { TallerRepository } from '@repository/taller.repository';
-import { TallerSucursalRepository } from '@repository/taller-sucursal.repository';
 import { SucursalRepository } from '@repository/sucursal.repository';
 import { TallerCreateDto } from './dto/taller/taller-create.dto';
 import { TallerUpdateDto } from './dto/taller/taller-update.dto';
@@ -11,7 +10,6 @@ import { SucursalUpdateDto } from './dto/sucursal/sucursal-update.dto';
 export class TalleresService {
   constructor(
     private readonly tallerRepository: TallerRepository,
-    private readonly tallerSucursalRepository: TallerSucursalRepository,
     private readonly sucursalRepository: SucursalRepository,
   ) {}
 
@@ -21,7 +19,11 @@ export class TalleresService {
     const taller = await this.tallerRepository.create(tallerData);
 
     if (sucursales && sucursales.length > 0) {
-      await this.tallerSucursalRepository.linkSucursalesToTaller(taller.id, sucursales);
+      const sucursalesData = sucursales.map((s) => ({
+        ...s,
+        tallerId: taller.id,
+      }));
+      await this.sucursalRepository.createMany(sucursalesData);
     }
 
     return taller;
@@ -52,8 +54,8 @@ export class TalleresService {
     if (!taller) {
       throw new NotFoundException(`Taller con ID ${id} no encontrado`);
     }
-    const sucursales = await this.tallerSucursalRepository.findSucursalesByTaller(id);
-    return { ...taller, sucursalIds: sucursales.map((s) => s.id), sucursales };
+    const sucursalesList = await this.sucursalRepository.findByTaller(id);
+    return { ...taller, sucursalIds: sucursalesList.map((s) => s.id), sucursales: sucursalesList };
   }
 
   async update(id: number, updateTallerDto: TallerUpdateDto) {
@@ -63,7 +65,15 @@ export class TalleresService {
     const updated = await this.tallerRepository.update(id, tallerData);
 
     if (sucursales !== undefined) {
-      await this.tallerSucursalRepository.linkSucursalesToTaller(id, sucursales);
+      // Reemplazar sucursales (lógica similar a pasajeros/entidades)
+      await this.sucursalRepository.hardDeleteByTaller(id);
+      if (sucursales.length > 0) {
+        const sucursalesData = sucursales.map((s) => ({
+          ...s,
+          tallerId: id,
+        }));
+        await this.sucursalRepository.createMany(sucursalesData);
+      }
     }
 
     return updated;

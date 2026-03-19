@@ -3,12 +3,9 @@ import { talleresTipo } from '@db/tables/taller.table';
 import type { TallerTipo } from '@db/tables/taller.table';
 
 class SucursalDetalleResDto {
-  @ApiProperty({ example: 1 }) sucursalId: number;
   @ApiProperty({ example: 1 }) id: number;
-  @ApiProperty({ example: 'Lima' }) departamento: string;
-  @ApiProperty({ example: 'Lima' }) provincia: string;
   @ApiProperty({ example: 'Miraflores' }) distrito: string;
-  @ApiProperty({ example: 'Av. Direccion Exacta 123' }) direccion: string;
+  @ApiProperty({ example: 'Av. Direccion Exacta 123' }) ubicacionExacta: string;
 }
 
 export class TallerListDto {
