@@ -8,6 +8,9 @@ import { MantenimientoRepository } from '@repository/mantenimiento.repository';
 import { ViajeRepository } from '@repository/viaje.repository';
 import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repository';
 
+import { AlquilerDetalleRepository } from '@repository/alquiler-detalle.repository';
+import { AlquilerHistorialRepository } from '@repository/alquiler-historial.repository';
+
 @Module({
   controllers: [AlquileresController],
   providers: [
@@ -18,6 +21,8 @@ import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repo
     MantenimientoRepository,
     ViajeRepository,
     VehiculoDocumentoRepository,
+    AlquilerDetalleRepository,
+    AlquilerHistorialRepository,
   ],
   exports: [AlquileresService],
 })

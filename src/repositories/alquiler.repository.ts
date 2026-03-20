@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { eq, or, ilike, and, isNull, sql, SQL, desc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { alquileres, AlquilerDTO } from '@db/tables/alquiler.table';
+import { alquilerDetalle } from '@db/tables/alquiler-detalle.table';
 import { vehiculos } from '@db/tables/vehiculo.table';
 import { modelos } from '@db/tables/modelo.table';
 import { marcas } from '@db/tables/marca.table';
@@ -26,18 +27,6 @@ export class AlquilerRepository {
       conditions.push(eq(alquileres.clienteId, filters.clienteId));
     }
 
-    if (filters.conductorId) {
-      conditions.push(eq(alquileres.conductorId, filters.conductorId));
-    }
-
-    if (filters.vehiculoId) {
-      conditions.push(eq(alquileres.vehiculoId, filters.vehiculoId));
-    }
-
-    if (filters.tipo) {
-      conditions.push(eq(alquileres.tipo, filters.tipo));
-    }
-
     if (filters.fechaInicio) {
       conditions.push(sql`date(${alquileres.fechaInicio}) >= ${filters.fechaInicio}`);
     }
@@ -52,13 +41,6 @@ export class AlquilerRepository {
       .select({
         id: alquileres.id,
         clienteId: alquileres.clienteId,
-        vehiculoId: alquileres.vehiculoId,
-        conductorId: alquileres.conductorId,
-
-        tipo: alquileres.tipo,
-
-        kilometrajeInicial: alquileres.kilometrajeInicial,
-        kilometrajeFinal: alquileres.kilometrajeFinal,
 
         montoPorDia: alquileres.montoPorDia,
         montoTotalFinal: alquileres.montoTotalFinal,
@@ -66,7 +48,7 @@ export class AlquilerRepository {
 
         fechaInicio: alquileres.fechaInicio,
         fechaFin: alquileres.fechaFin,
-        monto: alquileres.monto,
+        esIndefinido: alquileres.esIndefinido,
         observaciones: alquileres.observaciones,
         estado: alquileres.estado,
         creadoEn: alquileres.creadoEn,
@@ -76,33 +58,9 @@ export class AlquilerRepository {
           id: clientes.id,
           nombreCompleto: sql<string>`CASE WHEN ${clientes.tipoDocumento} = 'RUC' THEN COALESCE(${clientes.razonSocial}, ${clientes.nombreCompleto}) ELSE ${clientes.nombreCompleto} END`,
         },
-
-        vehiculo: {
-          id: vehiculos.id,
-          placa: vehiculos.placa,
-          marca: marcas.nombre,
-          modelo: modelos.nombre,
-        },
-        conductor: {
-          id: conductores.id,
-          nombreCompleto: conductores.nombreCompleto,
-          dni: conductores.dni,
-        },
-        proveedor: {
-          id: proveedores.id,
-          nombreCompleto: proveedores.nombreCompleto,
-          dni: proveedores.dni,
-          ruc: proveedores.ruc,
-        },
       })
       .from(alquileres)
       .leftJoin(clientes, eq(alquileres.clienteId, clientes.id))
-      .leftJoin(vehiculos, eq(alquileres.vehiculoId, vehiculos.id))
-      .leftJoin(conductores, eq(alquileres.conductorId, conductores.id))
-      .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
-      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
-      .leftJoin(vehiculoProveedores, eq(vehiculos.id, vehiculoProveedores.vehiculoId))
-      .leftJoin(proveedores, eq(vehiculoProveedores.proveedorId, proveedores.id))
       .where(whereClause);
 
     const data = await baseQuery.orderBy(desc(alquileres.creadoEn)).limit(limit).offset(offset);
@@ -111,10 +69,6 @@ export class AlquilerRepository {
       .select({ count: sql<number>`count(*)::int` })
       .from(alquileres)
       .leftJoin(clientes, eq(alquileres.clienteId, clientes.id))
-      .leftJoin(vehiculos, eq(alquileres.vehiculoId, vehiculos.id))
-      .leftJoin(conductores, eq(alquileres.conductorId, conductores.id))
-      .leftJoin(vehiculoProveedores, eq(vehiculos.id, vehiculoProveedores.vehiculoId))
-      .leftJoin(proveedores, eq(vehiculoProveedores.proveedorId, proveedores.id))
       .where(whereClause);
 
     return {
@@ -128,13 +82,6 @@ export class AlquilerRepository {
       .select({
         id: alquileres.id,
         clienteId: alquileres.clienteId,
-        vehiculoId: alquileres.vehiculoId,
-        conductorId: alquileres.conductorId,
-
-        tipo: alquileres.tipo,
-
-        kilometrajeInicial: alquileres.kilometrajeInicial,
-        kilometrajeFinal: alquileres.kilometrajeFinal,
 
         montoPorDia: alquileres.montoPorDia,
         montoTotalFinal: alquileres.montoTotalFinal,
@@ -142,7 +89,7 @@ export class AlquilerRepository {
 
         fechaInicio: alquileres.fechaInicio,
         fechaFin: alquileres.fechaFin,
-        monto: alquileres.monto,
+        esIndefinido: alquileres.esIndefinido,
         observaciones: alquileres.observaciones,
         estado: alquileres.estado,
         creadoEn: alquileres.creadoEn,
@@ -152,33 +99,9 @@ export class AlquilerRepository {
           id: clientes.id,
           nombreCompleto: clientes.nombreCompleto,
         },
-
-        vehiculo: {
-          id: vehiculos.id,
-          placa: vehiculos.placa,
-          marca: marcas.nombre,
-          modelo: modelos.nombre,
-        },
-        conductor: {
-          id: conductores.id,
-          nombreCompleto: conductores.nombreCompleto,
-          dni: conductores.dni,
-        },
-        proveedor: {
-          id: proveedores.id,
-          nombreCompleto: proveedores.nombreCompleto,
-          dni: proveedores.dni,
-          ruc: proveedores.ruc,
-        },
       })
       .from(alquileres)
       .leftJoin(clientes, eq(alquileres.clienteId, clientes.id))
-      .leftJoin(vehiculos, eq(alquileres.vehiculoId, vehiculos.id))
-      .leftJoin(conductores, eq(alquileres.conductorId, conductores.id))
-      .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
-      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
-      .leftJoin(vehiculoProveedores, eq(vehiculos.id, vehiculoProveedores.vehiculoId))
-      .leftJoin(proveedores, eq(vehiculoProveedores.proveedorId, proveedores.id))
       .where(and(eq(alquileres.id, id), isNull(alquileres.eliminadoEn)));
 
     return record;
@@ -213,9 +136,24 @@ export class AlquilerRepository {
   }
 
   async findActivosByVehiculo(vehiculoId: number) {
+    // Note: We join with alquileres to check the overall status and dates if needed, 
+    // but the primary check is on the detail table for the vehicle.
     return await database
-      .select()
+      .select({
+        id: alquileres.id,
+        fechaInicio: alquileres.fechaInicio,
+        fechaFin: alquileres.fechaFin,
+        estado: alquileres.estado,
+      })
       .from(alquileres)
-      .where(and(eq(alquileres.vehiculoId, vehiculoId), eq(alquileres.estado, 'activo'), isNull(alquileres.eliminadoEn)));
+      .innerJoin(alquilerDetalle, eq(alquileres.id, alquilerDetalle.alquilerId))
+      .where(
+        and(
+          eq(alquilerDetalle.vehiculoId, vehiculoId),
+          eq(alquileres.estado, 'activo'),
+          isNull(alquileres.eliminadoEn),
+          isNull(alquilerDetalle.eliminadoEn)
+        )
+      );
   }
 }

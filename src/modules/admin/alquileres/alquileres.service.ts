@@ -16,6 +16,8 @@ import { ViajeRepository } from '@repository/viaje.repository';
 import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repository';
 import { ValidarVehiculoAlquilerQueryDto } from './dto/alquiler/validar-vehiculo-alquiler-query.dto';
 import { ValidacionAlquilerResultDto } from './dto/alquiler/validacion-alquiler-result.dto';
+import { AlquilerDetalleRepository } from '@repository/alquiler-detalle.repository';
+import { AlquilerHistorialRepository } from '@repository/alquiler-historial.repository';
 
 @Injectable()
 export class AlquileresService {
@@ -26,6 +28,8 @@ export class AlquileresService {
     private readonly mantenimientoRepository: MantenimientoRepository,
     private readonly viajeRepository: ViajeRepository,
     private readonly vehiculoDocumentoRepository: VehiculoDocumentoRepository,
+    private readonly alquilerDetalleRepository: AlquilerDetalleRepository,
+    private readonly alquilerHistorialRepository: AlquilerHistorialRepository,
   ) {}
 
   async findAll(query: AlquilerQueryDto): Promise<AlquilerListDto> {
@@ -54,33 +58,50 @@ export class AlquileresService {
     }
 
     const documentos = await this.alquilerDocumentoRepository.findByAlquilerId(id);
+    const detalles = await this.alquilerDetalleRepository.findByAlquilerId(id);
+    const historial = await this.alquilerHistorialRepository.findByAlquilerId(id);
 
     return {
       ...alquiler,
       documentos,
+      detalles,
+      historial,
     };
   }
 
   async create(data: AlquilerCreateDto): Promise<AlquilerResultDto> {
-    if (data.tipo === 'maquina_operada' && !data.conductorId) {
-      throw new BadRequestException('Para alquiler tipo maquina_operada debe enviar conductorId.');
-    }
+    const { marcarComoAlquilado, vehiculos: vehiculosData, ...rest } = data;
 
-    if (data.tipo === 'maquina_seca' && data.conductorId) {
-      throw new BadRequestException('Para alquiler tipo maquina_seca no debe enviar conductorId.');
-    }
-
-    const { marcarComoAlquilado, ...rest } = data;
-    const payload = {
+    // 1. Crear Maestro
+    const alquiler = await this.alquilerRepository.create({
       ...rest,
-      conductorId: data.tipo === 'maquina_seca' ? null : rest.conductorId,
-      fechaFin: null,
-    };
-    const alquiler = await this.alquilerRepository.create(payload);
+      fechaInicio: new Date(rest.fechaInicio),
+      fechaFin: rest.fechaFin ? new Date(rest.fechaFin) : null,
+    });
     const id = alquiler.id;
 
-    if (marcarComoAlquilado) {
-      await this.vehiculoRepository.update(rest.vehiculoId, { estado: 'alquilado' });
+    // 2. Crear Detalles e Historial
+    for (const vData of vehiculosData) {
+      await this.alquilerDetalleRepository.create({
+        alquilerId: id,
+        vehiculoId: vData.vehiculoId,
+        conductorId: vData.conductorId || null,
+        tipo: vData.tipo,
+        kilometrajeInicial: vData.kilometrajeInicial,
+      });
+
+      // Historial de alta
+      await this.alquilerHistorialRepository.create({
+        alquilerId: id,
+        vehiculoId: vData.vehiculoId,
+        tipoAccion: 'ALTA_VEHICULO',
+        motivo: 'Alta inicial en contrato corporativo',
+        fechaAccion: new Date(),
+      });
+
+      if (marcarComoAlquilado) {
+        await this.vehiculoRepository.update(vData.vehiculoId, { estado: 'alquilado' });
+      }
     }
 
     return this.findOne(id);
@@ -88,26 +109,54 @@ export class AlquileresService {
 
   async update(id: number, data: AlquilerUpdateDto): Promise<AlquilerResultDto> {
     const prev = await this.findOne(id);
-    const { marcarComoAlquilado, ...payload } = data;
+    const { marcarComoAlquilado, vehiculos: vehiculosData, ...payload } = data;
 
-    const tipoFinal = data.tipo || prev.tipo;
-    const conductorFinal = data.conductorId !== undefined ? data.conductorId : prev.conductorId;
-
-    if (tipoFinal === 'maquina_operada' && !conductorFinal) {
-      throw new BadRequestException('Para alquiler tipo maquina_operada debe enviar conductorId.');
+    // 1. Verificar cambio de precio para el historial
+    if (payload.montoPorDia !== undefined && payload.montoPorDia !== prev.montoPorDia) {
+      await this.alquilerHistorialRepository.create({
+        alquilerId: id,
+        tipoAccion: 'CAMBIO_PRECIO',
+        montoAnterior: prev.montoPorDia,
+        montoNuevo: payload.montoPorDia,
+        motivo: 'Actualización de tarifa contractual',
+        fechaAccion: new Date(),
+      });
     }
 
-    if (tipoFinal === 'maquina_seca' && conductorFinal) {
-      throw new BadRequestException('Para alquiler tipo maquina_seca no debe enviar conductorId.');
-    }
-
+    // 2. Actualizar Maestro
     await this.alquilerRepository.update(id, {
       ...payload,
-      conductorId: tipoFinal === 'maquina_seca' ? null : conductorFinal,
+      fechaInicio: payload.fechaInicio ? new Date(payload.fechaInicio) : undefined,
+      fechaFin: payload.fechaFin ? new Date(payload.fechaFin) : undefined,
     });
 
-    if (marcarComoAlquilado) {
-      await this.vehiculoRepository.update(data.vehiculoId || prev.vehiculoId, { estado: 'alquilado' });
+    // 3. Manejar vehículos si se envían (esto podría ser más complejo para detectar adiciones/eliminaciones)
+    // Por ahora, si se envían vehículos nuevos que no están, los agregamos.
+    if (vehiculosData) {
+      for (const vData of vehiculosData) {
+        const exist = prev.detalles?.find((d) => d.vehiculoId === vData.vehiculoId);
+        if (!exist) {
+          await this.alquilerDetalleRepository.create({
+            alquilerId: id,
+            vehiculoId: vData.vehiculoId,
+            conductorId: vData.conductorId || null,
+            tipo: vData.tipo,
+            kilometrajeInicial: vData.kilometrajeInicial,
+          });
+
+          await this.alquilerHistorialRepository.create({
+            alquilerId: id,
+            vehiculoId: vData.vehiculoId,
+            tipoAccion: 'ALTA_VEHICULO',
+            motivo: 'Adición de vehículo al contrato',
+            fechaAccion: new Date(),
+          });
+
+          if (marcarComoAlquilado) {
+            await this.vehiculoRepository.update(vData.vehiculoId, { estado: 'alquilado' });
+          }
+        }
+      }
     }
 
     return this.findOne(id);
@@ -119,30 +168,66 @@ export class AlquileresService {
   }
 
   async terminar(id: number, data: AlquilerTerminarDto): Promise<AlquilerResultDto> {
-    const prev = await this.findOne(id);
+    if (data.detalleId) {
+      // 1. Finalizar una unidad específica
+      const detalle = await this.alquilerDetalleRepository.findOne(data.detalleId);
+      if (!detalle) throw new NotFoundException('Detalle de alquiler no encontrado.');
 
-    if (prev.estado === 'finalizado') {
-      throw new BadRequestException('El alquiler ya se encuentra finalizado.');
+      // Validar kilometraje
+      const kmInicial = Number(detalle.kilometrajeInicial);
+      const kmFinal = Number(data.kilometrajeFinal);
+      if (Number.isFinite(kmInicial) && Number.isFinite(kmFinal) && kmFinal < kmInicial) {
+        throw new BadRequestException('El kilometraje final no puede ser menor al kilometraje inicial.');
+      }
+
+      await this.alquilerDetalleRepository.update(data.detalleId, {
+        kilometrajeFinal: data.kilometrajeFinal,
+      });
+
+      await this.vehiculoRepository.update(detalle.vehiculoId, {
+        estado: 'disponible',
+        kilometraje: data.kilometrajeFinal,
+      });
+
+      await this.alquilerHistorialRepository.create({
+        alquilerId: id,
+        vehiculoId: detalle.vehiculoId,
+        tipoAccion: 'BAJA_VEHICULO',
+        motivo: data.observaciones || 'Baja de unidad del contrato',
+        fechaAccion: new Date(),
+      });
+    } else {
+      // 2. Finalizar el contrato maestro (y todas sus unidades activas)
+      const prev = await this.findOne(id);
+      if (prev.estado === 'finalizado') throw new BadRequestException('El contrato ya está finalizado.');
+
+      // Finalizar todas las unidades que aún no han sido finalizadas
+      if (prev.detalles?.length) {
+        for (const detalle of prev.detalles) {
+          if (detalle.kilometrajeFinal == null) {
+            // Actualizar vehículo a disponible
+            await this.vehiculoRepository.update(detalle.vehiculoId, {
+              estado: 'disponible',
+            });
+            // Log history for each vehicle
+            await this.alquilerHistorialRepository.create({
+              alquilerId: id,
+              vehiculoId: detalle.vehiculoId,
+              tipoAccion: 'BAJA_VEHICULO',
+              motivo: 'Finalización del contrato maestro',
+              fechaAccion: new Date(),
+            });
+          }
+        }
+      }
+
+      await this.alquilerRepository.update(id, {
+        estado: 'finalizado',
+        fechaFin: data.fechaFin || new Date(),
+        montoTotalFinal: data.montoTotalFinal,
+        observaciones: data.observaciones || prev.observaciones || null,
+      });
     }
-
-    const kmInicial = Number(prev.kilometrajeInicial);
-    const kmFinal = Number(data.kilometrajeFinal);
-    if (Number.isFinite(kmInicial) && Number.isFinite(kmFinal) && kmFinal < kmInicial) {
-      throw new BadRequestException('El kilometraje final no puede ser menor al kilometraje inicial.');
-    }
-
-    await this.alquilerRepository.update(id, {
-      fechaFin: data.fechaFin,
-      kilometrajeFinal: data.kilometrajeFinal,
-      montoTotalFinal: data.montoTotalFinal,
-      observaciones: data.observaciones || prev.observaciones || null,
-      estado: 'finalizado',
-    });
-
-    await this.vehiculoRepository.update(prev.vehiculoId, {
-      estado: 'disponible',
-      kilometraje: data.kilometrajeFinal,
-    });
 
     return this.findOne(id);
   }
@@ -190,11 +275,15 @@ export class AlquileresService {
     const vInicio = new Date(fechaInicio);
     const vFin = fechaFin ? new Date(fechaFin) : new Date(vInicio.getTime() + 1000 * 60 * 60 * 24 * 365); // 1 year if not set
 
-    // 1. Validar alquileres cruzados
-    const activeAlquileres = await this.alquilerRepository.findActivosByVehiculo(query.vehiculoId);
+    // 1. Validar alquileres cruzados usando los detalles
+    const activeDetalles = await this.alquilerDetalleRepository.findActiveByVehiculo(query.vehiculoId);
 
-    for (const alq of activeAlquileres) {
-      if (alquilerId && alq.id === alquilerId) continue;
+    for (const det of activeDetalles) {
+      if (alquilerId && det.alquilerId === alquilerId) continue;
+
+      // Necesito las fechas del maestro para comparar si el detalle no las tiene
+      const alq = await this.alquilerRepository.findOne(det.alquilerId);
+      if (!alq) continue;
 
       const aInicio = new Date(alq.fechaInicio);
       const aFin = alq.fechaFin ? new Date(alq.fechaFin) : null;

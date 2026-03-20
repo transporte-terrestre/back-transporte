@@ -28,17 +28,34 @@ export class AlquilerProveedorDto {
   @ApiProperty({ required: false }) ruc?: string | null;
 }
 
+export class AlquilerDetalleResultDto {
+  @ApiProperty() id: number;
+  @ApiProperty() alquilerId: number;
+  @ApiProperty() vehiculoId: number;
+  @ApiProperty({ required: false }) conductorId?: number | null;
+  @ApiProperty({ enum: alquilerTipo.enumValues }) tipo: AlquilerTipo;
+  @ApiProperty() kilometrajeInicial: number;
+  @ApiProperty({ required: false }) kilometrajeFinal?: number | null;
+  @ApiProperty({ type: AlquilerVehiculoDto, required: false }) vehiculo?: AlquilerVehiculoDto;
+  @ApiProperty({ type: AlquilerConductorDto, required: false }) conductor?: AlquilerConductorDto;
+}
+
+export class AlquilerHistorialResultDto {
+  @ApiProperty() id: number;
+  @ApiProperty() alquilerId: number;
+  @ApiProperty({ required: false }) vehiculoId?: number | null;
+  @ApiProperty() tipoAccion: string;
+  @ApiProperty({ required: false }) montoAnterior?: number | null;
+  @ApiProperty({ required: false }) montoNuevo?: number | null;
+  @ApiProperty({ required: false }) motivo?: string | null;
+  @ApiProperty() fechaAccion: Date;
+  @ApiProperty({ type: AlquilerVehiculoDto, required: false }) vehiculo?: Partial<AlquilerVehiculoDto>;
+}
+
 export class AlquilerResultDto {
   @ApiProperty() id: number;
 
   @ApiProperty() clienteId: number;
-  @ApiProperty() vehiculoId: number;
-  @ApiProperty({ required: false }) conductorId?: number | null;
-
-  @ApiProperty({ enum: alquilerTipo.enumValues }) tipo: AlquilerTipo;
-
-  @ApiProperty() kilometrajeInicial: number;
-  @ApiProperty({ required: false }) kilometrajeFinal?: number | null;
 
   @ApiProperty() montoPorDia: number;
   @ApiProperty({ required: false }) montoTotalFinal?: number | null;
@@ -46,8 +63,8 @@ export class AlquilerResultDto {
 
   @ApiProperty() fechaInicio: Date;
   @ApiProperty({ required: false }) fechaFin?: Date | null;
+  @ApiProperty() esIndefinido: boolean;
 
-  @ApiProperty({ required: false }) monto?: string | null;
   @ApiProperty({ required: false }) observaciones?: string | null;
   @ApiProperty({ enum: alquilerEstado.enumValues }) estado: AlquilerEstado;
 
@@ -55,8 +72,7 @@ export class AlquilerResultDto {
   @ApiProperty() actualizadoEn: Date;
 
   @ApiProperty({ type: AlquilerClienteDto, required: false }) cliente?: AlquilerClienteDto;
-  @ApiProperty({ type: AlquilerVehiculoDto, required: false }) vehiculo?: AlquilerVehiculoDto;
-  @ApiProperty({ type: AlquilerConductorDto, required: false }) conductor?: AlquilerConductorDto;
-  @ApiProperty({ type: AlquilerProveedorDto, required: false }) proveedor?: AlquilerProveedorDto;
+  @ApiProperty({ type: [AlquilerDetalleResultDto], required: false }) detalles?: AlquilerDetalleResultDto[];
+  @ApiProperty({ type: [AlquilerHistorialResultDto], required: false }) historial?: AlquilerHistorialResultDto[];
   @ApiProperty({ type: [AlquilerDocumentoResultDto], required: false }) documentos?: AlquilerDocumentoResultDto[];
 }
