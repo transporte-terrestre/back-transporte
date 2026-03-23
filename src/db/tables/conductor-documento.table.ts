@@ -30,8 +30,8 @@ export const conductorDocumentos = pgTable('conductor_documentos', {
   tipo: conductorDocumentosTipo('tipo').notNull(),
   nombre: text('nombre').notNull(),
   url: text('url').notNull(),
-  fechaExpiracion: date('fecha_expiracion').notNull(),
-  fechaEmision: date('fecha_emision').notNull(),
+  fechaExpiracion: date('fecha_expiracion'),
+  fechaEmision: date('fecha_emision'),
   creadoEn: timestamp('creado_en').defaultNow().notNull(),
   actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
 });

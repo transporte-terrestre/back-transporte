@@ -1,7 +1,7 @@
 import { pgTable, serial, pgEnum, date, timestamp, text, integer } from 'drizzle-orm/pg-core';
 import { usuarios } from './usuario.table';
 
-export const usuarioDocumentosTipo = pgEnum('usuario_documentos_tipo', ['dni', 'seguro_vida_ley', 'sctr', 'examen_medico', 'induccion_general']);
+export const usuarioDocumentosTipo = pgEnum('usuario_documentos_tipo', ['dni', 'seguro_vida_ley', 'sctr', 'examen_medico', 'induccion_general', 'firma']);
 
 export const usuarioDocumentos = pgTable('usuario_documentos', {
   id: serial('id').primaryKey(),

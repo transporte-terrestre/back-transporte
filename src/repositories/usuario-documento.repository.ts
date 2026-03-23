@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, gte, lte, count } from 'drizzle-orm';
+import { eq, and, gte, lte, count, inArray } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { usuarioDocumentos, UsuarioDocumentoDTO } from '@db/tables/usuario-documento.table';
+import { usuarioDocumentos, UsuarioDocumentoDTO, usuarioDocumentosTipo } from '@db/tables/usuario-documento.table';
 
 interface PaginationFilters {
   usuarioId?: number;
@@ -56,6 +56,13 @@ export class UsuarioDocumentoRepository {
 
   async findByUsuarioId(usuarioId: number) {
     return await database.select().from(usuarioDocumentos).where(eq(usuarioDocumentos.usuarioId, usuarioId));
+  }
+
+  async findByUserIdsAndTypes(userIds: number[], types: (typeof usuarioDocumentosTipo.enumValues[number])[]) {
+    return await database
+      .select()
+      .from(usuarioDocumentos)
+      .where(and(inArray(usuarioDocumentos.usuarioId, userIds), inArray(usuarioDocumentos.tipo, types as any)));
   }
 
   async create(data: UsuarioDocumentoDTO) {

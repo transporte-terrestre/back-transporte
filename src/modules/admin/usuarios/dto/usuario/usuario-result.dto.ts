@@ -20,6 +20,9 @@ export class DocumentosAgrupadosDto implements Record<UsuarioDocumentoTipo, Usua
 
   @ApiProperty({ type: [UsuarioDocumentoResultDto] })
   induccion_general: UsuarioDocumentoResultDto[];
+
+  @ApiProperty({ type: [UsuarioDocumentoResultDto] })
+  firma: UsuarioDocumentoResultDto[];
 }
 
 export class UsuarioResultDto {
