@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsInt, IsIn, IsString, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsInt, IsIn, IsString, IsDateString, IsOptional } from 'class-validator';
 import { ConductorDocumentoDTO, conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
 import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 
@@ -34,16 +34,18 @@ export class ConductorDocumentoCreateDto implements Omit<ConductorDocumentoDTO, 
   @ApiProperty({
     example: '2025-12-31',
     description: 'Fecha de expiración del documento',
+    required: false,
   })
   @IsDateString()
-  @IsNotEmpty()
-  fechaExpiracion: string;
+  @IsOptional()
+  fechaExpiracion?: string;
 
   @ApiProperty({
     example: '2023-01-15',
     description: 'Fecha de emisión del documento',
+    required: false,
   })
   @IsDateString()
-  @IsNotEmpty()
-  fechaEmision: string;
+  @IsOptional()
+  fechaEmision?: string;
 }

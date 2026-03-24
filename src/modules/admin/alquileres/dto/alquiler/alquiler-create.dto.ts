@@ -1,20 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDate, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateIf } from 'class-validator';
+import { IsDate, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, IsBoolean, ValidateNested, IsArray } from 'class-validator';
 import { AlquilerDTO, alquilerTipo } from '@db/tables/alquiler.table';
 
-export class AlquilerCreateDto
-  implements
-    Omit<
-      AlquilerDTO,
-      'id' | 'creadoEn' | 'actualizadoEn' | 'eliminadoEn' | 'estado' | 'fechaFin' | 'conductorId' | 'kilometrajeFinal' | 'montoTotalFinal'
-    >
-{
-  @ApiProperty()
-  @IsInt()
-  @IsNotEmpty()
-  clienteId: number;
-
+export class AlquilerVehiculoDetalleDto {
   @ApiProperty()
   @IsInt()
   @IsNotEmpty()
@@ -25,10 +14,9 @@ export class AlquilerCreateDto
   @IsNotEmpty()
   tipo: (typeof alquilerTipo.enumValues)[number];
 
-  @ApiProperty({ description: 'Conductor requerido cuando el tipo es maquina_operada' })
-  @ValidateIf((o: AlquilerCreateDto) => o.tipo === 'maquina_operada')
+  @ApiPropertyOptional({ description: 'Conductor requerido cuando el tipo es maquina_operada' })
   @IsInt()
-  @IsNotEmpty()
+  @IsOptional()
   conductorId?: number;
 
   @ApiProperty({ example: 15234.5 })
@@ -36,6 +24,19 @@ export class AlquilerCreateDto
   @Type(() => Number)
   @IsNotEmpty()
   kilometrajeInicial: number;
+}
+
+export class AlquilerCreateDto
+  implements
+    Omit<
+      AlquilerDTO,
+      'id' | 'creadoEn' | 'actualizadoEn' | 'eliminadoEn' | 'estado' | 'montoTotalFinal'
+    >
+{
+  @ApiProperty()
+  @IsInt()
+  @IsNotEmpty()
+  clienteId: number;
 
   @ApiProperty({ example: 450.0 })
   @IsNumber()
@@ -54,13 +55,31 @@ export class AlquilerCreateDto
   @IsNotEmpty()
   fechaInicio: Date;
 
+  @ApiPropertyOptional({ type: String, format: 'date-time' })
+  @IsDate()
+  @Type(() => Date)
+  @IsOptional()
+  fechaFin: Date | null;
+
+  @ApiProperty({ default: false })
+  @IsBoolean()
+  @IsNotEmpty()
+  esIndefinido: boolean;
+
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   observaciones?: string | null;
 
-  @ApiPropertyOptional({ description: 'Si es true, el vehículo cambiará su estado a alquilado.' })
+  @ApiProperty({ type: [AlquilerVehiculoDetalleDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AlquilerVehiculoDetalleDto)
+  vehiculos: AlquilerVehiculoDetalleDto[];
+
+  @ApiPropertyOptional({ description: 'Si es true, los vehículos cambiarán su estado a alquilado.' })
   @IsOptional()
+  @IsBoolean()
   @Type(() => Boolean)
   marcarComoAlquilado?: boolean;
 }

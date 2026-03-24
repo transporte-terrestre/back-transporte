@@ -49,6 +49,10 @@ export class UsuariosService {
     };
   }
 
+  async findFirmasByUsuarioId(usuarioId: number) {
+    return await this.usuarioDocumentoRepository.findByUserIdsAndTypes([usuarioId], ['firma']);
+  }
+
   async findOne(id: number) {
     const usuario = await this.usuarioRepository.findOne(id);
     const documentos = await this.usuarioDocumentoRepository.findByUsuarioId(id);

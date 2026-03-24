@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { eq, or, like, and, gte, lte, count, ilike, desc, sql } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { talleres, TallerDTO } from '@db/tables/taller.table';
-import { tallerSucursales } from '@db/tables/taller-sucursal.table';
+import { sucursales } from '@db/tables/sucursal.table';
 
 interface PaginationFilters {
   search?: string;
@@ -65,10 +65,10 @@ export class TallerRepository {
         eliminadoEn: talleres.eliminadoEn,
         sucursalIds: sql<
           number[]
-        >`COALESCE(ARRAY_AGG(${tallerSucursales.sucursalId}) FILTER (WHERE ${tallerSucursales.sucursalId} IS NOT NULL), '{}')`.as('sucursalIds'),
+        >`COALESCE(ARRAY_AGG(${sucursales.id}) FILTER (WHERE ${sucursales.id} IS NOT NULL), '{}')`.as('sucursalIds'),
       })
       .from(talleres)
-      .leftJoin(tallerSucursales, eq(talleres.id, tallerSucursales.tallerId))
+      .leftJoin(sucursales, eq(talleres.id, sucursales.tallerId))
       .where(whereClause)
       .groupBy(talleres.id)
       .orderBy(desc(talleres.creadoEn))

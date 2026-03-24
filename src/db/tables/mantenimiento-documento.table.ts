@@ -7,6 +7,7 @@ export const mantenimientoDocumentosTipo = pgEnum('mantenimiento_documentos_tipo
   'informe_tecnico',
   'cotizacion',
   'fotos',
+  'cartilla',
   'otros',
 ]);
 

@@ -1,19 +1,21 @@
-import { pgTable, serial, varchar, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, timestamp, index, integer } from 'drizzle-orm/pg-core';
+import { talleres } from './taller.table';
 
 export const sucursales = pgTable(
   'sucursales',
   {
     id: serial('id').primaryKey(),
-    departamento: varchar('departamento', { length: 100 }).notNull(),
-    provincia: varchar('provincia', { length: 100 }).notNull(),
+    tallerId: integer('taller_id')
+      .references(() => talleres.id, { onDelete: 'cascade' })
+      .notNull(),
     distrito: varchar('distrito', { length: 100 }).notNull(),
+    ubicacionExacta: varchar('ubicacion_exacta', { length: 255 }).notNull(),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
     eliminadoEn: timestamp('eliminado_en'),
   },
   (t) => [
-    index('sucursales_departamento_idx').using('gin', t.departamento.op('gin_trgm_ops')),
-    index('sucursales_provincia_idx').using('gin', t.provincia.op('gin_trgm_ops')),
+    index('sucursales_taller_id_idx').on(t.tallerId),
     index('sucursales_distrito_idx').using('gin', t.distrito.op('gin_trgm_ops')),
   ],
 );

@@ -75,12 +75,7 @@ export class MantenimientosService {
     sort: 'proximos' | 'ultimos' = 'proximos',
     vehiculoId?: number,
   ): Promise<PaginatedReporteEstadoResultDto> {
-    const { data: rawData, total } = await this.mantenimientoRepository.getReporteEstadoVehiculos(
-      page,
-      limit,
-      sort,
-      vehiculoId,
-    );
+    const { data: rawData, total } = await this.mantenimientoRepository.getReporteEstadoVehiculos(page, limit, sort, vehiculoId);
 
     const data = rawData.map((row) => {
       const actual = Number(row.kilometraje_actual || 0);

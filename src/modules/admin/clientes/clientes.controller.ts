@@ -14,6 +14,11 @@ import { PasajeroUpdateDto } from './dto/pasajero/pasajero-update.dto';
 import { PaginatedPasajeroResultDto } from './dto/pasajero/pasajero-paginated.dto';
 import { PasajeroPaginationQueryDto } from './dto/pasajero/pasajero-pagination.dto';
 import { PasajeroResultDto } from './dto/pasajero/pasajero-result.dto';
+import { EncargadoCreateDto } from './dto/encargado/encargado-create.dto';
+import { EncargadoUpdateDto } from './dto/encargado/encargado-update.dto';
+import { PaginatedEncargadoResultDto } from './dto/encargado/encargado-paginated.dto';
+import { EncargadoPaginationQueryDto } from './dto/encargado/encargado-pagination.dto';
+import { EncargadoResultDto } from './dto/encargado/encargado-result.dto';
 import { EntidadCreateDto } from './dto/entidad/entidad-create.dto';
 import { EntidadUpdateDto } from './dto/entidad/entidad-update.dto';
 import { PaginatedEntidadResultDto } from './dto/entidad/entidad-paginated.dto';
@@ -33,7 +38,15 @@ export class ClientesController {
   })
   @ApiResponse({ status: 200, type: PaginatedClienteResultDto })
   findAll(@Query() query: ClientePaginationQueryDto) {
-    return this.clientesService.findAllPaginated(query.page, query.limit, query.search, query.fechaInicio, query.fechaFin, query.tipoDocumento);
+    return this.clientesService.findAllPaginated(
+      query.page,
+      query.limit,
+      query.search,
+      query.fechaInicio,
+      query.fechaFin,
+      query.tipoDocumento,
+      query.tipo,
+    );
   }
 
   @Get('find-one/:id')
@@ -139,6 +152,48 @@ export class ClientesController {
   @ApiResponse({ status: 200, type: PasajeroResultDto })
   deletePasajero(@Param('id') id: string) {
     return this.clientesService.deletePasajero(+id);
+  }
+
+  // ========== ENCARGADOS ==========
+
+  @Get('encargado/find-all')
+  @ApiOperation({
+    summary: 'Obtener encargados con paginación, búsqueda y filtro por cliente',
+  })
+  @ApiResponse({ status: 200, type: PaginatedEncargadoResultDto })
+  findAllEncargados(@Query() query: EncargadoPaginationQueryDto) {
+    return this.clientesService.findAllEncargadosPaginated(query.page, query.limit, query.search, query.clienteId);
+  }
+
+  @Get('encargado/find-one/:id')
+  @ApiOperation({ summary: 'Obtener un encargado por ID' })
+  @ApiParam({ name: 'id', description: 'ID del encargado', type: Number })
+  @ApiResponse({ status: 200, type: EncargadoResultDto })
+  findEncargado(@Param('id') id: string) {
+    return this.clientesService.findEncargado(+id);
+  }
+
+  @Post('encargado/create')
+  @ApiOperation({ summary: 'Crear un nuevo encargado' })
+  @ApiResponse({ status: 201, type: EncargadoResultDto })
+  createEncargado(@Body() createDto: EncargadoCreateDto) {
+    return this.clientesService.createEncargado(createDto);
+  }
+
+  @Patch('encargado/update/:id')
+  @ApiOperation({ summary: 'Actualizar un encargado' })
+  @ApiParam({ name: 'id', description: 'ID del encargado', type: Number })
+  @ApiResponse({ status: 200, type: EncargadoResultDto })
+  updateEncargado(@Param('id') id: string, @Body() updateDto: EncargadoUpdateDto) {
+    return this.clientesService.updateEncargado(+id, updateDto);
+  }
+
+  @Delete('encargado/delete/:id')
+  @ApiOperation({ summary: 'Eliminar un encargado' })
+  @ApiParam({ name: 'id', description: 'ID del encargado', type: Number })
+  @ApiResponse({ status: 200, type: EncargadoResultDto })
+  deleteEncargado(@Param('id') id: string) {
+    return this.clientesService.deleteEncargado(+id);
   }
 
   // ========== ENTIDADES ==========

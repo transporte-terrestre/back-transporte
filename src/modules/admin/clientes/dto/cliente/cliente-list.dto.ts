@@ -1,4 +1,4 @@
-import { clientesTipoDocumento } from '@db/tables/cliente.table';
+import { clientesTipoDocumento, clientesTipo } from '@db/tables/cliente.table';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ClienteListDto {
@@ -10,6 +10,9 @@ export class ClienteListDto {
 
   @ApiProperty({ enum: clientesTipoDocumento.enumValues, example: clientesTipoDocumento.enumValues[0], description: 'Tipo de documento' })
   tipoDocumento: string;
+
+  @ApiProperty({ enum: clientesTipo.enumValues, example: clientesTipo.enumValues[0], description: 'Tipo de cliente' })
+  tipo: string;
 
   @ApiPropertyOptional({ example: '20123456789', description: 'RUC del cliente' })
   ruc: string | null;

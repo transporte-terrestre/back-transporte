@@ -30,6 +30,10 @@ export class ClienteRepository {
       conditions.push(eq(sql`${clientes.tipoDocumento}::text`, filters.tipoDocumento));
     }
 
+    if (filters?.tipo) {
+      conditions.push(eq(sql`${clientes.tipo}::text`, filters.tipo));
+    }
+
     // Filtro por rango de fechas
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(gte(clientes.creadoEn, new Date(filters.fechaInicio)));

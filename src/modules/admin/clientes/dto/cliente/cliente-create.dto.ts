@@ -1,7 +1,7 @@
 import { IsArray, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, IsIn, IsNumber, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ClienteDTO, clientesTipoDocumento } from '@db/tables/cliente.table';
-import type { ClienteTipoDocumento } from '@db/tables/cliente.table';
+import { ClienteDTO, clientesTipoDocumento, clientesTipo } from '@db/tables/cliente.table';
+import type { ClienteTipoDocumento, ClienteTipo } from '@db/tables/cliente.table';
 
 export class ClienteCreateDto implements Omit<ClienteDTO, 'id' | 'nombreCompleto' | 'creadoEn' | 'actualizadoEn'> {
   @ApiProperty({
@@ -12,6 +12,14 @@ export class ClienteCreateDto implements Omit<ClienteDTO, 'id' | 'nombreCompleto
   @IsIn(clientesTipoDocumento.enumValues, { each: true })
   @IsNotEmpty()
   tipoDocumento: ClienteTipoDocumento;
+  @ApiProperty({
+    description: 'Tipo de cliente',
+    enum: clientesTipo.enumValues,
+    default: clientesTipo.enumValues[0],
+  })
+  @IsIn(clientesTipo.enumValues, { each: true })
+  @IsNotEmpty()
+  tipo: ClienteTipo;
 
   @ApiPropertyOptional({ example: '12345678', description: 'DNI del cliente' })
   @IsString()

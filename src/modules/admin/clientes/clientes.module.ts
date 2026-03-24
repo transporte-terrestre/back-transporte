@@ -5,10 +5,11 @@ import { ClienteRepository } from '@repository/cliente.repository';
 import { ClienteDocumentoRepository } from '@repository/cliente-documento.repository';
 import { PasajeroRepository } from '@repository/pasajero.repository';
 import { EntidadRepository } from '@repository/entidad.repository';
+import { EncargadoRepository } from '@repository/encargado.repository';
 
 @Module({
   controllers: [ClientesController],
-  providers: [ClientesService, ClienteRepository, ClienteDocumentoRepository, PasajeroRepository, EntidadRepository],
+  providers: [ClientesService, ClienteRepository, ClienteDocumentoRepository, PasajeroRepository, EntidadRepository, EncargadoRepository],
   exports: [ClientesService, ClienteRepository],
 })
 export class ClientesModule {}

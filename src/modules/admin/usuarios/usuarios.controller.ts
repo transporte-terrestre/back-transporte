@@ -58,6 +58,14 @@ export class UsuariosController {
     return this.usuariosService.remove(+id);
   }
 
+  @Get('find-firmas/:id')
+  @ApiOperation({ summary: 'Obtener las firmas de un usuario' })
+  @ApiParam({ name: 'id', type: 'number', description: 'User ID' })
+  @ApiResponse({ status: 200, type: [UsuarioDocumentoResultDto] })
+  findFirmas(@Param('id') id: string) {
+    return this.usuariosService.findFirmasByUsuarioId(+id);
+  }
+
   // ========== DOCUMENTOS ==========
   @Get('documento/:id')
   @ApiOperation({ summary: 'Obtener un documento por ID' })

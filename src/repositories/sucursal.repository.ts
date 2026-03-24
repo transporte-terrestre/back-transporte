@@ -7,6 +7,7 @@ interface PaginationFilters {
   search?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  tallerId?: number;
 }
 
 @Injectable()
@@ -15,21 +16,32 @@ export class SucursalRepository {
     return await database.select().from(sucursales).where(isNull(sucursales.eliminadoEn));
   }
 
+  async findByTaller(tallerId: number) {
+    return await database
+      .select()
+      .from(sucursales)
+      .where(and(eq(sucursales.tallerId, tallerId), isNull(sucursales.eliminadoEn)));
+  }
+
   async findAllPaginated(page: number = 1, limit: number = 10, filters?: PaginationFilters) {
     const offset = (page - 1) * limit;
     const conditions = [isNull(sucursales.eliminadoEn)];
+
+    if (filters?.tallerId) {
+      conditions.push(eq(sucursales.tallerId, filters.tallerId));
+    }
 
     if (filters?.search) {
       const searchTerm = filters.search.trim();
       conditions.push(
         or(
-          ilike(sucursales.departamento, `%${searchTerm}%`),
-          ilike(sucursales.provincia, `%${searchTerm}%`),
           ilike(sucursales.distrito, `%${searchTerm}%`),
+          ilike(sucursales.ubicacionExacta, `%${searchTerm}%`),
         ),
       );
     }
 
+    // ... (dates remain same)
     if (filters?.fechaInicio && filters?.fechaFin) {
       conditions.push(gte(sucursales.creadoEn, new Date(filters.fechaInicio)));
       conditions.push(lte(sucursales.creadoEn, new Date(filters.fechaFin + 'T23:59:59')));
@@ -64,6 +76,11 @@ export class SucursalRepository {
     return result[0];
   }
 
+  async createMany(data: SucursalDTO[]) {
+    if (data.length === 0) return [];
+    return await database.insert(sucursales).values(data).returning();
+  }
+
   async update(id: number, data: Partial<SucursalDTO>) {
     const result = await database
       .update(sucursales)
@@ -76,5 +93,9 @@ export class SucursalRepository {
   async delete(id: number) {
     const result = await database.update(sucursales).set({ eliminadoEn: new Date() }).where(eq(sucursales.id, id)).returning();
     return result[0];
+  }
+
+  async hardDeleteByTaller(tallerId: number) {
+    await database.delete(sucursales).where(eq(sucursales.tallerId, tallerId));
   }
 }

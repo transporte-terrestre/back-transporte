@@ -11,11 +11,15 @@ import { PasajeroRepository } from '@repository/pasajero.repository';
 import { PasajeroCreateDto } from './dto/pasajero/pasajero-create.dto';
 import { PasajeroUpdateDto } from './dto/pasajero/pasajero-update.dto';
 import { PaginatedPasajeroResultDto } from './dto/pasajero/pasajero-paginated.dto';
+import { EncargadoRepository } from '@repository/encargado.repository';
+import { EncargadoCreateDto } from './dto/encargado/encargado-create.dto';
+import { EncargadoUpdateDto } from './dto/encargado/encargado-update.dto';
+import { PaginatedEncargadoResultDto } from './dto/encargado/encargado-paginated.dto';
 import { EntidadRepository } from '@repository/entidad.repository';
 import { EntidadCreateDto } from './dto/entidad/entidad-create.dto';
 import { EntidadUpdateDto } from './dto/entidad/entidad-update.dto';
 import { PaginatedEntidadResultDto } from './dto/entidad/entidad-paginated.dto';
-import type { ClienteTipoDocumento } from '@db/tables/cliente.table';
+import type { ClienteTipoDocumento, ClienteTipo } from '@db/tables/cliente.table';
 
 interface DatabaseError {
   code?: string;
@@ -29,6 +33,7 @@ export class ClientesService {
     private readonly clienteRepository: ClienteRepository,
     private readonly clienteDocumentoRepository: ClienteDocumentoRepository,
     private readonly pasajeroRepository: PasajeroRepository,
+    private readonly encargadoRepository: EncargadoRepository,
     private readonly entidadRepository: EntidadRepository,
   ) {}
 
@@ -39,12 +44,14 @@ export class ClientesService {
     fechaInicio?: string,
     fechaFin?: string,
     tipoDocumento?: ClienteTipoDocumento,
+    tipo?: ClienteTipo,
   ): Promise<PaginatedClienteResultDto> {
     const { data, total } = await this.clienteRepository.findAllPaginated(page, limit, {
       search,
       fechaInicio,
       fechaFin,
       tipoDocumento,
+      tipo,
     });
 
     const totalPages = Math.ceil(total / limit);
@@ -215,6 +222,71 @@ export class ClientesService {
 
   async deletePasajero(id: number) {
     return await this.pasajeroRepository.delete(id);
+  }
+
+  // ========== ENCARGADOS ==========
+
+  async findAllEncargadosPaginated(page: number = 1, limit: number = 10, search?: string, clienteId?: number): Promise<PaginatedEncargadoResultDto> {
+    const { data, total } = await this.encargadoRepository.findAllPaginated(page, limit, {
+      search,
+      clienteId,
+    });
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
+  }
+
+  async findEncargado(id: number) {
+    return await this.encargadoRepository.findOne(id);
+  }
+
+  async createEncargado(createEncargadoDto: EncargadoCreateDto) {
+    try {
+      return await this.encargadoRepository.create(createEncargadoDto);
+    } catch (error: unknown) {
+      const dbError = error as DatabaseError;
+      const constraint = dbError.cause?.constraint || dbError.constraint;
+      if (dbError.code === '23505' || dbError.cause?.code === '23505') {
+        if (constraint?.includes('cliente_dni')) {
+          throw new BadRequestException(['El encargado con este DNI ya existe para este cliente']);
+        }
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
+      }
+      throw error;
+    }
+  }
+
+  async updateEncargado(id: number, updateEncargadoDto: EncargadoUpdateDto) {
+    try {
+      return await this.encargadoRepository.update(id, updateEncargadoDto);
+    } catch (error: unknown) {
+      const dbError = error as DatabaseError;
+      const constraint = dbError.cause?.constraint || dbError.constraint;
+      if (dbError.code === '23505' || dbError.cause?.code === '23505') {
+        if (constraint?.includes('cliente_dni')) {
+          throw new BadRequestException(['El encargado con este DNI ya existe para este cliente']);
+        }
+        throw new BadRequestException(['Ya existe un registro con estos datos']);
+      }
+      throw error;
+    }
+  }
+
+  async deleteEncargado(id: number) {
+    return await this.encargadoRepository.delete(id);
   }
 
   // ========== ENTIDADES ==========

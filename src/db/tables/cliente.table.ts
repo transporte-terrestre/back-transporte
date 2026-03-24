@@ -2,11 +2,13 @@ import { pgTable, serial, varchar, timestamp, text, pgEnum, index, uniqueIndex, 
 import { sql } from 'drizzle-orm';
 
 export const clientesTipoDocumento = pgEnum('clientes_tipo_documento', ['DNI', 'RUC']);
+export const clientesTipo = pgEnum('clientes_tipo', ['personal', 'corporativo']);
 
 export const clientes = pgTable(
   'clientes',
   {
     id: serial('id').primaryKey(),
+    tipo: clientesTipo('tipo').default('personal').notNull(),
     tipoDocumento: clientesTipoDocumento('tipo_documento').default('DNI').notNull(),
     dni: varchar('dni', { length: 20 }),
     ruc: varchar('ruc', { length: 20 }),
@@ -44,5 +46,6 @@ export const clientes = pgTable(
 );
 
 export type ClienteTipoDocumento = (typeof clientesTipoDocumento.enumValues)[number];
+export type ClienteTipo = (typeof clientesTipo.enumValues)[number];
 export type Cliente = typeof clientes.$inferSelect;
 export type ClienteDTO = typeof clientes.$inferInsert;
