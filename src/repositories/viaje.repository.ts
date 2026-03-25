@@ -432,6 +432,7 @@ export class ViajeRepository {
       .select({
         ...getTableColumns(conductores),
         rol: viajeConductores.rol,
+        esPrincipal: viajeConductores.esPrincipal,
       })
       .from(viajeConductores)
       .innerJoin(conductores, eq(conductores.id, viajeConductores.conductorId))
