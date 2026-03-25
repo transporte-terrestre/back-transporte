@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, inArray, sql } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { alquilerDetalle, AlquilerDetalleDTO } from '@db/tables/alquiler-detalle.table';
 import { vehiculos } from '@db/tables/vehiculo.table';
@@ -25,6 +25,7 @@ export class AlquilerDetalleRepository {
           placa: vehiculos.placa,
           marca: marcas.nombre,
           modelo: modelos.nombre,
+          foto: sql<string | null>`${vehiculos.imagenes}[1]`,
         },
         conductor: {
           id: conductores.id,
@@ -38,6 +39,40 @@ export class AlquilerDetalleRepository {
       .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .where(and(eq(alquilerDetalle.alquilerId, alquilerId), isNull(alquilerDetalle.eliminadoEn)));
+  }
+
+  async findByAlquilerIds(alquilerIds: number[]) {
+    if (alquilerIds.length === 0) return [];
+
+    return await database
+      .select({
+        id: alquilerDetalle.id,
+        alquilerId: alquilerDetalle.alquilerId,
+        vehiculoId: alquilerDetalle.vehiculoId,
+        conductorId: alquilerDetalle.conductorId,
+        tipo: alquilerDetalle.tipo,
+        kilometrajeInicial: alquilerDetalle.kilometrajeInicial,
+        kilometrajeFinal: alquilerDetalle.kilometrajeFinal,
+        creadoEn: alquilerDetalle.creadoEn,
+        vehiculo: {
+          id: vehiculos.id,
+          placa: vehiculos.placa,
+          marca: marcas.nombre,
+          modelo: modelos.nombre,
+          foto: sql<string | null>`${vehiculos.imagenes}[1]`,
+        },
+        conductor: {
+          id: conductores.id,
+          nombreCompleto: conductores.nombreCompleto,
+          dni: conductores.dni,
+        },
+      })
+      .from(alquilerDetalle)
+      .leftJoin(vehiculos, eq(alquilerDetalle.vehiculoId, vehiculos.id))
+      .leftJoin(conductores, eq(alquilerDetalle.conductorId, conductores.id))
+      .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .where(and(inArray(alquilerDetalle.alquilerId, alquilerIds), isNull(alquilerDetalle.eliminadoEn)));
   }
 
   async create(data: AlquilerDetalleDTO) {

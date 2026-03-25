@@ -89,7 +89,10 @@ export class ClientesService {
 
   async create(createClienteDto: ClienteCreateDto) {
     try {
-      const nombreCompleto = `${createClienteDto.nombres} ${createClienteDto.apellidos}`;
+      const nombreCompleto = createClienteDto.tipoDocumento === 'RUC'
+        ? createClienteDto.razonSocial
+        : `${createClienteDto.nombres || ''} ${createClienteDto.apellidos || ''}`.trim();
+
       return await this.clienteRepository.create({
         ...createClienteDto,
         nombreCompleto,
@@ -113,12 +116,18 @@ export class ClientesService {
     try {
       const dataToUpdate: Partial<ClienteDTO> = { ...updateClienteDto };
 
-      // Auto-generate nombreCompleto if nombres or apellidos are being updated
-      if (updateClienteDto.nombres || updateClienteDto.apellidos) {
+      // Auto-generate nombreCompleto if names are being updated
+      if (updateClienteDto.nombres || updateClienteDto.apellidos || updateClienteDto.razonSocial || updateClienteDto.tipoDocumento) {
         const current = await this.clienteRepository.findOne(id);
-        const nombres = updateClienteDto.nombres ?? current.nombres;
-        const apellidos = updateClienteDto.apellidos ?? current.apellidos;
-        dataToUpdate.nombreCompleto = `${nombres} ${apellidos}`;
+        const tipo = updateClienteDto.tipoDocumento ?? current.tipoDocumento;
+
+        if (tipo === 'RUC') {
+          dataToUpdate.nombreCompleto = updateClienteDto.razonSocial ?? current.razonSocial;
+        } else {
+          const nombres = updateClienteDto.nombres ?? current.nombres;
+          const apellidos = updateClienteDto.apellidos ?? current.apellidos;
+          dataToUpdate.nombreCompleto = `${nombres || ''} ${apellidos || ''}`.trim();
+        }
       }
 
       return await this.clienteRepository.update(id, dataToUpdate);

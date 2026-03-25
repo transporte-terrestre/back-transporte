@@ -8,6 +8,7 @@ export class AlquilerVehiculoDto {
   @ApiProperty() placa: string;
   @ApiProperty() marca: string;
   @ApiProperty() modelo: string;
+  @ApiProperty({ required: false }) foto?: string | null;
 }
 
 export class AlquilerClienteDto {

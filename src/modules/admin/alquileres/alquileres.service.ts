@@ -36,10 +36,20 @@ export class AlquileresService {
     const { page = 1, limit = 10, ...filters } = query;
     const { data, total } = await this.alquilerRepository.findAllPaginated(page, limit, filters);
 
+    // Fetch and attach details for all items in the current page
+    if (data.length > 0) {
+      const ids = data.map((item) => item.id);
+      const allDetalles = await this.alquilerDetalleRepository.findByAlquilerIds(ids);
+
+      data.forEach((item) => {
+        (item as any).detalles = allDetalles.filter((d) => d.alquilerId === item.id);
+      });
+    }
+
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data,
+      data: data as any,
       meta: {
         total,
         page,
