@@ -97,7 +97,7 @@ export class AlquilerRepository {
 
         cliente: {
           id: clientes.id,
-          nombreCompleto: clientes.nombreCompleto,
+          nombreCompleto: sql<string>`CASE WHEN ${clientes.tipoDocumento} = 'RUC' THEN COALESCE(${clientes.razonSocial}, ${clientes.nombreCompleto}) ELSE ${clientes.nombreCompleto} END`,
         },
       })
       .from(alquileres)
