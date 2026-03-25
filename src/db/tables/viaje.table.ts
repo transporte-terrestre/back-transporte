@@ -2,6 +2,7 @@ import { pgTable, serial, integer, timestamp, pgEnum, varchar, decimal, jsonb } 
 import { rutas } from './ruta.table';
 import { clientes } from './cliente.table';
 import { entidades } from './entidad.table';
+import { encargados } from './encargado.table';
 
 export const viajesEstado = pgEnum('viajes_estado', ['programado', 'en_progreso', 'completado', 'cancelado']);
 
@@ -17,6 +18,7 @@ export const viajes = pgTable('viajes', {
   id: serial('id').primaryKey(),
   rutaId: integer('ruta_id').references(() => rutas.id),
   rutaOcasional: varchar('ruta_ocasional', { length: 500 }),
+  nombreRuta: varchar('nombre_ruta', { length: 500 }),
   distanciaEstimada: decimal('distancia_estimada', { precision: 10, scale: 2 }), // Distancia estimada del viaje
   distanciaFinal: decimal('distancia_final', { precision: 10, scale: 2 }), // Distancia real al final del viaje
   tipoRuta: viajesTipoRuta('tipo_ruta').default('fija').notNull(),
@@ -24,6 +26,7 @@ export const viajes = pgTable('viajes', {
     .references(() => clientes.id)
     .notNull(),
   entidadId: integer('entidad_id').references(() => entidades.id),
+  encargadoId: integer('encargado_id').references(() => encargados.id),
   modalidadServicio: viajesModalidadServicio('modalidad_servicio').default('regular').notNull(),
   horasContrato: decimal('horas_contrato', { precision: 10, scale: 2 }).default('0.00').notNull(),
   estado: viajesEstado('estado').default('programado').notNull(),

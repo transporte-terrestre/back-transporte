@@ -20,10 +20,10 @@ export class RutaCircuitoDetalleDto {
   @IsNotEmpty()
   origen: string;
 
-  @ApiProperty({ example: 'Ica', description: 'Ciudad de destino' })
+  @ApiPropertyOptional({ example: 'Ica', description: 'Ciudad de destino' })
   @IsString()
-  @IsNotEmpty()
-  destino: string;
+  @IsOptional()
+  destino?: string;
 
   @ApiProperty({ example: '-12.0464', description: 'Latitud del origen' })
   @IsString()
@@ -37,17 +37,17 @@ export class RutaCircuitoDetalleDto {
   @IsLongitude()
   origenLng: string;
 
-  @ApiProperty({ example: '-14.0678', description: 'Latitud del destino' })
+  @ApiPropertyOptional({ example: '-14.0678', description: 'Latitud del destino' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @IsLatitude()
-  destinoLat: string;
+  destinoLat?: string;
 
-  @ApiProperty({ example: '-75.7286', description: 'Longitud del destino' })
+  @ApiPropertyOptional({ example: '-75.7286', description: 'Longitud del destino' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @IsLongitude()
-  destinoLng: string;
+  destinoLng?: string;
 
   @ApiProperty({ example: '300.5', description: 'Distancia en km' })
   @IsNumberString()

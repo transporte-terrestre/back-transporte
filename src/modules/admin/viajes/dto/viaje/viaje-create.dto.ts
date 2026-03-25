@@ -11,12 +11,20 @@ export class ViajeDetalleCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' |
   rutaId?: number;
 
   @ApiPropertyOptional({
-    example: 'Lima - Arequipa (Ocasional)',
-    description: 'Descripción de ruta ocasional',
+    example: 'Lima',
+    description: 'Punto de partida para rutas ocasionales',
   })
   @IsOptional()
   @IsString()
   rutaOcasional?: string;
+
+  @ApiPropertyOptional({
+    example: 'Lima - Arequipa Especial',
+    description: 'Nombre de la ruta',
+  })
+  @IsOptional()
+  @IsString()
+  nombreRuta?: string;
 
   @ApiPropertyOptional({
     example: '450.00',
@@ -52,6 +60,11 @@ export class ViajeDetalleCreateDto implements Omit<ViajeDTO, 'id' | 'creadoEn' |
   @IsOptional()
   @IsInt()
   entidadId?: number;
+
+  @ApiPropertyOptional({ example: 1, description: 'ID del encargado (opcional)' })
+  @IsOptional()
+  @IsInt()
+  encargadoId?: number;
 
   @ApiPropertyOptional({
     enum: viajesModalidadServicio.enumValues,

@@ -5,6 +5,7 @@ import { ConductorResultDto } from '@module/admin/conductores/dto/conductor/cond
 import { VehiculoResultDto } from '@module/admin/vehiculos/dto/vehiculo/vehiculo-result.dto';
 import { ClienteResultDto } from '@module/admin/clientes/dto/cliente/cliente-result.dto';
 import { EntidadResultDto } from '@module/admin/clientes/dto/entidad/entidad-result.dto';
+import { EncargadoResultDto } from '@module/admin/clientes/dto/encargado/encargado-result.dto';
 import { RutaResultDto } from '@module/admin/rutas/dto/ruta/ruta-result.dto';
 
 export class ConductorViajeDto extends OmitType(ConductorResultDto, ['documentos']) {}
@@ -23,6 +24,12 @@ export class ViajeListDto {
     description: 'Descripción de ruta ocasional',
   })
   rutaOcasional: string | null;
+
+  @ApiPropertyOptional({
+    example: 'Lima - Arequipa Especial',
+    description: 'Nombre de la ruta',
+  })
+  nombreRuta: string | null;
 
   @ApiProperty({
     enum: viajesTipoRuta.enumValues,
@@ -48,6 +55,9 @@ export class ViajeListDto {
 
   @ApiPropertyOptional({ example: 1, description: 'ID de la entidad' })
   entidadId: number | null;
+
+  @ApiPropertyOptional({ example: 1, description: 'ID del encargado' })
+  encargadoId: number | null;
 
   @ApiProperty({
     enum: viajesModalidadServicio.enumValues,
@@ -124,6 +134,9 @@ export class ViajeListDto {
 
   @ApiPropertyOptional({ type: EntidadResultDto })
   entidad?: EntidadResultDto;
+
+  @ApiPropertyOptional({ type: EncargadoResultDto })
+  encargado?: EncargadoResultDto;
 
   @ApiPropertyOptional({ type: RutaResultDto })
   ruta?: RutaResultDto;
