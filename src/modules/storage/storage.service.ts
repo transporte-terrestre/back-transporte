@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, StreamableFile } from '@nestjs/common';
 import { BlobServiceClient, BlockBlobClient } from '@azure/storage-blob';
 import { StorageResultDto } from './dto/storage-result.dto';
 
@@ -79,6 +79,28 @@ export class StorageService {
       return await blockBlobClient.deleteIfExists();
     } catch (error) {
       throw new InternalServerErrorException('Error eliminando archivo de Azure');
+    }
+  }
+
+  async download(publicId: string): Promise<StreamableFile> {
+    try {
+      const containerClient = this.blobServiceClient.getContainerClient(this.containerName);
+      const blockBlobClient = containerClient.getBlockBlobClient(publicId);
+
+      const downloadResponse = await blockBlobClient.download(0);
+      const stream = downloadResponse.readableStreamBody as any; // Cast to any for StreamableFile compatibility if needed
+      
+      if (!stream) {
+        throw new Error('No readable stream found in Azure download response');
+      }
+
+      return new StreamableFile(stream, {
+        type: downloadResponse.contentType || 'application/octet-stream',
+        disposition: `inline; filename="${publicId.split('/').pop()}"`,
+      });
+    } catch (error) {
+      console.error('Error downloading from Azure:', error);
+      throw new InternalServerErrorException('Error al descargar archivo de Azure Storage');
     }
   }
 
