@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty, IsLatitude, IsLongitude, IsArray, IsIn, IsNumber } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsLatitude, IsLongitude, IsArray, IsIn, IsNumber, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 const SENTIDOS = ['ida', 'vuelta'] as const;
 type Sentido = (typeof SENTIDOS)[number];
@@ -26,10 +26,10 @@ export class RutaCreateDto {
   @IsNotEmpty()
   origen: string;
 
-  @ApiProperty({ example: 'Ica', description: 'Ciudad de destino' })
+  @ApiPropertyOptional({ example: 'Ica', description: 'Ciudad de destino' })
   @IsString()
-  @IsNotEmpty()
-  destino: string;
+  @IsOptional()
+  destino?: string;
 
   @ApiProperty({ example: '-12.0464', description: 'Latitud del origen' })
   @IsString()
@@ -43,17 +43,17 @@ export class RutaCreateDto {
   @IsLongitude({ message: 'La longitud de origen debe estar entre -180 y 180' })
   origenLng: string;
 
-  @ApiProperty({ example: '-14.0678', description: 'Latitud del destino' })
+  @ApiPropertyOptional({ example: '-14.0678', description: 'Latitud del destino' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @IsLatitude({ message: 'La latitud de destino debe estar entre -90 y 90' })
-  destinoLat: string;
+  destinoLat?: string;
 
-  @ApiProperty({ example: '-75.7286', description: 'Longitud del destino' })
+  @ApiPropertyOptional({ example: '-75.7286', description: 'Longitud del destino' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @IsLongitude({ message: 'La longitud de destino debe estar entre -180 y 180' })
-  destinoLng: string;
+  destinoLng?: string;
 
   @ApiProperty({ example: '300.5', description: 'Distancia en km' })
   @IsString()

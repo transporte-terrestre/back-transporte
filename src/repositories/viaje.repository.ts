@@ -11,6 +11,7 @@ import { marcas } from '@db/tables/marca.table';
 import { rutas } from '@db/tables/ruta.table';
 import { clientes } from '@db/tables/cliente.table';
 import { entidades } from '@db/tables/entidad.table';
+import { encargados } from '@db/tables/encargado.table';
 import { viajeComentarios } from '@db/tables/viaje-comentario.table';
 import { usuarios } from '@db/tables/usuario.table';
 import { viajeChecklists } from '@db/tables/viaje-checklist.table';
@@ -42,7 +43,7 @@ export class ViajeRepository {
 
     if (filters?.search) {
       const searchTerm = `%${filters.search}%`;
-      conditions.push(like(viajes.rutaOcasional, searchTerm));
+      conditions.push(or(like(viajes.rutaOcasional, searchTerm), like(viajes.nombreRuta, searchTerm)));
     }
 
     if (filters?.modalidadServicio) {
@@ -129,11 +130,15 @@ export class ViajeRepository {
         entidad: {
           ...getTableColumns(entidades),
         },
+        encargado: {
+          ...getTableColumns(encargados),
+        },
       })
       .from(viajes)
       .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
       .leftJoin(clientes, eq(clientes.id, viajes.clienteId))
       .leftJoin(entidades, eq(entidades.id, viajes.entidadId))
+      .leftJoin(encargados, eq(encargados.id, viajes.encargadoId))
       .leftJoin(viajeConductores, and(eq(viajeConductores.viajeId, viajes.id), eq(viajeConductores.esPrincipal, true)))
       .leftJoin(conductores, eq(conductores.id, viajeConductores.conductorId))
       .leftJoin(viajeVehiculos, and(eq(viajeVehiculos.viajeId, viajes.id), eq(viajeVehiculos.esPrincipal, true)))
@@ -270,7 +275,9 @@ export class ViajeRepository {
     }
 
     const formattedData = data.map((v) => {
-      const rutaNombre = v.tipoRuta === 'ocasional' ? v.rutaOcasional || 'Ocasional' : `${v.rutaOrigen} - ${v.rutaDestino}`;
+      const rutaNombre = v.tipoRuta === 'ocasional' 
+        ? v.rutaOcasional || 'Ocasional' 
+        : (v.rutaDestino ? `${v.rutaOrigen} - ${v.rutaDestino}` : v.rutaOrigen);
 
       const checks = checklistMap.get(v.id)!;
 
@@ -313,11 +320,15 @@ export class ViajeRepository {
         entidad: {
           ...getTableColumns(entidades),
         },
+        encargado: {
+          ...getTableColumns(encargados),
+        },
       })
       .from(viajes)
       .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
       .leftJoin(clientes, eq(clientes.id, viajes.clienteId))
       .leftJoin(entidades, eq(entidades.id, viajes.entidadId))
+      .leftJoin(encargados, eq(encargados.id, viajes.encargadoId))
       .leftJoin(viajeConductores, and(eq(viajeConductores.viajeId, viajes.id), eq(viajeConductores.esPrincipal, true)))
       .leftJoin(conductores, eq(conductores.id, viajeConductores.conductorId))
       .leftJoin(viajeVehiculos, and(eq(viajeVehiculos.viajeId, viajes.id), eq(viajeVehiculos.esPrincipal, true)))
@@ -333,6 +344,7 @@ export class ViajeRepository {
       ruta: item.ruta?.id ? item.ruta : null,
       cliente: item.cliente?.id ? item.cliente : null,
       entidad: item.entidad?.id ? item.entidad : null,
+      encargado: item.encargado?.id ? item.encargado : null,
     }));
   }
 
@@ -379,7 +391,9 @@ export class ViajeRepository {
     }
 
     return data.map((v) => {
-      const rutaNombre = v.tipoRuta === 'ocasional' ? v.rutaOcasional || 'Ocasional' : `${v.rutaOrigen} - ${v.rutaDestino}`;
+      const rutaNombre = v.tipoRuta === 'ocasional' 
+        ? v.rutaOcasional || 'Ocasional' 
+        : (v.rutaDestino ? `${v.rutaOrigen} - ${v.rutaDestino}` : v.rutaOrigen);
       const checks = checklistMap.get(v.id)!;
 
       return {
@@ -400,23 +414,24 @@ export class ViajeRepository {
         cliente: getTableColumns(clientes),
         ruta: getTableColumns(rutas),
         entidad: getTableColumns(entidades),
+        encargado: getTableColumns(encargados),
       })
       .from(viajes)
       .leftJoin(clientes, eq(clientes.id, viajes.clienteId))
       .leftJoin(rutas, eq(rutas.id, viajes.rutaId))
       .leftJoin(entidades, eq(entidades.id, viajes.entidadId))
+      .leftJoin(encargados, eq(encargados.id, viajes.encargadoId))
       .where(and(eq(viajes.id, id), isNull(viajes.eliminadoEn)))
       .limit(1);
 
     if (result.length === 0) return null;
-
-    const { viaje, cliente, ruta, entidad } = result[0];
+ 
+    const { viaje, cliente, ruta, entidad, encargado } = result[0];
 
     const conductorsQuery = database
       .select({
         ...getTableColumns(conductores),
         rol: viajeConductores.rol,
-        esPrincipal: viajeConductores.esPrincipal,
       })
       .from(viajeConductores)
       .innerJoin(conductores, eq(conductores.id, viajeConductores.conductorId))
@@ -475,6 +490,7 @@ export class ViajeRepository {
       cliente: cliente || null,
       ruta: ruta || null,
       entidad: entidad || null,
+      encargado: encargado || null,
       conductores: conductoresList,
       vehiculos: vehiculosList,
       comentarios: comentariosList,

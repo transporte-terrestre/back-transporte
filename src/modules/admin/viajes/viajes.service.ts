@@ -290,7 +290,7 @@ export class ViajesService {
           const p = rutaParadasDB[i];
           let tipo: ViajeTramoTipo = 'punto';
           if (i === 0) tipo = 'origen';
-          else if (i === rutaParadasDB.length - 1) tipo = 'destino';
+          else if (i === rutaParadasDB.length - 1 && r.destinoLat != null) tipo = 'destino';
 
           basePointsRaw.push({
             tipo,
@@ -309,13 +309,15 @@ export class ViajesService {
           lng: Number(r.origenLng),
           rutaParadaId: null,
         });
-        basePointsRaw.push({
-          tipo: 'destino',
-          nombre: r.destino,
-          lat: Number(r.destinoLat),
-          lng: Number(r.destinoLng),
-          rutaParadaId: null,
-        });
+        if (r.destinoLat != null) {
+          basePointsRaw.push({
+            tipo: 'destino',
+            nombre: r.destino,
+            lat: Number(r.destinoLat),
+            lng: Number(r.destinoLng),
+            rutaParadaId: null,
+          });
+        }
       }
     }
 
@@ -1309,8 +1311,15 @@ export class ViajesService {
       const hasSalida = tramos.some((s) => s.tipo === 'origen');
       const hasLlegada = tramos.some((s) => s.tipo === 'destino');
 
-      // Según el usuario, index 0 es origen y el último es destino en paradasRuta
-      const puntosControlRuta = paradasRuta.length > 2 ? paradasRuta.slice(1, -1) : [];
+      // Si la ruta tiene un destino coordenado, el último punto es el destino final, si no (ruta abierta), todos los puntos después del origen son puntos de control.
+      const isRutaAbierta = !viajeInfo.ruta.destinoLat;
+      const puntosControlRuta = isRutaAbierta
+        ? paradasRuta.length > 1
+          ? paradasRuta.slice(1)
+          : []
+        : paradasRuta.length > 2
+          ? paradasRuta.slice(1, -1)
+          : [];
 
       const IDsRegistrados = new Set(tramos.filter((s) => s.rutaParadaId).map((s) => s.rutaParadaId));
       const nombresRegistrados = new Set(tramos.filter((s) => s.nombreLugar).map((s) => s.nombreLugar.trim().toLowerCase()));
@@ -1345,16 +1354,27 @@ export class ViajesService {
         return result;
       }
 
-      // 3. Si todo lo anterior está listo, sugerir llegada si falta
+      // 3. Si todo lo anterior está listo, sugerir llegada (si existe) o dejar punto abierto
       if (!hasLlegada) {
-        result.tipo = 'destino';
-        result.nombreLugar = viajeInfo.ruta.destino;
-        result.latitud = viajeInfo.ruta.destinoLat;
-        result.longitud = viajeInfo.ruta.destinoLng;
-        result.esPuntoFijo = true;
-        result.rutaParadaId = paradasRuta.length > 1 ? paradasRuta[paradasRuta.length - 1].id : null;
-        result.faltanPuntosFijos = false;
-        return result;
+        if (viajeInfo.ruta.destino) {
+          result.tipo = 'destino';
+          result.nombreLugar = viajeInfo.ruta.destino;
+          result.latitud = viajeInfo.ruta.destinoLat;
+          result.longitud = viajeInfo.ruta.destinoLng;
+          result.esPuntoFijo = true;
+          // Asumir que el último elemento guardado en paradas estructuradas era el destino
+          result.rutaParadaId = paradasRuta.length > 1 ? paradasRuta[paradasRuta.length - 1].id : null;
+          result.faltanPuntosFijos = false;
+          return result;
+        } else {
+          result.tipo = 'parada';
+          result.nombreLugar = null;
+          result.latitud = null;
+          result.longitud = null;
+          result.esPuntoFijo = false;
+          result.faltanPuntosFijos = false;
+          return result;
+        }
       }
 
       // 4. Si hay salida, puntos de control y llegada -> COMPLETADO

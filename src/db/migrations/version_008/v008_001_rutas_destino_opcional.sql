@@ -1,0 +1,3 @@
+ALTER TABLE "rutas" ALTER COLUMN "destino" DROP NOT NULL;
+ALTER TABLE "rutas" ALTER COLUMN "destino_lat" DROP NOT NULL;
+ALTER TABLE "rutas" ALTER COLUMN "destino_lng" DROP NOT NULL;
