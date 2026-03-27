@@ -7,6 +7,7 @@ export const conductoresClaseLicencia = pgEnum('conductores_clase_licencia', ['A
 export const conductoresCategoriaLicencia = pgEnum('conductores_categoria_licencia', ['I', 'II-a', 'II-b', 'II-c', 'III-a', 'III-b', 'III-c']);
 
 export const conductoresTipoDocumento = pgEnum('conductores_tipo_documento', ['DNI', 'CE', 'PTP', 'PASAPORTE', 'OTRO']);
+export const conductoresEstado = pgEnum('conductores_estado', ['activo', 'inactivo', 'eventual']);
 
 export const conductores = pgTable(
   'conductores',
@@ -24,6 +25,7 @@ export const conductores = pgTable(
     numeroLicencia: varchar('numero_licencia', { length: 20 }).notNull(),
     claseLicencia: conductoresClaseLicencia('clase_licencia').notNull(),
     categoriaLicencia: conductoresCategoriaLicencia('categoria_licencia').notNull(),
+    estado: conductoresEstado('estado').default('activo').notNull(),
     fotocheck: text('fotocheck').array().default([]),
     documentosNoAplicables: conductorDocumentosTipo('documentos_no_aplicables').array().default([]),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
@@ -54,5 +56,6 @@ export const conductores = pgTable(
 export type ConductorClaseLicencia = (typeof conductoresClaseLicencia.enumValues)[number];
 export type ConductorCategoriaLicencia = (typeof conductoresCategoriaLicencia.enumValues)[number];
 export type ConductorTipoDocumento = (typeof conductoresTipoDocumento.enumValues)[number];
+export type ConductorEstado = (typeof conductoresEstado.enumValues)[number];
 export type Conductor = typeof conductores.$inferSelect;
 export type ConductorDTO = typeof conductores.$inferInsert;

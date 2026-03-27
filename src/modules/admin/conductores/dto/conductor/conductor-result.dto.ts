@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { conductoresClaseLicencia, conductoresCategoriaLicencia, conductoresTipoDocumento } from '@db/tables/conductor.table';
+import { conductoresClaseLicencia, conductoresCategoriaLicencia, conductoresTipoDocumento, conductoresEstado } from '@db/tables/conductor.table';
 import { ConductorDocumentoResultDto } from '../conductor-documento/conductor-documento-result.dto';
 import { conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
-import type { ConductorClaseLicencia, ConductorCategoriaLicencia, ConductorTipoDocumento } from '@db/tables/conductor.table';
+import type { ConductorClaseLicencia, ConductorCategoriaLicencia, ConductorTipoDocumento, ConductorEstado } from '@db/tables/conductor.table';
 import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 
 export class DocumentosAgrupadosConductorDto implements Record<ConductorDocumentoTipo, ConductorDocumentoResultDto[]> {
@@ -148,6 +148,13 @@ export class ConductorResultDto {
     enum: conductorDocumentosTipo.enumValues,
   })
   documentosNoAplicables: ConductorDocumentoTipo[];
+
+  @ApiProperty({
+    enum: conductoresEstado.enumValues,
+    example: 'activo',
+    description: 'Estado del conductor',
+  })
+  estado: ConductorEstado;
 
   @ApiProperty({ description: 'Driver documents grouped by type' })
   documentos: DocumentosAgrupadosConductorDto;

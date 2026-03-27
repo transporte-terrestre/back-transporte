@@ -1,8 +1,8 @@
-import { IsString, IsNotEmpty, IsIn, IsArray, IsOptional, MinLength, IsEmail } from 'class-validator';
+ import { IsString, IsNotEmpty, IsIn, IsArray, IsOptional, MinLength, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ConductorDTO, conductoresClaseLicencia, conductoresCategoriaLicencia, conductoresTipoDocumento } from '@db/tables/conductor.table';
+import { ConductorDTO, conductoresClaseLicencia, conductoresCategoriaLicencia, conductoresTipoDocumento, conductoresEstado } from '@db/tables/conductor.table';
 import { conductorDocumentosTipo } from '@db/tables/conductor-documento.table';
-import type { ConductorCategoriaLicencia, ConductorClaseLicencia, ConductorTipoDocumento } from '@db/tables/conductor.table';
+import type { ConductorCategoriaLicencia, ConductorClaseLicencia, ConductorTipoDocumento, ConductorEstado } from '@db/tables/conductor.table';
 import type { ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 
 export class ConductorCreateDto implements Omit<ConductorDTO, 'id' | 'nombreCompleto' | 'creadoEn' | 'actualizadoEn'> {
@@ -93,4 +93,13 @@ export class ConductorCreateDto implements Omit<ConductorDTO, 'id' | 'nombreComp
   @IsArray()
   @IsOptional()
   documentosNoAplicables?: ConductorDocumentoTipo[];
+
+  @ApiPropertyOptional({
+    enum: conductoresEstado.enumValues,
+    default: 'activo',
+    description: 'Estado del conductor',
+  })
+  @IsIn(conductoresEstado.enumValues)
+  @IsOptional()
+  estado?: ConductorEstado;
 }

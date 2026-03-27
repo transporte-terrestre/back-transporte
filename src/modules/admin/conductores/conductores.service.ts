@@ -11,7 +11,7 @@ import {
 } from './dto/conductor/conductor-documentos-estado.dto';
 import { ConductorDocumentoDTO, conductorDocumentosTipo, ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 import { DocumentosAgrupadosConductorDto } from './dto/conductor/conductor-result.dto';
-import { ConductorDTO } from '@db/tables/conductor.table';
+import { ConductorDTO, ConductorEstado, ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.table';
 import * as bcrypt from 'bcrypt';
 import archiver from 'archiver';
 import { Readable } from 'stream';
@@ -36,8 +36,9 @@ export class ConductoresService {
     search?: string,
     fechaInicio?: string,
     fechaFin?: string,
-    claseLicencia?: string,
-    categoriaLicencia?: string,
+    claseLicencia?: ConductorClaseLicencia,
+    categoriaLicencia?: ConductorCategoriaLicencia,
+    estado?: ConductorEstado,
   ): Promise<PaginatedConductorResultDto> {
     const { data, total } = await this.conductorRepository.findAllPaginated(page, limit, {
       search,
@@ -45,6 +46,7 @@ export class ConductoresService {
       fechaFin,
       claseLicencia,
       categoriaLicencia,
+      estado,
     });
 
     const totalPages = Math.ceil(total / limit);
@@ -68,8 +70,20 @@ export class ConductoresService {
     page: number = 1,
     limit: number = 10,
     filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO,
+    search?: string,
+    estado?: ConductorEstado,
+    claseLicencia?: ConductorClaseLicencia,
+    categoriaLicencia?: ConductorCategoriaLicencia,
   ): Promise<PaginatedConductorEstadoDocumentosResultDto> {
-    const { conductores, documentosPorConductor, total } = await this.conductorRepository.findAllWithDocumentos(page, limit, filtro);
+    const { conductores, documentosPorConductor, total } = await this.conductorRepository.findAllWithDocumentos(
+      page,
+      limit,
+      filtro,
+      search,
+      estado,
+      claseLicencia,
+      categoriaLicencia,
+    );
     const hoy = new Date();
 
     const data: ConductorEstadoDocumentosDto[] = conductores.map((conductor) => {
@@ -100,6 +114,7 @@ export class ConductoresService {
         nombres: conductor.nombres,
         apellidos: conductor.apellidos,
         fotocheck: conductor.fotocheck ?? [],
+        estado: conductor.estado,
         dni: calcularEstado('dni'),
         licencia_mtc: calcularEstado('licencia_mtc'),
         seguro_vida_ley: calcularEstado('seguro_vida_ley'),

@@ -12,6 +12,7 @@ export const notificacionesConductorLeidas = pgTable('notificaciones_conductor_l
     .notNull(),
   creadoEn: timestamp('creado_en').defaultNow().notNull(),
   leidoEn: timestamp('leido_en'),
+  ocultadoEn: timestamp('ocultado_en'),
 });
 
 export type NotificacionConductorLeida = typeof notificacionesConductorLeidas.$inferSelect;

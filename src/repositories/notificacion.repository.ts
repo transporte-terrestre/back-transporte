@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { database } from '@db/connection.db';
-import { notificaciones } from '@db/tables/notificacion.table';
+import { notificaciones, NotificacionDestino, NotificacionDTO, Notificacion } from '@db/tables/notificacion.table';
 import { notificacionesLeidas } from '@db/tables/notificacion-leida.table';
 import { notificacionesConductorLeidas } from '@db/tables/notificacion-conductor-leida.table';
 import { conductorDocumentos } from '@db/tables/conductor-documento.table';
@@ -42,7 +42,7 @@ export class NotificacionRepository {
   // EXISTING METHODS
   // =============================================
 
-  async findAllPaginatedByUsuario(usuarioId: number, page: number = 1, limit: number = 10) {
+  async findAllPaginatedByUsuario(usuarioId: number, page: number = 1, limit: number = 10, destino: NotificacionDestino = 'sistema') {
     const offset = (page - 1) * limit;
 
     const query = database
@@ -57,13 +57,17 @@ export class NotificacionRepository {
       })
       .from(notificaciones)
       .leftJoin(notificacionesLeidas, and(eq(notificacionesLeidas.notificacionId, notificaciones.id), eq(notificacionesLeidas.usuarioId, usuarioId)))
-      .where(isNull(notificaciones.eliminadoEn))
+      .where(and(eq(notificaciones.destino, destino), isNull(notificaciones.eliminadoEn), isNull(notificacionesLeidas.ocultadoEn)))
       .orderBy(desc(notificaciones.creadoEn))
       .limit(limit)
       .offset(offset);
 
     const data = await query;
-    const totalResult = await database.select({ count: count() }).from(notificaciones).where(isNull(notificaciones.eliminadoEn));
+    const totalResult = await database
+      .select({ count: count() })
+      .from(notificaciones)
+      .leftJoin(notificacionesLeidas, and(eq(notificacionesLeidas.notificacionId, notificaciones.id), eq(notificacionesLeidas.usuarioId, usuarioId)))
+      .where(and(eq(notificaciones.destino, destino), isNull(notificaciones.eliminadoEn), isNull(notificacionesLeidas.ocultadoEn)));
 
     return { data, total: Number(totalResult[0]?.count || 0) };
   }
@@ -76,12 +80,12 @@ export class NotificacionRepository {
     return result;
   }
 
-  async create(data: any) {
+  async create(data: NotificacionDTO) {
     const result = await database.insert(notificaciones).values(data).returning();
     return result[0];
   }
 
-  async createMany(data: any[]) {
+  async createMany(data: NotificacionDTO[]) {
     if (data.length === 0) return [];
     const result = await database.insert(notificaciones).values(data).returning();
     return result;
@@ -112,14 +116,42 @@ export class NotificacionRepository {
     return result[0];
   }
 
+  async dismiss(usuarioId: number, notificacionId: number) {
+    const [alreadyExists] = await database
+      .select()
+      .from(notificacionesLeidas)
+      .where(and(eq(notificacionesLeidas.usuarioId, usuarioId), eq(notificacionesLeidas.notificacionId, notificacionId)));
+
+    if (alreadyExists) {
+      const [updated] = await database
+        .update(notificacionesLeidas)
+        .set({ ocultadoEn: new Date() })
+        .where(eq(notificacionesLeidas.id, alreadyExists.id))
+        .returning();
+      return updated;
+    }
+
+    const [result] = await database
+      .insert(notificacionesLeidas)
+      .values({
+        usuarioId,
+        notificacionId,
+        ocultadoEn: new Date(),
+        leidoEn: new Date(),
+      })
+      .returning();
+
+    return result[0];
+  }
+
   // =============================================
   // CONDUCTOR METHODS
   // =============================================
 
-  async createForConductor(conductorId: number, data: any) {
+  async createForConductor(conductorId: number, data: NotificacionDTO) {
     return await database.transaction(async (tx) => {
       // 1. Create the notification itself
-      const [notif] = await tx.insert(notificaciones).values(data).returning();
+      const [notif] = await tx.insert(notificaciones).values({ ...data, destino: 'conductor' }).returning();
 
       // 2. Link it to the conductor
       await tx.insert(notificacionesConductorLeidas).values({
@@ -147,7 +179,7 @@ export class NotificacionRepository {
       })
       .from(notificaciones)
       .innerJoin(notificacionesConductorLeidas, eq(notificaciones.id, notificacionesConductorLeidas.notificacionId))
-      .where(and(eq(notificacionesConductorLeidas.conductorId, conductorId), isNull(notificaciones.eliminadoEn)))
+      .where(and(eq(notificacionesConductorLeidas.conductorId, conductorId), eq(notificaciones.destino, 'conductor'), isNull(notificaciones.eliminadoEn), isNull(notificacionesConductorLeidas.ocultadoEn)))
       .orderBy(desc(notificaciones.creadoEn))
       .limit(limit)
       .offset(offset);
@@ -158,7 +190,7 @@ export class NotificacionRepository {
       .select({ count: count() })
       .from(notificacionesConductorLeidas)
       .innerJoin(notificaciones, eq(notificaciones.id, notificacionesConductorLeidas.notificacionId))
-      .where(and(eq(notificacionesConductorLeidas.conductorId, conductorId), isNull(notificaciones.eliminadoEn)));
+      .where(and(eq(notificacionesConductorLeidas.conductorId, conductorId), eq(notificaciones.destino, 'conductor'), isNull(notificaciones.eliminadoEn), isNull(notificacionesConductorLeidas.ocultadoEn)));
 
     return { data, total: Number(totalResult?.count || 0) };
   }
@@ -176,6 +208,23 @@ export class NotificacionRepository {
     const [updated] = await database
       .update(notificacionesConductorLeidas)
       .set({ leidoEn: new Date() })
+      .where(eq(notificacionesConductorLeidas.id, relation.id))
+      .returning();
+
+    return updated;
+  }
+
+  async dismissByConductor(conductorId: number, notificacionId: number) {
+    const [relation] = await database
+      .select()
+      .from(notificacionesConductorLeidas)
+      .where(and(eq(notificacionesConductorLeidas.conductorId, conductorId), eq(notificacionesConductorLeidas.notificacionId, notificacionId)));
+
+    if (!relation) return null;
+
+    const [updated] = await database
+      .update(notificacionesConductorLeidas)
+      .set({ ocultadoEn: new Date(), leidoEn: relation.leidoEn || new Date() })
       .where(eq(notificacionesConductorLeidas.id, relation.id))
       .returning();
 

@@ -13,6 +13,7 @@ export const notificacionesLeidas = pgTable(
       .references(() => notificaciones.id)
       .notNull(),
     leidoEn: timestamp('leido_en').defaultNow().notNull(),
+    ocultadoEn: timestamp('ocultado_en'),
   },
   (t) => [uniqueIndex('usuario_notificacion_unique_idx').on(t.usuarioId, t.notificacionId)],
 );

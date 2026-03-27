@@ -33,6 +33,7 @@ export class ConductoresController {
       query.fechaFin,
       query.claseLicencia,
       query.categoriaLicencia,
+      query.estado,
     );
   }
 
@@ -40,7 +41,15 @@ export class ConductoresController {
   @ApiOperation({ summary: 'Obtener estado de documentos de conductores (activo/caducado/nulo)' })
   @ApiResponse({ status: 200, type: PaginatedConductorEstadoDocumentosResultDto })
   findAllEstadoDocumentos(@Query() query: ConductorDocumentosEstadoQueryDto) {
-    return this.conductoresService.findAllEstadoDocumentos(query.page, query.limit, query.filtro);
+    return this.conductoresService.findAllEstadoDocumentos(
+      query.page,
+      query.limit,
+      query.filtro,
+      query.search,
+      query.estado,
+      query.claseLicencia,
+      query.categoriaLicencia,
+    );
   }
 
   @Get('find-one/:id')
