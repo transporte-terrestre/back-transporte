@@ -1,0 +1,72 @@
+import { Injectable, Logger } from '@nestjs/common';
+
+@Injectable()
+export class TeamsNotifierService {
+  private readonly logger = new Logger(TeamsNotifierService.name);
+
+  async sendErrorNotification(errorDetails: {
+    path: string;
+    message: string;
+    stack?: string;
+    timestamp: string;
+  }) {
+    const webhookUrl = process.env.TEAMS_WEBHOOK_URL;
+    if (!webhookUrl) {
+      this.logger.warn('TEAMS_WEBHOOK_URL no definida en el archivo .env');
+      return;
+    }
+
+    const card = {
+      type: 'message',
+      attachments: [
+        {
+          contentType: 'application/vnd.microsoft.card.adaptive',
+          content: {
+            type: 'AdaptiveCard',
+            body: [
+              {
+                type: 'TextBlock',
+                size: 'Medium',
+                weight: 'Bolder',
+                text: '🚨 Alerta de Error 500 (Backend)',
+                color: 'Attention',
+              },
+              {
+                type: 'FactSet',
+                facts: [
+                  { title: 'Ruta:', value: errorDetails.path },
+                  { title: 'Error:', value: errorDetails.message },
+                  { title: 'Fecha:', value: errorDetails.timestamp },
+                ],
+              },
+              { type: 'TextBlock', text: 'Stack Trace:', weight: 'Bolder', separator: true },
+              {
+                type: 'TextBlock',
+                text: errorDetails.stack?.substring(0, 500) + '...',
+                wrap: true,
+                fontType: 'Monospace',
+                size: 'Small',
+              },
+            ],
+            $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+            version: '1.4',
+          },
+        },
+      ],
+    };
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(card),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Teams API respondió con status ${response.status}`);
+      }
+    } catch (err) {
+      this.logger.error('Falla al enviar notificación a Teams', err.stack);
+    }
+  }
+}

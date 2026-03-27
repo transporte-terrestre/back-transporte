@@ -272,12 +272,37 @@ export class VehiculoRepository {
     return result[0];
   }
 
-  async findAllWithDocumentos(page: number = 1, limit: number = 10, filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO) {
+  async findAllWithDocumentos(
+    page: number = 1,
+    limit: number = 10,
+    filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO,
+    estado?: string,
+    marcaId?: number,
+    placa?: string,
+  ) {
     const offset = (page - 1) * limit;
 
-    const whereClause = isNull(vehiculos.eliminadoEn);
+    const conditions = [isNull(vehiculos.eliminadoEn)];
 
-    const [{ total }] = await database.select({ total: count() }).from(vehiculos).where(whereClause);
+    if (estado) {
+      conditions.push(sql`${vehiculos.estado}::text = ${estado}`);
+    }
+
+    if (marcaId) {
+      conditions.push(eq(modelos.marcaId, marcaId));
+    }
+
+    if (placa) {
+      conditions.push(ilike(vehiculos.placa, `%${placa}%`));
+    }
+
+    const whereClause = and(...conditions);
+
+    const [{ total }] = await database
+      .select({ total: count() })
+      .from(vehiculos)
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .where(whereClause);
 
     const vehiculosConConteo = await database
       .select({
@@ -286,6 +311,7 @@ export class VehiculoRepository {
         documentosNoAplicables: vehiculos.documentosNoAplicables,
       })
       .from(vehiculos)
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .leftJoin(vehiculoDocumentos, eq(vehiculos.id, vehiculoDocumentos.vehiculoId))
       .where(whereClause)
       .groupBy(vehiculos.id);
@@ -324,6 +350,7 @@ export class VehiculoRepository {
         placa: vehiculos.placa,
         imagenes: vehiculos.imagenes,
         documentosNoAplicables: vehiculos.documentosNoAplicables,
+        estado: vehiculos.estado,
       })
       .from(vehiculos)
       .where(inArray(vehiculos.id, ids));

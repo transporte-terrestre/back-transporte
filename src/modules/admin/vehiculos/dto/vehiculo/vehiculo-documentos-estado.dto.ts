@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, Min, Max } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsIn, IsInt, IsOptional, Min, Max, IsNumber, IsString } from 'class-validator';
 import { PaginationMetaDto } from '../../../../../common/dto/pagination-meta.dto';
 
 export const FiltroDocumentoEstado = {
@@ -45,6 +45,33 @@ export class VehiculoDocumentosEstadoQueryDto {
   @IsOptional()
   @IsIn(Object.values(FiltroDocumentoEstado))
   filtro?: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO;
+
+  @ApiProperty({
+    description: 'Filtrar por estado del vehículo',
+    example: 'alquilado',
+    required: false,
+  })
+  @IsOptional()
+  estado?: string;
+
+  @ApiProperty({
+    description: 'ID de la marca para filtrar',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  marcaId?: number;
+
+  @ApiProperty({
+    description: 'Placa del vehículo para filtrar',
+    example: 'ABC-123',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  placa?: string;
 }
 
 export class VehiculoEstadoDocumentosDto {
@@ -66,6 +93,12 @@ export class VehiculoEstadoDocumentosDto {
     type: [String],
   })
   imagenes: string[];
+
+  @ApiProperty({
+    description: 'Estado del vehículo',
+    example: 'disponible',
+  })
+  estado: string;
 
   @ApiProperty({
     description: 'Estado del documento: activo (existe y vigente), caducado (existe pero vencido), nulo (no existe)',

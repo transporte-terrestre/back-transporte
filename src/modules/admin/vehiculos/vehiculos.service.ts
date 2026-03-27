@@ -151,8 +151,18 @@ export class VehiculosService {
     page: number = 1,
     limit: number = 10,
     filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO,
+    estado?: string,
+    marcaId?: number,
+    placa?: string,
   ): Promise<PaginatedVehiculoEstadoDocumentosResultDto> {
-    const { vehiculos, documentosPorVehiculo, total } = await this.vehiculoRepository.findAllWithDocumentos(page, limit, filtro);
+    const { vehiculos, documentosPorVehiculo, total } = await this.vehiculoRepository.findAllWithDocumentos(
+      page,
+      limit,
+      filtro,
+      estado,
+      marcaId,
+      placa,
+    );
     const hoy = new Date();
 
     const data: VehiculoEstadoDocumentosDto[] = vehiculos.map((vehiculo) => {
@@ -182,6 +192,7 @@ export class VehiculosService {
         id: vehiculo.id,
         placa: vehiculo.placa,
         imagenes: vehiculo.imagenes || [],
+        estado: vehiculo.estado,
         tarjeta_propiedad: calcularEstado('tarjeta_propiedad'),
         tarjeta_unica_circulacion: calcularEstado('tarjeta_unica_circulacion'),
         citv: calcularEstado('citv'),

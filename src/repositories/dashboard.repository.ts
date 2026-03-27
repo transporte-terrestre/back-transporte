@@ -8,22 +8,31 @@ import { rutas } from '@db/tables/ruta.table';
 import { viajeConductores } from '@db/tables/viaje-conductor.table';
 import { viajeVehiculos } from '@db/tables/viaje-vehiculo.table';
 import { clientes } from '@db/tables/cliente.table';
-import { count, eq, gte, lte, and, desc, sql, or, asc } from 'drizzle-orm';
+import { count, eq, gte, lte, and, desc, sql, or, asc, isNull } from 'drizzle-orm';
 
 @Injectable()
 export class DashboardRepository {
   async countVehiculos() {
-    const [{ total }] = await database.select({ total: count() }).from(vehiculos);
+    const [{ total }] = await database
+      .select({ total: count() })
+      .from(vehiculos)
+      .where(isNull(vehiculos.eliminadoEn));
     return Number(total);
   }
 
   async countConductores() {
-    const [{ total }] = await database.select({ total: count() }).from(conductores);
+    const [{ total }] = await database
+      .select({ total: count() })
+      .from(conductores)
+      .where(isNull(conductores.eliminadoEn));
     return Number(total);
   }
 
   async countClientes() {
-    const [{ total }] = await database.select({ total: count() }).from(clientes);
+    const [{ total }] = await database
+      .select({ total: count() })
+      .from(clientes)
+      .where(isNull(clientes.eliminadoEn));
     return Number(total);
   }
 
@@ -36,7 +45,7 @@ export class DashboardRepository {
     const [{ count: total }] = await database
       .select({ count: count() })
       .from(viajes)
-      .where(and(gte(viajes.fechaSalida, today), lte(viajes.fechaSalida, tomorrow)));
+      .where(and(isNull(viajes.eliminadoEn), gte(viajes.fechaSalida, today), lte(viajes.fechaSalida, tomorrow)));
 
     return Number(total);
   }
@@ -53,6 +62,7 @@ export class DashboardRepository {
         estado: viajes.estado,
       })
       .from(viajes)
+      .where(isNull(viajes.eliminadoEn))
       .orderBy(desc(viajes.creadoEn))
       .limit(limit);
 
@@ -60,7 +70,13 @@ export class DashboardRepository {
     // For now, mirroring logic from service but encapsulating DB access
     return await Promise.all(
       result.map(async (viaje) => {
-        const ruta = viaje.rutaId ? await database.select().from(rutas).where(eq(rutas.id, viaje.rutaId)).limit(1) : [];
+        const ruta = viaje.rutaId
+          ? await database
+              .select()
+              .from(rutas)
+              .where(and(eq(rutas.id, viaje.rutaId), isNull(rutas.eliminadoEn)))
+              .limit(1)
+          : [];
 
         const conductorPrincipal = await database
           .select({ conductorId: viajeConductores.conductorId })
@@ -69,7 +85,11 @@ export class DashboardRepository {
           .limit(1);
 
         const conductor = conductorPrincipal.length
-          ? await database.select().from(conductores).where(eq(conductores.id, conductorPrincipal[0].conductorId)).limit(1)
+          ? await database
+              .select()
+              .from(conductores)
+              .where(and(eq(conductores.id, conductorPrincipal[0].conductorId), isNull(conductores.eliminadoEn)))
+              .limit(1)
           : [];
 
         const vehiculoPrincipal = await database
@@ -79,7 +99,11 @@ export class DashboardRepository {
           .limit(1);
 
         const vehiculo = vehiculoPrincipal.length
-          ? await database.select().from(vehiculos).where(eq(vehiculos.id, vehiculoPrincipal[0].vehiculoId)).limit(1)
+          ? await database
+              .select()
+              .from(vehiculos)
+              .where(and(eq(vehiculos.id, vehiculoPrincipal[0].vehiculoId), isNull(vehiculos.eliminadoEn)))
+              .limit(1)
           : [];
 
         return {
@@ -109,14 +133,21 @@ export class DashboardRepository {
       })
       .from(mantenimientos)
       .where(
-        or(eq(mantenimientos.estado, 'pendiente'), eq(mantenimientos.estado, 'en_proceso')),
+        and(
+          isNull(mantenimientos.eliminadoEn),
+          or(eq(mantenimientos.estado, 'pendiente'), eq(mantenimientos.estado, 'en_proceso')),
+        ),
       )
       .orderBy(asc(mantenimientos.fechaIngreso))
       .limit(limit);
 
     return await Promise.all(
       result.map(async (m) => {
-        const vehiculo = await database.select().from(vehiculos).where(eq(vehiculos.id, m.vehiculoId)).limit(1);
+        const vehiculo = await database
+          .select()
+          .from(vehiculos)
+          .where(and(eq(vehiculos.id, m.vehiculoId), isNull(vehiculos.eliminadoEn)))
+          .limit(1);
         return { ...m, vehiculoDetails: vehiculo[0] };
       }),
     );
@@ -129,7 +160,31 @@ export class DashboardRepository {
         cantidad: count(),
       })
       .from(vehiculos)
+      .where(isNull(vehiculos.eliminadoEn))
       .groupBy(vehiculos.estado);
+  }
+
+  async getMonthlyKilometrage() {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5); // This month and the 5 previous
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+
+    return await database
+      .select({
+        mes: sql<string>`to_char(${viajes.fechaSalida}, 'Mon')`,
+        monto: sql<number>`sum(${viajes.distanciaFinal})::float`,
+        mesNum: sql<number>`extract(month from ${viajes.fechaSalida})`,
+        anio: sql<number>`extract(year from ${viajes.fechaSalida})`,
+      })
+      .from(viajes)
+      .where(and(isNull(viajes.eliminadoEn), eq(viajes.estado, 'completado'), gte(viajes.fechaSalida, sixMonthsAgo)))
+      .groupBy(
+        sql`to_char(${viajes.fechaSalida}, 'Mon')`,
+        sql`extract(month from ${viajes.fechaSalida})`,
+        sql`extract(year from ${viajes.fechaSalida})`,
+      )
+      .orderBy(sql`extract(year from ${viajes.fechaSalida})`, sql`extract(month from ${viajes.fechaSalida})`);
   }
 
   async getRutasPopulares(limit: number = 5) {
@@ -139,14 +194,18 @@ export class DashboardRepository {
         totalViajes: count(),
       })
       .from(viajes)
-      .where(eq(viajes.tipoRuta, 'fija'))
+      .where(and(isNull(viajes.eliminadoEn), eq(viajes.tipoRuta, 'fija')))
       .groupBy(viajes.rutaId)
       .orderBy(desc(count()))
       .limit(limit);
 
     return await Promise.all(
       result.map(async (item) => {
-        const ruta = await database.select().from(rutas).where(eq(rutas.id, item.rutaId)).limit(1);
+        const ruta = await database
+          .select()
+          .from(rutas)
+          .where(and(eq(rutas.id, item.rutaId), isNull(rutas.eliminadoEn)))
+          .limit(1);
         return {
           ...item,
           rutaDetails: ruta[0],
