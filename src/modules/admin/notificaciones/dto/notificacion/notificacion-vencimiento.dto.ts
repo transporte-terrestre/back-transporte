@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { NotificacionResultDto } from './notificacion-result.dto';
+import type { NotificacionTipo } from '@db/tables/notificacion.table';
 
 export class NotificacionPreviewDto {
   @ApiProperty({ example: 'DNI próximo a vencer' })
@@ -11,7 +12,7 @@ export class NotificacionPreviewDto {
   mensaje: string;
 
   @ApiProperty({ enum: ['info', 'warning', 'error', 'success'], example: 'warning' })
-  tipo: string;
+  tipo: NotificacionTipo;
 
   @ApiProperty({ enum: ['cliente', 'conductor', 'vehiculo', 'usuario'], example: 'cliente' })
   entidad: string;

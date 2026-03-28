@@ -17,10 +17,6 @@ export class DashboardService {
       conductoresActivos: totalConductores,
       viajesHoy,
       totalClientes,
-      cambioVehiculos: 12,
-      cambioConductores: 5,
-      cambioViajes: 18,
-      cambioClientes: 8,
     };
   }
 
@@ -84,6 +80,7 @@ export class DashboardService {
         fecha: mant.fecha,
         dias: diffDays,
         prioridad,
+        estado: mant.estado,
       };
     });
 
@@ -106,15 +103,34 @@ export class DashboardService {
     return { data };
   }
 
-  async getIngresosMensuales() {
-    const meses = ['Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  async getKilometrajeMensual() {
+    const rawData = await this.dashboardRepository.getMonthlyKilometrage();
 
-    // Por ahora retornamos datos simulados
-    const data = meses.map((mes) => ({
-      mes,
-      monto: Math.floor(Math.random() * (65000 - 45000) + 45000),
-    }));
+    // Map raw data for easy lookup
+    const dataMap = new Map();
+    rawData.forEach((item) => {
+      const key = `${item.anio}-${item.mesNum}`;
+      dataMap.set(key, item.monto);
+    });
 
-    return { data };
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const result = [];
+
+    // Generate last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthIndex = date.getMonth();
+      const monthNum = monthIndex + 1;
+      const year = date.getFullYear();
+
+      const key = `${year}-${monthNum}`;
+      result.push({
+        mes: monthNames[monthIndex],
+        monto: dataMap.get(key) || 0,
+      });
+    }
+
+    return { data: result };
   }
 }

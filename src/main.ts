@@ -3,19 +3,18 @@ import { AppModule } from './app.module';
 import { config } from 'dotenv';
 import { setupSwagger } from '@core/swagger.core';
 import { setupTransform } from '@core/transform.core';
+import { setupCors } from '@core/cors.core';
+import { setupGlobalFilters } from '@core/filters.core';
 
 config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors({
-    origin: '*',
-    allowedHeaders: '*',
-    exposedHeaders: ['Content-Disposition'],
-  });
 
+  setupCors(app);
   setupTransform(app);
   setupSwagger(app);
+  setupGlobalFilters(app);
 
   await app.listen(process.env.PORT || 3000);
 }

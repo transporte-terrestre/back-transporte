@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, Min, Max } from 'class-validator';
+import { IsIn, IsInt, IsOptional, Min, Max, IsString } from 'class-validator';
 import { PaginationMetaDto } from '../../../../../common/dto/pagination-meta.dto';
+import { conductoresClaseLicencia, conductoresCategoriaLicencia, conductoresEstado } from '@db/tables/conductor.table';
+import type { ConductorClaseLicencia, ConductorCategoriaLicencia, ConductorEstado } from '@db/tables/conductor.table';
 
 export const FiltroDocumentoEstado = {
   COMPLETO: 'completo',
@@ -45,6 +47,41 @@ export class ConductorDocumentosEstadoQueryDto {
   @IsOptional()
   @IsIn(Object.values(FiltroDocumentoEstado))
   filtro?: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO;
+
+  @ApiProperty({
+    description: 'Búsqueda por nombre, DNI o número de licencia',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiProperty({
+    description: 'Filtrar por clase de licencia',
+    enum: conductoresClaseLicencia.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(conductoresClaseLicencia.enumValues)
+  claseLicencia?: ConductorClaseLicencia;
+
+  @ApiProperty({
+    description: 'Filtrar por categoría de licencia',
+    enum: conductoresCategoriaLicencia.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(conductoresCategoriaLicencia.enumValues)
+  categoriaLicencia?: ConductorCategoriaLicencia;
+
+  @ApiProperty({
+    description: 'Filtrar por estado del conductor',
+    enum: conductoresEstado.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(conductoresEstado.enumValues)
+  estado?: ConductorEstado;
 }
 
 export class ConductorEstadoDocumentosDto {
@@ -59,6 +96,9 @@ export class ConductorEstadoDocumentosDto {
 
   @ApiProperty({ description: 'Fotos del conductor', example: ['https://...'], type: [String] })
   fotocheck: string[];
+
+  @ApiProperty({ description: 'Estado del conductor', example: 'activo' })
+  estado: string;
 
   @ApiProperty({ description: 'Estado del documento', example: 'activo' })
   dni: string;

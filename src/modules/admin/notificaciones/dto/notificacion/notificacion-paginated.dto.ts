@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { NotificacionListDto } from './notificacion-list.dto';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Min, Max } from 'class-validator';
+import { IsInt, IsOptional, Min, Max, IsIn } from 'class-validator';
 import { PaginationMetaDto } from '../../../../../common/dto/pagination-meta.dto';
+import { notificacionDestino } from '@db/tables/notificacion.table';
+import type { NotificacionDestino } from '@db/tables/notificacion.table';
 
 export class NotificacionPaginationQueryDto {
   @ApiProperty({
@@ -38,6 +40,16 @@ export class NotificacionPaginationQueryDto {
   @Type(() => Number)
   @IsInt()
   userId: number;
+
+  @ApiProperty({
+    description: 'Filtrar por destino del usuario',
+    enum: notificacionDestino.enumValues,
+    example: notificacionDestino.enumValues[0],
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(notificacionDestino.enumValues)
+  destino?: NotificacionDestino;
 }
 
 export class ConductorNotificationQueryDto {

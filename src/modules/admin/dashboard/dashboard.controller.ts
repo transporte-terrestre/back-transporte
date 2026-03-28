@@ -52,9 +52,9 @@ export class DashboardController {
   }
 
   @Get('ingresos-mensuales')
-  @ApiOperation({ summary: 'Obtener ingresos de los últimos 6 meses' })
+  @ApiOperation({ summary: 'Obtener kilometraje de los últimos 6 meses (alias para compatibilidad)' })
   @ApiResponse({ status: 200, type: IngresosMensualesDto })
   getIngresosMensuales() {
-    return this.dashboardService.getIngresosMensuales();
+    return this.dashboardService.getKilometrajeMensual();
   }
 }

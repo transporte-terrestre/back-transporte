@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.table';
-import type { ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.table';
+import { conductoresClaseLicencia, conductoresCategoriaLicencia, conductoresEstado } from '@db/tables/conductor.table';
+import type { ConductorClaseLicencia, ConductorCategoriaLicencia, ConductorEstado } from '@db/tables/conductor.table';
 
 export class ConductorListDto {
   @ApiProperty({ example: 1, description: 'Driver ID' })
@@ -65,4 +65,11 @@ export class ConductorListDto {
     description: 'Update date',
   })
   actualizadoEn: Date;
+
+  @ApiProperty({
+    enum: conductoresEstado.enumValues,
+    example: 'activo',
+    description: 'Estado del conductor',
+  })
+  estado: ConductorEstado;
 }

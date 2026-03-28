@@ -3,8 +3,8 @@ import { ConductorListDto } from './conductor-list.dto';
 import { PaginationMetaDto } from '../../../../../common/dto/pagination-meta.dto';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
-import { conductoresClaseLicencia, conductoresCategoriaLicencia } from '@db/tables/conductor.table';
-import type { ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.table';
+import { conductoresClaseLicencia, conductoresCategoriaLicencia, conductoresEstado } from '@db/tables/conductor.table';
+import type { ConductorClaseLicencia, ConductorCategoriaLicencia, ConductorEstado } from '@db/tables/conductor.table';
 
 export class ConductorPaginationQueryDto {
   @ApiProperty({
@@ -75,6 +75,16 @@ export class ConductorPaginationQueryDto {
   @IsOptional()
   @IsIn(conductoresCategoriaLicencia.enumValues, { each: true })
   categoriaLicencia?: ConductorCategoriaLicencia;
+
+  @ApiProperty({
+    description: 'Filtrar por estado del conductor',
+    enum: conductoresEstado.enumValues,
+    example: conductoresEstado.enumValues[0],
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(conductoresEstado.enumValues)
+  estado?: ConductorEstado;
 }
 
 export class PaginatedConductorResultDto {

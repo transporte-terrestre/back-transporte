@@ -75,7 +75,14 @@ export class VehiculosController {
   @ApiOperation({ summary: 'Obtener estado de documentos de vehículos (activo/caducado/nulo)' })
   @ApiResponse({ status: 200, type: PaginatedVehiculoEstadoDocumentosResultDto })
   findAllEstadoDocumentos(@Query() query: VehiculoDocumentosEstadoQueryDto) {
-    return this.vehiculosService.findAllEstadoDocumentos(query.page, query.limit, query.filtro);
+    return this.vehiculosService.findAllEstadoDocumentos(
+      query.page || 1,
+      query.limit || 10,
+      query.filtro,
+      query.estado,
+      query.marcaId,
+      query.placa,
+    );
   }
 
   @Get('download/:id')

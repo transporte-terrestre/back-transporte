@@ -2,6 +2,7 @@ import { Controller, Get, Post, Query, Param, UseGuards, ParseIntPipe, Body, Def
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { NotificacionesService } from './notificaciones.service';
 import { NotificacionCreateDto } from './dto/notificacion/notificacion-create.dto';
+import { notificacionDestino, NotificacionDestino } from '@db/tables/notificacion.table';
 import {
   PaginatedNotificacionResultDto,
   NotificacionPaginationQueryDto,
@@ -24,7 +25,7 @@ export class NotificacionesController {
   @ApiOperation({ summary: 'Obtener notificaciones del usuario' })
   @ApiResponse({ status: 200, type: PaginatedNotificacionResultDto })
   async findAll(@Query() query: NotificacionPaginationQueryDto) {
-    return await this.notificacionesService.findAllByUser(query.userId, query.page, query.limit);
+    return await this.notificacionesService.findAllByUser(query.userId, query.page, query.limit, query.destino);
   }
 
   @Post('create')
@@ -39,6 +40,13 @@ export class NotificacionesController {
   @ApiResponse({ status: 200, type: NotificacionResultDto })
   async markAsRead(@Param('id', ParseIntPipe) id: number, @Query('userId', ParseIntPipe) userId: number): Promise<NotificacionResultDto> {
     return await this.notificacionesService.markAsRead(userId, id);
+  }
+
+  @Post('ocultar/:id')
+  @ApiOperation({ summary: 'Ocultar notificación para un usuario' })
+  @ApiResponse({ status: 200, type: NotificacionResultDto })
+  async markAsDismissed(@Param('id', ParseIntPipe) id: number, @Query('userId', ParseIntPipe) userId: number): Promise<NotificacionResultDto> {
+    return await this.notificacionesService.dismiss(userId, id);
   }
 
   // ===================================
@@ -70,6 +78,16 @@ export class NotificacionesController {
     @Query('conductorId', ParseIntPipe) conductorId: number,
   ): Promise<NotificacionResultDto> {
     return await this.notificacionesService.markAsReadByConductor(conductorId, id);
+  }
+
+  @Post('ocultar-conductor/:id')
+  @ApiOperation({ summary: 'Ocultar notificación para un conductor' })
+  @ApiResponse({ status: 200, type: NotificacionResultDto })
+  async markAsDismissedByConductor(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('conductorId', ParseIntPipe) conductorId: number,
+  ): Promise<NotificacionResultDto> {
+    return await this.notificacionesService.dismissByConductor(conductorId, id);
   }
 
   @Get('vencimientos/test')

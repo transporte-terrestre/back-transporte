@@ -1,8 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { NotificacionRepository, DocumentoVencimiento } from '@repository/notificacion.repository';
+import { NotificacionDestino, NotificacionDTO } from '@db/tables/notificacion.table';
 import { PaginatedNotificacionResultDto } from './dto/notificacion/notificacion-paginated.dto';
 import { NotificacionResultDto } from './dto/notificacion/notificacion-result.dto';
 import { NotificacionCreateDto } from './dto/notificacion/notificacion-create.dto';
+import type { NotificacionTipo } from '@db/tables/notificacion.table';
 import { GenerarVencimientosResultDto, NotificacionPreviewDto, PreviewVencimientosResultDto } from './dto/notificacion/notificacion-vencimiento.dto';
 import { SendEmailDto } from './dto/email/send-email.dto';
 import * as nodemailer from 'nodemailer';
@@ -42,12 +44,12 @@ export class NotificacionesService {
       return { message: 'Correo enviado correctamente' };
     } catch (error) {
       console.error('Error enviando correo:', error);
-      throw new InternalServerErrorException('No se pudo enviar el correo: ' + (error as any).message);
+      throw new InternalServerErrorException('No se pudo enviar el correo: ' + (error as Error).message);
     }
   }
 
-  async findAllByUser(usuarioId: number, page: number = 1, limit: number = 10): Promise<PaginatedNotificacionResultDto> {
-    const { data, total } = await this.notificacionRepository.findAllPaginatedByUsuario(usuarioId, page, limit);
+  async findAllByUser(usuarioId: number, page: number = 1, limit: number = 10, destino?: NotificacionDestino): Promise<PaginatedNotificacionResultDto> {
+    const { data, total } = await this.notificacionRepository.findAllPaginatedByUsuario(usuarioId, page, limit, destino);
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -71,10 +73,10 @@ export class NotificacionesService {
     const adminEmails = admins.map((u) => u.email).filter((e) => e);
 
     // In-app notification for admins
-    const notificacionData = {
+    const notificacionData: NotificacionDTO = {
       titulo: `Mantenimiento requerido: ${placa}`,
       mensaje: `El vehículo ${placa} alcanzó los ${kmActual} KM (Programado: ${kmProxMant} KM).`,
-      tipo: 'warning' as const,
+      tipo: 'warning',
       metadata: { entidad: 'vehiculo', id: vehiculoId },
     };
     await this.notificacionRepository.create(notificacionData);
@@ -385,6 +387,30 @@ export class NotificacionesService {
     } as NotificacionResultDto;
   }
 
+  async dismiss(usuarioId: number, notificacionId: number): Promise<NotificacionResultDto> {
+    const result = await this.notificacionRepository.dismiss(usuarioId, notificacionId);
+    if (!result) {
+      throw new Error('Notificación no encontrada');
+    }
+    const notif = await this.notificacionRepository.findOne(notificacionId);
+    return {
+      ...notif,
+      leido: true,
+    } as NotificacionResultDto;
+  }
+
+  async dismissByConductor(conductorId: number, notificacionId: number): Promise<NotificacionResultDto> {
+    const result = await this.notificacionRepository.dismissByConductor(conductorId, notificacionId);
+    if (!result) {
+      throw new Error('Notificación no encontrada o no asignada al conductor');
+    }
+    const notif = await this.notificacionRepository.findOne(notificacionId);
+    return {
+      ...notif,
+      leido: true,
+    } as NotificacionResultDto;
+  }
+
   async previewNotificacionesVencimiento(fecha: string, diasAnticipacion: number = 7): Promise<PreviewVencimientosResultDto> {
     const fechaReferencia = new Date(fecha);
     const documentosVencidos = await this.notificacionRepository.getDocumentosVencimientosPorFecha(fechaReferencia, diasAnticipacion);
@@ -431,7 +457,7 @@ export class NotificacionesService {
       };
     }
 
-    const notificacionesData = previews.map((preview) => {
+    const notificacionesData: NotificacionDTO[] = previews.map((preview) => {
       return {
         titulo: preview.titulo,
         mensaje: preview.mensaje,

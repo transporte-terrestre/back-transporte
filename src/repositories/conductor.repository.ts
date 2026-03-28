@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, or, like, and, gte, lte, count, sql, ilike, desc, isNull, inArray } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { conductores, ConductorDTO } from '@db/tables/conductor.table';
+import { conductores, ConductorDTO, ConductorEstado, ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.table';
 import { conductorDocumentos, ConductorDocumento } from '@db/tables/conductor-documento.table';
 import { FiltroDocumentoEstado } from '../modules/admin/conductores/dto/conductor/conductor-documentos-estado.dto';
 
@@ -9,8 +9,9 @@ interface PaginationFilters {
   search?: string;
   fechaInicio?: string;
   fechaFin?: string;
-  claseLicencia?: string;
-  categoriaLicencia?: string;
+  claseLicencia?: ConductorClaseLicencia;
+  categoriaLicencia?: ConductorCategoriaLicencia;
+  estado?: ConductorEstado;
 }
 
 @Injectable()
@@ -42,6 +43,10 @@ export class ConductorRepository {
 
     if (filters?.categoriaLicencia) {
       conditions.push(eq(sql`${conductores.categoriaLicencia}::text`, filters.categoriaLicencia));
+    }
+
+    if (filters?.estado) {
+      conditions.push(eq(sql`${conductores.estado}::text`, filters.estado));
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
@@ -103,10 +108,46 @@ export class ConductorRepository {
     return result[0];
   }
 
-  async findAllWithDocumentos(page: number = 1, limit: number = 10, filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO) {
+  async findAllWithDocumentos(
+    page: number = 1,
+    limit: number = 10,
+    filtro: FiltroDocumentoEstado = FiltroDocumentoEstado.INCOMPLETO,
+    search?: string,
+    estado?: ConductorEstado,
+    claseLicencia?: ConductorClaseLicencia,
+    categoriaLicencia?: ConductorCategoriaLicencia,
+  ) {
     const offset = (page - 1) * limit;
+    const conditions = [];
 
-    const whereClause = isNull(conductores.eliminadoEn);
+    if (search) {
+      const searchTerm = search.trim();
+      conditions.push(
+        or(
+          ilike(conductores.nombreCompleto, `%${searchTerm}%`),
+          like(conductores.dni, `%${searchTerm}%`),
+          like(conductores.numeroLicencia, `%${searchTerm}%`),
+          ilike(conductores.email, `%${searchTerm}%`),
+          like(conductores.celular, `%${searchTerm}%`),
+        ),
+      );
+    }
+
+    if (claseLicencia) {
+      conditions.push(eq(sql`${conductores.claseLicencia}::text`, claseLicencia));
+    }
+
+    if (categoriaLicencia) {
+      conditions.push(eq(sql`${conductores.categoriaLicencia}::text`, categoriaLicencia));
+    }
+
+    if (estado) {
+      conditions.push(eq(sql`${conductores.estado}::text`, estado));
+    }
+
+    conditions.push(isNull(conductores.eliminadoEn));
+
+    const whereClause = and(...conditions);
 
     const [{ total }] = await database.select({ total: count() }).from(conductores).where(whereClause);
 
@@ -167,6 +208,7 @@ export class ConductorRepository {
               apellidos: conductores.apellidos,
               fotocheck: conductores.fotocheck,
               documentosNoAplicables: conductores.documentosNoAplicables,
+              estado: conductores.estado,
             })
             .from(conductores)
             .where(inArray(conductores.id, ids))
