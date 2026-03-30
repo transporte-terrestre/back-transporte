@@ -48,8 +48,8 @@ export class NotificacionesService {
     }
   }
 
-  async findAllByUser(usuarioId: number, page: number = 1, limit: number = 10, destino?: NotificacionDestino): Promise<PaginatedNotificacionResultDto> {
-    const { data, total } = await this.notificacionRepository.findAllPaginatedByUsuario(usuarioId, page, limit, destino);
+  async findAllByUser(usuarioId: number, page: number = 1, limit: number = 10, destino?: NotificacionDestino, entidad?: string, fechaInicio?: string, fechaFin?: string): Promise<PaginatedNotificacionResultDto> {
+    const { data, total } = await this.notificacionRepository.findAllPaginatedByUsuario(usuarioId, page, limit, destino, entidad, fechaInicio, fechaFin);
 
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -66,6 +66,11 @@ export class NotificacionesService {
         hasPreviousPage,
       },
     };
+  }
+
+  async countUnreadByUser(usuarioId: number, destino?: NotificacionDestino, entidad?: string, fechaInicio?: string, fechaFin?: string): Promise<{ count: number }> {
+    const count = await this.notificacionRepository.countUnreadByUsuario(usuarioId, destino, entidad, fechaInicio, fechaFin);
+    return { count };
   }
 
   async notifyMaintenance(vehiculoId: number, placa: string, kmActual: number, kmProxMant: number): Promise<void> {

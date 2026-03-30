@@ -10,7 +10,7 @@ import { vehiculos } from '@db/tables/vehiculo.table';
 import { modelos } from '@db/tables/modelo.table';
 import { marcas } from '@db/tables/marca.table';
 import { usuarios } from '@db/tables/usuario.table';
-import { eq, and, desc, isNull, count, sql, lte, isNotNull } from 'drizzle-orm';
+import { eq, and, desc, isNull, count, sql, lte, isNotNull, gte } from 'drizzle-orm';
 
 // Types for document expiration results
 export interface DocumentoVencimientoBase {
@@ -42,8 +42,19 @@ export class NotificacionRepository {
   // EXISTING METHODS
   // =============================================
 
-  async findAllPaginatedByUsuario(usuarioId: number, page: number = 1, limit: number = 10, destino: NotificacionDestino = 'sistema') {
+  async findAllPaginatedByUsuario(usuarioId: number, page: number = 1, limit: number = 10, destino: NotificacionDestino = 'sistema', entidad?: string, fechaInicio?: string, fechaFin?: string) {
     const offset = (page - 1) * limit;
+
+    const conditions = [eq(notificaciones.destino, destino), isNull(notificaciones.eliminadoEn), isNull(notificacionesLeidas.ocultadoEn)];
+    if (entidad) {
+      conditions.push(sql`${notificaciones.metadata}->>'entidad' = ${entidad}`);
+    }
+    if (fechaInicio) {
+      conditions.push(gte(notificaciones.creadoEn, new Date(fechaInicio)));
+    }
+    if (fechaFin) {
+      conditions.push(lte(notificaciones.creadoEn, new Date(fechaFin)));
+    }
 
     const query = database
       .select({
@@ -57,7 +68,7 @@ export class NotificacionRepository {
       })
       .from(notificaciones)
       .leftJoin(notificacionesLeidas, and(eq(notificacionesLeidas.notificacionId, notificaciones.id), eq(notificacionesLeidas.usuarioId, usuarioId)))
-      .where(and(eq(notificaciones.destino, destino), isNull(notificaciones.eliminadoEn), isNull(notificacionesLeidas.ocultadoEn)))
+      .where(and(...conditions))
       .orderBy(desc(notificaciones.creadoEn))
       .limit(limit)
       .offset(offset);
@@ -67,7 +78,7 @@ export class NotificacionRepository {
       .select({ count: count() })
       .from(notificaciones)
       .leftJoin(notificacionesLeidas, and(eq(notificacionesLeidas.notificacionId, notificaciones.id), eq(notificacionesLeidas.usuarioId, usuarioId)))
-      .where(and(eq(notificaciones.destino, destino), isNull(notificaciones.eliminadoEn), isNull(notificacionesLeidas.ocultadoEn)));
+      .where(and(...conditions));
 
     return { data, total: Number(totalResult[0]?.count || 0) };
   }
@@ -110,6 +121,7 @@ export class NotificacionRepository {
       .values({
         usuarioId,
         notificacionId,
+        leidoEn: new Date(),
       })
       .returning();
 
@@ -131,7 +143,7 @@ export class NotificacionRepository {
       return updated;
     }
 
-    const [result] = await database
+    const result = await database
       .insert(notificacionesLeidas)
       .values({
         usuarioId,
@@ -389,6 +401,38 @@ export class NotificacionRepository {
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
     return diffDays;
+  }
+
+  async countUnreadByUsuario(usuarioId: number, destino: NotificacionDestino = 'sistema', entidad?: string, fechaInicio?: string, fechaFin?: string): Promise<number> {
+    const conditions = [
+      eq(notificaciones.destino, destino),
+      isNull(notificaciones.eliminadoEn),
+      isNull(notificacionesLeidas.ocultadoEn),
+      isNull(notificacionesLeidas.id),
+    ];
+    if (entidad) {
+      conditions.push(sql`${notificaciones.metadata}->>'entidad' = ${entidad}`);
+    }
+    if (fechaInicio) {
+      conditions.push(gte(notificaciones.creadoEn, new Date(fechaInicio)));
+    }
+    if (fechaFin) {
+      conditions.push(lte(notificaciones.creadoEn, new Date(fechaFin)));
+    }
+
+    const result = await database
+      .select({ count: count() })
+      .from(notificaciones)
+      .leftJoin(
+        notificacionesLeidas,
+        and(
+          eq(notificacionesLeidas.notificacionId, notificaciones.id),
+          eq(notificacionesLeidas.usuarioId, usuarioId),
+        ),
+      )
+      .where(and(...conditions));
+
+    return Number(result[0]?.count || 0);
   }
 
   async findUsersByRole(role: string) {
