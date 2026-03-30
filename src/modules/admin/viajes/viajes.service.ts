@@ -51,6 +51,8 @@ import { ConductorRepository } from '@repository/conductor.repository';
 import { ValidarVehiculoQueryDto } from './dto/viaje/validar-vehiculo-query.dto';
 import { ValidarConductorQueryDto } from './dto/viaje/validar-conductor-query.dto';
 import { ValidacionResultDto } from './dto/viaje/validacion-result.dto';
+import { ViajeRepostajeMovimientoRepository } from '@repository/viaje-repostaje-movimiento.repository';
+import { ViajeRepostajeMovimientoCreateDto } from './dto/viaje-repostaje-movimiento/viaje-repostaje-movimiento-create.dto';
 
 interface UsuarioAutenticado {
   sub: number;
@@ -82,6 +84,7 @@ export class ViajesService {
     private readonly vehiculoDocumentoRepository: VehiculoDocumentoRepository,
     private readonly conductorDocumentoRepository: ConductorDocumentoRepository,
     private readonly conductorRepository: ConductorRepository,
+    private readonly viajeRepostajeMovimientoRepository: ViajeRepostajeMovimientoRepository,
   ) {}
 
   async findAllPaginated(
@@ -499,6 +502,24 @@ export class ViajesService {
   }
 
   // ========== TRAMOS DEL VIAJE ==========
+  async getRepostajesPorTramo(viajeTramoId: number) {
+    return await this.viajeRepostajeMovimientoRepository.findByViajeTramo(viajeTramoId);
+  }
+
+  async registrarRepostaje(data: ViajeRepostajeMovimientoCreateDto) {
+    const tramo = await this.viajeTramoRepository.findOne(data.viajeTramoId);
+    if (!tramo) throw new NotFoundException('Tramo no encontrado');
+    return await this.viajeRepostajeMovimientoRepository.create({
+      viajeTramoId: data.viajeTramoId,
+      combustible: data.combustible,
+      galonesEstablecidos: data.galonesEstablecidos.toString(),
+    });
+  }
+
+  async deleteRepostaje(id: number) {
+    return await this.viajeRepostajeMovimientoRepository.delete(id);
+  }
+
   async findTramos(viajeId: number) {
     return await this.viajeTramoRepository.findByViajeIdWithParadas(viajeId);
   }
