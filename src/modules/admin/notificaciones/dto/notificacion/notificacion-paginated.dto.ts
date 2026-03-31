@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { NotificacionListDto } from './notificacion-list.dto';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Min, Max, IsIn } from 'class-validator';
+import { IsInt, IsOptional, Min, Max, IsIn, IsString } from 'class-validator';
 import { PaginationMetaDto } from '../../../../../common/dto/pagination-meta.dto';
 import { notificacionDestino } from '@db/tables/notificacion.table';
 import type { NotificacionDestino } from '@db/tables/notificacion.table';
@@ -50,6 +50,33 @@ export class NotificacionPaginationQueryDto {
   @IsOptional()
   @IsIn(notificacionDestino.enumValues)
   destino?: NotificacionDestino;
+
+  @ApiProperty({
+    description: 'Filtrar por entidad en metadata (ej: conductor, vehiculo)',
+    example: 'conductor',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  entidad?: string;
+
+  @ApiProperty({
+    description: 'Fecha de inicio para filtrar (ISO 8601)',
+    example: '2024-01-01T00:00:00.000Z',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  fechaInicio?: string;
+
+  @ApiProperty({
+    description: 'Fecha de fin para filtrar (ISO 8601)',
+    example: '2024-12-31T23:59:59.999Z',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  fechaFin?: string;
 }
 
 export class ConductorNotificationQueryDto {

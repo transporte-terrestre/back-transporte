@@ -8,6 +8,7 @@ import {
   NotificacionPaginationQueryDto,
   ConductorNotificationQueryDto,
 } from './dto/notificacion/notificacion-paginated.dto';
+import { UnreadCountQueryDto, UnreadCountResultDto } from './dto/notificacion/notificacion-unread-count.dto';
 import { NotificacionResultDto } from './dto/notificacion/notificacion-result.dto';
 import {
   PreviewVencimientosResultDto,
@@ -25,7 +26,14 @@ export class NotificacionesController {
   @ApiOperation({ summary: 'Obtener notificaciones del usuario' })
   @ApiResponse({ status: 200, type: PaginatedNotificacionResultDto })
   async findAll(@Query() query: NotificacionPaginationQueryDto) {
-    return await this.notificacionesService.findAllByUser(query.userId, query.page, query.limit, query.destino);
+    return await this.notificacionesService.findAllByUser(query.userId, query.page, query.limit, query.destino, query.entidad, query.fechaInicio, query.fechaFin);
+  }
+
+  @Get('unread-count')
+  @ApiOperation({ summary: 'Obtener cantidad de notificaciones no leídas' })
+  @ApiResponse({ status: 200, type: UnreadCountResultDto })
+  async countUnread(@Query() query: UnreadCountQueryDto): Promise<UnreadCountResultDto> {
+    return await this.notificacionesService.countUnreadByUser(query.userId, query.destino, query.entidad, query.fechaInicio, query.fechaFin);
   }
 
   @Post('create')
