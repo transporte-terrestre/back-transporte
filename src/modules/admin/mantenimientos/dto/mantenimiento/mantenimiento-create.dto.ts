@@ -1,4 +1,4 @@
-import { IsInt, IsString, IsNotEmpty, IsIn, IsOptional, IsDate } from 'class-validator';
+import { IsInt, IsNumber, IsString, IsNotEmpty, IsIn, IsOptional, IsDate } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { MantenimientoDTO, mantenimientosTipo, mantenimientosEstado } from '@db/tables/mantenimiento.table';
@@ -52,13 +52,13 @@ export class MantenimientoCreateDto implements Omit<MantenimientoDTO, 'id' | 'cr
   @Type(() => Date)
   fechaSalida: Date | null;
 
-  @ApiProperty({ example: 55000, description: 'Mileage at maintenance' })
-  @IsInt()
+  @ApiProperty({ example: 55000.5, description: 'Mileage at maintenance' })
+  @IsNumber()
   kilometraje: number;
 
-  @ApiProperty({ example: 60000, description: 'Next maintenance mileage' })
+  @ApiProperty({ example: 60000.5, description: 'Next maintenance mileage' })
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   kilometrajeProximoMantenimiento?: number;
 
   @ApiProperty({
