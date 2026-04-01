@@ -18,6 +18,7 @@ import { ReportesModule } from './modules/admin/reportes/reportes.module';
 import { PropietariosModule } from './modules/admin/propietarios/propietarios.module';
 import { ProveedoresModule } from './modules/admin/proveedores/proveedores.module';
 import { AlquileresModule } from './modules/admin/alquileres/alquileres.module';
+import { AuditoriaModule } from './modules/admin/auditoria/auditoria.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { AlquileresModule } from './modules/admin/alquileres/alquileres.module';
     AlquileresModule,
     StorageModule,
     CronjobModule,
+    AuditoriaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
