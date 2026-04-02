@@ -44,6 +44,9 @@ export class AuditoriaResultDto {
     type: [String],
   })
   usuarioRol: UsuarioRol[];
+
+  @ApiProperty({ example: 'erick@gmail.com', description: 'Correo del usuario' })
+  usuarioEmail: string;
 }
 
 export class PaginatedAuditoriaResultDto {

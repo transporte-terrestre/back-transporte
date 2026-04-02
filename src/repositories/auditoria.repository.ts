@@ -16,7 +16,6 @@ export class AuditoriaRepository {
 
   async insertar(auditoria: AuditoriaDTO) {
     const data = await database.insert(auditorias).values(auditoria).returning();
-    this.logger.debug(`Insertado registro de auditoría en DB: ${auditoria.accion} - ${auditoria.modulo}`);
     return data[0];
   }
 
@@ -60,6 +59,7 @@ export class AuditoriaRepository {
           usuarioNombre: usuarios.nombres,
           usuarioApellido: usuarios.apellidos,
           usuarioRol: usuarios.roles,
+          usuarioEmail: usuarios.email,
         })
         .from(auditorias)
         .innerJoin(usuarios, eq(auditorias.usuarioId, usuarios.id))
@@ -76,5 +76,26 @@ export class AuditoriaRepository {
       data: records,
       total: Number(total),
     };
+  }
+  async findOne(id: number) {
+    const data = await database
+      .select({
+        id: auditorias.id,
+        accion: auditorias.accion,
+        usuarioId: auditorias.usuarioId,
+        modulo: auditorias.modulo,
+        detalle: auditorias.detalle,
+        fechaHora: auditorias.fechaHora,
+        usuarioNombre: usuarios.nombres,
+        usuarioApellido: usuarios.apellidos,
+        usuarioRol: usuarios.roles,
+        usuarioEmail: usuarios.email,
+      })
+      .from(auditorias)
+      .innerJoin(usuarios, eq(auditorias.usuarioId, usuarios.id))
+      .where(eq(auditorias.id, id))
+      .limit(1);
+
+    return data[0] || null;
   }
 }

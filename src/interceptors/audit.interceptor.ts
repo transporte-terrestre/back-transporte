@@ -35,7 +35,6 @@ export class AuditInterceptor implements NestInterceptor {
     const usuarioId = user?.sub || user?.id;
 
     if (!usuarioId) {
-      this.logger.warn(`No se pudo registrar auditoría: Usuario no identificado en el request ${method} ${originalUrl}`);
       return;
     }
 
@@ -68,7 +67,5 @@ export class AuditInterceptor implements NestInterceptor {
       modulo,
       detalle,
     });
-
-    this.logger.log(`Auditoría guardada: ${accion} en ${modulo} (User: ${usuarioId})`);
   }
 }

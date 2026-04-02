@@ -43,4 +43,7 @@ export class AuditoriaService {
       },
     };
   }
+  async findOne(id: number) {
+    return this.auditoriaRepository.findOne(id);
+  }
 }
