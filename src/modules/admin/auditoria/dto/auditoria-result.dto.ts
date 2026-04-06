@@ -16,8 +16,11 @@ export class AuditoriaResultDto {
   })
   accion: AuditoriaAccion;
 
-  @ApiProperty({ example: 1, description: 'ID del usuario que realizó la acción' })
+  @ApiProperty({ example: 1, description: 'ID del usuario que realizó la acción', required: false })
   usuarioId: number;
+
+  @ApiProperty({ example: 1, description: 'ID del conductor que realizó la acción', required: false })
+  conductorId: number;
 
   @ApiProperty({ example: 'vehiculo', description: 'Módulo afectado' })
   modulo: string;
@@ -31,22 +34,20 @@ export class AuditoriaResultDto {
   })
   fechaHora: Date;
 
-  @ApiProperty({ example: 'Erick', description: 'Nombre del usuario' })
-  usuarioNombre: string;
+  @ApiProperty({ example: 'Erick', description: 'Nombre de quien realizó la acción' })
+  executorNombre: string;
 
-  @ApiProperty({ example: 'Flores', description: 'Apellido del usuario' })
-  usuarioApellido: string;
+  @ApiProperty({ example: 'Flores', description: 'Apellido de quien realizó la acción' })
+  executorApellido: string;
 
   @ApiProperty({
-    enum: usuariosRol.enumValues,
-    example: [usuariosRol.enumValues[0]],
-    description: 'Roles del usuario',
-    type: [String],
+    example: 'ADMIN',
+    description: 'Rol de quien realizó la acción',
   })
-  usuarioRol: UsuarioRol[];
+  executorRol: string;
 
-  @ApiProperty({ example: 'erick@gmail.com', description: 'Correo del usuario' })
-  usuarioEmail: string;
+  @ApiProperty({ example: 'erick@gmail.com', description: 'Correo de quien realizó la acción' })
+  executorEmail: string;
 }
 
 export class PaginatedAuditoriaResultDto {

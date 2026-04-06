@@ -31,10 +31,10 @@ export class AuditInterceptor implements NestInterceptor {
   }
 
   private async registrarAuditoria(method: string, originalUrl: string, body: any, user: any) {
-    // Usamos user.sub porque así viene en el JWT de este proyecto
-    const usuarioId = user?.sub || user?.id;
+    const sub = user?.sub || user?.id;
+    const tipo = user?.tipo; // 'usuario' | 'conductor'
 
-    if (!usuarioId) {
+    if (!sub) {
       return;
     }
 
@@ -61,11 +61,20 @@ export class AuditInterceptor implements NestInterceptor {
     const urlParts = originalUrl.split('?')[0].split('/').filter(Boolean);
     const modulo = urlParts.length > 0 ? urlParts.join('/') : 'general';
 
-    await this.auditoriaService.registrarAccion({
+    const auditData: any = {
       accion,
-      usuarioId: usuarioId,
       modulo,
       detalle,
-    });
+    };
+
+    if (tipo === 'conductor') {
+      auditData.conductorId = sub;
+      auditData.usuarioId = null;
+    } else {
+      auditData.usuarioId = sub;
+      auditData.conductorId = null;
+    }
+
+    await this.auditoriaService.registrarAccion(auditData);
   }
 }
