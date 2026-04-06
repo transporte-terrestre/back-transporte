@@ -7,58 +7,48 @@ export class ReportesService {
   constructor(private readonly reportesRepository: ReportesRepository) {}
 
   // ========== REPORTES DETALLADOS ==========
+  private parseDate(dateStr: string, setToEnd = false): Date {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    if (setToEnd) {
+      date.setHours(23, 59, 59, 999);
+    } else {
+      date.setHours(0, 0, 0, 0);
+    }
+    return date;
+  }
 
   async getViajesDetalladosPorVehiculo(vehiculoId: number, fechaInicio?: string, fechaFin?: string) {
-    const start = fechaInicio ? new Date(fechaInicio) : undefined;
-    const end = fechaFin ? new Date(fechaFin) : undefined;
-
-    if (end) {
-      end.setHours(23, 59, 59, 999);
-    }
+    const start = fechaInicio ? this.parseDate(fechaInicio) : undefined;
+    const end = fechaFin ? this.parseDate(fechaFin, true) : undefined;
 
     return await this.reportesRepository.getViajesDetalladosPorVehiculo(vehiculoId, start, end);
   }
 
   async getViajesDetalladosPorConductor(conductorId: number, fechaInicio?: string, fechaFin?: string) {
-    const start = fechaInicio ? new Date(fechaInicio) : undefined;
-    const end = fechaFin ? new Date(fechaFin) : undefined;
-
-    if (end) {
-      end.setHours(23, 59, 59, 999);
-    }
+    const start = fechaInicio ? this.parseDate(fechaInicio) : undefined;
+    const end = fechaFin ? this.parseDate(fechaFin, true) : undefined;
 
     return await this.reportesRepository.getViajesDetalladosPorConductor(conductorId, start, end);
   }
 
   async getViajesDetalladosPorCliente(clienteId: number, fechaInicio?: string, fechaFin?: string) {
-    const start = fechaInicio ? new Date(fechaInicio) : undefined;
-    const end = fechaFin ? new Date(fechaFin) : undefined;
-
-    if (end) {
-      end.setHours(23, 59, 59, 999);
-    }
+    const start = fechaInicio ? this.parseDate(fechaInicio) : undefined;
+    const end = fechaFin ? this.parseDate(fechaFin, true) : undefined;
 
     return await this.reportesRepository.getViajesDetalladosPorCliente(clienteId, start, end);
   }
 
   async getMantenimientosDetalladosPorVehiculo(vehiculoId: number, fechaInicio?: string, fechaFin?: string) {
-    const start = fechaInicio ? new Date(fechaInicio) : undefined;
-    const end = fechaFin ? new Date(fechaFin) : undefined;
-
-    if (end) {
-      end.setHours(23, 59, 59, 999);
-    }
+    const start = fechaInicio ? this.parseDate(fechaInicio) : undefined;
+    const end = fechaFin ? this.parseDate(fechaFin, true) : undefined;
 
     return await this.reportesRepository.getMantenimientosDetalladosPorVehiculo(vehiculoId, start, end);
   }
 
   async getMantenimientosDetalladosPorTaller(tallerId: number, fechaInicio?: string, fechaFin?: string) {
-    const start = fechaInicio ? new Date(fechaInicio) : undefined;
-    const end = fechaFin ? new Date(fechaFin) : undefined;
-
-    if (end) {
-      end.setHours(23, 59, 59, 999);
-    }
+    const start = fechaInicio ? this.parseDate(fechaInicio) : undefined;
+    const end = fechaFin ? this.parseDate(fechaFin, true) : undefined;
 
     return await this.reportesRepository.getMantenimientosDetalladosPorTaller(tallerId, start, end);
   }
@@ -181,5 +171,12 @@ export class ReportesService {
     });
 
     return Array.from(map.values());
+  }
+
+  async getResumenVehiculos(fechaInicio?: string, fechaFin?: string) {
+    const start = fechaInicio ? this.parseDate(fechaInicio) : undefined;
+    const end = fechaFin ? this.parseDate(fechaFin, true) : undefined;
+
+    return await this.reportesRepository.getResumenVehiculos(start, end);
   }
 }

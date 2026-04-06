@@ -28,6 +28,7 @@ import { viajeChecklists } from '@db/tables/viaje-checklist.table';
 import { viajeChecklistItems } from '@db/tables/viaje-checklist-item.table';
 import { alquileres } from '@db/tables/alquiler.table';
 import { viajeRepostajeMovimientos } from '@db/tables/viaje-repostaje-movimiento.table';
+import { auditorias } from '@db/tables/auditoria.table';
 
 const pool = new Pool(dbConfig);
 
@@ -57,6 +58,7 @@ const schema = {
   viajeChecklistItems,
   alquileres,
   viajeRepostajeMovimientos,
+  auditorias,
 };
 
 export const database = drizzle(pool, { schema: schema });

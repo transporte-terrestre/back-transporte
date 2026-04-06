@@ -56,7 +56,7 @@ export class MantenimientosService {
     return {
       data: data.map((item) => ({
         ...item,
-        taller: item.taller ? ({ ...item.taller, sucursalIds: [] as number[] } as any) : null,
+        taller: item.taller ? { ...item.taller, sucursalIds: [] as number[] } : null,
       })),
       meta: {
         total,

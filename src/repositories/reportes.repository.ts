@@ -15,6 +15,8 @@ import { conductores } from '@db/tables/conductor.table';
 import { conductorDocumentos } from '@db/tables/conductor-documento.table';
 import { clientes } from '@db/tables/cliente.table';
 import { entidades } from '@db/tables/entidad.table';
+import { viajeTramos } from '@db/tables/viaje-tramo.table';
+import { viajeRepostajeMovimientos } from '@db/tables/viaje-repostaje-movimiento.table';
 
 @Injectable()
 export class ReportesRepository {
@@ -25,6 +27,7 @@ export class ReportesRepository {
       id: viajes.id,
       tipoRuta: viajes.tipoRuta,
       rutaOcasional: viajes.rutaOcasional,
+      nombreRuta: viajes.nombreRuta,
       rutaOrigen: rutas.origen,
       rutaDestino: rutas.destino,
       distanciaEstimada: viajes.distanciaEstimada,
@@ -73,8 +76,9 @@ export class ReportesRepository {
   // ========== REPORTES DETALLADOS ==========
 
   async getViajesDetalladosPorVehiculo(vehiculoId: number, fechaInicio?: Date, fechaFin?: Date) {
-    const filters = [eq(viajeVehiculos.vehiculoId, vehiculoId), isNull(viajes.eliminadoEn)];
+    const filters = [isNull(viajes.eliminadoEn)];
 
+    if (vehiculoId > 0) filters.push(eq(viajeVehiculos.vehiculoId, vehiculoId));
     if (fechaInicio) filters.push(gte(viajes.fechaSalidaProgramada, fechaInicio));
     if (fechaFin) filters.push(lte(viajes.fechaSalidaProgramada, fechaFin));
 
@@ -99,8 +103,9 @@ export class ReportesRepository {
   }
 
   async getViajesDetalladosPorConductor(conductorId: number, fechaInicio?: Date, fechaFin?: Date) {
-    const filters = [eq(viajeConductores.conductorId, conductorId), isNull(viajes.eliminadoEn)];
+    const filters = [isNull(viajes.eliminadoEn)];
 
+    if (conductorId > 0) filters.push(eq(viajeConductores.conductorId, conductorId));
     if (fechaInicio) filters.push(gte(viajes.fechaSalidaProgramada, fechaInicio));
     if (fechaFin) filters.push(lte(viajes.fechaSalidaProgramada, fechaFin));
 
@@ -125,8 +130,9 @@ export class ReportesRepository {
   }
 
   async getViajesDetalladosPorCliente(clienteId: number, fechaInicio?: Date, fechaFin?: Date) {
-    const filters = [eq(viajes.clienteId, clienteId), isNull(viajes.eliminadoEn)];
+    const filters = [isNull(viajes.eliminadoEn)];
 
+    if (clienteId > 0) filters.push(eq(viajes.clienteId, clienteId));
     if (fechaInicio) filters.push(gte(viajes.fechaSalidaProgramada, fechaInicio));
     if (fechaFin) filters.push(lte(viajes.fechaSalidaProgramada, fechaFin));
 
@@ -151,8 +157,9 @@ export class ReportesRepository {
   }
 
   async getMantenimientosDetalladosPorVehiculo(vehiculoId: number, fechaInicio?: Date, fechaFin?: Date) {
-    const filters = [eq(mantenimientos.vehiculoId, vehiculoId), isNull(mantenimientos.eliminadoEn)];
+    const filters = [isNull(mantenimientos.eliminadoEn)];
 
+    if (vehiculoId > 0) filters.push(eq(mantenimientos.vehiculoId, vehiculoId));
     if (fechaInicio) filters.push(gte(mantenimientos.fechaIngreso, fechaInicio));
     if (fechaFin) filters.push(lte(mantenimientos.fechaIngreso, fechaFin));
 
@@ -177,8 +184,9 @@ export class ReportesRepository {
   }
 
   async getMantenimientosDetalladosPorTaller(tallerId: number, fechaInicio?: Date, fechaFin?: Date) {
-    const filters = [eq(mantenimientos.tallerId, tallerId), isNull(mantenimientos.eliminadoEn)];
+    const filters = [isNull(mantenimientos.eliminadoEn)];
 
+    if (tallerId > 0) filters.push(eq(mantenimientos.tallerId, tallerId));
     if (fechaInicio) filters.push(gte(mantenimientos.fechaIngreso, fechaInicio));
     if (fechaFin) filters.push(lte(mantenimientos.fechaIngreso, fechaFin));
 
@@ -223,5 +231,42 @@ export class ReportesRepository {
       .leftJoin(conductorDocumentos, eq(conductores.id, conductorDocumentos.conductorId))
       .where(isNull(conductores.eliminadoEn))
       .orderBy(conductores.apellidos, conductores.nombres);
+  }
+
+  async getResumenVehiculos(fechaInicio?: Date, fechaFin?: Date) {
+    const filters = [isNull(viajes.eliminadoEn)];
+    if (fechaInicio) filters.push(gte(viajes.fechaSalidaProgramada, fechaInicio));
+    if (fechaFin) filters.push(lte(viajes.fechaSalidaProgramada, fechaFin));
+
+    const fuelSubquery = database
+      .select({
+        viajeId: viajeTramos.viajeId,
+        totalGalonesViaje: sql<number>`SUM(CAST(${viajeRepostajeMovimientos.galonesEstablecidos} AS DECIMAL))`.as('total_galones_viaje'),
+      })
+      .from(viajeTramos)
+      .innerJoin(viajeRepostajeMovimientos, eq(viajeRepostajeMovimientos.viajeTramoId, viajeTramos.id))
+      .where(isNull(viajeRepostajeMovimientos.eliminadoEn))
+      .groupBy(viajeTramos.viajeId)
+      .as('fuel_sub');
+
+    return await database
+      .select({
+        vehiculoId: vehiculos.id,
+        placa: vehiculos.placa,
+        marca: marcas.nombre,
+        modelo: modelos.nombre,
+        totalKilometraje: sql<number>`COALESCE(SUM(CAST(${viajes.distanciaFinal} AS DECIMAL)), 0)`.mapWith(Number),
+        totalGalones: sql<number>`COALESCE(SUM(${fuelSubquery.totalGalonesViaje}), 0)`.mapWith(Number),
+        cantidadViajes: sql<number>`COUNT(DISTINCT ${viajes.id})`.mapWith(Number),
+      })
+      .from(viajes)
+      .innerJoin(viajeVehiculos, and(eq(viajeVehiculos.viajeId, viajes.id), eq(viajeVehiculos.esPrincipal, true)))
+      .innerJoin(vehiculos, eq(viajeVehiculos.vehiculoId, vehiculos.id))
+      .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .leftJoin(fuelSubquery, eq(fuelSubquery.viajeId, viajes.id))
+      .where(and(...filters))
+      .groupBy(vehiculos.id, vehiculos.placa, marcas.nombre, modelos.nombre)
+      .orderBy(vehiculos.placa);
   }
 }

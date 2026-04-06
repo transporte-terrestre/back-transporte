@@ -7,6 +7,7 @@ import { ViajeDetalladoDto } from './dto/viaje-detallado.dto';
 import { MantenimientoDetalladoVehiculoDto } from './dto/mantenimiento-detallado-vehiculo.dto';
 import { MantenimientoDetalladoTallerDto } from './dto/mantenimiento-detallado-taller.dto';
 import { ReporteConductorDto } from './dto/reporte-conductor.dto';
+import { ResumenVehiculoDto } from './dto/resumen-vehiculo.dto';
 
 @ApiTags('reportes')
 @ApiBearerAuth()
@@ -98,5 +99,17 @@ export class ReportesController {
   })
   async getReporteConductores() {
     return await this.reportesService.getReporteConductores();
+  }
+
+  @Get('resumen-vehiculos')
+  @ApiOperation({ summary: 'Resumen de kilometraje y combustible por vehículo' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de resumen por vehículo',
+    type: ResumenVehiculoDto,
+    isArray: true,
+  })
+  async getResumenVehiculos(@Query() query: ReporteDetalladoQueryDto) {
+    return await this.reportesService.getResumenVehiculos(query.fechaInicio, query.fechaFin);
   }
 }
