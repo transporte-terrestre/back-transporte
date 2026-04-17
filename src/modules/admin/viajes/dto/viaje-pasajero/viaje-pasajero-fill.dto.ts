@@ -19,6 +19,10 @@ export class PasajeroItemDto {
   @IsOptional()
   apellidos?: string;
 
+  @IsString()
+  @IsOptional()
+  empresa?: string;
+
   @IsBoolean()
   asistencia: boolean;
 }

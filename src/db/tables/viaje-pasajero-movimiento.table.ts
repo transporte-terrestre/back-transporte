@@ -15,6 +15,7 @@ export const viajePasajeroMovimientos = pgTable(
       .references(() => viajeTramos.id, { onDelete: 'cascade' })
       .notNull(),
     tipoMovimiento: tipoMovimientoEnum('tipo_movimiento').notNull().default('entrada'),
+    hora: timestamp('hora').defaultNow().notNull(),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
     eliminadoEn: timestamp('eliminado_en'),

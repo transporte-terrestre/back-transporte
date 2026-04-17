@@ -84,12 +84,13 @@ export class StorageService {
 
   async download(publicId: string): Promise<StreamableFile> {
     try {
+      const decodedPath = decodeURIComponent(publicId);
       const containerClient = this.blobServiceClient.getContainerClient(this.containerName);
-      const blockBlobClient = containerClient.getBlockBlobClient(publicId);
+      const blockBlobClient = containerClient.getBlockBlobClient(decodedPath);
 
       const downloadResponse = await blockBlobClient.download(0);
       const stream = downloadResponse.readableStreamBody as any; // Cast to any for StreamableFile compatibility if needed
-      
+
       if (!stream) {
         throw new Error('No readable stream found in Azure download response');
       }

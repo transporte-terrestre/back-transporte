@@ -46,16 +46,19 @@ export class ViajePasajeroRepository {
         dni: sql<string | null>`COALESCE(${pasajeros.dni}, ${viajePasajeros.dni})`.as('dni'),
         nombres: sql<string | null>`COALESCE(${pasajeros.nombres}, ${viajePasajeros.nombres})`.as('nombres'),
         apellidos: sql<string | null>`COALESCE(${pasajeros.apellidos}, ${viajePasajeros.apellidos})`.as('apellidos'),
+        empresa: viajePasajeros.empresa,
         asistencia: viajeTramoId ? sql<boolean>`CASE WHEN ${movEntrada.id} IS NOT NULL THEN TRUE ELSE FALSE END` : viajePasajeros.asistencia,
         // Entrada
         paradaAsistenciaId: sql<number | null>`${movEntrada.viajeTramoId}`.as('parada_asistencia_id'),
         paradaAsistenciaNombre: sql<string | null>`${tramoEntrada.nombreLugar}`.as('parada_asistencia_nombre'),
+        horaAsistencia: sql<string | null>`${movEntrada.hora}`.as('hora_asistencia'),
         esAsistenciaTramoActual: viajeTramoId
           ? sql<boolean>`CASE WHEN ${movEntrada.viajeTramoId} = ${viajeTramoId} THEN TRUE ELSE FALSE END`.as('es_asistencia_tramo_actual')
           : sql<null>`NULL`.as('es_asistencia_tramo_actual'),
         // Salida
         paradaSalidaId: sql<number | null>`${movSalida.viajeTramoId}`.as('parada_salida_id'),
         paradaSalidaNombre: sql<string | null>`${tramoSalida.nombreLugar}`.as('parada_salida_nombre'),
+        horaSalida: sql<string | null>`${movSalida.hora}`.as('hora_salida'),
         esSalidaTramoActual: viajeTramoId
           ? sql<boolean>`CASE WHEN ${movSalida.viajeTramoId} = ${viajeTramoId} THEN TRUE ELSE FALSE END`.as('es_salida_tramo_actual')
           : sql<null>`NULL`.as('es_salida_tramo_actual'),
@@ -85,6 +88,7 @@ export class ViajePasajeroRepository {
         dni: sql<string | null>`COALESCE(${pasajeros.dni}, ${viajePasajeros.dni})`.as('dni'),
         nombres: sql<string | null>`COALESCE(${pasajeros.nombres}, ${viajePasajeros.nombres})`.as('nombres'),
         apellidos: sql<string | null>`COALESCE(${pasajeros.apellidos}, ${viajePasajeros.apellidos})`.as('apellidos'),
+        empresa: viajePasajeros.empresa,
         asistencia: viajePasajeros.asistencia,
         paradaAsistenciaId: sql<number | null>`${movEntradaGlobal.viajeTramoId}`.as('parada_asistencia_id'),
         paradaAsistenciaNombre: sql<string | null>`${viajeTramos.nombreLugar}`.as('parada_asistencia_nombre'),
@@ -125,6 +129,7 @@ export class ViajePasajeroRepository {
           target: [viajePasajeros.viajeId, viajePasajeros.pasajeroId],
           set: {
             asistencia: sql`excluded.asistencia`,
+            empresa: sql`excluded.empresa`,
             actualizadoEn: new Date(),
           },
         })
@@ -142,6 +147,7 @@ export class ViajePasajeroRepository {
             asistencia: sql`excluded.asistencia`,
             nombres: sql`excluded.nombres`,
             apellidos: sql`excluded.apellidos`,
+            empresa: sql`excluded.empresa`,
             actualizadoEn: new Date(),
           },
         })

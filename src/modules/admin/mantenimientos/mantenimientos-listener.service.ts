@@ -15,10 +15,12 @@ export class MantenimientosListenerService implements OnModuleInit, OnModuleDest
   async onModuleInit() {
     try {
       await this.client.connect();
-      this.logger.log('Conectado a PostgreSQL para escucha en tiempo real');
+      // this.logger.log('Conectado a PostgreSQL para escucha en tiempo real');
+      this.logger.warn('GENERACIÓN DE MANTENIMIENTOS AUTOMÁTICOS DESHABILITADA');
 
-      await this.client.query('LISTEN vehiculo_mantenimiento_channel');
+      // await this.client.query('LISTEN vehiculo_mantenimiento_channel');
 
+      /*
       this.client.on('notification', async (msg) => {
         if (msg.channel === 'vehiculo_mantenimiento_channel' && msg.payload) {
           const vehiculoId = parseInt(msg.payload);
@@ -31,6 +33,7 @@ export class MantenimientosListenerService implements OnModuleInit, OnModuleDest
           }
         }
       });
+      */
 
       this.client.on('error', (err) => {
         this.logger.error('Error en el cliente de base de datos (Realtime)', err);

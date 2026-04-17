@@ -15,6 +15,7 @@ export const viajePasajeros = pgTable(
     dni: varchar('dni', { length: 20 }),
     nombres: varchar('nombres', { length: 200 }),
     apellidos: varchar('apellidos', { length: 200 }),
+    empresa: varchar('empresa', { length: 255 }),
 
     asistencia: boolean('asistencia').default(false).notNull(),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),

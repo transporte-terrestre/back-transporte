@@ -186,17 +186,18 @@ export class ConductoresService {
       return await this.conductorRepository.create(dataToCreate as ConductorDTO);
     } catch (error: unknown) {
       const dbError = error as DatabaseError;
-      if (dbError.cause?.code === '23505') {
-        if (dbError.cause.constraint?.includes('email')) {
+      const pgError = dbError.cause || dbError;
+      if (pgError.code === '23505') {
+        if (pgError.constraint?.includes('email')) {
           throw new BadRequestException(['El correo electrónico ya está registrado']);
         }
-        if (dbError.cause.constraint?.includes('dni')) {
+        if (pgError.constraint?.includes('dni')) {
           throw new BadRequestException(['El DNI ya está registrado']);
         }
-        if (dbError.cause.constraint?.includes('licencia')) {
+        if (pgError.constraint?.includes('licencia')) {
           throw new BadRequestException(['El número de licencia ya está registrado']);
         }
-        if (dbError.cause.constraint?.includes('celular')) {
+        if (pgError.constraint?.includes('celular')) {
           throw new BadRequestException(['El número de celular ya está registrado']);
         }
         throw new BadRequestException(['Ya existe un registro con estos datos']);
@@ -225,17 +226,18 @@ export class ConductoresService {
       return await this.conductorRepository.update(id, dataToUpdate);
     } catch (error: unknown) {
       const dbError = error as DatabaseError;
-      if (dbError.cause?.code === '23505') {
-        if (dbError.cause.constraint?.includes('email')) {
+      const pgError = dbError.cause || dbError;
+      if (pgError.code === '23505') {
+        if (pgError.constraint?.includes('email')) {
           throw new BadRequestException(['El correo electrónico ya está registrado']);
         }
-        if (dbError.cause.constraint?.includes('dni')) {
+        if (pgError.constraint?.includes('dni')) {
           throw new BadRequestException(['El DNI ya está registrado']);
         }
-        if (dbError.cause.constraint?.includes('licencia')) {
+        if (pgError.constraint?.includes('licencia')) {
           throw new BadRequestException(['El número de licencia ya está registrado']);
         }
-        if (dbError.cause.constraint?.includes('celular')) {
+        if (pgError.constraint?.includes('celular')) {
           throw new BadRequestException(['El número de celular ya está registrado']);
         }
         throw new BadRequestException(['Ya existe un registro con estos datos']);
