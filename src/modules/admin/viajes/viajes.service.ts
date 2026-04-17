@@ -593,7 +593,7 @@ export class ViajesService {
         kmInicial: inicio.tipo === 'descanso' ? '—' : formatKm(inicio.kilometrajeFinal),
         puntoPartida: inicio.nombreLugar || '—',
         puntoLlegada: fin.nombreLugar || '—',
-        numeroPasajeros: fin.tipo === 'descanso' ? null : (fin.numeroPasajeros ?? 0),
+        numeroPasajeros: inicio.tipo === 'descanso' ? null : (inicio.numeroPasajeros ?? 0),
         horaTermino: formatHora(fin.horaFinal),
         kmFinal: fin.tipo === 'descanso' ? '—' : formatKm(fin.kilometrajeFinal),
         tiempoRecorrido: diffMin > 0 ? formatDuracion(diffMin) : '—',
@@ -1044,6 +1044,7 @@ export class ViajesService {
       dni: p.dni || null,
       nombres: p.nombres || null,
       apellidos: p.apellidos || null,
+      empresa: p.empresa || null,
       asistencia: p.asistencia,
     }));
 
@@ -1110,7 +1111,9 @@ export class ViajesService {
         }
 
         // Registrar entrada en el tramo objetivo
-        await this.viajePasajeroMovimientoRepository.create({ viajePasajeroId: id, viajeTramoId: tramoId, tipoMovimiento: 'entrada' });
+        const peruTimeStr = new Date().toLocaleString('en-US', { timeZone: 'America/Lima', hour12: false });
+        const limaDate = new Date(peruTimeStr + " UTC");
+        await this.viajePasajeroMovimientoRepository.create({ viajePasajeroId: id, viajeTramoId: tramoId, tipoMovimiento: 'entrada', hora: limaDate });
         resultados.push(updated);
       } catch (e) {
         console.error(`Error en abordarPasajeros ${id}:`, e);
@@ -1158,7 +1161,9 @@ export class ViajesService {
         }
 
         // Registrar salida en el tramo
-        await this.viajePasajeroMovimientoRepository.create({ viajePasajeroId: id, viajeTramoId: tramoId, tipoMovimiento: 'salida' });
+        const peruTimeStr = new Date().toLocaleString('en-US', { timeZone: 'America/Lima', hour12: false });
+        const limaDate = new Date(peruTimeStr + " UTC");
+        await this.viajePasajeroMovimientoRepository.create({ viajePasajeroId: id, viajeTramoId: tramoId, tipoMovimiento: 'salida', hora: limaDate });
         const pasajero = await this.viajePasajeroRepository.findOne(id);
         if (pasajero) resultados.push(pasajero);
       } catch (e) {

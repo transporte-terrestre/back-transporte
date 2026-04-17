@@ -18,6 +18,9 @@ export class ViajePasajeroResultDto {
 
   @ApiProperty({ example: 'Pérez', description: 'Apellidos del pasajero', required: false })
   apellidos?: string | null;
+  
+  @ApiProperty({ example: 'Empresa S.A.', description: 'Nombre de la empresa del pasajero', required: false })
+  empresa?: string | null;
 
   @ApiProperty({ example: false, description: 'Asistencia del pasajero en la parada consultada' })
   asistencia: boolean;
@@ -69,6 +72,22 @@ export class ViajePasajeroResultDto {
     nullable: true,
   })
   esSalidaTramoActual?: boolean | null;
+
+  @ApiProperty({
+    example: '2024-03-24T10:30:00Z',
+    description: 'Hora en la que se registró la entrada del pasajero (subida)',
+    required: false,
+    nullable: true,
+  })
+  horaAsistencia?: string | null;
+
+  @ApiProperty({
+    example: '2024-03-24T12:30:00Z',
+    description: 'Hora en la que se registró la salida del pasajero (bajada)',
+    required: false,
+    nullable: true,
+  })
+  horaSalida?: string | null;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z', description: 'Fecha de creación' })
   creadoEn: Date;
