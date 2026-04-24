@@ -262,14 +262,14 @@ export class NotificacionRepository {
   }
 
   private async getConductorDocumentosVencidos(fechaLimite: Date): Promise<ConductorDocumentoVencimiento[]> {
+    // Find the latest document per (conductorId, tipo) by creation date
     const latestDocs = database
       .select({
         conductorId: conductorDocumentos.conductorId,
         tipo: conductorDocumentos.tipo,
-        maxFechaExp: sql<string>`MAX(${conductorDocumentos.fechaExpiracion})`.as('max_fecha_exp'),
+        maxCreadoEn: sql<string>`MAX(${conductorDocumentos.creadoEn})`.as('max_creado_en'),
       })
       .from(conductorDocumentos)
-      .where(isNotNull(conductorDocumentos.fechaExpiracion))
       .groupBy(conductorDocumentos.conductorId, conductorDocumentos.tipo)
       .as('latest_docs');
 
@@ -290,12 +290,13 @@ export class NotificacionRepository {
         and(
           eq(conductorDocumentos.conductorId, latestDocs.conductorId),
           eq(conductorDocumentos.tipo, latestDocs.tipo),
-          eq(conductorDocumentos.fechaExpiracion, latestDocs.maxFechaExp),
+          eq(conductorDocumentos.creadoEn, latestDocs.maxCreadoEn),
         ),
       )
       .where(
         and(
           isNull(conductores.eliminadoEn),
+          // Only alert if the latest doc actually has an expiration date and it's within range
           isNotNull(conductorDocumentos.fechaExpiracion),
           lte(conductorDocumentos.fechaExpiracion, fechaLimite.toISOString().split('T')[0]),
         ),
@@ -316,14 +317,14 @@ export class NotificacionRepository {
   }
 
   private async getVehiculoDocumentosVencidos(fechaLimite: Date): Promise<VehiculoDocumentoVencimiento[]> {
+    // Find the latest document per (vehiculoId, tipo) by creation date
     const latestDocs = database
       .select({
         vehiculoId: vehiculoDocumentos.vehiculoId,
         tipo: vehiculoDocumentos.tipo,
-        maxFechaExp: sql<string>`MAX(${vehiculoDocumentos.fechaExpiracion})`.as('max_fecha_exp'),
+        maxCreadoEn: sql<string>`MAX(${vehiculoDocumentos.creadoEn})`.as('max_creado_en'),
       })
       .from(vehiculoDocumentos)
-      .where(isNotNull(vehiculoDocumentos.fechaExpiracion))
       .groupBy(vehiculoDocumentos.vehiculoId, vehiculoDocumentos.tipo)
       .as('latest_docs');
 
@@ -347,12 +348,13 @@ export class NotificacionRepository {
         and(
           eq(vehiculoDocumentos.vehiculoId, latestDocs.vehiculoId),
           eq(vehiculoDocumentos.tipo, latestDocs.tipo),
-          eq(vehiculoDocumentos.fechaExpiracion, latestDocs.maxFechaExp),
+          eq(vehiculoDocumentos.creadoEn, latestDocs.maxCreadoEn),
         ),
       )
       .where(
         and(
           isNull(vehiculos.eliminadoEn),
+          // Only alert if the latest doc actually has an expiration date and it's within range
           isNotNull(vehiculoDocumentos.fechaExpiracion),
           lte(vehiculoDocumentos.fechaExpiracion, fechaLimite.toISOString().split('T')[0]),
         ),

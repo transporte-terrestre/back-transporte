@@ -169,11 +169,12 @@ export class NotificacionesService {
     const today = new Date().toISOString().split('T')[0];
     const fechaReferencia = new Date(today);
 
-    // Get all expirations
+    // Get all expirations (conductores + vehículos)
     const allExpirations = await this.notificacionRepository.getDocumentosVencimientosPorFecha(fechaReferencia, diasAnticipacion);
 
-    // Filter only conductors
+    // Split by entity type
     const conductorExpirations = allExpirations.filter((doc) => doc.entidad === 'conductor');
+    const vehiculoExpirations = allExpirations.filter((doc) => doc.entidad === 'vehiculo');
 
     // Get all admins
     const admins = await this.notificacionRepository.findUsersByRole('admin');
@@ -183,16 +184,18 @@ export class NotificacionesService {
       return { message: 'No hay administradores a quienes enviar el reporte.', count: 0 };
     }
 
-    if (conductorExpirations.length === 0) {
+    const totalExpirations = conductorExpirations.length + vehiculoExpirations.length;
+
+    if (totalExpirations === 0) {
       // Send email saying no expirations found to all admins
       for (const email of adminEmails) {
         try {
           await this.sendEmail({
             to: email,
-            subject: 'Reporte de Vencimientos de Conductores',
-            text: 'No hay documentos de conductores próximos a vencer.',
+            subject: 'Reporte de Vencimientos de Conductores y Vehículos',
+            text: 'No hay documentos de conductores ni vehículos próximos a vencer.',
             html:
-              '<h3>Reporte de Vencimientos</h3><p>No se encontraron documentos de conductores próximos a vencer en los siguientes ' +
+              '<h3>Reporte de Vencimientos</h3><p>No se encontraron documentos de conductores ni vehículos próximos a vencer en los siguientes ' +
               diasAnticipacion +
               ' días.</p>',
           });
@@ -205,52 +208,87 @@ export class NotificacionesService {
 
     // Sort by expiration date (most urgent first)
     conductorExpirations.sort((a, b) => a.diasRestantes - b.diasRestantes);
+    vehiculoExpirations.sort((a, b) => a.diasRestantes - b.diasRestantes);
 
-    // Generate HTML Table
+    // Build HTML content
     let htmlContent = `
-      <h2>Reporte de Documentos de Conductores por Vencer</h2>
-      <p>Se encontraron <strong>${conductorExpirations.length}</strong> documentos con vencimiento próximo (dentro de ${diasAnticipacion} días) o vencidos.</p>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-        <thead>
-          <tr style="background-color: #f2f2f2;">
-            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Conductor</th>
-            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Documento</th>
-            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Fecha Venc.</th>
-            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Estado</th>
-          </tr>
-        </thead>
-        <tbody>
+      <h2>Reporte de Documentos por Vencer</h2>
+      <p>Se encontraron <strong>${totalExpirations}</strong> documentos con vencimiento próximo (dentro de ${diasAnticipacion} días) o vencidos.</p>
+      <ul>
+        <li>Conductores: <strong>${conductorExpirations.length}</strong></li>
+        <li>Vehículos: <strong>${vehiculoExpirations.length}</strong></li>
+      </ul>
     `;
 
-    conductorExpirations.forEach((doc) => {
-      const dias = doc.diasRestantes;
-      let estadoColor = '#28a745'; // Green
-      let estadoText = 'Vigente';
+    // --- Conductor table ---
+    if (conductorExpirations.length > 0) {
+      htmlContent += `
+        <h3 style="margin-top: 25px; color: #333;">🧑‍✈️ Documentos de Conductores</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+          <thead>
+            <tr style="background-color: #f2f2f2;">
+              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Conductor</th>
+              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Documento</th>
+              <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Fecha Venc.</th>
+              <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
 
-      if (dias < 0) {
-        estadoColor = '#dc3545'; // Red
-        estadoText = `Vencido hace ${Math.abs(dias)} días`;
-      } else if (dias === 0) {
-        estadoColor = '#dc3545';
-        estadoText = 'Vence HOY';
-      } else if (dias <= 7) {
-        estadoColor = '#ffc107'; // Yellow
-        estadoText = `Vence en ${dias} días`;
-      }
+      conductorExpirations.forEach((doc) => {
+        const { estadoColor, estadoText } = this.getEstadoVencimiento(doc.diasRestantes);
+        htmlContent += `
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">${doc.entidadNombre}</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${this.formatearTipoDocumento(doc.tipoDocumento)} - ${doc.nombreDocumento}</td>
+            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${this.formatearFecha(doc.fechaExpiracion)}</td>
+            <td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: ${estadoColor}; font-weight: bold;">${estadoText}</td>
+          </tr>
+        `;
+      });
 
       htmlContent += `
-        <tr>
-          <td style="padding: 8px; border: 1px solid #ddd;">${doc.entidadNombre}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${this.formatearTipoDocumento(doc.tipoDocumento)} - ${doc.nombreDocumento}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${this.formatearFecha(doc.fechaExpiracion)}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: ${estadoColor}; font-weight: bold;">${estadoText}</td>
-        </tr>
+          </tbody>
+        </table>
       `;
-    });
+    }
+
+    // --- Vehículo table ---
+    if (vehiculoExpirations.length > 0) {
+      htmlContent += `
+        <h3 style="margin-top: 25px; color: #333;">🚛 Documentos de Vehículos</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+          <thead>
+            <tr style="background-color: #f2f2f2;">
+              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Vehículo</th>
+              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Documento</th>
+              <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Fecha Venc.</th>
+              <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      vehiculoExpirations.forEach((doc) => {
+        const { estadoColor, estadoText } = this.getEstadoVencimiento(doc.diasRestantes);
+        htmlContent += `
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">${doc.entidadNombre}</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${this.formatearTipoDocumento(doc.tipoDocumento)} - ${doc.nombreDocumento}</td>
+            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${this.formatearFecha(doc.fechaExpiracion)}</td>
+            <td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: ${estadoColor}; font-weight: bold;">${estadoText}</td>
+          </tr>
+        `;
+      });
+
+      htmlContent += `
+          </tbody>
+        </table>
+      `;
+    }
 
     htmlContent += `
-        </tbody>
-      </table>
       <p style="margin-top: 20px; font-size: 12px; color: #666;">Generado automáticamente por el Sistema de Transporte.</p>
     `;
 
@@ -259,8 +297,8 @@ export class NotificacionesService {
       try {
         await this.sendEmail({
           to: email,
-          subject: `[ALERTA] ${conductorExpirations.length} Documentos de Conductores por Vencer`,
-          text: `Se encontraron ${conductorExpirations.length} documentos de conductores por vencer. Por favor revise el formato HTML.`,
+          subject: `[ALERTA] ${totalExpirations} Documentos por Vencer (${conductorExpirations.length} Conductores, ${vehiculoExpirations.length} Vehículos)`,
+          text: `Se encontraron ${totalExpirations} documentos por vencer: ${conductorExpirations.length} de conductores y ${vehiculoExpirations.length} de vehículos. Por favor revise el formato HTML.`,
           html: htmlContent,
         });
         successful++;
@@ -270,8 +308,8 @@ export class NotificacionesService {
     }
 
     return {
-      message: `Correo enviado a ${successful}/${adminEmails.length} administradores con la lista de conductores.`,
-      count: conductorExpirations.length,
+      message: `Correo enviado a ${successful}/${adminEmails.length} administradores con la lista de conductores y vehículos.`,
+      count: totalExpirations,
     };
   }
 
@@ -600,6 +638,17 @@ export class NotificacionesService {
       propietario: 'Proveedor',
     };
     return labels[entidad] || entidad;
+  }
+
+  private getEstadoVencimiento(dias: number): { estadoColor: string; estadoText: string } {
+    if (dias < 0) {
+      return { estadoColor: '#dc3545', estadoText: `Vencido hace ${Math.abs(dias)} días` };
+    } else if (dias === 0) {
+      return { estadoColor: '#dc3545', estadoText: 'Vence HOY' };
+    } else if (dias <= 7) {
+      return { estadoColor: '#ffc107', estadoText: `Vence en ${dias} días` };
+    }
+    return { estadoColor: '#28a745', estadoText: 'Vigente' };
   }
 
   private formatearFecha(fechaStr: string): string {
