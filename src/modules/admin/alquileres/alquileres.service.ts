@@ -178,66 +178,72 @@ export class AlquileresService {
   }
 
   async terminar(id: number, data: AlquilerTerminarDto): Promise<AlquilerResultDto> {
-    if (data.detalleId) {
-      // 1. Finalizar una unidad específica
-      const detalle = await this.alquilerDetalleRepository.findOne(data.detalleId);
-      if (!detalle) throw new NotFoundException('Detalle de alquiler no encontrado.');
+    const prev = await this.findOne(id);
+    if (prev.estado === 'finalizado') throw new BadRequestException('El contrato ya está finalizado.');
 
-      // Validar kilometraje
-      const kmInicial = Number(detalle.kilometrajeInicial);
-      const kmFinal = Number(data.kilometrajeFinal);
-      if (Number.isFinite(kmInicial) && Number.isFinite(kmFinal) && kmFinal < kmInicial) {
-        throw new BadRequestException('El kilometraje final no puede ser menor al kilometraje inicial.');
+    // 1. Actualizar kilometrajes de las unidades específicas
+    if (data.detalles && data.detalles.length > 0) {
+      for (const item of data.detalles) {
+        const detalle = await this.alquilerDetalleRepository.findOne(item.detalleId);
+        if (!detalle) throw new NotFoundException(`Detalle de alquiler con ID ${item.detalleId} no encontrado.`);
+        if (detalle.alquilerId !== id) throw new BadRequestException(`El detalle ${item.detalleId} no pertenece al alquiler ${id}.`);
+
+        // Validar kilometraje
+        const kmInicial = Number(detalle.kilometrajeInicial);
+        const kmFinal = Number(item.kilometrajeFinal);
+        if (item.kilometrajeFinal != null && Number.isFinite(kmInicial) && Number.isFinite(kmFinal) && kmFinal < kmInicial) {
+          throw new BadRequestException(`El kilometraje final no puede ser menor al inicial para el vehículo asignado.`);
+        }
+
+        if (item.kilometrajeFinal != null) {
+          await this.alquilerDetalleRepository.update(item.detalleId, {
+            kilometrajeFinal: item.kilometrajeFinal,
+          });
+
+          await this.vehiculoRepository.update(detalle.vehiculoId, {
+            estado: 'disponible',
+            kilometraje: item.kilometrajeFinal,
+          });
+        }
       }
+    }
 
-      await this.alquilerDetalleRepository.update(data.detalleId, {
-        kilometrajeFinal: data.kilometrajeFinal,
-      });
-
-      await this.vehiculoRepository.update(detalle.vehiculoId, {
-        estado: 'disponible',
-        kilometraje: data.kilometrajeFinal,
-      });
-
-      await this.alquilerHistorialRepository.create({
-        alquilerId: id,
-        vehiculoId: detalle.vehiculoId,
-        tipoAccion: 'BAJA_VEHICULO',
-        motivo: data.observaciones || 'Baja de unidad del contrato',
-        fechaAccion: new Date(),
-      });
-    } else {
-      // 2. Finalizar el contrato maestro (y todas sus unidades activas)
-      const prev = await this.findOne(id);
-      if (prev.estado === 'finalizado') throw new BadRequestException('El contrato ya está finalizado.');
-
-      // Finalizar todas las unidades que aún no han sido finalizadas
-      if (prev.detalles?.length) {
-        for (const detalle of prev.detalles) {
+    // 2. Finalizar todas las unidades que aún no han sido finalizadas
+    const currentDetalles = await this.alquilerDetalleRepository.findByAlquilerId(id);
+    if (currentDetalles?.length) {
+      for (const detalle of currentDetalles) {
+        // Validamos si ya se procesó en el paso 1
+        const fueProcesado = data.detalles?.some(d => d.detalleId === detalle.id && d.kilometrajeFinal != null);
+        
+        if (!fueProcesado) {
           if (detalle.kilometrajeFinal == null) {
-            // Actualizar vehículo a disponible
+            // Actualizar vehículo a disponible si no tenía kilometraje final asignado previamente
             await this.vehiculoRepository.update(detalle.vehiculoId, {
               estado: 'disponible',
             });
-            // Log history for each vehicle
-            await this.alquilerHistorialRepository.create({
-              alquilerId: id,
-              vehiculoId: detalle.vehiculoId,
-              tipoAccion: 'BAJA_VEHICULO',
-              motivo: 'Finalización del contrato maestro',
-              fechaAccion: new Date(),
-            });
           }
         }
-      }
 
-      await this.alquilerRepository.update(id, {
-        estado: 'finalizado',
-        fechaFin: data.fechaFin || new Date(),
-        montoTotalFinal: data.montoTotalFinal,
-        observaciones: data.observaciones || prev.observaciones || null,
-      });
+        // Historial de baja para todas las unidades al finalizar contrato
+        if (detalle.kilometrajeFinal == null || fueProcesado) {
+          await this.alquilerHistorialRepository.create({
+            alquilerId: id,
+            vehiculoId: detalle.vehiculoId,
+            tipoAccion: 'BAJA_VEHICULO',
+            motivo: data.observaciones || 'Finalización del contrato maestro',
+            fechaAccion: new Date(),
+          });
+        }
+      }
     }
+
+    // 3. Finalizar el contrato maestro
+    await this.alquilerRepository.update(id, {
+      estado: 'finalizado',
+      fechaFin: data.fechaFin || new Date(),
+      montoTotalFinal: data.montoTotalFinal,
+      observaciones: data.observaciones || prev.observaciones || null,
+    });
 
     return this.findOne(id);
   }
