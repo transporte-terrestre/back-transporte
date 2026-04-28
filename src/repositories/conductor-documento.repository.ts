@@ -63,6 +63,11 @@ export class ConductorDocumentoRepository {
     return result[0];
   }
 
+  async createMany(data: ConductorDocumentoDTO[]) {
+    if (!data || data.length === 0) return [];
+    return await database.insert(conductorDocumentos).values(data).returning();
+  }
+
   async update(id: number, data: Partial<ConductorDocumentoDTO>) {
     const result = await database
       .update(conductorDocumentos)

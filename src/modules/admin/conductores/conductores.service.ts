@@ -11,6 +11,7 @@ import {
 } from './dto/conductor/conductor-documentos-estado.dto';
 import { ConductorDocumentoDTO, conductorDocumentosTipo, ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 import { DocumentosAgrupadosConductorDto } from './dto/conductor/conductor-result.dto';
+import { ConductorDocumentoMasivoDto } from './dto/conductor-documento/conductor-documento-masivo.dto';
 import { ConductorDTO, ConductorEstado, ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.table';
 import * as bcrypt from 'bcrypt';
 import archiver from 'archiver';
@@ -257,6 +258,34 @@ export class ConductoresService {
 
   async createDocumento(data: Partial<ConductorDocumentoDTO>) {
     return await this.conductorDocumentoRepository.create(data as ConductorDocumentoDTO);
+  }
+
+  async createDocumentoMasivo(dto: ConductorDocumentoMasivoDto) {
+    // Para no repetir código o evitar un findAll() pesado si hay muchos conductores
+    const allConductores = await this.conductorRepository.findAll();
+    
+    const validConductores = allConductores.filter(c => {
+      const isNotDeleted = c.eliminadoEn === null;
+      const isNotRetired = c.estado !== 'inactivo';
+      const isNotExcluded = dto.excepto ? !dto.excepto.includes(c.id) : true;
+      return isNotDeleted && isNotRetired && isNotExcluded;
+    });
+
+    if (validConductores.length === 0) {
+      return { count: 0, message: 'No hay conductores válidos para asignar el documento.' };
+    }
+
+    const payloadDocs: ConductorDocumentoDTO[] = validConductores.map(c => ({
+      conductorId: c.id,
+      tipo: dto.documento.tipo,
+      nombre: dto.documento.nombre,
+      url: dto.documento.url,
+      fechaExpiracion: dto.documento.fechaExpiracion || null,
+      fechaEmision: dto.documento.fechaEmision || null,
+    })) as ConductorDocumentoDTO[];
+
+    const inserted = await this.conductorDocumentoRepository.createMany(payloadDocs);
+    return { count: inserted.length, message: `Documento asignado correctamente a ${inserted.length} conductores.` };
   }
 
   async updateDocumento(id: number, data: Partial<ConductorDocumentoDTO>) {

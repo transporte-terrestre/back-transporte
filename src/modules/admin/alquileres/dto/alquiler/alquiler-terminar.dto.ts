@@ -1,24 +1,33 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 
-export class AlquilerTerminarDto {
-  @ApiPropertyOptional({ description: 'ID del detalle del alquiler a finalizar. Si no se envía se finaliza todo el contrato (maestro).' })
+export class AlquilerTerminarDetalleDto {
+  @ApiProperty()
   @IsNumber()
-  @IsOptional()
-  detalleId?: number;
-
-  @ApiProperty({ type: String, format: 'date-time' })
-  @IsDate()
-  @Type(() => Date)
   @IsNotEmpty()
-  fechaFin: Date;
+  detalleId: number;
 
   @ApiPropertyOptional({ example: 15820.5 })
   @IsNumber()
   @Type(() => Number)
   @IsOptional()
   kilometrajeFinal?: number;
+}
+
+export class AlquilerTerminarDto {
+  @ApiPropertyOptional({ type: [AlquilerTerminarDetalleDto], description: 'Lista de detalles a finalizar. Si no se envía se finaliza todo el contrato maestro.' })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AlquilerTerminarDetalleDto)
+  @IsOptional()
+  detalles?: AlquilerTerminarDetalleDto[];
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  @IsDate()
+  @Type(() => Date)
+  @IsNotEmpty()
+  fechaFin: Date;
 
   @ApiProperty({ example: 2500.0 })
   @IsNumber()

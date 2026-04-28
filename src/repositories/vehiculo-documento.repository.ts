@@ -63,6 +63,11 @@ export class VehiculoDocumentoRepository {
     return result[0];
   }
 
+  async createMany(data: VehiculoDocumentoDTO[]) {
+    if (!data || data.length === 0) return [];
+    return await database.insert(vehiculoDocumentos).values(data).returning();
+  }
+
   async update(id: number, data: Partial<VehiculoDocumentoDTO>) {
     const result = await database
       .update(vehiculoDocumentos)
