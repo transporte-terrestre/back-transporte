@@ -10,6 +10,7 @@ import { VehiculoPaginationQueryDto, PaginatedVehiculoResultDto } from './dto/ve
 import { VehiculoDocumentosEstadoQueryDto, PaginatedVehiculoEstadoDocumentosResultDto } from './dto/vehiculo/vehiculo-documentos-estado.dto';
 
 import { VehiculoDocumentoCreateDto } from './dto/vehiculo-documento/vehiculo-documento-create.dto';
+import { VehiculoDocumentoMasivoDto, VehiculoDocumentoMasivoResultDto } from './dto/vehiculo-documento/vehiculo-documento-masivo.dto';
 import { VehiculoDocumentoUpdateDto } from './dto/vehiculo-documento/vehiculo-documento-update.dto';
 import { VehiculoDocumentoResultDto } from './dto/vehiculo-documento/vehiculo-documento-result.dto';
 import { VehiculoComentarioCreateDto } from './dto/vehiculo-comentario/vehiculo-comentario-create.dto';
@@ -144,6 +145,13 @@ export class VehiculosController {
   @ApiResponse({ status: 201, type: VehiculoDocumentoResultDto })
   createDocumento(@Body() createDto: VehiculoDocumentoCreateDto) {
     return this.vehiculosService.createDocumento(createDto);
+  }
+
+  @Post('documento/masivo')
+  @ApiOperation({ summary: 'Asignar un documento a múltiples vehículos masivamente' })
+  @ApiResponse({ status: 201, type: VehiculoDocumentoMasivoResultDto, description: 'Documento asignado correctamente' })
+  createDocumentoMasivo(@Body() dto: VehiculoDocumentoMasivoDto) {
+    return this.vehiculosService.createDocumentoMasivo(dto);
   }
 
   @Patch('documento/update/:id')

@@ -8,6 +8,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ConductorPaginationQueryDto, PaginatedConductorResultDto } from './dto/conductor/conductor-paginated.dto';
 import { ConductorDocumentosEstadoQueryDto, PaginatedConductorEstadoDocumentosResultDto } from './dto/conductor/conductor-documentos-estado.dto';
 import { ConductorDocumentoCreateDto } from './dto/conductor-documento/conductor-documento-create.dto';
+import { ConductorDocumentoMasivoDto, ConductorDocumentoMasivoResultDto } from './dto/conductor-documento/conductor-documento-masivo.dto';
 import { ConductorDocumentoUpdateDto } from './dto/conductor-documento/conductor-documento-update.dto';
 import { ConductorDocumentoResultDto } from './dto/conductor-documento/conductor-documento-result.dto';
 
@@ -97,6 +98,13 @@ export class ConductoresController {
   @ApiResponse({ status: 201, type: ConductorDocumentoResultDto })
   createDocumento(@Body() createDto: ConductorDocumentoCreateDto) {
     return this.conductoresService.createDocumento(createDto);
+  }
+
+  @Post('documento/masivo')
+  @ApiOperation({ summary: 'Asignar un documento a múltiples conductores masivamente' })
+  @ApiResponse({ status: 201, type: ConductorDocumentoMasivoResultDto, description: 'Documento asignado correctamente' })
+  createDocumentoMasivo(@Body() dto: ConductorDocumentoMasivoDto) {
+    return this.conductoresService.createDocumentoMasivo(dto);
   }
 
   @Patch('documento/update/:id')

@@ -7,6 +7,7 @@ import { VehiculoCreateDto } from './dto/vehiculo/vehiculo-create.dto';
 import { VehiculoUpdateDto } from './dto/vehiculo/vehiculo-update.dto';
 import { PaginatedVehiculoResultDto } from './dto/vehiculo/vehiculo-paginated.dto';
 import { VehiculoDocumentoDTO, vehiculoDocumentosTipo, VehiculoDocumentoTipo } from '@db/tables/vehiculo-documento.table';
+import { VehiculoDocumentoMasivoDto } from './dto/vehiculo-documento/vehiculo-documento-masivo.dto';
 import { VehiculoEstado, vehiculosEstado } from '@db/tables/vehiculo.table';
 import { DocumentosAgrupadosVehiculoDto } from './dto/vehiculo/vehiculo-result.dto';
 import {
@@ -257,6 +258,34 @@ export class VehiculosService {
 
   async createDocumento(data: Partial<VehiculoDocumentoDTO>) {
     return await this.vehiculoDocumentoRepository.create(data as VehiculoDocumentoDTO);
+  }
+
+  async createDocumentoMasivo(dto: VehiculoDocumentoMasivoDto) {
+    const allVehiculos = await this.vehiculoRepository.findAll();
+    
+    // Filtrar vehiculos validos: no eliminados, no retirados, y no en la lista de "excepto"
+    const validVehiculos = allVehiculos.filter(v => {
+      const isNotDeleted = v.eliminadoEn === null;
+      const isNotRetired = v.estado !== 'retirado';
+      const isNotExcluded = dto.excepto ? !dto.excepto.includes(v.id) : true;
+      return isNotDeleted && isNotRetired && isNotExcluded;
+    });
+
+    if (validVehiculos.length === 0) {
+      return { count: 0, message: 'No hay vehículos válidos para asignar el documento.' };
+    }
+
+    const payloadDocs: VehiculoDocumentoDTO[] = validVehiculos.map(v => ({
+      vehiculoId: v.id,
+      tipo: dto.documento.tipo,
+      nombre: dto.documento.nombre,
+      url: dto.documento.url,
+      fechaExpiracion: dto.documento.fechaExpiracion || null,
+      fechaEmision: dto.documento.fechaEmision || null,
+    })) as VehiculoDocumentoDTO[];
+
+    const inserted = await this.vehiculoDocumentoRepository.createMany(payloadDocs);
+    return { count: inserted.length, message: `Documento asignado correctamente a ${inserted.length} vehículos.` };
   }
 
   async updateDocumento(id: number, data: Partial<VehiculoDocumentoDTO>) {
