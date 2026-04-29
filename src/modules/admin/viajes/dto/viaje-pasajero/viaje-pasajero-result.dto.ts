@@ -1,5 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class ViajePasajeroMovimientoDetalleDto {
+  @ApiProperty({ example: 1, description: 'ID del movimiento' })
+  id: number;
+
+  @ApiProperty({ example: 'entrada', description: 'Tipo de movimiento (entrada/salida)' })
+  tipoMovimiento: string;
+
+  @ApiProperty({ example: 1, description: 'ID del tramo' })
+  viajeTramoId: number;
+
+  @ApiProperty({ example: 'Parada A', description: 'Nombre del lugar/parada' })
+  paradaNombre: string;
+
+  @ApiProperty({ example: '2024-03-24T10:30:00Z', description: 'Hora del movimiento' })
+  hora: string;
+}
+
 export class ViajePasajeroResultDto {
   @ApiProperty({ example: 1, description: 'ID del registro' })
   id: number;
@@ -89,9 +106,23 @@ export class ViajePasajeroResultDto {
   })
   horaSalida?: string | null;
 
+  @ApiProperty({
+    example: true,
+    description: 'Indica si el pasajero se encuentra actualmente a bordo (su último movimiento fue entrada)',
+  })
+  estaArriba: boolean;
+
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z', description: 'Fecha de creación' })
   creadoEn: Date;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z', description: 'Fecha de actualización' })
   actualizadoEn: Date;
+
+  @ApiProperty({
+    type: [ViajePasajeroMovimientoDetalleDto],
+    description: 'Historial completo de movimientos del pasajero en el viaje',
+    required: false,
+    nullable: true,
+  })
+  historial?: ViajePasajeroMovimientoDetalleDto[] | null;
 }

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, asc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { viajePasajeroMovimientos, ViajePasajeroMovimientoDTO } from '@db/tables/viaje-pasajero-movimiento.table';
+import { viajeTramos } from '@db/tables/viaje-tramo.table';
 
 @Injectable()
 export class ViajePasajeroMovimientoRepository {
@@ -33,12 +34,20 @@ export class ViajePasajeroMovimientoRepository {
     return deletedItem;
   }
 
-  async deleteByViajeTramo(viajeTramoId: number) {
-    const deletedItems = await database
-      .update(viajePasajeroMovimientos)
-      .set({ eliminadoEn: new Date() })
-      .where(and(eq(viajePasajeroMovimientos.viajeTramoId, viajeTramoId), isNull(viajePasajeroMovimientos.eliminadoEn)))
-      .returning();
-    return deletedItems;
+  async findByViajeId(viajeId: number) {
+    return await database
+      .select({
+        id: viajePasajeroMovimientos.id,
+        viajePasajeroId: viajePasajeroMovimientos.viajePasajeroId,
+        viajeTramoId: viajePasajeroMovimientos.viajeTramoId,
+        tipoMovimiento: viajePasajeroMovimientos.tipoMovimiento,
+        paradaNombre: viajeTramos.nombreLugar,
+        tramoHoraFinal: viajeTramos.horaFinal,
+        hora: viajePasajeroMovimientos.hora,
+      })
+      .from(viajePasajeroMovimientos)
+      .innerJoin(viajeTramos, eq(viajePasajeroMovimientos.viajeTramoId, viajeTramos.id))
+      .where(and(eq(viajeTramos.viajeId, viajeId), isNull(viajePasajeroMovimientos.eliminadoEn)))
+      .orderBy(asc(viajePasajeroMovimientos.hora));
   }
 }

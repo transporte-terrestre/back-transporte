@@ -1028,7 +1028,65 @@ export class ViajesService {
 
   // ========== PASAJEROS ==========
   async findPasajeros(viajeId: number, viajeTramoId?: number) {
-    return await this.viajePasajeroRepository.findByViajeId(viajeId, viajeTramoId);
+    const [listaPasajeros, todosMovimientos] = await Promise.all([
+      this.viajePasajeroRepository.findByViajeId(viajeId),
+      this.viajePasajeroMovimientoRepository.findByViajeId(viajeId),
+    ]);
+
+    // Obtener la hora del tramo consultado si existe para filtrar el historial
+    let horaLimite: number | null = null;
+    if (viajeTramoId) {
+      const tramoConsultado = await this.viajeTramoRepository.findOne(viajeTramoId);
+      if (tramoConsultado?.horaFinal) {
+        horaLimite = new Date(tramoConsultado.horaFinal).getTime();
+      }
+    }
+
+    return listaPasajeros.map((p) => {
+      // Filtrar movimientos por pasajero y, opcionalmente, por tiempo
+      let historial = todosMovimientos.filter((m) => m.viajePasajeroId === p.id);
+
+      if (horaLimite !== null) {
+        // Filtramos basándonos en la hora en que ocurrió el tramo del movimiento
+        historial = historial.filter((m) => {
+          if (!m.tramoHoraFinal) return m.viajeTramoId === viajeTramoId;
+          const mHoraTramo = new Date(m.tramoHoraFinal).getTime();
+          return mHoraTramo <= (horaLimite as number) || m.viajeTramoId === viajeTramoId;
+        });
+      }
+
+      const entradas = historial.filter((m) => m.tipoMovimiento === 'entrada');
+      const salidas = historial.filter((m) => m.tipoMovimiento === 'salida');
+
+      const ultimaEntrada = entradas[entradas.length - 1];
+      const ultimaSalida = salidas[salidas.length - 1];
+
+      // El pasajero está "arriba" si su último movimiento (hasta este tramo) fue una entrada
+      const estaArriba = !!ultimaEntrada && (!ultimaSalida || new Date(ultimaEntrada.hora).getTime() > new Date(ultimaSalida.hora).getTime());
+
+      return {
+        ...p,
+        asistencia: viajeTramoId ? entradas.length > 0 : p.asistencia,
+        estaArriba,
+        paradaAsistenciaId: ultimaEntrada?.viajeTramoId || null,
+        paradaAsistenciaNombre: ultimaEntrada?.paradaNombre || null,
+        horaAsistencia: ultimaEntrada?.hora ? new Date(ultimaEntrada.hora).toISOString() : null,
+        esAsistenciaTramoActual: viajeTramoId ? ultimaEntrada?.viajeTramoId === viajeTramoId : null,
+
+        paradaSalidaId: ultimaSalida?.viajeTramoId || null,
+        paradaSalidaNombre: ultimaSalida?.paradaNombre || null,
+        horaSalida: ultimaSalida?.hora ? new Date(ultimaSalida.hora).toISOString() : null,
+        esSalidaTramoActual: viajeTramoId ? ultimaSalida?.viajeTramoId === viajeTramoId : null,
+
+        historial: historial.map((m) => ({
+          id: m.id,
+          tipoMovimiento: m.tipoMovimiento,
+          viajeTramoId: m.viajeTramoId,
+          paradaNombre: m.paradaNombre,
+          hora: new Date(m.hora).toISOString(),
+        })),
+      };
+    });
   }
 
   async upsertPasajeros(viajeId: number, data: ViajePasajeroFillDto) {
@@ -1071,8 +1129,8 @@ export class ViajesService {
       await this.viajePasajeroRepository.addPasajeros(dtos);
     }
 
-    // 5. Retornar la lista actualizada
-    return await this.viajePasajeroRepository.findByViajeId(viajeId);
+    // 5. Retornar la lista actualizada calculada
+    return await this.findPasajeros(viajeId);
   }
 
   async abordarPasajeros(viajePasajeroIds: number[], tramoId: number): Promise<ViajePasajeroResultDto[]> {
@@ -1082,38 +1140,62 @@ export class ViajesService {
     const resultados = [];
     const setIdsNuevos = new Set(viajePasajeroIds);
 
-    // 1. Sincronización: Desabordar a los que ya no están en la lista enviada para este tramo
+    // 1. Sincronización: Quitar abordajes EN ESTE TRAMO que ya no están en la lista (corrección manual del conductor)
     const currentInTramo = await this.viajePasajeroMovimientoRepository.findByViajeTramo(tramoId);
     for (const mov of currentInTramo) {
       if (mov.tipoMovimiento === 'entrada' && !setIdsNuevos.has(mov.viajePasajeroId)) {
         await this.viajePasajeroMovimientoRepository.delete(mov.id);
-        await this.viajePasajeroRepository.updateAsistencia(mov.viajePasajeroId, false);
+        
+        // Verificar si el pasajero tiene algun otro abordaje en el viaje para mantener asistencia
+        const otherMovs = await this.viajePasajeroMovimientoRepository.findByViajePasajero(mov.viajePasajeroId);
+        if (!otherMovs.some(m => m.tipoMovimiento === 'entrada')) {
+          await this.viajePasajeroRepository.updateAsistencia(mov.viajePasajeroId, false);
+        }
       }
     }
 
-    // 2. Procesar abordajes (siempre asumiendo asistencia: true)
+    // 2. Procesar abordajes
     for (const id of viajePasajeroIds) {
       try {
         const [updated] = await this.viajePasajeroRepository.updateAsistencia(id, true);
         if (!updated) continue;
 
+        // Obtener historial ordenado por hora descendente para ver el estado más reciente
         const movements = await this.viajePasajeroMovimientoRepository.findByViajePasajero(id);
-        const entrada = movements.find((m) => m.tipoMovimiento === 'entrada');
+        movements.sort((a, b) => new Date(b.hora).getTime() - new Date(a.hora).getTime());
+        
+        const lastMov = movements[0];
 
-        if (entrada?.viajeTramoId === tramoId) {
+        // CASO A: Ya abordó en este mismo tramo -> Mantener y retornar
+        if (lastMov?.tipoMovimiento === 'entrada' && lastMov.viajeTramoId === tramoId) {
           resultados.push(updated);
           continue;
         }
 
-        // Si ya abordó en otro tramo, eliminar la entrada antigua
-        if (entrada) {
-          await this.viajePasajeroMovimientoRepository.delete(entrada.id);
+        // CASO B: El pasajero está "abajo" (su último movimiento fue salida) o no tiene historial -> Crear NUEVA entrada
+        if (!lastMov || lastMov.tipoMovimiento === 'salida') {
+          const peruTimeStr = new Date().toLocaleString('en-US', { timeZone: 'America/Lima', hour12: false });
+          const limaDate = new Date(peruTimeStr + " UTC");
+          await this.viajePasajeroMovimientoRepository.create({ 
+            viajePasajeroId: id, 
+            viajeTramoId: tramoId, 
+            tipoMovimiento: 'entrada', 
+            hora: limaDate 
+          });
+        } 
+        // CASO C: El pasajero ya estaba "arriba" en otro tramo sin haber bajado -> Corrección de punto de abordaje
+        else if (lastMov.tipoMovimiento === 'entrada' && lastMov.viajeTramoId !== tramoId) {
+          await this.viajePasajeroMovimientoRepository.delete(lastMov.id);
+          const peruTimeStr = new Date().toLocaleString('en-US', { timeZone: 'America/Lima', hour12: false });
+          const limaDate = new Date(peruTimeStr + " UTC");
+          await this.viajePasajeroMovimientoRepository.create({ 
+            viajePasajeroId: id, 
+            viajeTramoId: tramoId, 
+            tipoMovimiento: 'entrada', 
+            hora: limaDate 
+          });
         }
 
-        // Registrar entrada en el tramo objetivo
-        const peruTimeStr = new Date().toLocaleString('en-US', { timeZone: 'America/Lima', hour12: false });
-        const limaDate = new Date(peruTimeStr + " UTC");
-        await this.viajePasajeroMovimientoRepository.create({ viajePasajeroId: id, viajeTramoId: tramoId, tipoMovimiento: 'entrada', hora: limaDate });
         resultados.push(updated);
       } catch (e) {
         console.error(`Error en abordarPasajeros ${id}:`, e);
@@ -1123,7 +1205,7 @@ export class ViajesService {
     // 3. Sincronizar contadores de pasajeros acumulados para todos los tramos del viaje
     await this.viajeTramoRepository.syncAllNumeroPasajeros(tramo.viajeId);
 
-    return resultados;
+    return await this.findPasajeros(tramo.viajeId, tramoId);
   }
 
   async desabordarPasajeros(viajePasajeroIds: number[], tramoId: number): Promise<ViajePasajeroResultDto[]> {
@@ -1133,7 +1215,7 @@ export class ViajesService {
     const resultados = [];
     const setIdsNuevos = new Set(viajePasajeroIds);
 
-    // 1. Sincronización: quitar salidas previas en este tramo que ya no están en la lista
+    // 1. Sincronización: Quitar salidas EN ESTE TRAMO que ya no están en la lista (corrección manual)
     const currentInTramo = await this.viajePasajeroMovimientoRepository.findByViajeTramo(tramoId);
     for (const mov of currentInTramo) {
       if (mov.tipoMovimiento === 'salida' && !setIdsNuevos.has(mov.viajePasajeroId)) {
@@ -1145,25 +1227,42 @@ export class ViajesService {
     for (const id of viajePasajeroIds) {
       try {
         const movements = await this.viajePasajeroMovimientoRepository.findByViajePasajero(id);
-        const salidaExistente = movements.find((m) => m.tipoMovimiento === 'salida' && m.viajeTramoId === tramoId);
+        movements.sort((a, b) => new Date(b.hora).getTime() - new Date(a.hora).getTime());
+        
+        const lastMov = movements[0];
 
-        if (salidaExistente) {
-          // Ya tiene salida en este tramo, solo agregar al resultado
+        // CASO A: Ya bajó en este mismo tramo -> Mantener y retornar
+        if (lastMov?.tipoMovimiento === 'salida' && lastMov.viajeTramoId === tramoId) {
           const pasajero = await this.viajePasajeroRepository.findOne(id);
           if (pasajero) resultados.push(pasajero);
           continue;
         }
 
-        // Si ya tiene salida en otro tramo, eliminarla
-        const salidaOtroTramo = movements.find((m) => m.tipoMovimiento === 'salida' && m.viajeTramoId !== tramoId);
-        if (salidaOtroTramo) {
-          await this.viajePasajeroMovimientoRepository.delete(salidaOtroTramo.id);
+        // CASO B: El pasajero está "arriba" (su último movimiento fue entrada) -> Crear NUEVA salida
+        if (lastMov?.tipoMovimiento === 'entrada') {
+          const peruTimeStr = new Date().toLocaleString('en-US', { timeZone: 'America/Lima', hour12: false });
+          const limaDate = new Date(peruTimeStr + " UTC");
+          await this.viajePasajeroMovimientoRepository.create({ 
+            viajePasajeroId: id, 
+            viajeTramoId: tramoId, 
+            tipoMovimiento: 'salida', 
+            hora: limaDate 
+          });
         }
+        // CASO C: El pasajero ya estaba "abajo" en otro tramo -> Corrección de punto de descenso
+        else if (lastMov?.tipoMovimiento === 'salida' && lastMov.viajeTramoId !== tramoId) {
+          await this.viajePasajeroMovimientoRepository.delete(lastMov.id);
+          const peruTimeStr = new Date().toLocaleString('en-US', { timeZone: 'America/Lima', hour12: false });
+          const limaDate = new Date(peruTimeStr + " UTC");
+          await this.viajePasajeroMovimientoRepository.create({ 
+            viajePasajeroId: id, 
+            viajeTramoId: tramoId, 
+            tipoMovimiento: 'salida', 
+            hora: limaDate 
+          });
+        }
+        // Si no tiene historial (!lastMov), no hacemos nada ya que no puede bajar si nunca subió.
 
-        // Registrar salida en el tramo
-        const peruTimeStr = new Date().toLocaleString('en-US', { timeZone: 'America/Lima', hour12: false });
-        const limaDate = new Date(peruTimeStr + " UTC");
-        await this.viajePasajeroMovimientoRepository.create({ viajePasajeroId: id, viajeTramoId: tramoId, tipoMovimiento: 'salida', hora: limaDate });
         const pasajero = await this.viajePasajeroRepository.findOne(id);
         if (pasajero) resultados.push(pasajero);
       } catch (e) {
@@ -1174,7 +1273,7 @@ export class ViajesService {
     // Sincronizar contadores acumulados para todos los tramos del viaje
     await this.viajeTramoRepository.syncAllNumeroPasajeros(tramo.viajeId);
 
-    return resultados;
+    return await this.findPasajeros(tramo.viajeId, tramoId);
   }
 
   async abordarPasajerosPorDni(viajeId: number, dnis: string[], tramoId: number): Promise<ViajePasajeroResultDto[]> {
@@ -1269,7 +1368,7 @@ export class ViajesService {
       exito: true,
       mensaje: 'Procesamiento de DNIs completado',
       resultados,
-      pasajerosActualizados: await this.viajePasajeroRepository.findByViajeId(viajeId),
+      pasajerosActualizados: await this.findPasajeros(viajeId),
     };
   }
 
