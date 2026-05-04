@@ -17,6 +17,9 @@ import { clientes } from '@db/tables/cliente.table';
 import { entidades } from '@db/tables/entidad.table';
 import { viajeTramos } from '@db/tables/viaje-tramo.table';
 import { viajeRepostajeMovimientos } from '@db/tables/viaje-repostaje-movimiento.table';
+import { alquileres } from '@db/tables/alquiler.table';
+import { alquilerDetalle } from '@db/tables/alquiler-detalle.table';
+
 
 @Injectable()
 export class ReportesRepository {
@@ -234,10 +237,7 @@ export class ReportesRepository {
   }
 
   async getResumenVehiculos(fechaInicio?: Date, fechaFin?: Date) {
-    const filters = [isNull(viajes.eliminadoEn)];
-    if (fechaInicio) filters.push(gte(viajes.fechaSalidaProgramada, fechaInicio));
-    if (fechaFin) filters.push(lte(viajes.fechaSalidaProgramada, fechaFin));
-
+    // Subconsulta para combustible
     const fuelSubquery = database
       .select({
         viajeId: viajeTramos.viajeId,
@@ -249,24 +249,56 @@ export class ReportesRepository {
       .groupBy(viajeTramos.viajeId)
       .as('fuel_sub');
 
+    // Subconsulta para viajes con filtros de fecha
+    const viajesFilters = [isNull(viajes.eliminadoEn)];
+    if (fechaInicio) viajesFilters.push(gte(viajes.fechaSalidaProgramada, fechaInicio));
+    if (fechaFin) viajesFilters.push(lte(viajes.fechaSalidaProgramada, fechaFin));
+
+    const viajesSubquery = database
+      .select({
+        vehiculoId: viajeVehiculos.vehiculoId,
+        totalKilometraje: sql<number>`SUM(CAST(${viajes.distanciaFinal} AS DECIMAL))`.as('total_km'),
+        totalGalones: sql<number>`SUM(${fuelSubquery.totalGalonesViaje})`.as('total_gal'),
+        cantidadViajes: sql<number>`COUNT(DISTINCT ${viajes.id})`.as('cnt_viajes'),
+      })
+      .from(viajes)
+      .innerJoin(viajeVehiculos, and(eq(viajeVehiculos.viajeId, viajes.id), eq(viajeVehiculos.esPrincipal, true)))
+      .leftJoin(fuelSubquery, eq(fuelSubquery.viajeId, viajes.id))
+      .where(and(...viajesFilters))
+      .groupBy(viajeVehiculos.vehiculoId)
+      .as('v_stats');
+
+    // Subconsulta para alquiler activo
+    const rentalSubquery = database
+      .select({
+        vehiculoId: alquilerDetalle.vehiculoId,
+        clienteNombre: sql<string>`COALESCE(NULLIF(TRIM(${clientes.razonSocial}), ''), ${clientes.nombreCompleto})`.as('cliente_nombre'),
+      })
+      .from(alquilerDetalle)
+      .innerJoin(alquileres, eq(alquilerDetalle.alquilerId, alquileres.id))
+      .innerJoin(clientes, eq(alquileres.clienteId, clientes.id))
+      .where(and(eq(alquileres.estado, 'activo'), isNull(alquilerDetalle.eliminadoEn), isNull(alquileres.eliminadoEn)))
+      .as('active_rental');
+
     return await database
       .select({
         vehiculoId: vehiculos.id,
         placa: vehiculos.placa,
         marca: marcas.nombre,
         modelo: modelos.nombre,
-        totalKilometraje: sql<number>`COALESCE(SUM(CAST(${viajes.distanciaFinal} AS DECIMAL)), 0)`.mapWith(Number),
-        totalGalones: sql<number>`COALESCE(SUM(${fuelSubquery.totalGalonesViaje}), 0)`.mapWith(Number),
-        cantidadViajes: sql<number>`COUNT(DISTINCT ${viajes.id})`.mapWith(Number),
+        kilometrajeActual: vehiculos.kilometraje,
+        estado: vehiculos.estado,
+        clienteActual: rentalSubquery.clienteNombre,
+        totalKilometraje: sql<number>`COALESCE(${viajesSubquery.totalKilometraje}, 0)`.mapWith(Number),
+        totalGalones: sql<number>`COALESCE(${viajesSubquery.totalGalones}, 0)`.mapWith(Number),
+        cantidadViajes: sql<number>`COALESCE(${viajesSubquery.cantidadViajes}, 0)`.mapWith(Number),
       })
-      .from(viajes)
-      .innerJoin(viajeVehiculos, and(eq(viajeVehiculos.viajeId, viajes.id), eq(viajeVehiculos.esPrincipal, true)))
-      .innerJoin(vehiculos, eq(viajeVehiculos.vehiculoId, vehiculos.id))
+      .from(vehiculos)
       .leftJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
-      .leftJoin(fuelSubquery, eq(fuelSubquery.viajeId, viajes.id))
-      .where(and(...filters))
-      .groupBy(vehiculos.id, vehiculos.placa, marcas.nombre, modelos.nombre)
+      .leftJoin(viajesSubquery, eq(viajesSubquery.vehiculoId, vehiculos.id))
+      .leftJoin(rentalSubquery, eq(rentalSubquery.vehiculoId, vehiculos.id))
+      .where(isNull(vehiculos.eliminadoEn))
       .orderBy(vehiculos.placa);
   }
 }
