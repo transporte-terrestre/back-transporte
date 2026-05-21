@@ -34,9 +34,4 @@ export class ViajeTramoUpdateDto {
   @IsNumber()
   @IsOptional()
   kilometrajeFinal?: number;
-
-  @ApiProperty({ required: false })
-  @IsNumber()
-  @IsOptional()
-  numeroPasajeros?: number;
 }

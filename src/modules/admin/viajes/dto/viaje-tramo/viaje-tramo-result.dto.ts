@@ -26,8 +26,11 @@ export class ViajeTramoResultDto {
   @ApiProperty({ required: false })
   kilometrajeFinal?: number;
 
-  @ApiProperty({ required: false })
-  numeroPasajeros?: number;
+  @ApiProperty({ required: false, nullable: true })
+  numeroPasajeros?: number | null;
+
+  @ApiProperty({ required: false, nullable: true, description: 'Galones abastecidos en el tramo' })
+  galonesAbastecidos?: number | null;
 
   @ApiProperty({ required: false })
   rutaParadaId?: number;

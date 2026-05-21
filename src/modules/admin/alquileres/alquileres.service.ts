@@ -18,6 +18,8 @@ import { ValidarVehiculoAlquilerQueryDto } from './dto/alquiler/validar-vehiculo
 import { ValidacionAlquilerResultDto } from './dto/alquiler/validacion-alquiler-result.dto';
 import { AlquilerDetalleRepository } from '@repository/alquiler-detalle.repository';
 import { AlquilerHistorialRepository } from '@repository/alquiler-historial.repository';
+import { alquilerDocumentosTipo } from '@db/tables/alquiler-documento.table';
+import { DocumentosAgrupadosAlquilerDto } from './dto/alquiler/alquiler-result.dto';
 
 @Injectable()
 export class AlquileresService {
@@ -70,10 +72,14 @@ export class AlquileresService {
     const documentos = await this.alquilerDocumentoRepository.findByAlquilerId(id);
     const detalles = await this.alquilerDetalleRepository.findByAlquilerId(id);
     const historial = await this.alquilerHistorialRepository.findByAlquilerId(id);
+    const documentosAgrupados = alquilerDocumentosTipo.enumValues.reduce((acc, tipo) => {
+      acc[tipo] = documentos.filter((doc) => doc.tipo === tipo);
+      return acc;
+    }, {} as DocumentosAgrupadosAlquilerDto);
 
     return {
       ...alquiler,
-      documentos,
+      documentos: documentosAgrupados,
       detalles,
       historial,
     };

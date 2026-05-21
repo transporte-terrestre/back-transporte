@@ -1,8 +1,9 @@
-import { pgTable, serial, text, timestamp, integer, pgEnum, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, integer, pgEnum, index, date } from 'drizzle-orm/pg-core';
 import { alquileres } from './alquiler.table';
 
 export const alquilerDocumentosTipo = pgEnum('alquiler_documentos_tipo', [
   'contrato',
+  'documentacion',
   'guia_remision',
   'acta_entrega',
   'acta_devolucion',
@@ -20,6 +21,8 @@ export const alquilerDocumentos = pgTable(
     tipo: alquilerDocumentosTipo('tipo').default('otros').notNull(),
     nombre: text('nombre').notNull(),
     url: text('url').notNull(),
+    fechaExpiracion: date('fecha_expiracion'),
+    fechaEmision: date('fecha_emision'),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
   },

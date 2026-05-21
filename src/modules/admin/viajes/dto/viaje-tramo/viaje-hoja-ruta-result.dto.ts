@@ -15,8 +15,11 @@ export class ViajeItemHojaRutaDto {
   @ApiProperty({ description: 'Punto de llegada', example: 'Parada 1' })
   puntoLlegada: string;
 
-  @ApiPropertyOptional({ description: 'Número de pasajeros', example: 12 })
-  numeroPasajeros: number;
+  @ApiPropertyOptional({ description: 'Número de pasajeros', example: 12, nullable: true })
+  numeroPasajeros: number | null;
+
+  @ApiPropertyOptional({ description: 'Galones abastecidos en el tramo', example: 8.5, nullable: true })
+  galonesAbastecidos: number | null;
 
   @ApiProperty({ description: 'Hora de término del tramo', example: '10:20 AM' })
   horaTermino: string;

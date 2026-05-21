@@ -20,6 +20,7 @@ import { ProveedoresModule } from './modules/admin/proveedores/proveedores.modul
 import { AlquileresModule } from './modules/admin/alquileres/alquileres.module';
 import { AuditoriaModule } from './modules/admin/auditoria/auditoria.module';
 import { DescargasModule } from './modules/admin/descargas/descargas.module';
+import { AbastecimientosModule } from './modules/admin/abastecimientos/abastecimientos.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { DescargasModule } from './modules/admin/descargas/descargas.module';
     CronjobModule,
     AuditoriaModule,
     DescargasModule,
+    AbastecimientosModule,
   ],
   controllers: [AppController],
   providers: [AppService],

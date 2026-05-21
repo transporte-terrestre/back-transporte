@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { alquilerDocumentosTipo, AlquilerDocumentoDTO } from '@db/tables/alquiler-documento.table';
 
 export class AlquilerDocumentoCreateDto implements Omit<AlquilerDocumentoDTO, 'id' | 'creadoEn' | 'actualizadoEn'> {
@@ -22,4 +22,14 @@ export class AlquilerDocumentoCreateDto implements Omit<AlquilerDocumentoDTO, 'i
   @IsString()
   @IsNotEmpty()
   url: string;
+
+  @ApiPropertyOptional({ example: '2026-04-26' })
+  @IsOptional()
+  @IsDateString()
+  fechaEmision?: string | null;
+
+  @ApiPropertyOptional({ example: '2027-04-26' })
+  @IsOptional()
+  @IsDateString()
+  fechaExpiracion?: string | null;
 }

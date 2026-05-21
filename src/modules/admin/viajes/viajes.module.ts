@@ -22,7 +22,6 @@ import { AlquilerRepository } from '@repository/alquiler.repository';
 import { VehiculoDocumentoRepository } from '@repository/vehiculo-documento.repository';
 import { ConductorDocumentoRepository } from '@repository/conductor-documento.repository';
 import { ConductorRepository } from '@repository/conductor.repository';
-import { ViajeRepostajeMovimientoRepository } from '@repository/viaje-repostaje-movimiento.repository';
 
 import { GeminiAiModule } from '@module/gemini-ai/gemini-ai.module';
 
@@ -51,7 +50,6 @@ import { GeminiAiModule } from '@module/gemini-ai/gemini-ai.module';
     VehiculoDocumentoRepository,
     ConductorDocumentoRepository,
     ConductorRepository,
-    ViajeRepostajeMovimientoRepository,
   ],
   imports: [GeminiAiModule],
   exports: [ViajeTramoRepository, ChecklistItemRepository, ViajeChecklistRepository],

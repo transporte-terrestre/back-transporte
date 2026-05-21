@@ -16,7 +16,7 @@ import { conductorDocumentos } from '@db/tables/conductor-documento.table';
 import { clientes } from '@db/tables/cliente.table';
 import { entidades } from '@db/tables/entidad.table';
 import { viajeTramos } from '@db/tables/viaje-tramo.table';
-import { viajeRepostajeMovimientos } from '@db/tables/viaje-repostaje-movimiento.table';
+import { vehiculoAbastecimientos } from '@db/tables/vehiculo-abastecimiento.table';
 import { alquileres } from '@db/tables/alquiler.table';
 import { alquilerDetalle } from '@db/tables/alquiler-detalle.table';
 
@@ -241,11 +241,11 @@ export class ReportesRepository {
     const fuelSubquery = database
       .select({
         viajeId: viajeTramos.viajeId,
-        totalGalonesViaje: sql<number>`SUM(CAST(${viajeRepostajeMovimientos.galonesEstablecidos} AS DECIMAL))`.as('total_galones_viaje'),
+        totalGalonesViaje: sql<number>`SUM(CAST(${vehiculoAbastecimientos.galonesEstablecidos} AS DECIMAL))`.as('total_galones_viaje'),
       })
       .from(viajeTramos)
-      .innerJoin(viajeRepostajeMovimientos, eq(viajeRepostajeMovimientos.viajeTramoId, viajeTramos.id))
-      .where(isNull(viajeRepostajeMovimientos.eliminadoEn))
+      .innerJoin(vehiculoAbastecimientos, eq(vehiculoAbastecimientos.viajeTramoId, viajeTramos.id))
+      .where(isNull(vehiculoAbastecimientos.eliminadoEn))
       .groupBy(viajeTramos.viajeId)
       .as('fuel_sub');
 

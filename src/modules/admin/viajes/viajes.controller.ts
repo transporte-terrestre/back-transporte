@@ -43,8 +43,6 @@ import { ViajePasajeroDesabordarPasajerosDto } from './dto/viaje-pasajero/viaje-
 import { ValidarVehiculoQueryDto } from './dto/viaje/validar-vehiculo-query.dto';
 import { ValidarConductorQueryDto } from './dto/viaje/validar-conductor-query.dto';
 import { ValidacionResultDto } from './dto/viaje/validacion-result.dto';
-import { ViajeRepostajeMovimientoCreateDto } from './dto/viaje-repostaje-movimiento/viaje-repostaje-movimiento-create.dto';
-import { ViajeRepostajeMovimientoResultDto } from './dto/viaje-repostaje-movimiento/viaje-repostaje-movimiento-result.dto';
 
 @ApiTags('viajes')
 @ApiBearerAuth()
@@ -286,29 +284,6 @@ export class ViajesController {
   }
 
   // ========== TRAMOS DEL VIAJE ==========
-  @Get('tramo/:viajeTramoId/repostajes')
-  @ApiOperation({ summary: 'Obtener todos los repostajes de un tramo' })
-  @ApiParam({ name: 'viajeTramoId', description: 'ID del tramo', type: Number })
-  @ApiResponse({ status: 200, type: [ViajeRepostajeMovimientoResultDto] })
-  getRepostajesPorTramo(@Param('viajeTramoId') viajeTramoId: string) {
-    return this.viajesService.getRepostajesPorTramo(+viajeTramoId);
-  }
-
-  @Post('tramo/repostaje/create')
-  @ApiOperation({ summary: 'Registrar un repostaje en un tramo' })
-  @ApiResponse({ status: 201, type: ViajeRepostajeMovimientoResultDto })
-  registrarRepostaje(@Body() dto: ViajeRepostajeMovimientoCreateDto) {
-    return this.viajesService.registrarRepostaje(dto);
-  }
-
-  @Delete('tramo/repostaje/delete/:id')
-  @ApiOperation({ summary: 'Eliminar un repostaje' })
-  @ApiParam({ name: 'id', description: 'ID del repostaje', type: Number })
-  @ApiResponse({ status: 200, type: ViajeRepostajeMovimientoResultDto })
-  deleteRepostaje(@Param('id') id: string) {
-    return this.viajesService.deleteRepostaje(+id);
-  }
-
   @Get(':viajeId/tramos')
   @ApiOperation({ summary: 'Obtener todos los tramos de un viaje' })
   @ApiParam({ name: 'viajeId', description: 'ID del viaje', type: Number })

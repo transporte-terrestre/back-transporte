@@ -27,7 +27,7 @@ import { checklistItems } from '@db/tables/checklist-item.table';
 import { viajeChecklists } from '@db/tables/viaje-checklist.table';
 import { viajeChecklistItems } from '@db/tables/viaje-checklist-item.table';
 import { alquileres } from '@db/tables/alquiler.table';
-import { viajeRepostajeMovimientos } from '@db/tables/viaje-repostaje-movimiento.table';
+import { vehiculoAbastecimientos } from '@db/tables/vehiculo-abastecimiento.table';
 import { auditorias } from '@db/tables/auditoria.table';
 
 const pool = new Pool(dbConfig);
@@ -57,7 +57,7 @@ const schema = {
   viajeChecklists,
   viajeChecklistItems,
   alquileres,
-  viajeRepostajeMovimientos,
+  vehiculoAbastecimientos,
   auditorias,
 };
 
