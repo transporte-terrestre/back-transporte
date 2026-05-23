@@ -13,6 +13,8 @@ export const usuarios = pgTable(
     email: varchar('email', { length: 100 }).notNull(),
     contrasenia: varchar('contrasenia', { length: 255 }).notNull(),
     roles: usuariosRol('roles').array().default(['empleado']).notNull(),
+    empresa: varchar('empresa', { length: 200 }).notNull().default('TRANSPORTES LINEA S.A.'),
+    asignatura: varchar('asignatura', { length: 200 }),
     fotocheck: text('fotocheck').array().default([]),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),

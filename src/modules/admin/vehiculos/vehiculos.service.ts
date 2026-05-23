@@ -234,6 +234,8 @@ export class VehiculosService {
   }
 
   async create(data: VehiculoCreateDto) {
+    if (data.placa) data.placa = data.placa.toUpperCase();
+    if (data.placaAnterior) data.placaAnterior = data.placaAnterior.toUpperCase();
     const vehiculo = await this.vehiculoRepository.create(data);
     const codigoInterno = this.generarCodigoInterno(vehiculo.id);
     return this.vehiculoRepository.update(vehiculo.id, { codigoInterno });
@@ -244,6 +246,8 @@ export class VehiculosService {
   }
 
   update(id: number, data: VehiculoUpdateDto) {
+    if (data.placa) data.placa = data.placa.toUpperCase();
+    if (data.placaAnterior) data.placaAnterior = data.placaAnterior.toUpperCase();
     return this.vehiculoRepository.update(id, data);
   }
 

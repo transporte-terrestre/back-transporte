@@ -17,7 +17,6 @@ export const viajeTramos = pgTable(
     nombreLugar: text('nombre_lugar'),
     horaFinal: timestamp('hora_final'),
     kilometrajeFinal: doublePrecision('kilometraje_final'),
-    numeroPasajeros: integer('numero_pasajeros').default(0),
     rutaParadaId: integer('ruta_parada_id').references(() => rutaParadas.id, { onDelete: 'set null' }),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),

@@ -35,4 +35,13 @@ export class UsuarioCreateDto implements Omit<UsuarioDTO, 'id' | 'nombreCompleto
   @IsNotEmpty()
   @IsIn(usuariosRol.enumValues, { each: true })
   roles: UsuarioRol[];
+
+  @ApiProperty({ example: 'TRANSPORTES LINEA S.A.', description: 'Empresa del usuario' })
+  @IsString()
+  @IsNotEmpty()
+  empresa: string;
+
+  @ApiProperty({ example: 'Asignatura 1', description: 'Asignatura del usuario', required: false })
+  @IsString()
+  asignatura?: string;
 }

@@ -21,4 +21,13 @@ export class ResumenVehiculoDto {
 
   @ApiProperty({ description: 'Cantidad de viajes realizados' })
   cantidadViajes: number;
+
+  @ApiProperty({ description: 'Kilometraje actual del vehículo' })
+  kilometrajeActual: number;
+
+  @ApiProperty({ description: 'Estado actual del vehículo' })
+  estado: string;
+
+  @ApiProperty({ description: 'Cliente al que está alquilado actualmente', required: false })
+  clienteActual?: string;
 }

@@ -26,6 +26,12 @@ export class UsuarioListDto {
   })
   roles: UsuarioRol[];
 
+  @ApiProperty({ example: 'TRANSPORTES LINEA S.A.', description: 'Empresa del usuario' })
+  empresa: string;
+
+  @ApiProperty({ example: 'Asignatura 1', description: 'Asignatura del usuario', required: false })
+  asignatura?: string;
+
   @ApiProperty({
     example: [],
     description: 'User fotocheck URLs',

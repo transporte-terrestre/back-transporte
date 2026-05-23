@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { AlquilerDocumentoResultDto } from '../alquiler-documento/alquiler-documento-result.dto';
 import { alquilerTipo, alquilerEstado } from '@db/tables/alquiler.table';
 import type { AlquilerTipo, AlquilerEstado } from '@db/tables/alquiler.table';
+import type { AlquilerDocumentoTipo } from '@db/tables/alquiler-documento.table';
 
 export class AlquilerVehiculoDto {
   @ApiProperty() id: number;
@@ -53,6 +54,29 @@ export class AlquilerHistorialResultDto {
   @ApiProperty({ type: AlquilerVehiculoDto, required: false }) vehiculo?: Partial<AlquilerVehiculoDto>;
 }
 
+export class DocumentosAgrupadosAlquilerDto implements Record<AlquilerDocumentoTipo, AlquilerDocumentoResultDto[]> {
+  @ApiProperty({ type: [AlquilerDocumentoResultDto] })
+  contrato: AlquilerDocumentoResultDto[];
+
+  @ApiProperty({ type: [AlquilerDocumentoResultDto] })
+  documentacion: AlquilerDocumentoResultDto[];
+
+  @ApiProperty({ type: [AlquilerDocumentoResultDto] })
+  guia_remision: AlquilerDocumentoResultDto[];
+
+  @ApiProperty({ type: [AlquilerDocumentoResultDto] })
+  acta_entrega: AlquilerDocumentoResultDto[];
+
+  @ApiProperty({ type: [AlquilerDocumentoResultDto] })
+  acta_devolucion: AlquilerDocumentoResultDto[];
+
+  @ApiProperty({ type: [AlquilerDocumentoResultDto] })
+  comprobante_pago: AlquilerDocumentoResultDto[];
+
+  @ApiProperty({ type: [AlquilerDocumentoResultDto] })
+  otros: AlquilerDocumentoResultDto[];
+}
+
 export class AlquilerResultDto {
   @ApiProperty() id: number;
 
@@ -75,5 +99,5 @@ export class AlquilerResultDto {
   @ApiProperty({ type: AlquilerClienteDto, required: false }) cliente?: AlquilerClienteDto;
   @ApiProperty({ type: [AlquilerDetalleResultDto], required: false }) detalles?: AlquilerDetalleResultDto[];
   @ApiProperty({ type: [AlquilerHistorialResultDto], required: false }) historial?: AlquilerHistorialResultDto[];
-  @ApiProperty({ type: [AlquilerDocumentoResultDto], required: false }) documentos?: AlquilerDocumentoResultDto[];
+  @ApiProperty({ type: DocumentosAgrupadosAlquilerDto, required: false }) documentos?: DocumentosAgrupadosAlquilerDto;
 }

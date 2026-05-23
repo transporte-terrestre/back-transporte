@@ -1,5 +1,5 @@
 ---
-trigger: always_on
+trigger: manual
 ---
 
 # REGLAS DEL PROYECTO - Backend Transporte Terrestre
