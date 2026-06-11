@@ -55,6 +55,8 @@ export class VehiculoRepository {
 
     if (filters?.estado) {
       conditions.push(eq(sql`${vehiculos.estado}::text`, filters.estado));
+    } else {
+      conditions.push(sql`${vehiculos.estado}::text != 'retirado'`);
     }
 
     if (filters?.marcaId) {
@@ -282,7 +284,7 @@ export class VehiculoRepository {
   ) {
     const offset = (page - 1) * limit;
 
-    const conditions = [isNull(vehiculos.eliminadoEn)];
+    const conditions = [isNull(vehiculos.eliminadoEn), sql`${vehiculos.estado}::text != 'retirado'`];
 
     if (estado) {
       conditions.push(sql`${vehiculos.estado}::text = ${estado}`);

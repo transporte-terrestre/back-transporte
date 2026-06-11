@@ -47,6 +47,8 @@ export class ConductorRepository {
 
     if (filters?.estado) {
       conditions.push(eq(sql`${conductores.estado}::text`, filters.estado));
+    } else {
+      conditions.push(sql`${conductores.estado}::text != 'inactivo'`);
     }
 
     if (filters?.fechaInicio && filters?.fechaFin) {
@@ -146,6 +148,7 @@ export class ConductorRepository {
     }
 
     conditions.push(isNull(conductores.eliminadoEn));
+    conditions.push(sql`${conductores.estado}::text != 'inactivo'`);
 
     const whereClause = and(...conditions);
 
