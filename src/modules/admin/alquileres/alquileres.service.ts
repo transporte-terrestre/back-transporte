@@ -146,12 +146,32 @@ export class AlquileresService {
       fechaFin: payload.fechaFin ? new Date(payload.fechaFin) : undefined,
     });
 
-    // 3. Manejar vehículos si se envían (esto podría ser más complejo para detectar adiciones/eliminaciones)
-    // Por ahora, si se envían vehículos nuevos que no están, los agregamos.
+    // 3. Manejar adiciones, actualizaciones y eliminaciones de vehículos
     if (vehiculosData) {
+      const existingDetails = prev.detalles || [];
+      const newVehiculoIds = vehiculosData.map((v) => v.vehiculoId);
+
+      // 3.1. Eliminar vehículos que ya no están en el contrato (soft delete)
+      const detailsToRemove = existingDetails.filter((d) => !newVehiculoIds.includes(d.vehiculoId));
+      for (const detail of detailsToRemove) {
+        await this.alquilerDetalleRepository.delete(detail.id);
+
+        await this.alquilerHistorialRepository.create({
+          alquilerId: id,
+          vehiculoId: detail.vehiculoId,
+          tipoAccion: 'BAJA_VEHICULO',
+          motivo: 'Retiro de vehículo del contrato',
+          fechaAccion: new Date(),
+        });
+
+        await this.vehiculoRepository.update(detail.vehiculoId, { estado: 'disponible' });
+      }
+
+      // 3.2. Agregar nuevos o actualizar existentes
       for (const vData of vehiculosData) {
-        const exist = prev.detalles?.find((d) => d.vehiculoId === vData.vehiculoId);
+        const exist = existingDetails.find((d) => d.vehiculoId === vData.vehiculoId);
         if (!exist) {
+          // Agregar nuevo vehículo
           await this.alquilerDetalleRepository.create({
             alquilerId: id,
             vehiculoId: vData.vehiculoId,
@@ -170,6 +190,20 @@ export class AlquileresService {
 
           if (marcarComoAlquilado) {
             await this.vehiculoRepository.update(vData.vehiculoId, { estado: 'alquilado' });
+          }
+        } else {
+          // Actualizar vehículo existente si algún campo cambió
+          const hasChanged =
+            exist.conductorId !== (vData.conductorId || null) ||
+            exist.tipo !== vData.tipo ||
+            Number(exist.kilometrajeInicial) !== Number(vData.kilometrajeInicial);
+
+          if (hasChanged) {
+            await this.alquilerDetalleRepository.update(exist.id, {
+              conductorId: vData.conductorId || null,
+              tipo: vData.tipo,
+              kilometrajeInicial: vData.kilometrajeInicial,
+            });
           }
         }
       }
