@@ -16,6 +16,12 @@ export class MantenimientoReporteEstadoDto {
   @ApiProperty({ example: ['url1', 'url2'], description: 'Imágenes del vehículo', nullable: true })
   imagenes: string[] | null;
 
+  @ApiProperty({ example: 'Transportes ABC S.A.C.', description: 'Proveedor asociado a la unidad', nullable: true })
+  unidadProveedor: string | null;
+
+  @ApiProperty({ example: 'Toyota Avanza', description: 'Marca y modelo del vehículo', nullable: true })
+  marcaModelo: string | null;
+
   @ApiProperty({ example: 50000, description: 'Kilometraje actual del vehículo' })
   kilometrajeActual: number;
 

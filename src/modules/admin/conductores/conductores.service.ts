@@ -100,12 +100,17 @@ export class ConductoresService {
           return 'nulo';
         }
 
-        // Si alguno no tiene fecha de expiración o su fecha es futura, está activo
-        const tieneActivo = docsDelTipo.some((doc) => {
-          if (!doc.fechaExpiracion) return true;
-          const fechaExp = new Date(doc.fechaExpiracion);
-          return fechaExp > hoy;
-        });
+        const documentoActual = docsDelTipo.reduce((actual, documento) => {
+          if (!actual) return documento;
+
+          const fechaActual = new Date(actual.creadoEn).getTime();
+          const fechaDocumento = new Date(documento.creadoEn).getTime();
+          return fechaDocumento > fechaActual || (fechaDocumento === fechaActual && documento.id > actual.id)
+            ? documento
+            : actual;
+        }, docsDelTipo[0]);
+
+        const tieneActivo = !documentoActual.fechaExpiracion || new Date(documentoActual.fechaExpiracion) > hoy;
 
         return tieneActivo ? 'activo' : 'caducado';
       };

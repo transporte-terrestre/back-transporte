@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, or, like, and, gte, lte, count, sql, ilike, desc, isNull, inArray } from 'drizzle-orm';
+import { eq, or, like, and, gte, lte, count, countDistinct, sql, ilike, desc, isNull, inArray } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { conductores, ConductorDTO, ConductorEstado, ConductorClaseLicencia, ConductorCategoriaLicencia } from '@db/tables/conductor.table';
 import { conductorDocumentos, ConductorDocumento } from '@db/tables/conductor-documento.table';
@@ -157,7 +157,7 @@ export class ConductorRepository {
     const conductoresConConteo = await database
       .select({
         id: conductores.id,
-        cantidadDocumentos: count(conductorDocumentos.id),
+        cantidadDocumentos: countDistinct(conductorDocumentos.tipo),
         documentosNoAplicables: conductores.documentosNoAplicables,
       })
       .from(conductores)

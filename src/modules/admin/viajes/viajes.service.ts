@@ -1485,7 +1485,7 @@ export class ViajesService {
     }
 
     // 4. Validar documentos vencidos del vehiculo
-    const docs = await this.vehiculoDocumentoRepository.findByVehiculoId(query.vehiculoId);
+    const docs = await this.vehiculoDocumentoRepository.findLatestByVehiculoId(query.vehiculoId);
 
     // Si la fecha de expiracion del documento es menor a la fecha de llegada de este viaje,
     // significa que el documento caducará durante (o antes) del viaje
@@ -1510,7 +1510,7 @@ export class ViajesService {
     const { fechaSalida, fechaLlegada, viajeId } = query;
 
     // 1. Validar documentos vencidos del conductor
-    const docs = await this.conductorDocumentoRepository.findByConductorId(query.conductorId);
+    const docs = await this.conductorDocumentoRepository.findLatestByConductorId(query.conductorId);
 
     for (const d of docs) {
       if (d.fechaExpiracion && new Date(d.fechaExpiracion) < new Date(fechaLlegada)) {
