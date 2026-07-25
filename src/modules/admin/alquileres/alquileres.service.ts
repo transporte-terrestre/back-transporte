@@ -380,7 +380,7 @@ export class AlquileresService {
     }
 
     // 4. Validar documentos vencidos
-    const docs = await this.vehiculoDocumentoRepository.findByVehiculoId(query.vehiculoId);
+    const docs = await this.vehiculoDocumentoRepository.findLatestByVehiculoId(query.vehiculoId);
     for (const d of docs) {
       if (d.fechaExpiracion && new Date(d.fechaExpiracion) < vFin) {
         return {

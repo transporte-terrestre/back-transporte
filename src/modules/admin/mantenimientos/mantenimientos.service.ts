@@ -101,6 +101,8 @@ export class MantenimientosService {
         placa: row.placa,
         codigoInterno: row.codigo_interno || null,
         imagenes: row.imagenes,
+        unidadProveedor: row.unidad_proveedor || null,
+        marcaModelo: [row.marca, row.modelo].filter(Boolean).join(' ') || null,
         kilometrajeActual: actual,
         ultimoMantenimientoFecha: row.ultimo_mantenimiento_fecha ? new Date(row.ultimo_mantenimiento_fecha) : null,
         ultimoMantenimientoKm: row.ultimo_mantenimiento_km ? Number(row.ultimo_mantenimiento_km) : null,

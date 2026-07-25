@@ -296,6 +296,7 @@ export class NotificacionRepository {
       .where(
         and(
           isNull(conductores.eliminadoEn),
+          sql`${conductores.estado}::text != 'inactivo'`,
           // Only alert if the latest doc actually has an expiration date and it's within range
           isNotNull(conductorDocumentos.fechaExpiracion),
           lte(conductorDocumentos.fechaExpiracion, fechaLimite.toISOString().split('T')[0]),
@@ -354,6 +355,7 @@ export class NotificacionRepository {
       .where(
         and(
           isNull(vehiculos.eliminadoEn),
+          sql`${vehiculos.estado}::text != 'retirado'`,
           // Only alert if the latest doc actually has an expiration date and it's within range
           isNotNull(vehiculoDocumentos.fechaExpiracion),
           lte(vehiculoDocumentos.fechaExpiracion, fechaLimite.toISOString().split('T')[0]),

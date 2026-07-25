@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, gte, lte, count } from 'drizzle-orm';
+import { eq, and, gte, lte, count, desc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { vehiculoDocumentos, VehiculoDocumentoDTO, VehiculoDocumentoTipo } from '@db/tables/vehiculo-documento.table';
 
@@ -56,6 +56,23 @@ export class VehiculoDocumentoRepository {
 
   async findByVehiculoId(vehiculoId: number) {
     return await database.select().from(vehiculoDocumentos).where(eq(vehiculoDocumentos.vehiculoId, vehiculoId));
+  }
+
+  async findLatestByVehiculoId(vehiculoId: number) {
+    const documentos = await database
+      .select()
+      .from(vehiculoDocumentos)
+      .where(eq(vehiculoDocumentos.vehiculoId, vehiculoId))
+      .orderBy(desc(vehiculoDocumentos.creadoEn), desc(vehiculoDocumentos.id));
+
+    const documentosPorTipo = new Map<VehiculoDocumentoTipo, (typeof documentos)[number]>();
+    for (const documento of documentos) {
+      if (!documentosPorTipo.has(documento.tipo)) {
+        documentosPorTipo.set(documento.tipo, documento);
+      }
+    }
+
+    return Array.from(documentosPorTipo.values());
   }
 
   async create(data: VehiculoDocumentoDTO) {

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, gte, lte, count } from 'drizzle-orm';
+import { eq, and, gte, lte, count, desc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
-import { conductorDocumentos, ConductorDocumentoDTO } from '@db/tables/conductor-documento.table';
+import { conductorDocumentos, ConductorDocumentoDTO, ConductorDocumentoTipo } from '@db/tables/conductor-documento.table';
 
 interface PaginationFilters {
   conductorId?: number;
@@ -56,6 +56,23 @@ export class ConductorDocumentoRepository {
 
   async findByConductorId(conductorId: number) {
     return await database.select().from(conductorDocumentos).where(eq(conductorDocumentos.conductorId, conductorId));
+  }
+
+  async findLatestByConductorId(conductorId: number) {
+    const documentos = await database
+      .select()
+      .from(conductorDocumentos)
+      .where(eq(conductorDocumentos.conductorId, conductorId))
+      .orderBy(desc(conductorDocumentos.creadoEn), desc(conductorDocumentos.id));
+
+    const documentosPorTipo = new Map<ConductorDocumentoTipo, (typeof documentos)[number]>();
+    for (const documento of documentos) {
+      if (!documentosPorTipo.has(documento.tipo)) {
+        documentosPorTipo.set(documento.tipo, documento);
+      }
+    }
+
+    return Array.from(documentosPorTipo.values());
   }
 
   async create(data: ConductorDocumentoDTO) {

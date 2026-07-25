@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, or, like, and, gte, lte, count, sql, ilike, desc, isNull, getTableColumns, inArray, asc } from 'drizzle-orm';
+import { eq, or, like, and, gte, lte, count, countDistinct, sql, ilike, desc, isNull, getTableColumns, inArray, asc } from 'drizzle-orm';
 import { database } from '@db/connection.db';
 import { vehiculos, VehiculoDTO } from '@db/tables/vehiculo.table';
 import type { VehiculoEstado } from '@db/tables/vehiculo.table';
@@ -309,7 +309,7 @@ export class VehiculoRepository {
     const vehiculosConConteo = await database
       .select({
         id: vehiculos.id,
-        cantidadDocumentos: count(vehiculoDocumentos.id),
+        cantidadDocumentos: countDistinct(vehiculoDocumentos.tipo),
         documentosNoAplicables: vehiculos.documentosNoAplicables,
       })
       .from(vehiculos)

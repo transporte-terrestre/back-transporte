@@ -3,6 +3,8 @@ import { eq, or, like, and, gte, lte, count, sql, isNull, getTableColumns, desc 
 import { database } from '@db/connection.db';
 import { mantenimientos, MantenimientoDTO } from '@db/tables/mantenimiento.table';
 import { vehiculos } from '@db/tables/vehiculo.table';
+import { vehiculoProveedores } from '@db/tables/vehiculo-proveedor.table';
+import { proveedores } from '@db/tables/proveedor.table';
 import { modelos } from '@db/tables/modelo.table';
 import { marcas } from '@db/tables/marca.table';
 import { talleres } from '@db/tables/taller.table';
@@ -32,6 +34,7 @@ export class MantenimientoRepository {
     const conditions = [];
 
     conditions.push(isNull(mantenimientos.eliminadoEn));
+    conditions.push(sql`${vehiculos.estado}::text != 'retirado'`);
 
     if (filters?.search) {
       const searchTerm = `%${filters.search}%`;
@@ -74,7 +77,11 @@ export class MantenimientoRepository {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [{ total }] = await database.select({ total: count() }).from(mantenimientos).where(whereClause);
+    const [{ total }] = await database
+      .select({ total: count() })
+      .from(mantenimientos)
+      .innerJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
+      .where(whereClause);
 
     const data = await database
       .select({
@@ -274,13 +281,24 @@ export class MantenimientoRepository {
   ) {
     const offset = (page - 1) * limit;
 
-    const conditions = [isNull(vehiculos.eliminadoEn)];
+    const conditions = [isNull(vehiculos.eliminadoEn), sql`${vehiculos.estado}::text != 'retirado'`];
     if (vehiculoId) {
       conditions.push(eq(vehiculos.id, vehiculoId));
     }
     const whereClause = and(...conditions);
 
     const [{ total }] = await database.select({ total: count() }).from(vehiculos).where(whereClause);
+
+    const proveedoresPorVehiculo = database
+      .select({
+        vehiculoId: vehiculoProveedores.vehiculoId,
+        unidadProveedor: sql<string>`STRING_AGG(DISTINCT ${proveedores.nombreCompleto}, ', ')`.as('unidad_proveedor'),
+      })
+      .from(vehiculoProveedores)
+      .innerJoin(proveedores, eq(vehiculoProveedores.proveedorId, proveedores.id))
+      .where(isNull(proveedores.eliminadoEn))
+      .groupBy(vehiculoProveedores.vehiculoId)
+      .as('proveedores_por_vehiculo');
 
     // Consultar todos los datos necesarios para el reporte y ordenamiento
     // Se trae todo en memoria porque el ordenamiento depende de campos calculados complejos
@@ -291,6 +309,9 @@ export class MantenimientoRepository {
         placa: vehiculos.placa,
         codigo_interno: vehiculos.codigoInterno,
         imagenes: vehiculos.imagenes,
+        unidad_proveedor: proveedoresPorVehiculo.unidadProveedor,
+        marca: marcas.nombre,
+        modelo: modelos.nombre,
         kilometraje_actual: vehiculos.kilometraje,
         ultimo_mantenimiento_fecha: mantenimientos.fechaIngreso,
         ultimo_mantenimiento_km: mantenimientos.kilometraje,
@@ -298,6 +319,9 @@ export class MantenimientoRepository {
       })
       .from(vehiculos)
       .leftJoin(mantenimientos, and(eq(vehiculos.id, mantenimientos.vehiculoId), isNull(mantenimientos.eliminadoEn)))
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .leftJoin(proveedoresPorVehiculo, eq(proveedoresPorVehiculo.vehiculoId, vehiculos.id))
       .where(whereClause)
       .orderBy(vehiculos.id, desc(mantenimientos.fechaIngreso));
 

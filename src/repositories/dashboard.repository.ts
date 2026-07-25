@@ -16,7 +16,7 @@ export class DashboardRepository {
     const [{ total }] = await database
       .select({ total: count() })
       .from(vehiculos)
-      .where(isNull(vehiculos.eliminadoEn));
+      .where(and(isNull(vehiculos.eliminadoEn), sql`${vehiculos.estado}::text != 'retirado'`));
     return Number(total);
   }
 
@@ -132,9 +132,11 @@ export class DashboardRepository {
         estado: mantenimientos.estado,
       })
       .from(mantenimientos)
+      .innerJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
       .where(
         and(
           isNull(mantenimientos.eliminadoEn),
+          sql`${vehiculos.estado}::text != 'retirado'`,
           or(eq(mantenimientos.estado, 'pendiente'), eq(mantenimientos.estado, 'en_proceso')),
         ),
       )
@@ -160,7 +162,7 @@ export class DashboardRepository {
         cantidad: count(),
       })
       .from(vehiculos)
-      .where(isNull(vehiculos.eliminadoEn))
+      .where(and(isNull(vehiculos.eliminadoEn), sql`${vehiculos.estado}::text != 'retirado'`))
       .groupBy(vehiculos.estado);
   }
 

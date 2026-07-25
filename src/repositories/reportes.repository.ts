@@ -160,7 +160,7 @@ export class ReportesRepository {
   }
 
   async getMantenimientosDetalladosPorVehiculo(vehiculoId: number, fechaInicio?: Date, fechaFin?: Date) {
-    const filters = [isNull(mantenimientos.eliminadoEn)];
+    const filters = [isNull(mantenimientos.eliminadoEn), sql`${vehiculos.estado}::text != 'retirado'`];
 
     if (vehiculoId > 0) filters.push(eq(mantenimientos.vehiculoId, vehiculoId));
     if (fechaInicio) filters.push(gte(mantenimientos.fechaIngreso, fechaInicio));
@@ -181,13 +181,14 @@ export class ReportesRepository {
         tallerTipo: talleres.tipo,
       })
       .from(mantenimientos)
+      .innerJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
       .innerJoin(talleres, eq(mantenimientos.tallerId, talleres.id))
       .where(and(...filters))
       .orderBy(desc(mantenimientos.fechaIngreso));
   }
 
   async getMantenimientosDetalladosPorTaller(tallerId: number, fechaInicio?: Date, fechaFin?: Date) {
-    const filters = [isNull(mantenimientos.eliminadoEn)];
+    const filters = [isNull(mantenimientos.eliminadoEn), sql`${vehiculos.estado}::text != 'retirado'`];
 
     if (tallerId > 0) filters.push(eq(mantenimientos.tallerId, tallerId));
     if (fechaInicio) filters.push(gte(mantenimientos.fechaIngreso, fechaInicio));
@@ -298,7 +299,7 @@ export class ReportesRepository {
       .leftJoin(marcas, eq(modelos.marcaId, marcas.id))
       .leftJoin(viajesSubquery, eq(viajesSubquery.vehiculoId, vehiculos.id))
       .leftJoin(rentalSubquery, eq(rentalSubquery.vehiculoId, vehiculos.id))
-      .where(isNull(vehiculos.eliminadoEn))
+      .where(and(isNull(vehiculos.eliminadoEn), sql`${vehiculos.estado}::text != 'retirado'`))
       .orderBy(vehiculos.placa);
   }
 }
