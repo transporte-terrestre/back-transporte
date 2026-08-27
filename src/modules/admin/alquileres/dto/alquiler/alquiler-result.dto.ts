@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AlquilerDocumentoResultDto } from '../alquiler-documento/alquiler-documento-result.dto';
-import { alquilerTipo, alquilerEstado } from '@db/tables/alquiler.table';
-import type { AlquilerTipo, AlquilerEstado } from '@db/tables/alquiler.table';
+import { alquilerTipo, alquilerEstado, alquilerMoneda } from '@db/tables/alquiler.table';
+import type { AlquilerTipo, AlquilerEstado, AlquilerMoneda } from '@db/tables/alquiler.table';
 import type { AlquilerDocumentoTipo } from '@db/tables/alquiler-documento.table';
 
 export class AlquilerVehiculoDto {
@@ -84,6 +84,7 @@ export class AlquilerResultDto {
 
   @ApiProperty() montoPorDia: number;
   @ApiProperty({ required: false }) montoTotalFinal?: number | null;
+  @ApiProperty({ enum: alquilerMoneda.enumValues, example: 'PEN' }) moneda: AlquilerMoneda;
   @ApiProperty({ required: false }) razon?: string | null;
 
   @ApiProperty() fechaInicio: Date;

@@ -91,6 +91,7 @@ export class AlquileresService {
     // 1. Crear Maestro
     const alquiler = await this.alquilerRepository.create({
       ...rest,
+      moneda: rest.moneda ?? 'PEN',
       fechaInicio: new Date(rest.fechaInicio),
       fechaFin: rest.fechaFin ? new Date(rest.fechaFin) : null,
     });

@@ -6,15 +6,6 @@ import type { NotificacionDestino } from '@db/tables/notificacion.table';
 
 export class UnreadCountQueryDto {
   @ApiProperty({
-    description: 'ID del usuario',
-    example: 1,
-    required: true,
-  })
-  @Type(() => Number)
-  @IsInt()
-  userId: number;
-
-  @ApiProperty({
     description: 'Filtrar por destino',
     enum: notificacionDestino.enumValues,
     required: false,

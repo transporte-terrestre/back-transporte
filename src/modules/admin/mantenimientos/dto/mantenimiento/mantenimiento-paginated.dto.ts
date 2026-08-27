@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min, Max, IsString, IsDateString, IsIn } from 'class-validator';
-import { mantenimientosTipo, mantenimientosEstado } from '@db/tables/mantenimiento.table';
-import type { MantenimientoTipo, MantenimientoEstado } from '@db/tables/mantenimiento.table';
+import { mantenimientosTipo, mantenimientosEstado, mantenimientosMoneda } from '@db/tables/mantenimiento.table';
+import type { MantenimientoTipo, MantenimientoEstado, MantenimientoMoneda } from '@db/tables/mantenimiento.table';
 import { PaginationMetaDto } from '../../../../../common/dto/pagination-meta.dto';
 
 export class MantenimientoPaginationQueryDto {
@@ -75,6 +75,16 @@ export class MantenimientoPaginationQueryDto {
   @IsOptional()
   @IsIn(mantenimientosEstado.enumValues, { each: true })
   estado?: MantenimientoEstado;
+
+  @ApiProperty({
+    description: 'Filtrar por moneda',
+    enum: mantenimientosMoneda.enumValues,
+    example: 'PEN',
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(mantenimientosMoneda.enumValues, { each: true })
+  moneda?: MantenimientoMoneda;
 
   @ApiProperty({
     description: 'Filtrar por taller',

@@ -46,6 +46,7 @@ export class MantenimientosController {
       query.estado,
       query.tallerId,
       query.vehiculoId,
+      query.moneda,
     );
   }
 

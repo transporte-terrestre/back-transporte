@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Param, UseGuards, ParseIntPipe, Body, DefaultValuePipe } from '@nestjs/common';
+import { Controller, Get, Post, Query, Param, UseGuards, ParseIntPipe, Body, DefaultValuePipe, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { NotificacionesService } from './notificaciones.service';
 import { NotificacionCreateDto } from './dto/notificacion/notificacion-create.dto';
@@ -16,8 +16,14 @@ import {
   NotificacionVencimientoQueryDto,
 } from './dto/notificacion/notificacion-vencimiento.dto';
 import { SendEmailDto } from './dto/email/send-email.dto';
+import { NotificacionCorteResultDto } from './dto/notificacion/notificacion-corte-result.dto';
+import { AuthGuard } from '@nestjs/passport';
+
+type AuthenticatedRequest = { user: { sub: number; tipo: string } };
 
 @ApiTags('notificaciones')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
 @Controller('notificacion')
 export class NotificacionesController {
   constructor(private readonly notificacionesService: NotificacionesService) {}
@@ -25,15 +31,15 @@ export class NotificacionesController {
   @Get('find-all')
   @ApiOperation({ summary: 'Obtener notificaciones del usuario' })
   @ApiResponse({ status: 200, type: PaginatedNotificacionResultDto })
-  async findAll(@Query() query: NotificacionPaginationQueryDto) {
-    return await this.notificacionesService.findAllByUser(query.userId, query.page, query.limit, query.destino, query.entidad, query.fechaInicio, query.fechaFin);
+  async findAll(@Query() query: NotificacionPaginationQueryDto, @Request() req: AuthenticatedRequest) {
+    return await this.notificacionesService.findAllByUser(req.user.sub, query.page, query.limit, query.destino, query.entidad, query.fechaInicio, query.fechaFin);
   }
 
   @Get('unread-count')
   @ApiOperation({ summary: 'Obtener cantidad de notificaciones no leídas' })
   @ApiResponse({ status: 200, type: UnreadCountResultDto })
-  async countUnread(@Query() query: UnreadCountQueryDto): Promise<UnreadCountResultDto> {
-    return await this.notificacionesService.countUnreadByUser(query.userId, query.destino, query.entidad, query.fechaInicio, query.fechaFin);
+  async countUnread(@Query() query: UnreadCountQueryDto, @Request() req: AuthenticatedRequest): Promise<UnreadCountResultDto> {
+    return await this.notificacionesService.countUnreadByUser(req.user.sub, query.destino, query.entidad, query.fechaInicio, query.fechaFin);
   }
 
   @Post('create')
@@ -46,15 +52,29 @@ export class NotificacionesController {
   @Post('leido/:id')
   @ApiOperation({ summary: 'Marcar notificación como leída' })
   @ApiResponse({ status: 200, type: NotificacionResultDto })
-  async markAsRead(@Param('id', ParseIntPipe) id: number, @Query('userId', ParseIntPipe) userId: number): Promise<NotificacionResultDto> {
-    return await this.notificacionesService.markAsRead(userId, id);
+  async markAsRead(@Param('id', ParseIntPipe) id: number, @Request() req: AuthenticatedRequest): Promise<NotificacionResultDto> {
+    return await this.notificacionesService.markAsRead(req.user.sub, id);
   }
 
   @Post('ocultar/:id')
   @ApiOperation({ summary: 'Ocultar notificación para un usuario' })
   @ApiResponse({ status: 200, type: NotificacionResultDto })
-  async markAsDismissed(@Param('id', ParseIntPipe) id: number, @Query('userId', ParseIntPipe) userId: number): Promise<NotificacionResultDto> {
-    return await this.notificacionesService.dismiss(userId, id);
+  async markAsDismissed(@Param('id', ParseIntPipe) id: number, @Request() req: AuthenticatedRequest): Promise<NotificacionResultDto> {
+    return await this.notificacionesService.dismiss(req.user.sub, id);
+  }
+
+  @Post('marcar-todas-leidas')
+  @ApiOperation({ summary: 'Marcar todas las notificaciones como leídas' })
+  @ApiResponse({ status: 200, type: NotificacionCorteResultDto })
+  async markAllAsRead(@Request() req: { user: { sub: number } }): Promise<NotificacionCorteResultDto> {
+    return await this.notificacionesService.markAllAsRead(req.user.sub);
+  }
+
+  @Post('ocultar-todas')
+  @ApiOperation({ summary: 'Ocultar todas las notificaciones anteriores a este momento' })
+  @ApiResponse({ status: 200, type: NotificacionCorteResultDto })
+  async dismissAll(@Request() req: { user: { sub: number } }): Promise<NotificacionCorteResultDto> {
+    return await this.notificacionesService.dismissAll(req.user.sub);
   }
 
   // ===================================

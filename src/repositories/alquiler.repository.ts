@@ -23,6 +23,10 @@ export class AlquilerRepository {
       conditions.push(eq(alquileres.estado, filters.estado));
     }
 
+    if (filters.moneda) {
+      conditions.push(eq(alquileres.moneda, filters.moneda));
+    }
+
     if (filters.clienteId) {
       conditions.push(eq(alquileres.clienteId, filters.clienteId));
     }
@@ -44,6 +48,7 @@ export class AlquilerRepository {
 
         montoPorDia: alquileres.montoPorDia,
         montoTotalFinal: alquileres.montoTotalFinal,
+        moneda: alquileres.moneda,
         razon: alquileres.razon,
 
         fechaInicio: alquileres.fechaInicio,
@@ -85,6 +90,7 @@ export class AlquilerRepository {
 
         montoPorDia: alquileres.montoPorDia,
         montoTotalFinal: alquileres.montoTotalFinal,
+        moneda: alquileres.moneda,
         razon: alquileres.razon,
 
         fechaInicio: alquileres.fechaInicio,

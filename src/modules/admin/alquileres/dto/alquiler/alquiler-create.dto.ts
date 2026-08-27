@@ -1,7 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, IsBoolean, ValidateNested, IsArray } from 'class-validator';
-import { AlquilerDTO, alquilerTipo } from '@db/tables/alquiler.table';
+import { AlquilerDTO, alquilerMoneda, alquilerTipo } from '@db/tables/alquiler.table';
+import type { AlquilerMoneda } from '@db/tables/alquiler.table';
 
 export class AlquilerVehiculoDetalleDto {
   @ApiProperty()
@@ -43,6 +44,15 @@ export class AlquilerCreateDto
   @Type(() => Number)
   @IsNotEmpty()
   montoPorDia: number;
+
+  @ApiPropertyOptional({
+    enum: alquilerMoneda.enumValues,
+    default: 'PEN',
+    description: 'Moneda de la tarifa y del monto total (PEN: soles, USD: dólares)',
+  })
+  @IsOptional()
+  @IsEnum(alquilerMoneda.enumValues)
+  moneda?: AlquilerMoneda;
 
   @ApiPropertyOptional({ description: 'Razón o motivo del alquiler' })
   @IsString()

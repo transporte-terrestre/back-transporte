@@ -17,6 +17,11 @@ export class VehiculoAbastecimientoRepository {
     id: vehiculoAbastecimientos.id,
     vehiculoId: vehiculoAbastecimientos.vehiculoId,
     viajeTramoId: vehiculoAbastecimientos.viajeTramoId,
+    viajeId: viajeTramos.viajeId,
+    kilometrajeSuelto: vehiculoAbastecimientos.kilometrajeSuelto,
+    tramoSuelto: vehiculoAbastecimientos.tramoSuelto,
+    fechaAbastecimiento: vehiculoAbastecimientos.fechaAbastecimiento,
+    metadata: vehiculoAbastecimientos.metadata,
     combustible: vehiculoAbastecimientos.combustible,
     galonesEstablecidos: vehiculoAbastecimientos.galonesEstablecidos,
     creadoEn: vehiculoAbastecimientos.creadoEn,
@@ -26,6 +31,9 @@ export class VehiculoAbastecimientoRepository {
     vehiculoImagenes: vehiculos.imagenes,
     tramoNombreLugar: viajeTramos.nombreLugar,
     tramoHoraFinal: viajeTramos.horaFinal,
+    tramoKilometrajeFinal: viajeTramos.kilometrajeFinal,
+    tramoLatitud: viajeTramos.latitud,
+    tramoLongitud: viajeTramos.longitud,
   };
 
   async findAllPaginated(page: number = 1, limit: number = 10, filters?: AbastecimientoFilters) {
@@ -43,9 +51,10 @@ export class VehiculoAbastecimientoRepository {
     if (filters?.search) {
       const searchTerm = filters.search.trim();
       const searchCondition = or(
-          ilike(vehiculos.placa, `%${searchTerm}%`),
-          ilike(vehiculos.codigoInterno, `%${searchTerm}%`),
-          ilike(viajeTramos.nombreLugar, `%${searchTerm}%`),
+        ilike(vehiculos.placa, `%${searchTerm}%`),
+        ilike(vehiculos.codigoInterno, `%${searchTerm}%`),
+        ilike(viajeTramos.nombreLugar, `%${searchTerm}%`),
+        ilike(vehiculoAbastecimientos.tramoSuelto, `%${searchTerm}%`),
       );
 
       if (searchCondition) conditions.push(searchCondition);

@@ -10,7 +10,7 @@ import { vehiculos } from '@db/tables/vehiculo.table';
 import { modelos } from '@db/tables/modelo.table';
 import { marcas } from '@db/tables/marca.table';
 import { usuarios } from '@db/tables/usuario.table';
-import { eq, and, desc, isNull, count, sql, lte, isNotNull, gte } from 'drizzle-orm';
+import { eq, and, desc, isNull, count, sql, lte, isNotNull, gte, gt } from 'drizzle-orm';
 
 // Types for document expiration results
 export interface DocumentoVencimientoBase {
@@ -45,7 +45,18 @@ export class NotificacionRepository {
   async findAllPaginatedByUsuario(usuarioId: number, page: number = 1, limit: number = 10, destino: NotificacionDestino = 'sistema', entidad?: string, fechaInicio?: string, fechaFin?: string) {
     const offset = (page - 1) * limit;
 
+    const [usuario] = await database
+      .select({
+        notificacionesEliminadasDesde: usuarios.notificacionesEliminadasDesde,
+        notificacionesLeidasDesde: usuarios.notificacionesLeidasDesde,
+      })
+      .from(usuarios)
+      .where(eq(usuarios.id, usuarioId));
+
     const conditions = [eq(notificaciones.destino, destino), isNull(notificaciones.eliminadoEn), isNull(notificacionesLeidas.ocultadoEn)];
+    if (usuario?.notificacionesEliminadasDesde) {
+      conditions.push(gt(notificaciones.creadoEn, usuario.notificacionesEliminadasDesde));
+    }
     if (entidad) {
       conditions.push(sql`${notificaciones.metadata}->>'entidad' = ${entidad}`);
     }
@@ -56,6 +67,10 @@ export class NotificacionRepository {
       conditions.push(lte(notificaciones.creadoEn, new Date(fechaFin)));
     }
 
+    const leidaPorFechaCorte = usuario?.notificacionesLeidasDesde
+      ? sql`${notificaciones.creadoEn} <= ${usuario.notificacionesLeidasDesde}`
+      : sql`false`;
+
     const query = database
       .select({
         id: notificaciones.id,
@@ -64,7 +79,7 @@ export class NotificacionRepository {
         tipo: notificaciones.tipo,
         metadata: notificaciones.metadata,
         creadoEn: notificaciones.creadoEn,
-        leido: sql<boolean>`CASE WHEN ${notificacionesLeidas.id} IS NOT NULL THEN true ELSE false END`.as('leido'),
+        leido: sql<boolean>`CASE WHEN ${notificacionesLeidas.id} IS NOT NULL OR ${leidaPorFechaCorte} THEN true ELSE false END`.as('leido'),
       })
       .from(notificaciones)
       .leftJoin(notificacionesLeidas, and(eq(notificacionesLeidas.notificacionId, notificaciones.id), eq(notificacionesLeidas.usuarioId, usuarioId)))
@@ -154,6 +169,34 @@ export class NotificacionRepository {
       .returning();
 
     return result[0];
+  }
+
+  async markAllAsRead(usuarioId: number) {
+    const fechaCorte = new Date();
+    const [updated] = await database
+      .update(usuarios)
+      .set({
+        notificacionesLeidasDesde: fechaCorte,
+        actualizadoEn: fechaCorte,
+      })
+      .where(and(eq(usuarios.id, usuarioId), isNull(usuarios.eliminadoEn)))
+      .returning({ fechaCorte: usuarios.notificacionesLeidasDesde });
+
+    return updated;
+  }
+
+  async dismissAll(usuarioId: number) {
+    const fechaCorte = new Date();
+    const [updated] = await database
+      .update(usuarios)
+      .set({
+        notificacionesEliminadasDesde: fechaCorte,
+        actualizadoEn: fechaCorte,
+      })
+      .where(and(eq(usuarios.id, usuarioId), isNull(usuarios.eliminadoEn)))
+      .returning({ fechaCorte: usuarios.notificacionesEliminadasDesde });
+
+    return updated;
   }
 
   // =============================================
@@ -408,12 +451,26 @@ export class NotificacionRepository {
   }
 
   async countUnreadByUsuario(usuarioId: number, destino: NotificacionDestino = 'sistema', entidad?: string, fechaInicio?: string, fechaFin?: string): Promise<number> {
+    const [usuario] = await database
+      .select({
+        notificacionesEliminadasDesde: usuarios.notificacionesEliminadasDesde,
+        notificacionesLeidasDesde: usuarios.notificacionesLeidasDesde,
+      })
+      .from(usuarios)
+      .where(eq(usuarios.id, usuarioId));
+
     const conditions = [
       eq(notificaciones.destino, destino),
       isNull(notificaciones.eliminadoEn),
       isNull(notificacionesLeidas.ocultadoEn),
       isNull(notificacionesLeidas.id),
     ];
+    if (usuario?.notificacionesEliminadasDesde) {
+      conditions.push(gt(notificaciones.creadoEn, usuario.notificacionesEliminadasDesde));
+    }
+    if (usuario?.notificacionesLeidasDesde) {
+      conditions.push(gt(notificaciones.creadoEn, usuario.notificacionesLeidasDesde));
+    }
     if (entidad) {
       conditions.push(sql`${notificaciones.metadata}->>'entidad' = ${entidad}`);
     }

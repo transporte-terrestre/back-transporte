@@ -18,6 +18,8 @@ export const usuarios = pgTable(
     fotocheck: text('fotocheck').array().default([]),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
     actualizadoEn: timestamp('actualizado_en').defaultNow().notNull(),
+    notificacionesEliminadasDesde: timestamp('notificaciones_eliminadas_desde'),
+    notificacionesLeidasDesde: timestamp('notificaciones_leidas_desde'),
     eliminadoEn: timestamp('eliminado_en'),
   },
   (t) => [

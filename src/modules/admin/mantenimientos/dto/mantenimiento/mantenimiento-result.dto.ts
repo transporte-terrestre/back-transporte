@@ -1,6 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { mantenimientosTipo, mantenimientosEstado } from '@db/tables/mantenimiento.table';
-import type { MantenimientoTipo, MantenimientoEstado } from '@db/tables/mantenimiento.table';
+import { mantenimientosTipo, mantenimientosEstado, mantenimientosMoneda } from '@db/tables/mantenimiento.table';
+import type { MantenimientoTipo, MantenimientoEstado, MantenimientoMoneda } from '@db/tables/mantenimiento.table';
 import { VehiculoResultDto } from '../../../vehiculos/dto/vehiculo/vehiculo-result.dto';
 import { MantenimientoTareaResultDto } from '../mantenimiento-tarea/mantenimiento-tarea-result.dto';
 import { MantenimientoDocumentoResultDto } from '../mantenimiento-documento/mantenimiento-documento-result.dto';
@@ -77,6 +77,9 @@ export class MantenimientoResultDto {
 
   @ApiProperty({ example: '150.50', description: 'Total Cost' })
   costoTotal: string;
+
+  @ApiProperty({ enum: mantenimientosMoneda.enumValues, example: 'PEN', description: 'Currency of the total cost' })
+  moneda: MantenimientoMoneda;
 
   @ApiProperty({ example: 'Cambio de aceite', description: 'Description' })
   descripcion: string;

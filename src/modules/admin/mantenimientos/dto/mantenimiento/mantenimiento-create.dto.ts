@@ -1,8 +1,8 @@
 import { IsInt, IsNumber, IsString, IsNotEmpty, IsIn, IsOptional, IsDate } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { MantenimientoDTO, mantenimientosTipo, mantenimientosEstado } from '@db/tables/mantenimiento.table';
-import type { MantenimientoTipo, MantenimientoEstado } from '@db/tables/mantenimiento.table';
+import { MantenimientoDTO, mantenimientosTipo, mantenimientosEstado, mantenimientosMoneda } from '@db/tables/mantenimiento.table';
+import type { MantenimientoTipo, MantenimientoEstado, MantenimientoMoneda } from '@db/tables/mantenimiento.table';
 
 export class MantenimientoCreateDto implements Omit<MantenimientoDTO, 'id' | 'creadoEn' | 'actualizadoEn' | 'codigoOrden'> {
   @ApiProperty({ example: 1, description: 'Vehicle ID' })
@@ -32,6 +32,15 @@ export class MantenimientoCreateDto implements Omit<MantenimientoDTO, 'id' | 'cr
   @IsString()
   @IsNotEmpty()
   costoTotal: string;
+
+  @ApiPropertyOptional({
+    enum: mantenimientosMoneda.enumValues,
+    default: 'PEN',
+    description: 'Moneda del costo total (PEN: soles, USD: dólares)',
+  })
+  @IsOptional()
+  @IsIn(mantenimientosMoneda.enumValues, { each: true })
+  moneda?: MantenimientoMoneda;
 
   @ApiProperty({ example: 'Cambio de aceite', description: 'Description' })
   @IsString()

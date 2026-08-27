@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsDateString, IsInt, IsIn, IsOptional, IsString, Min } from 'class-validator';
 import { AlquilerResultDto } from './alquiler-result.dto';
-import { alquilerTipo, alquilerEstado } from '@db/tables/alquiler.table';
-import type { AlquilerTipo, AlquilerEstado } from '@db/tables/alquiler.table';
+import { alquilerTipo, alquilerEstado, alquilerMoneda } from '@db/tables/alquiler.table';
+import type { AlquilerTipo, AlquilerEstado, AlquilerMoneda } from '@db/tables/alquiler.table';
 
 export class AlquilerFiltersDto {
   @ApiProperty({ required: false })
@@ -19,6 +19,15 @@ export class AlquilerFiltersDto {
   @IsOptional()
   @IsIn(alquilerEstado.enumValues)
   estado?: AlquilerEstado;
+
+  @ApiProperty({
+    description: 'Filtrar por moneda',
+    enum: alquilerMoneda.enumValues,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(alquilerMoneda.enumValues)
+  moneda?: AlquilerMoneda;
 
   @ApiProperty({ required: false })
   @Transform(({ value }) => (value != null ? parseInt(value, 10) : undefined))

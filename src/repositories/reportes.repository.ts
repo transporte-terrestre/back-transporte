@@ -11,6 +11,7 @@ import { eq, desc, and, gte, lte, sql, isNull, or } from 'drizzle-orm';
 import { viajeCircuitos } from '@db/tables/viaje-circuito.table';
 import { mantenimientos } from '@db/tables/mantenimiento.table';
 import { talleres } from '@db/tables/taller.table';
+import { sucursales } from '@db/tables/sucursal.table';
 import { conductores } from '@db/tables/conductor.table';
 import { conductorDocumentos } from '@db/tables/conductor-documento.table';
 import { clientes } from '@db/tables/cliente.table';
@@ -19,7 +20,6 @@ import { viajeTramos } from '@db/tables/viaje-tramo.table';
 import { vehiculoAbastecimientos } from '@db/tables/vehiculo-abastecimiento.table';
 import { alquileres } from '@db/tables/alquiler.table';
 import { alquilerDetalle } from '@db/tables/alquiler-detalle.table';
-
 
 @Injectable()
 export class ReportesRepository {
@@ -35,9 +35,25 @@ export class ReportesRepository {
       rutaDestino: rutas.destino,
       distanciaEstimada: viajes.distanciaEstimada,
       distanciaFinal: viajes.distanciaFinal,
-      diferencia: sql<number>`COALESCE(CAST(${viajes.distanciaFinal} AS DECIMAL) - CAST(${viajes.distanciaEstimada} AS DECIMAL), 0)`.mapWith(
-        Number,
-      ),
+      kilometrajeInicial: sql<number | null>`(
+        SELECT tramo.kilometraje_final
+        FROM viaje_tramos AS tramo
+        WHERE tramo.viaje_id = ${viajes.id}
+          AND tramo.eliminado_en IS NULL
+          AND tramo.kilometraje_final IS NOT NULL
+        ORDER BY tramo.hora_final ASC NULLS LAST, tramo.id ASC
+        LIMIT 1
+      )`,
+      kilometrajeFinal: sql<number | null>`(
+        SELECT tramo.kilometraje_final
+        FROM viaje_tramos AS tramo
+        WHERE tramo.viaje_id = ${viajes.id}
+          AND tramo.eliminado_en IS NULL
+          AND tramo.kilometraje_final IS NOT NULL
+        ORDER BY tramo.hora_final DESC NULLS LAST, tramo.id DESC
+        LIMIT 1
+      )`,
+      diferencia: sql<number>`COALESCE(CAST(${viajes.distanciaFinal} AS DECIMAL) - CAST(${viajes.distanciaEstimada} AS DECIMAL), 0)`.mapWith(Number),
       horasContrato: viajes.horasContrato,
       horasTotales: sql<number>`
         CASE 
@@ -174,15 +190,46 @@ export class ReportesRepository {
         estado: mantenimientos.estado,
         descripcion: mantenimientos.descripcion,
         kilometraje: mantenimientos.kilometraje,
+        kilometrajeProximoMantenimiento: mantenimientos.kilometrajeProximoMantenimiento,
         costoTotal: mantenimientos.costoTotal,
+        moneda: mantenimientos.moneda,
         fechaIngreso: mantenimientos.fechaIngreso,
         fechaSalida: mantenimientos.fechaSalida,
-        tallerNombre: talleres.razonSocial,
+        tallerNombre: sql<string | null>`COALESCE(NULLIF(${talleres.nombreComercial}, ''), ${talleres.razonSocial})`,
         tallerTipo: talleres.tipo,
+        tallerSucursal: sucursales.ubicacionExacta,
+        numeroFacturaCertificado: sql<string | null>`NULLIF((
+          SELECT STRING_AGG(md.nombre, ', ' ORDER BY md.tipo, md.nombre)
+          FROM mantenimiento_documentos md
+          WHERE md.mantenimiento_id = ${mantenimientos.id}
+            AND md.tipo IN ('factura', 'informe_tecnico')
+        ), '')`,
+        intervencion: sql<string>`COALESCE(NULLIF((
+          SELECT STRING_AGG(DISTINCT t.nombre_trabajo, ', ' ORDER BY t.nombre_trabajo)
+          FROM mantenimiento_tareas mt
+          INNER JOIN tareas t ON t.id = mt.tarea_id
+          WHERE mt.mantenimiento_id = ${mantenimientos.id}
+            AND t.eliminado_en IS NULL
+        ), ''), ${mantenimientos.descripcion})`,
+        observaciones: sql<string | null>`NULLIF((
+          SELECT STRING_AGG(DISTINCT mt.observaciones, ' | ' ORDER BY mt.observaciones)
+          FROM mantenimiento_tareas mt
+          WHERE mt.mantenimiento_id = ${mantenimientos.id}
+            AND NULLIF(TRIM(mt.observaciones), '') IS NOT NULL
+        ), '')`,
+        vehiculoPlaca: vehiculos.placa,
+        vehiculoMarca: marcas.nombre,
+        vehiculoModelo: modelos.nombre,
+        vehiculoAnio: vehiculos.anio,
+        vehiculoTipo: sql<string | null>`COALESCE(NULLIF(${vehiculos.carroceria}, ''), NULLIF(${vehiculos.categoria}, ''))`,
+        vehiculoEstado: vehiculos.estado,
       })
       .from(mantenimientos)
       .innerJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
-      .innerJoin(talleres, eq(mantenimientos.tallerId, talleres.id))
+      .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
+      .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .leftJoin(talleres, eq(mantenimientos.tallerId, talleres.id))
+      .leftJoin(sucursales, eq(mantenimientos.sucursalId, sucursales.id))
       .where(and(...filters))
       .orderBy(desc(mantenimientos.fechaIngreso));
   }
@@ -202,17 +249,46 @@ export class ReportesRepository {
         estado: mantenimientos.estado,
         descripcion: mantenimientos.descripcion,
         kilometraje: mantenimientos.kilometraje,
+        kilometrajeProximoMantenimiento: mantenimientos.kilometrajeProximoMantenimiento,
         costoTotal: mantenimientos.costoTotal,
+        moneda: mantenimientos.moneda,
         fechaIngreso: mantenimientos.fechaIngreso,
         fechaSalida: mantenimientos.fechaSalida,
+        tallerNombre: sql<string | null>`COALESCE(NULLIF(${talleres.nombreComercial}, ''), ${talleres.razonSocial})`,
+        tallerTipo: talleres.tipo,
+        tallerSucursal: sucursales.ubicacionExacta,
+        numeroFacturaCertificado: sql<string | null>`NULLIF((
+          SELECT STRING_AGG(md.nombre, ', ' ORDER BY md.tipo, md.nombre)
+          FROM mantenimiento_documentos md
+          WHERE md.mantenimiento_id = ${mantenimientos.id}
+            AND md.tipo IN ('factura', 'informe_tecnico')
+        ), '')`,
+        intervencion: sql<string>`COALESCE(NULLIF((
+          SELECT STRING_AGG(DISTINCT t.nombre_trabajo, ', ' ORDER BY t.nombre_trabajo)
+          FROM mantenimiento_tareas mt
+          INNER JOIN tareas t ON t.id = mt.tarea_id
+          WHERE mt.mantenimiento_id = ${mantenimientos.id}
+            AND t.eliminado_en IS NULL
+        ), ''), ${mantenimientos.descripcion})`,
+        observaciones: sql<string | null>`NULLIF((
+          SELECT STRING_AGG(DISTINCT mt.observaciones, ' | ' ORDER BY mt.observaciones)
+          FROM mantenimiento_tareas mt
+          WHERE mt.mantenimiento_id = ${mantenimientos.id}
+            AND NULLIF(TRIM(mt.observaciones), '') IS NOT NULL
+        ), '')`,
         vehiculoPlaca: vehiculos.placa,
         vehiculoMarca: marcas.nombre,
         vehiculoModelo: modelos.nombre,
+        vehiculoAnio: vehiculos.anio,
+        vehiculoTipo: sql<string | null>`COALESCE(NULLIF(${vehiculos.carroceria}, ''), NULLIF(${vehiculos.categoria}, ''))`,
+        vehiculoEstado: vehiculos.estado,
       })
       .from(mantenimientos)
       .innerJoin(vehiculos, eq(mantenimientos.vehiculoId, vehiculos.id))
       .innerJoin(modelos, eq(vehiculos.modeloId, modelos.id))
       .innerJoin(marcas, eq(modelos.marcaId, marcas.id))
+      .leftJoin(talleres, eq(mantenimientos.tallerId, talleres.id))
+      .leftJoin(sucursales, eq(mantenimientos.sucursalId, sucursales.id))
       .where(and(...filters))
       .orderBy(desc(mantenimientos.fechaIngreso));
   }

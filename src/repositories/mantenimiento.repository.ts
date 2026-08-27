@@ -19,6 +19,7 @@ interface PaginationFilters {
   fechaFin?: string;
   tipo?: string;
   estado?: string;
+  moneda?: string;
   tallerId?: number;
   vehiculoId?: number;
 }
@@ -38,9 +39,7 @@ export class MantenimientoRepository {
 
     if (filters?.search) {
       const searchTerm = `%${filters.search}%`;
-      const searchConditions = [
-        like(mantenimientos.codigoOrden, searchTerm),
-      ];
+      const searchConditions = [like(mantenimientos.codigoOrden, searchTerm)];
 
       // Si el término de búsqueda es un número, también buscar por ID exacto
       if (!isNaN(Number(filters.search))) {
@@ -56,6 +55,10 @@ export class MantenimientoRepository {
 
     if (filters?.estado) {
       conditions.push(eq(sql`${mantenimientos.estado}::text`, filters.estado));
+    }
+
+    if (filters?.moneda) {
+      conditions.push(eq(sql`${mantenimientos.moneda}::text`, filters.moneda));
     }
 
     if (filters?.tallerId) {
@@ -273,12 +276,7 @@ export class MantenimientoRepository {
     return result[0];
   }
 
-  async getReporteEstadoVehiculos(
-    page: number,
-    limit: number,
-    sort: 'proximos' | 'ultimos' = 'proximos',
-    vehiculoId?: number,
-  ) {
+  async getReporteEstadoVehiculos(page: number, limit: number, sort: 'proximos' | 'ultimos' = 'proximos', vehiculoId?: number) {
     const offset = (page - 1) * limit;
 
     const conditions = [isNull(vehiculos.eliminadoEn), sql`${vehiculos.estado}::text != 'retirado'`];
