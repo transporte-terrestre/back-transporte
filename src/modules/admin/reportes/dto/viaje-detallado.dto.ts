@@ -29,6 +29,18 @@ export class ViajeDetalladoDto {
   distanciaFinal: string | null;
 
   @ApiProperty({
+    nullable: true,
+    description: 'Kilometraje del vehículo al iniciar el viaje',
+  })
+  kilometrajeInicial: number | null;
+
+  @ApiProperty({
+    nullable: true,
+    description: 'Kilometraje del vehículo al finalizar el viaje',
+  })
+  kilometrajeFinal: number | null;
+
+  @ApiProperty({
     description: 'Diferencia entre distancia final y estimada (0 si no hay valores)',
   })
   diferencia: number;

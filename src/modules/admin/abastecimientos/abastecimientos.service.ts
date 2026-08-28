@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { VehiculoAbastecimientoRepository } from '@repository/vehiculo-abastecimiento.repository';
 import { VehiculoRepository } from '@repository/vehiculo.repository';
 import { ViajeTramoRepository } from '@repository/viaje-tramo.repository';
@@ -61,11 +61,16 @@ export class AbastecimientosService {
 
   async create(dto: AbastecimientoCreateDto) {
     await this.ensureVehiculoExists(dto.vehiculoId);
-    if (dto.viajeTramoId) await this.ensureTramoExists(dto.viajeTramoId);
+    if (dto.viajeTramoId != null) await this.ensureTramoExists(dto.viajeTramoId);
+    this.ensureStandaloneData(dto);
 
     const abastecimiento = await this.abastecimientoRepository.create({
       vehiculoId: dto.vehiculoId,
       viajeTramoId: dto.viajeTramoId ?? null,
+      kilometrajeSuelto: dto.kilometrajeSuelto != null ? dto.kilometrajeSuelto.toString() : null,
+      tramoSuelto: dto.tramoSuelto?.trim() || null,
+      fechaAbastecimiento: dto.fechaAbastecimiento ? new Date(dto.fechaAbastecimiento) : null,
+      metadata: dto.metadata ?? null,
       combustible: dto.combustible,
       galonesEstablecidos: dto.galonesEstablecidos.toString(),
     });
@@ -74,14 +79,31 @@ export class AbastecimientosService {
   }
 
   async update(id: number, dto: AbastecimientoUpdateDto) {
-    await this.findOne(id);
+    const current = await this.findOne(id);
 
-    if (dto.vehiculoId) await this.ensureVehiculoExists(dto.vehiculoId);
-    if (dto.viajeTramoId) await this.ensureTramoExists(dto.viajeTramoId);
+    if (dto.vehiculoId != null) await this.ensureVehiculoExists(dto.vehiculoId);
+    if (dto.viajeTramoId != null) await this.ensureTramoExists(dto.viajeTramoId);
+
+    this.ensureStandaloneData({
+      viajeTramoId: dto.viajeTramoId !== undefined ? dto.viajeTramoId : current.viajeTramoId,
+      kilometrajeSuelto: dto.kilometrajeSuelto !== undefined ? dto.kilometrajeSuelto : current.kilometrajeSuelto,
+      tramoSuelto: dto.tramoSuelto !== undefined ? dto.tramoSuelto : current.tramoSuelto,
+      fechaAbastecimiento: dto.fechaAbastecimiento !== undefined ? dto.fechaAbastecimiento : current.fechaAbastecimiento,
+    });
 
     const data: Partial<VehiculoAbastecimientoDTO> = {
-      ...(dto.vehiculoId ? { vehiculoId: dto.vehiculoId } : {}),
+      ...(dto.vehiculoId != null ? { vehiculoId: dto.vehiculoId } : {}),
       ...(dto.viajeTramoId !== undefined ? { viajeTramoId: dto.viajeTramoId } : {}),
+      ...(dto.kilometrajeSuelto !== undefined ? { kilometrajeSuelto: dto.kilometrajeSuelto != null ? dto.kilometrajeSuelto.toString() : null } : {}),
+      ...(dto.tramoSuelto !== undefined ? { tramoSuelto: dto.tramoSuelto?.trim() || null } : {}),
+      ...(dto.fechaAbastecimiento !== undefined
+        ? {
+            fechaAbastecimiento: dto.fechaAbastecimiento
+              ? new Date(dto.fechaAbastecimiento)
+              : null,
+          }
+        : {}),
+      ...(dto.metadata !== undefined ? { metadata: dto.metadata } : {}),
       ...(dto.combustible ? { combustible: dto.combustible } : {}),
       ...(dto.galonesEstablecidos !== undefined ? { galonesEstablecidos: dto.galonesEstablecidos.toString() } : {}),
     };
@@ -104,5 +126,23 @@ export class AbastecimientosService {
   private async ensureTramoExists(viajeTramoId: number) {
     const tramo = await this.viajeTramoRepository.findOne(viajeTramoId);
     if (!tramo) throw new NotFoundException('Tramo no encontrado');
+  }
+
+  private ensureStandaloneData(data: {
+    viajeTramoId?: number | null;
+    kilometrajeSuelto?: number | string | null;
+    tramoSuelto?: string | null;
+    fechaAbastecimiento?: string | Date | null;
+  }) {
+    if (data.viajeTramoId != null) return;
+
+    const missingFields: string[] = [];
+    if (data.kilometrajeSuelto == null) missingFields.push('kilometrajeSuelto');
+    if (!data.tramoSuelto?.trim()) missingFields.push('tramoSuelto');
+    if (!data.fechaAbastecimiento) missingFields.push('fechaAbastecimiento');
+
+    if (missingFields.length > 0) {
+      throw new BadRequestException(`Los abastecimientos sin viaje requieren: ${missingFields.join(', ')}`);
+    }
   }
 }

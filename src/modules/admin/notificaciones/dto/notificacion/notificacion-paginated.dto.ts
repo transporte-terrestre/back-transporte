@@ -33,15 +33,6 @@ export class NotificacionPaginationQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description: 'ID del usuario',
-    example: 1,
-    required: true,
-  })
-  @Type(() => Number)
-  @IsInt()
-  userId: number;
-
-  @ApiProperty({
     description: 'Filtrar por destino del usuario',
     enum: notificacionDestino.enumValues,
     example: notificacionDestino.enumValues[0],

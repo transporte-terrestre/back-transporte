@@ -1,6 +1,13 @@
-import { pgTable, serial, integer, timestamp, decimal, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, timestamp, decimal, text, jsonb, index } from 'drizzle-orm/pg-core';
 import { viajeTramos } from './viaje-tramo.table';
 import { combustibleEnum, vehiculos } from './vehiculo.table';
+
+export interface AbastecimientoMetadata {
+  ubicacion: {
+    lat: number;
+    lng: number;
+  };
+}
 
 export const vehiculoAbastecimientos = pgTable(
   'vehiculo_abastecimientos',
@@ -9,8 +16,11 @@ export const vehiculoAbastecimientos = pgTable(
     vehiculoId: integer('vehiculo_id')
       .references(() => vehiculos.id, { onDelete: 'cascade' })
       .notNull(),
-    viajeTramoId: integer('viaje_tramo_id')
-      .references(() => viajeTramos.id, { onDelete: 'set null' }),
+    viajeTramoId: integer('viaje_tramo_id').references(() => viajeTramos.id, { onDelete: 'set null' }),
+    kilometrajeSuelto: decimal('kilometraje_suelto', { precision: 12, scale: 2 }),
+    tramoSuelto: text('tramo_suelto'),
+    fechaAbastecimiento: timestamp('fecha_abastecimiento'),
+    metadata: jsonb('metadata').$type<AbastecimientoMetadata>(),
     combustible: combustibleEnum('combustible').notNull(),
     galonesEstablecidos: decimal('galones_establecidos', { precision: 10, scale: 2 }).notNull(),
     creadoEn: timestamp('creado_en').defaultNow().notNull(),
@@ -20,6 +30,7 @@ export const vehiculoAbastecimientos = pgTable(
   (t) => [
     index('vehiculo_abastecimientos_vehiculo_id_idx').on(t.vehiculoId),
     index('vehiculo_abastecimientos_viaje_tramo_id_idx').on(t.viajeTramoId),
+    index('vehiculo_abastecimientos_fecha_abastecimiento_idx').on(t.fechaAbastecimiento),
   ],
 );
 

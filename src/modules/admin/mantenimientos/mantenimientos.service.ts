@@ -38,6 +38,7 @@ export class MantenimientosService {
     estado?: string,
     tallerId?: number,
     vehiculoId?: number,
+    moneda?: string,
   ): Promise<PaginatedMantenimientoResultDto> {
     const { data, total } = await this.mantenimientoRepository.findAllPaginated(page, limit, {
       search,
@@ -47,6 +48,7 @@ export class MantenimientosService {
       estado,
       tallerId,
       vehiculoId,
+      moneda,
     });
 
     const totalPages = Math.ceil(total / limit);
@@ -149,7 +151,11 @@ export class MantenimientosService {
   async create(data: MantenimientoCreateDto) {
     const { marcarEnTaller, ...rest } = data;
     const codigoOrden = await this.generarCodigoOrden(rest.vehiculoId);
-    const result = await this.mantenimientoRepository.create({ ...rest, codigoOrden });
+    const result = await this.mantenimientoRepository.create({
+      ...rest,
+      moneda: rest.moneda ?? 'PEN',
+      codigoOrden,
+    });
 
     if (marcarEnTaller) {
       await this.vehiculoRepository.update(rest.vehiculoId, { estado: 'taller' });
@@ -348,6 +354,7 @@ export class MantenimientosService {
       estado: 'pendiente',
       codigoOrden,
       costoTotal: '0',
+      moneda: 'PEN',
     });
   }
 }

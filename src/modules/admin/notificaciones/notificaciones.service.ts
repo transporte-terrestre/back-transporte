@@ -3,6 +3,7 @@ import { NotificacionRepository, DocumentoVencimiento } from '@repository/notifi
 import { NotificacionDestino, NotificacionDTO } from '@db/tables/notificacion.table';
 import { PaginatedNotificacionResultDto } from './dto/notificacion/notificacion-paginated.dto';
 import { NotificacionResultDto } from './dto/notificacion/notificacion-result.dto';
+import { NotificacionCorteResultDto } from './dto/notificacion/notificacion-corte-result.dto';
 import { NotificacionCreateDto } from './dto/notificacion/notificacion-create.dto';
 import type { NotificacionTipo } from '@db/tables/notificacion.table';
 import { GenerarVencimientosResultDto, NotificacionPreviewDto, PreviewVencimientosResultDto } from './dto/notificacion/notificacion-vencimiento.dto';
@@ -440,6 +441,30 @@ export class NotificacionesService {
       ...notif,
       leido: true,
     } as NotificacionResultDto;
+  }
+
+  async markAllAsRead(usuarioId: number): Promise<NotificacionCorteResultDto> {
+    const result = await this.notificacionRepository.markAllAsRead(usuarioId);
+    if (!result?.fechaCorte) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    return {
+      message: 'Notificaciones marcadas como leídas correctamente',
+      fechaCorte: result.fechaCorte,
+    };
+  }
+
+  async dismissAll(usuarioId: number): Promise<NotificacionCorteResultDto> {
+    const result = await this.notificacionRepository.dismissAll(usuarioId);
+    if (!result?.fechaCorte) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    return {
+      message: 'Notificaciones ocultadas correctamente',
+      fechaCorte: result.fechaCorte,
+    };
   }
 
   async dismissByConductor(conductorId: number, notificacionId: number): Promise<NotificacionResultDto> {

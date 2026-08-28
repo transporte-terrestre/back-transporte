@@ -8,6 +8,8 @@ export const mantenimientosTipo = pgEnum('mantenimientos_tipo', ['preventivo', '
 
 export const mantenimientosEstado = pgEnum('mantenimientos_estado', ['pendiente', 'en_proceso', 'finalizado']);
 
+export const mantenimientosMoneda = pgEnum('mantenimientos_moneda', ['PEN', 'USD']);
+
 export const mantenimientos = pgTable('mantenimientos', {
   id: serial('id').primaryKey(),
   vehiculoId: integer('vehiculo_id')
@@ -18,6 +20,7 @@ export const mantenimientos = pgTable('mantenimientos', {
   codigoOrden: varchar('codigo_orden', { length: 50 }),
   tipo: mantenimientosTipo('tipo').notNull(),
   costoTotal: decimal('costo_total', { precision: 10, scale: 2 }).default('0').notNull(),
+  moneda: mantenimientosMoneda('moneda').default('PEN').notNull(),
   descripcion: text('descripcion').notNull(),
   fechaIngreso: timestamp('fecha_ingreso').notNull(),
   fechaSalida: timestamp('fecha_salida'),
@@ -31,5 +34,6 @@ export const mantenimientos = pgTable('mantenimientos', {
 
 export type MantenimientoTipo = (typeof mantenimientosTipo.enumValues)[number];
 export type MantenimientoEstado = (typeof mantenimientosEstado.enumValues)[number];
+export type MantenimientoMoneda = (typeof mantenimientosMoneda.enumValues)[number];
 export type Mantenimiento = typeof mantenimientos.$inferSelect;
 export type MantenimientoDTO = typeof mantenimientos.$inferInsert;
